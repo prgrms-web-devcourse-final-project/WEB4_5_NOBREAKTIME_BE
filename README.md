@@ -115,10 +115,7 @@
 | **hotfix** | `hotfix/이슈명` | 운영 중 긴급 버그 수정(main에서 분기) |
 
 > 모든 브랜치는 영어로 작성
-> 
-> 
 > 예시: `feature/oauth-login`, `hotfix/payment-error`
-> 
 
 브랜치 요약
 
@@ -134,4 +131,4 @@
 <br/>
 
 ## 컨벤션
-[🎯 Commit Convention](
+[🎯 Commit Convention](https://github.com/prgrms-web-devcourse-final-project/WEB4_5_NOBREAKTIME_BE/wiki/Git-Flow-%EA%B8%B0%EB%B0%98-%EC%BB%A4%EB%B0%8B-%EC%BB%A8%EB%B2%A4%EC%85%98-&-%EB%B8%8C%EB%9E%9C%EC%B9%98-%EC%A0%84%EB%9E%B5)
