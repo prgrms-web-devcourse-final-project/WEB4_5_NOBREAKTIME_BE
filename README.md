@@ -22,28 +22,52 @@
 <br/>
 
 ## 2. 프로젝트 소개
-- 고객들이 Coffe Bean package를 온라인 웹 사이트로 주문할 수 있는 서비스입니다.
-- Spring을 이용해서 커피 메뉴 데이터를 관리하는 4가지 로직 CRUD를 구현합니다.
-- 매일 전날 오후 2시부터 오늘 오후 2시까지의 주문을 모아서 처리합니다.
-- 고객들은 주문, 리뷰, 질문, 포인트 정립 등의 기능을 사용할 수 있습니다.
-- 관리자는 상품 및 고객 관리 등 쇼핑몰의 전반적인 관리 기능을 수행할 수 있습니다.
+유튜브 영상을 학습 콘텐츠로 활용하여, 자막 생성, 해석, 표현 분석, 반복 학습 등 실질적인 언어 습득을 지원하는 플랫폼
 
 <br/>
 
-## 3. 주요 기능
-![image](https://github.com/user-attachments/assets/efe5962a-57c2-4059-a27e-54422b831ad6)
+## 3. 기능
+### 🔑 핵심 기능 구성
+
+| 기능 영역 | 세부 내용 |
+| --- | --- |
+| 🧑 **회원 관리** | - 카카오, 구글, 네이버 SSO 로그인<br>- 이메일 로그인 및 회원가입<br>- 이메일 인증 기능 |
+| ✨ **영상 탐색** | - 필터를 설정해 영상 검색<br>- 학습 인기 동영상 목록 조회 |
+| 🎙️ **자막 생성** | - 유튜브 API로 영상 선택<br>- Clova Speech API로 음성 추출 및 자막 변환 |
+| 🌐 **자막 번역** | - 생성된 자막을 Papago API로 번역<br>- 전체 스크립트 제공<br>- 이중 자막 표시 가능 |
+| 🧠 **단어/표현 설명 (AI)** | - 단어를 사전 API로 해석 및 설명<br>- 문장별 표현을 LLM 기반으로 의미 및 문맥 설명<br>- 헷갈리는 표현은 대체 표현과 비교 제공 |
+| 📝 **개인 학습 도구** | - 단어/표현을 '내 단어장', '내 표현함'에 저장<br>- 저장된 항목 기반 학습 퀴즈 제공 |
+
+### ⏹️ 추가 기능 ⏹️
+
+| 기능 영역 | 세부 내용 |
+| --- | --- |
+| 📆 **학습 계획** | - 학습 일정 관리<br>- 복습 주기 설정<br>- 오늘의 학습 표현 제공 |
+| 📊 **학습 통계** | - 일일 학습량, 학습 현황 요약<br>- 학습 레벨 및 시간 확인<br>- 일정 기간 학습 통계 시각화 |
+| 🌟 **추천 콘텐츠** | - 추천 수 높은 영상/강의 메인 노출<br>- 카테고리별 랭킹 제공 |
+| 💳 **결제** | - 결제 API 기반 구독 시스템<br>- 베이직, 스탠다드, 프리미엄 플랜 제공 |
+| 📚 **추가 단어장/표현함** | - 스탠다드/프리미엄 회원 추가 단어장·표현함 생성 가능 |
+| 🌍 **추가 언어 선택** | - 프리미엄 회원 추가 학습 언어 선택 가능 |
+| 🧩 **분석** | - 전체 스크립트 요약 제공 |
+| 🛠️ **관리자** | - 회원 정보, 게시판, 문의사항 관리 |
+| 🕓 **히스토리 저장** | - 최근 학습 영상 히스토리 저장 |
+
 
 
 <br/>
 
 ## 4. 작업 및 역할 분담
-   |     |                                                                                         |                                                                                                  |
-   |-----|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-   | 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>프로젝트 관리 및 문서화</li><li>팀 리딩 및 커뮤니케이션</li><li>회원가입/로그인</li><li>토큰/세션/시큐리티</li><li>회원 정보 수정</li></ul> |
-   | 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100">  | <ul><li>메인 페이지</li><li>장바구니</li><li>주문 관리</li><li>질문 관리</li><li>결제</li></ul>|
-   | 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>마이페이지</li><li>주문/배송 관리</li><li>주문/배송 관리</li><li>비회원 주문/배송 관리</li><li>리뷰 및 포인트 관리</li></ul>|
-   | 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100">  | <ul><li>메인페이지</li><li>장바구니</li><li>주문 관리</li><li>공지사항</li><li>세부 상품 조회</li></ul>|
-   | 김경래 | <img src="https://avatars.githubusercontent.com/u/15260002?v=4" alt="김경래" width="100">  | <ul><li>관리자 관리 페이지</li><li>관리자 상품 관리</li><li>관리자 주문 관리</li><li>오후 2시 일괄 배송</li></ul> |
+
+| 이름 | 프로필 | 주요 역할 |
+|:----:|:------:|:---------|
+| 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>PO (Product Owner)</li><li>프로젝트 일정 관리 및 팀 협업 조율</li><li>프론트와 백엔드 팀 사이 소통<li>기술 문서화</li><li>OpenAI 모듈을 활용한 문제 제작/번역/사전/문법 분석/레벨 분석 기능 개발</li></ul> |
+| 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
+| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>카카오 소셜 로그인 구현</li></ul> |
+| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
+| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
+| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
+
+<br/>
 
 <br/>
 <br/>
@@ -53,55 +77,61 @@
 ## 기술 스택
 ### 언어
 - JAVA   23
-- TypeScript
 
 ### 프레임워크 및 라이브러리
 - Spring   3.4.2
 - Spring  Security
-- React   19.0.0
-- Next.js   15.1.7
-- ShadCN/UI
   
 ### IED 및 개발 도구
 - IntelliJ IDEA
-- Visual Studio Code
 
 ### 버전 관리 및 협업 도구
 - Git
 - GitHub
 - Slack
 - Notion
+- Discord
 
 ## UML
-![image](https://github.com/user-attachments/assets/621c2429-04f2-4f0c-bf84-0df7d1dde2f7)
+![image](https://github.com/user-attachments/assets/6cb60bd5-c59f-45b6-9f31-8db06a0f3575)
 
 ## ERD
-![Blue White Illustration Group Project Presentation ](https://github.com/user-attachments/assets/a95a0bdf-385c-44d2-8421-2140e5e187fe)
 
 ## System Architecture
-![image](https://github.com/user-attachments/assets/51b881ad-8acc-47fb-acaf-269dff79be0b)
 
 ## Flow Chart
-[🗃️ Flow Chart](https://github.com/prgrms-be-devcourse/NBE4-5-1-Team07/wiki/%F0%9F%97%83%EF%B8%8F-Flow-Chart)
+[🗃️ Flow Chart]()
 
-## 브랜치 전략
-**GitHub Flow** 전략 사용
-- **Main Branch**
-  - 배포 가능한 상태의 코드를 유지합니다.
-  - 모든 배포는 이 브랜치에서 이루어집니다.
-- **{name} Branch**
-  - 팀원 각자의 개발 브랜치입니다.
-  - 모든 기능 개발은 이 브랜치에서 이루어집니다.
-- 테스트가 완료되면, Pull Request를 생성하여 Review를 요청합니다. 이 때 타겟은 ```main``` 브랜치입니다.
-- Review가 완료되고, 피드백이 모두 반영돠면 해당 ```feature```브랜치를 ```main```브랜치로 **Merge**합니다.
-![image](https://github.com/user-attachments/assets/6eb191d6-d686-4e25-a383-6338d02675fc)
+## 🏷️  브랜치 전략
 
+- **`main`**: 실제 운영(배포)되는 코드만 존재
+- **`develop`**: 다음 배포를 위한 최신 개발 코드가 모임
+
+### **기능/릴리즈/핫픽스 브랜치**
+
+| 브랜치 유형 | 네이밍 규칙 | 용도/설명 |
+| --- | --- | --- |
+| **feature** | `feature/기능명` | 새로운 기능 개발 (develop에서 분기) |
+| **hotfix** | `hotfix/이슈명` | 운영 중 긴급 버그 수정(main에서 분기) |
+
+> 모든 브랜치는 영어로 작성
+> 
+> 
+> 예시: `feature/oauth-login`, `hotfix/payment-error`
+> 
+
+브랜치 요약
+
+- `main`: 운영 배포 코드
+- `develop`: 최신 개발 코드
+- `feature/*`: 기능 단위 개발
+- `hotfix/*`: 운영 긴급 수정
+
+  
 ## API 명세서
-[📝 API 명세서](https://peaceful-acorn-daf.notion.site/API-193d9ae0b864813fa94aea1a6645edbf?pvs=4)
+[📝 API 명세서]()
 <br/>
 <br/>
 
 ## 컨벤션
-[🎯 Commit Convention](https://github.com/prgrms-be-devcourse/NBE4-5-1-Team07/wiki/%F0%9F%93%8C-Git-Commit-Message-Convention#6-%EC%97%AC%EB%9F%AC%EA%B0%80%EC%A7%80-%ED%95%AD%EB%AA%A9%EC%9D%B4-%EC%9E%88%EB%8B%A4%EB%A9%B4-%EA%B8%80%EB%A8%B8%EB%A6%AC-%EA%B8%B0%ED%98%B8%EB%A5%BC-%ED%86%B5%ED%95%B4-%EA%B0%80%EB%8F%85%EC%84%B1-%EB%86%92%EC%9D%B4%EA%B8%B0)
-<br/>
-[📌 Code Convention](https://github.com/prgrms-be-devcourse/NBE4-5-1-Team07/wiki/%F0%9F%93%8C-Code-Convention)
+[🎯 Commit Convention](
