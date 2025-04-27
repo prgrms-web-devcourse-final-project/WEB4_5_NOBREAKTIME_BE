@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.entity;
 
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType;
 import jakarta.persistence.*;
@@ -21,12 +22,12 @@ public class ExpressionQuiz {
     @Column(name = "expression_quiz_id")
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private QuizType quizType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Column(nullable = false)
-    private Integer runningTime;
+    private Integer learningTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -34,11 +35,13 @@ public class ExpressionQuiz {
 
     // 생성 메서드
     @Builder
-    public ExpressionQuiz(QuizType quizType,
-                          Integer runningTime,
-                          Language language) {
-        this.quizType = quizType;
-        this.runningTime = runningTime;
+    public ExpressionQuiz(
+        Member member,
+        Integer learningTime,
+        Language language
+    ) {
+        this.member = member;
+        this.learningTime = learningTime;
         this.language = language;
     }
 }

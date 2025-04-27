@@ -47,6 +47,12 @@ public class Member {
     @Column(nullable = false)
     private LocalDateTime subscribedAt = createdAt;
 
+    @Column(nullable = false)
+    private int wordGoal = 20;
+
+    @Column(nullable = false)
+    private int videoGoal = 3;
+
     @Builder
     public Member(
             String email,

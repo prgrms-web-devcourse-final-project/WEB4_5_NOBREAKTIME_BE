@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.voca.word;
+package com.mallang.mallang_backend.domain.voca.word.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

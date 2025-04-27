@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.sentence.expressions.entity;
+package com.mallang.mallang_backend.domain.sentence.expressionbook.entity;
 
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Expressions {
+public class ExpressionBook {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "expressions_id")
+    @Column(name = "ExpressionBook_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -23,20 +23,20 @@ public class Expressions {
     private Member member;
 
     @Column(nullable = false)
-    private String expressionsName;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Language language;
 
     @Builder
-    public Expressions(
+    public ExpressionBook(
             Member member,
-            String expressionsName,
+            String name,
             Language language
     ) {
         this.member = member;
-        this.expressionsName = expressionsName;
+        this.name = name;
         this.language = language;
     }
 }

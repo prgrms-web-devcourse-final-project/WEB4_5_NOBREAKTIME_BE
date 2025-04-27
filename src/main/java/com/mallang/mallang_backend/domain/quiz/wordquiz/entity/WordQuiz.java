@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.entity;
 
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -14,8 +15,12 @@ public class WordQuiz {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quiz_id")
+    @Column(name = "word_quiz_id")
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -29,10 +34,12 @@ public class WordQuiz {
 
     @Builder
     public WordQuiz(
-            QuizType quizType,
-            String learningTime,
-            Language language
+        Member member,
+        QuizType quizType,
+        String learningTime,
+        Language language
     ) {
+        this.member = member;
         this.quizType = quizType;
         this.learningTime = learningTime;
         this.language = language;

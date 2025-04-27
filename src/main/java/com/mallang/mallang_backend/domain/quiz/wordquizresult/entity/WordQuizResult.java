@@ -1,11 +1,11 @@
-package com.mallang.mallang_backend.domain.quiz.totalwordquiz.entity;
-
+package com.mallang.mallang_backend.domain.quiz.wordquizresult.entity;
 
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -21,11 +21,11 @@ public class WordQuizResult {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quiz_result_id")
+    @Column(name = "word_quiz_result_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiz_id", nullable = false)
+    @JoinColumn(name = "word_quiz_id", nullable = false)
     private WordQuiz wordQuiz;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,7 +41,14 @@ public class WordQuizResult {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private QuizType quizType; // 퀴즈유형
+    @Builder
+    public WordQuizResult(
+        WordQuiz wordQuiz,
+        WordbookItem wordbookItem,
+        Boolean isCorrect
+    ) {
+        this.wordQuiz = wordQuiz;
+        this.wordbookItem = wordbookItem;
+        this.isCorrect = isCorrect;
+    }
 }

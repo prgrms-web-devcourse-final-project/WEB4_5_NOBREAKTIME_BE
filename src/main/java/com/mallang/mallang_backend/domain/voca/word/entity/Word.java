@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.voca.word;
+package com.mallang.mallang_backend.domain.voca.word.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -15,7 +15,7 @@ public class Word {
     private String word;
 
     @Column(nullable = false)
-    private String translated;
+    private String definition;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
