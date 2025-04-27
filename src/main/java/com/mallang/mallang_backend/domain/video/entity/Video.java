@@ -1,0 +1,60 @@
+package com.mallang.mallang_backend.domain.video.entity;
+
+import com.mallang.mallang_backend.global.common.Language;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Video {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "video_id")
+    private Long id;
+
+    @Column(nullable = false)
+    private String youtubeId;
+
+    @Column(nullable = false)
+    private String videoTitle;
+
+    @Column(nullable = false)
+    private String thumbnailImageUrl;
+
+    @Column(nullable = false)
+    private String channelTitle;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String originalSubtitle;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String translated;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Language language;
+
+    @Builder
+    public Video(
+            String youtubeId,
+            String videoTitle,
+            String thumbnailImageUrl,
+            String channelTitle,
+            String originalSubtitle,
+            String translated,
+            Language language
+    ) {
+        this.youtubeId = youtubeId;
+        this.videoTitle = videoTitle;
+        this.thumbnailImageUrl = thumbnailImageUrl;
+        this.channelTitle = channelTitle;
+        this.originalSubtitle = originalSubtitle;
+        this.translated = translated;
+        this.language = language;
+    }
+}
