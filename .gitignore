@@ -41,3 +41,5 @@ out/
 
 ## querydsl
 src/main/generated/
+
+application-secret.yml
