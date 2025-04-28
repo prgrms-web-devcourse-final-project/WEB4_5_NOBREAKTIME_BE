@@ -5,20 +5,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
-	private static final Logger log = LoggerFactory.getLogger(YoutubeAudioExtractorImpl.class);
+	public static final int VIDEO_LENGTH_LIMIT = 1200;
 	private final ProcessRunner processRunner;
 
 	@Override
@@ -52,7 +52,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 			throw new RuntimeException("영상 길이(duration)를 가져올 수 없습니다.");
 		}
 
-		if (durationSeconds >= 1200) { // 20분 = 600초
+		if (durationSeconds >= VIDEO_LENGTH_LIMIT) {
 			throw new RuntimeException("20분 이상 영상은 다운로드할 수 없습니다. (" + (durationSeconds/60) + "분)");
 		}
 
