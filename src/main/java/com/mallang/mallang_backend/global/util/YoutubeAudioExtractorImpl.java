@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.global.util;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +45,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 		if (!uploadsDirectory.exists()) {
 			boolean created = uploadsDirectory.mkdirs();
 			if (!created) {
-				throw new RuntimeException("uploads 폴더 생성 실패: " + UPLOADS_DIR);
+				throw new ServiceException(VIDEO_PATH_CREATION_FAILED);
 			}
 		}
 	}
@@ -58,7 +60,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 		String jsonOutput = readProcessOutput(infoProcess);
 		int exitCode = infoProcess.waitFor();
 		if (exitCode != 0) {
-			throw new RuntimeException("yt-dlp 영상 정보 조회 실패. exitCode=" + exitCode);
+			throw new ServiceException(VIDEO_RETRIEVAL_FAILED);
 		}
 
 		return objectMapper.readTree(jsonOutput);
@@ -67,10 +69,10 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	private void validateVideoDuration(JsonNode videoInfo) {
 		int durationSeconds = videoInfo.path("duration").asInt(-1);
 		if (durationSeconds == -1) {
-			throw new IllegalArgumentException("영상 길이(duration)를 가져올 수 없습니다.");
+			throw new ServiceException(VIDEO_RETRIEVAL_FAILED);
 		}
 		if (durationSeconds >= VIDEO_LENGTH_LIMIT_SECONDS) {
-			throw new IllegalArgumentException("20분 이상 영상은 다운로드할 수 없습니다. (" + (durationSeconds / 60) + "분)");
+			throw new ServiceException(VIDEO_LENGTH_EXCEED);
 		}
 	}
 
@@ -86,7 +88,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 		int exitCode = process.waitFor();
 		if (exitCode != 0) {
-			throw new RuntimeException("yt-dlp 음성 추출 실패. exitCode=" + exitCode);
+			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
 		}
 	}
 

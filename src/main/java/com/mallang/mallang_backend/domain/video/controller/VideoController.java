@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.video.controller;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.IOException;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.video.service.VideoService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +40,7 @@ public class VideoController {
 		try {
 			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
 		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(e);
+			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
 		}
 
 		// TODO: Clova Speech 연결, Open AI 연결 기능 추가

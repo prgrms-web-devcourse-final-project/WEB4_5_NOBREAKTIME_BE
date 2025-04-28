@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.util;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -14,6 +16,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 @ExtendWith(MockitoExtension.class)
 class YoutubeAudioExtractorImplTest {
@@ -55,7 +59,7 @@ class YoutubeAudioExtractorImplTest {
 		String result = youtubeAudioExtractor.extractAudio(youtubeUrl);
 
 		assertNotNull(result);
-		assertTrue(result.contains("/tmp/audio_"));
+		assertTrue(result.contains(AUDIO_FILE_PREFIX));
 
 		// 명령어가 제대로 호출됐는지 검증
 		verify(processRunner).runProcess(
@@ -91,10 +95,31 @@ class YoutubeAudioExtractorImplTest {
 			ArgumentMatchers.eq("yt-dlp"), ArgumentMatchers.eq("--dump-json"), anyString()
 		)).thenReturn(mockInfoProcess);
 
-		RuntimeException exception = assertThrows(RuntimeException.class, () ->
+		ServiceException exception = assertThrows(ServiceException.class, () ->
 			youtubeAudioExtractor.extractAudio("https://www.youtube.com/watch?v=dummy")
 		);
 
-		assertTrue(exception.getMessage().contains("20분 이상 영상은 다운로드할 수 없습니다"));
+		assertTrue(exception.getMessageCode().contains("video.length.exceed"));
+	}
+
+	@Test
+	@DisplayName("실패 - 존재하지 않는 영상 링크는 음성 추출에 실패한다")
+	void testExtractAudio_invalidVideoLink_shouldThrowException() throws Exception {
+		Process mockInfoProcess = mock(Process.class);
+
+		// 실패한 프로세스 시뮬레이션 (exit code != 0)
+		InputStream errorStream = new ByteArrayInputStream("에러 발생".getBytes());
+		when(mockInfoProcess.getInputStream()).thenReturn(errorStream);
+		when(mockInfoProcess.waitFor()).thenReturn(1); // 실패 (exit code 1)
+
+		when(processRunner.runProcess(
+			eq("yt-dlp"), eq("--dump-json"), anyString()
+		)).thenReturn(mockInfoProcess);
+
+		ServiceException exception = assertThrows(ServiceException.class, () ->
+			youtubeAudioExtractor.extractAudio("https://www.youtube.com/watch?v=invalid")
+		);
+
+		assertThat(exception.getMessageCode()).isEqualTo("video.retrieval.failed");
 	}
 }
