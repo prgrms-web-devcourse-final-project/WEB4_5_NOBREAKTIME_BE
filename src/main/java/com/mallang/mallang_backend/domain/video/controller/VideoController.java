@@ -39,7 +39,7 @@ public class VideoController {
 		String result;
 		try {
 			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
-		} catch (IOException | InterruptedException e) {
+		} catch (Exception e) {
 			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
 		}
 
@@ -69,7 +69,8 @@ public class VideoController {
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
 				.body(audioData);
 		} catch (IOException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // 파일을 찾을 수 없으면 404 반환
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				.body(null);  // 파일을 찾을 수 없으면 404 반환
 		}
 	}
 }
