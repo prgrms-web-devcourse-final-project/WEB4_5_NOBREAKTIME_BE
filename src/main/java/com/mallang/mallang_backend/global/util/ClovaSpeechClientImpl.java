@@ -32,7 +32,17 @@ public class ClovaSpeechClientImpl implements ClovaSpeechClient {
 	@Value("${clova.speech.invoke_url}")
 	private String invoke_url;
 
-	private CloseableHttpClient httpClient = HttpClients.createDefault();
+	private CloseableHttpClient httpClient;
+
+	public ClovaSpeechClientImpl() {
+		this.httpClient = HttpClients.createDefault();
+	}
+
+	// 테스트용 생성자 오버로딩
+	public ClovaSpeechClientImpl(CloseableHttpClient httpClient) {
+		this.httpClient = httpClient;
+	}
+
 	private Gson gson = new Gson();
 
 	private Header[] createHeaders() {
