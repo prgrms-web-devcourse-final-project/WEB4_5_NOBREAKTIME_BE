@@ -3,13 +3,15 @@ package com.mallang.mallang_backend.global.util;
 import java.util.List;
 import java.util.Map;
 
+import com.mallang.mallang_backend.global.common.Language;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class NestRequestEntity {
-	private String language = "en-US";
+	private String language;
 	//completion optional, sync/async (응답 결과 반환 방식(sync/async) 설정, 필수 파라미터 아님)
 	private String completion = "sync";
 	//optional, used to receive the analyzed results (분석된 결과 조회 용도, 필수 파라미터 아님)
@@ -24,4 +26,12 @@ public class NestRequestEntity {
 	private String forbiddens;
 	private Diarization diarization;
 	private Sed sed;
+
+	/**
+	 * Clova Speech에 보낼 요청 설정을 생성합니다.
+	 * @param language 텍스트 인식 언어
+	 */
+	public NestRequestEntity(Language language) {
+		this.language = language.getLanguageCode();
+	}
 }
