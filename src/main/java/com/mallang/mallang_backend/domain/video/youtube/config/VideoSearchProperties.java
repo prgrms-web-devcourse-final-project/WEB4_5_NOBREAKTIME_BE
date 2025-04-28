@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video;
+package com.mallang.mallang_backend.domain.video.youtube.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

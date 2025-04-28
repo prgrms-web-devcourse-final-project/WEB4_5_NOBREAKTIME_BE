@@ -1,23 +1,20 @@
 package com.mallang.mallang_backend.domain.video.service.impl;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
-import com.google.api.services.youtube.model.VideoListResponse;
-import com.mallang.mallang_backend.domain.video.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.service.VideoService;
+import com.mallang.mallang_backend.domain.video.youtube.config.VideoFilterUtils;
+import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
+import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,89 +22,63 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VideoServiceImpl implements VideoService {
 
-    // yml 매핑한 설정 클래스 주입
-    private final VideoSearchProperties youtubeSearchProperties;
+	private final VideoSearchProperties youtubeSearchProperties;
+	private final YoutubeService youtubeService;
 
-    // 유튜브 API 키
-    @Value("${youtube.api.key}")
-    private String apiKey;
+	@Override
+	public List<VideoResponse> getVideosByLanguage(
+		String q,
+		String category,
+		String language,
+		long maxResults
+	) {
+		// 1) 언어 키 및 기본 설정
+		String langKey = Optional.ofNullable(language).orElse("en").toLowerCase();
+		var defaults = youtubeSearchProperties.getDefaults()
+			.getOrDefault(langKey, youtubeSearchProperties.getDefaults().get("en"));
+		String regionCode   = defaults.getRegion();
+		String defaultQuery = defaults.getQuery();
 
-    @Override
-    public List<VideoResponse> getVideosByLanguage(String language, long maxResults) {
-        List<VideoResponse> results = new ArrayList<>();
+		// 2) 쿼리 > 카테고리 > 기본 검색어
+		String effectiveQuery = (q != null && !q.isBlank()) ? q
+			: (category != null && !category.isBlank() ? category : defaultQuery);
 
-        try {
-            String langKey = language.toLowerCase();
+		// 3) ID 목록 조회 using YoutubeService
+		List<String> videoIds;
+		try {
+			videoIds = youtubeService.searchVideoIds(effectiveQuery, regionCode, langKey, maxResults);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to search video IDs", e);
+		}
+		if (videoIds == null || videoIds.isEmpty()) {
+			return Collections.emptyList();
+		}
 
-            // 언어에 맞는 기본 검색어와 지역코드를 가져온다
-            VideoSearchProperties.SearchDefault searchDefault = youtubeSearchProperties.getDefaults().get(langKey);
+		// 4) 상세 비디오 정보 조회
+		List<Video> videoList;
+		try {
+			videoList = youtubeService.fetchVideosByIds(videoIds);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to fetch video details", e);
+		}
 
-            if (searchDefault == null) {
-                // 언어 매칭이 안되면 기본 en 사용
-                searchDefault = youtubeSearchProperties.getDefaults().get("en");
-            }
-
-            String effectiveQuery = searchDefault.getQuery();
-            String effectiveRegionCode = searchDefault.getRegion();
-            String effectiveLanguageCode = langKey;
-
-            // 유튜브 API 클라이언트 생성
-            YouTube youtubeService = new YouTube.Builder(
-                    GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(),
-                    request -> {
-                    }
-            ).setApplicationName("youtube-search-app")
-                    .build();
-
-            // 검색 요청 세팅
-            YouTube.Search.List searchRequest = youtubeService.search()
-                    .list(List.of("id", "snippet"));
-
-            searchRequest.setQ(effectiveQuery);
-            searchRequest.setType(List.of("video"));
-            searchRequest.setVideoLicense("creativeCommon");
-            searchRequest.setRelevanceLanguage(effectiveLanguageCode);
-            searchRequest.setRegionCode(effectiveRegionCode);
-            searchRequest.setMaxResults(maxResults);
-            searchRequest.setVideoDuration("any");
-            searchRequest.setKey(apiKey);
-
-            // 검색 실행
-            SearchListResponse searchResponse = searchRequest.execute();
-            List<SearchResult> searchResults = searchResponse.getItems();
-
-            if (searchResults != null && !searchResults.isEmpty()) {
-                // videoId 리스트 추출
-                List<String> videoIds = searchResults.stream()
-                        .map(searchResult -> searchResult.getId().getVideoId())
-                        .collect(Collectors.toList());
-
-                // YouTube Videos API 호출 (duration 정보 조회)
-                YouTube.Videos.List videosRequest = youtubeService.videos()
-                        .list(List.of("id", "snippet", "contentDetails"));
-
-                videosRequest.setId(videoIds);
-                videosRequest.setKey(apiKey);
-
-                VideoListResponse videosResponse = videosRequest.execute();
-                List<Video> videoList = videosResponse.getItems();
-
-                for (Video video : videoList) {
-                    String durationStr = video.getContentDetails().getDuration();
-                    Duration duration = parseDuration(durationStr); // PT19M32S 같은 걸 파싱
-
-                    if (duration != null && duration.toMinutes() <= 20) {
-                        // 20분 이하만 리스트에 추가
-                        results.add(new VideoResponse(
-                                video.getId(),
-                                video.getSnippet().getTitle(),
-                                video.getSnippet().getDescription(),
-                                video.getSnippet().getThumbnails().getMedium().getUrl()
-                        ));
-                    }
-                }
-            }
+		// 5) 최종 필터 및 DTO 매핑 (null-safe)
+		return Optional.ofNullable(videoList).orElse(Collections.emptyList()).stream()
+			.filter(v -> v.getStatus() != null && "creativeCommon".equals(v.getStatus().getLicense()))
+			.filter(v -> {
+				var snip = v.getSnippet();
+				return snip != null && langKey.equals(snip.getDefaultAudioLanguage());
+			})
+			.filter(VideoFilterUtils::isDurationLessThanOrEqualTo20Minutes)
+			.map(v -> new VideoResponse(
+				v.getId(),
+				v.getSnippet().getTitle(),
+				v.getSnippet().getDescription(),
+				v.getSnippet().getThumbnails().getMedium().getUrl()
+			))
+			.collect(Collectors.toList());
+	}
+}
 
         } catch (Exception e) {
             e.printStackTrace();

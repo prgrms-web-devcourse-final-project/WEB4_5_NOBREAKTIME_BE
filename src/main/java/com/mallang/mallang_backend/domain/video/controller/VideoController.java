@@ -19,9 +19,12 @@ public class VideoController {
 
     @GetMapping("/list")
     public List<VideoResponse> getVideoList(
-            @RequestParam(defaultValue = "en") String language,
-            @RequestParam(defaultValue = "10") long maxResults
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "en") String language,
+        @RequestParam(defaultValue = "10") long maxResults
     ) {
-        return videoService.getVideosByLanguage(language, maxResults);
+        return videoService.getVideosByLanguage(q, category, language, maxResults);
+        // return videoService.getVideosByLanguage(language, maxResults);
     }
 }
