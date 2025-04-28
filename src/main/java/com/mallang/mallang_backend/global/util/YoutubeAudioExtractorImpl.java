@@ -1,6 +1,9 @@
 package com.mallang.mallang_backend.global.util;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
@@ -18,27 +21,39 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
-	private static final int VIDEO_LENGTH_LIMIT_SECONDS = 1200;
-	private static final String AUDIO_OUTPUT_DIR = "/tmp/";
-	private static final String AUDIO_FILE_PREFIX = "audio_";
-	private static final String AUDIO_FILE_EXTENSION = ".mp3";
-
 	private final ProcessRunner processRunner;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
 	public String extractAudio(String youtubeUrl) throws IOException, InterruptedException {
+		ensureUploadsDirectoryExists();
+
 		JsonNode videoInfo = fetchVideoInfo(youtubeUrl);
 		validateVideoDuration(videoInfo);
 
-		String outputPath = generateOutputPath();
-		downloadAudio(youtubeUrl, outputPath);
+		String fileName = generateFileName();
 
-		return outputPath;
+		runAudioExtraction(youtubeUrl, UPLOADS_DIR + fileName);
+
+		return fileName;
+	}
+
+	private void ensureUploadsDirectoryExists() {
+		File uploadsDirectory = new File(UPLOADS_DIR);
+		if (!uploadsDirectory.exists()) {
+			boolean created = uploadsDirectory.mkdirs();
+			if (!created) {
+				throw new RuntimeException("uploads 폴더 생성 실패: " + UPLOADS_DIR);
+			}
+		}
 	}
 
 	private JsonNode fetchVideoInfo(String youtubeUrl) throws IOException, InterruptedException {
-		Process infoProcess = processRunner.runProcess("yt-dlp", "--dump-json", youtubeUrl);
+		Process infoProcess = processRunner.runProcess(
+			"yt-dlp",
+			"--dump-json",
+			youtubeUrl
+		);
 
 		String jsonOutput = readProcessOutput(infoProcess);
 		int exitCode = infoProcess.waitFor();
@@ -52,27 +67,26 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	private void validateVideoDuration(JsonNode videoInfo) {
 		int durationSeconds = videoInfo.path("duration").asInt(-1);
 		if (durationSeconds == -1) {
-			throw new RuntimeException("영상 길이(duration)를 가져올 수 없습니다.");
+			throw new IllegalArgumentException("영상 길이(duration)를 가져올 수 없습니다.");
 		}
-
 		if (durationSeconds >= VIDEO_LENGTH_LIMIT_SECONDS) {
-			throw new RuntimeException("20분 이상 영상은 다운로드할 수 없습니다. (" + (durationSeconds / 60) + "분)");
+			throw new IllegalArgumentException("20분 이상 영상은 다운로드할 수 없습니다. (" + (durationSeconds / 60) + "분)");
 		}
 	}
 
-	private void downloadAudio(String youtubeUrl, String outputPath) throws IOException, InterruptedException {
-		Process downloadProcess = processRunner.runProcess(
+	private void runAudioExtraction(String youtubeUrl, String outputPath) throws IOException, InterruptedException {
+		Process process = processRunner.runProcess(
 			"yt-dlp",
 			"-x", "--audio-format", "mp3",
 			"-o", outputPath,
 			youtubeUrl
 		);
 
-		logProcessOutput(downloadProcess);
+		logProcessOutput(process);
 
-		int exitCode = downloadProcess.waitFor();
+		int exitCode = process.waitFor();
 		if (exitCode != 0) {
-			throw new RuntimeException("yt-dlp 오디오 다운로드 실패. exitCode=" + exitCode);
+			throw new RuntimeException("yt-dlp 음성 추출 실패. exitCode=" + exitCode);
 		}
 	}
 
@@ -96,8 +110,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 		}
 	}
 
-	private String generateOutputPath() {
-		String fileName = AUDIO_FILE_PREFIX + UUID.randomUUID() + System.currentTimeMillis() + AUDIO_FILE_EXTENSION;
-		return AUDIO_OUTPUT_DIR + fileName;
+	private String generateFileName() {
+		return AUDIO_FILE_PREFIX + UUID.randomUUID() + System.currentTimeMillis() + AUDIO_FILE_EXTENSION;
 	}
 }
