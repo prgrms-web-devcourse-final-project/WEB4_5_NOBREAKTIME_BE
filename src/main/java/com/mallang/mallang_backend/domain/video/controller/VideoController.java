@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.video.controller;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +27,21 @@ public class VideoController {
 	@Autowired
 	private final VideoService videoService;
 
+	/**
+	 * Youtube ID 로 영상을 분석해 원어 자막, 번역 자막, 핵심 단어를 응답하는 메서드
+	 * @param youtubeVideoId 유튜브 영상의 ID, ex) DF3KVSnyUWI
+	 * @return 원어 자막, 번역 자막, 핵심 단어
+	 */
 	@GetMapping("/{youtubeVideoId}/analysis")
 	public ResponseEntity<RsData<String>> videoAnalysis(@PathVariable String youtubeVideoId) {
 		String result;
 		try {
-			result = videoService.analyzeVideo("https://www.youtube.com/watch?v=" + youtubeVideoId);
+			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
-		// TODO: Clova Speech 연결, Open AI 연결
+		// TODO: Clova Speech 연결, Open AI 연결 기능 추가
 
 		return ResponseEntity.ok(new RsData<>(
 			"",

@@ -19,4 +19,8 @@ public class AppConstants {
      * 파일 위치 (현재 프로젝트 디렉토리)
      */
     public static final String UPLOADS_DIR = System.getProperty("user.dir") + "/uploads/";
+    /**
+     * Youtube Video ID 로 전체 URL 을 만들기 위한 Youtbe 영상 Base URL
+     */
+    public static final String YOUTUBE_VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
 }
