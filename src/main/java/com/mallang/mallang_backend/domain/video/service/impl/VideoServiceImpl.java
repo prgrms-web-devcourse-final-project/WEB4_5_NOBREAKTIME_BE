@@ -80,19 +80,46 @@ public class VideoServiceImpl implements VideoService {
 	}
 }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+// @Override
+    // public List<VideoResponse> getVideosByLanguage(String language, long maxResults) {
+    //     List<VideoResponse> results = new ArrayList<>();
+    //
+    //     try {
+    //         String langKey = language.toLowerCase();
+    //
+    //         // 언어에 맞는 기본 검색어와 지역코드를 가져온다
+    //         VideoSearchProperties.SearchDefault searchDefault = youtubeSearchProperties.getDefaults().get(langKey);
 
-        return results;
-    }
+    // String searchQuery = (query == null || query.isBlank())
+    //     ? searchDefault.getQuery()
+    //     : query;
 
-    // SO 8601 포맷(PT19M32S)을 java.time.Duration 객체로 변환
-    private Duration parseDuration(String isoDuration) {
-        try {
-            return Duration.parse(isoDuration);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-}
+
+    //
+    //         // 검색
+    //         List<String> videoIds = youtubeService.searchVideoIds(
+    //             searchDefault.getQuery(),
+    //             searchDefault.getRegion(),
+    //             langKey,
+    //             maxResults
+    //         );
+    //
+    //         // 상세 조회
+    //         List<Video> videoList = youtubeService.fetchVideosByIds(videoIds);
+    //
+    //         for (Video video : videoList) {
+    //             if (VideoFilterUtils.isDurationLessThanOrEqualTo20Minutes(video)) {
+    //                 results.add(new VideoResponse(
+    //                     video.getId(),
+    //                     video.getSnippet().getTitle(),
+    //                     video.getSnippet().getDescription(),
+    //                     video.getSnippet().getThumbnails().getMedium().getUrl()
+    //                 ));
+    //             }
+    //         }
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //     }
+    //
+    //     return results;
+    // }
