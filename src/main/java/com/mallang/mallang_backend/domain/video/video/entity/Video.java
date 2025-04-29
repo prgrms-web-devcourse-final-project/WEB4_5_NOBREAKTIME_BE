@@ -29,32 +29,22 @@ public class Video {
     @Column(nullable = false)
     private String channelTitle;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String originalSubtitle;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String translated;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Language language;
 
     @Builder
     public Video(
-            String youtubeId,
-            String videoTitle,
-            String thumbnailImageUrl,
-            String channelTitle,
-            String originalSubtitle,
-            String translated,
-            Language language
+        String youtubeId,
+        String videoTitle,
+        String thumbnailImageUrl,
+        String channelTitle,
+        Language language
     ) {
         this.youtubeId = youtubeId;
         this.videoTitle = videoTitle;
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;
-        this.originalSubtitle = originalSubtitle;
-        this.translated = translated;
         this.language = language;
     }
 }
