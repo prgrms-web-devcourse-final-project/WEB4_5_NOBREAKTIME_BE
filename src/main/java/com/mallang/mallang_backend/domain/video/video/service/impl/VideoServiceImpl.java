@@ -8,17 +8,22 @@ import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProper
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.util.YoutubeAudioExtractor;
+import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

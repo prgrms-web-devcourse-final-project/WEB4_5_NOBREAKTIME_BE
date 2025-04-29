@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.util;
+package com.mallang.mallang_backend.global.util.youtube;
 
 import java.io.IOException;
 
