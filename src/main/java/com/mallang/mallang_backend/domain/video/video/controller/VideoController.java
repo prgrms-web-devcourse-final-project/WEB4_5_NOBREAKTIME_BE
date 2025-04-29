@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.controller;
+package com.mallang.mallang_backend.domain.video.video.controller;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;

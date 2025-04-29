@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.service.impl;
+package com.mallang.mallang_backend.domain.video.video.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 
