@@ -77,6 +77,11 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
+
+	// clova speech api
+	implementation 'org.apache.httpcomponents:httpclient:4.5.12'
+	implementation 'org.apache.httpcomponents:httpmime:4.3.1'
+	implementation 'com.google.code.gson:gson:2.8.5'
 }
 
 tasks.named('test') {

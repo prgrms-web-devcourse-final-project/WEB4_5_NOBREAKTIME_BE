@@ -1,14 +1,17 @@
 package com.mallang.mallang_backend.global.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
 
-    // User Errors
+    /**
+     * 사용자를 찾을 수 없음
+     */
     USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
 
     // Token Errors
@@ -31,6 +34,26 @@ public enum ErrorCode {
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
+    /**
+     * 토큰이 만료됨
+     */
+    TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
+    /**
+     * 오디오 추출 실패
+     */
+    AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    /**
+     * 영상 길이 제한
+     */
+    VIDEO_LENGTH_EXCEED("400-1", "video.length.exceed", HttpStatus.BAD_REQUEST),
+    /**
+     * 영상 조회 실패
+     */
+    VIDEO_RETRIEVAL_FAILED("404-1", "video.retrieval.failed", HttpStatus.NOT_FOUND),
+    /**
+     * 영상 다운로드 경로 생성에 실패
+     */
+    VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
