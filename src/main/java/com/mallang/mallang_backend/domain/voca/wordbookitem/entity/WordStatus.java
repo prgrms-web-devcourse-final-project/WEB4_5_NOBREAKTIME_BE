@@ -2,9 +2,6 @@ package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
 /**
  * 단어의 학습 상태
- * 1일 후
- * 1개월 후
- *
  */
 public enum WordStatus {
     /** 새로운 단어 */

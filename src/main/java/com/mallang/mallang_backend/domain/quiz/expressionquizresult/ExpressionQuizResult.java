@@ -1,10 +1,9 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquizresult;
 
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
-import com.mallang.mallang_backend.domain.sentence.expressions.entity.Expressions;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,13 +26,9 @@ public class ExpressionQuizResult {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "expressions_id", nullable = false)
-    private Expressions expressions;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
-
+    @JoinColumn(name = "ExpressionBook_id", nullable = false)
+    private ExpressionBook ExpressionBook;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expression_quiz_id", nullable = false)
     private ExpressionQuiz expressionQuiz;
@@ -43,7 +38,7 @@ public class ExpressionQuizResult {
     private Expression expression;
 
     @Column(nullable = false)
-    private Integer result;
+    private Boolean isCorrect;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -55,18 +50,16 @@ public class ExpressionQuizResult {
     // 생성 메서드
     @Builder
     public ExpressionQuizResult(
-            Expressions expressions,
-            Member member,
-            Expression expression,
-            ExpressionQuiz expressionQuiz,
-            Integer result,
-            Language language
+        ExpressionBook ExpressionBook,
+        Expression expression,
+        ExpressionQuiz expressionQuiz,
+        Boolean isCorrect,
+        Language language
     ) {
-        this.expressions = expressions;
-        this.member = member;
+        this.ExpressionBook = ExpressionBook;
         this.expression = expression;
         this.expressionQuiz = expressionQuiz;
-        this.result = result;
+        this.isCorrect = isCorrect;
         this.language = language;
     }
 }

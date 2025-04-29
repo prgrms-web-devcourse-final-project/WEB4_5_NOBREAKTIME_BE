@@ -1,6 +1,5 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
-import com.mallang.mallang_backend.domain.video.entity.Video;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,9 +16,8 @@ public class WordbookItem {
     @EmbeddedId
     private WordbookItemId id; // 단어 + 단어장 id 를 복합 키로 사용 -> 하나의 단어장 안에 포함되어있는 여러 단어들
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "video_id", nullable = false)
-    private Video video;
+    @Column(nullable = true, name = "video_id")
+    private Long videoId;
     
     @Column(nullable = false)
     private String description; // 해석
@@ -43,14 +41,14 @@ public class WordbookItem {
         String word,
         String description,
         String originalSentence,
-        Video video
+        Long videoId
     ) {
         this.id = new WordbookItemId(wordbookId, word);
         this.description = description;
         this.originalSentence = originalSentence;
         this.createdAt = LocalDateTime.now();
         this.wordStatus = WordStatus.NEW;
-        this.video = video;
+        this.videoId = videoId;
     }
 
     // 비즈니스 메서드

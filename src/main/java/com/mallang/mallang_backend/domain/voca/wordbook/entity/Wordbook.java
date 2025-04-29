@@ -20,7 +20,7 @@ public class Wordbook {
     private Member member;
 
     @Column(nullable = false)
-    private String wordbookName;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -29,11 +29,11 @@ public class Wordbook {
     @Builder
     public Wordbook(
         Member member,
-        String wordbookName,
+        String name,
         Language language
     ) {
         this.member = member;
-        this.wordbookName = wordbookName;
+        this.name = name;
         this.language = language;
     }
 }

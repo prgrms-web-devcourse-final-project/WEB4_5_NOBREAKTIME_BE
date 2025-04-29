@@ -1,0 +1,26 @@
+services:
+  mallang-spring-server:
+    container_name: mallang-spring-server
+    build: .
+    ports:
+      - 8080:8080
+    depends_on:
+      mallang-mysql:
+        condition: service_healthy
+
+  mallang-mysql:
+    container_name: mallang-mysql
+    image: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mallang#1234
+      MYSQL_DATABASE: mallang
+      TZ: Asia/Seoul
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping" ]
+      interval: 5s
+      retries: 10
