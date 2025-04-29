@@ -2,7 +2,11 @@ package com.mallang.mallang_backend.domain.videohistory.controller;
 
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryService;
+import com.mallang.mallang_backend.global.dto.RsData;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 

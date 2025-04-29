@@ -14,7 +14,7 @@ public class VideoHistoryMapper {
     private final VideoRepository videoRepository;
 
     public VideoHistoryResponse toDto(VideoHistory videoHistory) {
-        Long videoId = videoHistory.getId().getVideoId();
+        String videoId = videoHistory.getId().getVideoId();
         Video video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new IllegalArgumentException("Video not found with id: " + videoId));
 

@@ -17,5 +17,5 @@ public class VideoHistoryId implements Serializable {
     private Long memberId;
 
     @Column(name = "video_id")
-    private Long videoId;
+    private String videoId;
 }
