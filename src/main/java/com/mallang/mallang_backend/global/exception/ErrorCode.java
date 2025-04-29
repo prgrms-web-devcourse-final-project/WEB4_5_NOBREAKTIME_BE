@@ -8,29 +8,18 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ErrorCode {
 
-    /**
-     * 사용자를 찾을 수 없음
-     */
+    // User Errors
     USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
-    /**
-     * 토큰이 만료됨
-     */
+
+    // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
-    /**
-     * 오디오 추출 실패
-     */
+
+    // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
-    /**
-     * 영상 길이 제한
-     */
+
+    // Video Errors
     VIDEO_LENGTH_EXCEED("400-1", "video.length.exceed", HttpStatus.BAD_REQUEST),
-    /**
-     * 영상 조회 실패
-     */
     VIDEO_RETRIEVAL_FAILED("404-1", "video.retrieval.failed", HttpStatus.NOT_FOUND),
-    /**
-     * 영상 다운로드 경로 생성에 실패
-     */
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // GPT Errors
@@ -38,7 +27,7 @@ public enum ErrorCode {
     GPT_API_CALL_FAILED("500-4", "gpt.api.call.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     GPT_RESPONSE_EMPTY("500-5", "gpt.response.empty", HttpStatus.INTERNAL_SERVER_ERROR),
 
-    // Word Errors (추가)
+    // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
