@@ -3,20 +3,24 @@ package com.mallang.mallang_backend.domain.video.service.impl;
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.service.VideoService;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoFilterUtils;
+import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -32,94 +36,64 @@ public class VideoServiceImpl implements VideoService {
 		String language,
 		long maxResults
 	) {
-		// 1) 언어 키 및 기본 설정
-		String langKey = Optional.ofNullable(language).orElse("en").toLowerCase();
-		var defaults = youtubeSearchProperties.getDefaults()
-			.getOrDefault(langKey, youtubeSearchProperties.getDefaults().get("en"));
-		String regionCode   = defaults.getRegion();
-		String defaultQuery = defaults.getQuery();
+		// 검색 컨텍스트 준비
+		SearchContext ctx = buildSearchContext(q, category, language);
+		log.info("context: {}", ctx);
 
-		// 2) 쿼리 > 카테고리 > 기본 검색어
-		String effectiveQuery = (q != null && !q.isBlank()) ? q
-			: (category != null && !category.isBlank() ? category : defaultQuery);
-
-		// 3) ID 목록 조회 using YoutubeService
-		List<String> videoIds;
-		try {
-			videoIds = youtubeService.searchVideoIds(effectiveQuery, regionCode, langKey, maxResults);
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to search video IDs", e);
-		}
-		if (videoIds == null || videoIds.isEmpty()) {
+		// ID 목록 조회
+		List<String> videoIds = fetchVideoIds(ctx, maxResults);
+		if (videoIds.isEmpty()) {
 			return Collections.emptyList();
 		}
 
-		// 4) 상세 비디오 정보 조회
-		List<Video> videoList;
-		try {
-			videoList = youtubeService.fetchVideosByIds(videoIds);
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to fetch video details", e);
-		}
+		// 상세 비디오 조회
+		List<Video> videos = fetchVideoDetails(videoIds);
 
-		// 5) 최종 필터 및 DTO 매핑 (null-safe)
-		return Optional.ofNullable(videoList).orElse(Collections.emptyList()).stream()
-			.filter(v -> v.getStatus() != null && "creativeCommon".equals(v.getStatus().getLicense()))
-			.filter(v -> {
-				var snip = v.getSnippet();
-				return snip != null && langKey.equals(snip.getDefaultAudioLanguage());
-			})
-			.filter(VideoFilterUtils::isDurationLessThanOrEqualTo20Minutes)
-			.map(v -> new VideoResponse(
-				v.getId(),
-				v.getSnippet().getTitle(),
-				v.getSnippet().getDescription(),
-				v.getSnippet().getThumbnails().getMedium().getUrl()
-			))
-			.collect(Collectors.toList());
+		// 필터링, 매핑, 셔플
+		List<VideoResponse> responses = videos.stream()
+			.filter(VideoUtils::isCreativeCommons)
+			.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
+			.filter(VideoUtils::isDurationLessThanOrEqualTo20Minutes)
+			.map(VideoUtils::toVideoResponse)
+			.toList();
+
+		return VideoUtils.shuffleIfDefault(responses, ctx.isDefaultSearch());
+	}
+
+	private SearchContext buildSearchContext(String q, String category, String language) {
+		String langKey = Optional.ofNullable(language)
+			.filter(StringUtils::hasText)
+			.map(String::toLowerCase)
+			.orElse("en");
+
+		var defaults = youtubeSearchProperties.getDefaults()
+			.getOrDefault(langKey, youtubeSearchProperties.getDefaults().get("en"));
+		String region = defaults.getRegion();
+		String query = StringUtils.hasText(q) ? q : defaults.getQuery();
+		boolean isDefault = !StringUtils.hasText(q) && !StringUtils.hasText(category);
+
+		return new SearchContext(query, region, langKey, category, isDefault);
+	}
+
+	private List<String> fetchVideoIds(SearchContext ctx, long maxResults) {
+		try {
+			return youtubeService.searchVideoIds(
+				ctx.getQuery(),
+				ctx.getRegion(),
+				ctx.getLangKey(),
+				ctx.getCategory(),
+				maxResults
+			);
+		} catch (IOException e) {
+			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
+		}
+	}
+
+	private List<Video> fetchVideoDetails(List<String> ids) {
+		try {
+			return youtubeService.fetchVideosByIds(ids);
+		} catch (IOException e) {
+			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
+		}
 	}
 }
-
-// @Override
-    // public List<VideoResponse> getVideosByLanguage(String language, long maxResults) {
-    //     List<VideoResponse> results = new ArrayList<>();
-    //
-    //     try {
-    //         String langKey = language.toLowerCase();
-    //
-    //         // 언어에 맞는 기본 검색어와 지역코드를 가져온다
-    //         VideoSearchProperties.SearchDefault searchDefault = youtubeSearchProperties.getDefaults().get(langKey);
-
-    // String searchQuery = (query == null || query.isBlank())
-    //     ? searchDefault.getQuery()
-    //     : query;
-
-
-    //
-    //         // 검색
-    //         List<String> videoIds = youtubeService.searchVideoIds(
-    //             searchDefault.getQuery(),
-    //             searchDefault.getRegion(),
-    //             langKey,
-    //             maxResults
-    //         );
-    //
-    //         // 상세 조회
-    //         List<Video> videoList = youtubeService.fetchVideosByIds(videoIds);
-    //
-    //         for (Video video : videoList) {
-    //             if (VideoFilterUtils.isDurationLessThanOrEqualTo20Minutes(video)) {
-    //                 results.add(new VideoResponse(
-    //                     video.getId(),
-    //                     video.getSnippet().getTitle(),
-    //                     video.getSnippet().getDescription(),
-    //                     video.getSnippet().getThumbnails().getMedium().getUrl()
-    //                 ));
-    //             }
-    //         }
-    //     } catch (Exception e) {
-    //         e.printStackTrace();
-    //     }
-    //
-    //     return results;
-    // }

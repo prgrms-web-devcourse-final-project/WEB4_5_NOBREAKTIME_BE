@@ -1,12 +1,16 @@
 package com.mallang.mallang_backend.domain.video.dto;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
+@Getter
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VideoResponse {
-    // 프론트에 넘겨줄 유튜브 영상 정보 DTO
     private String videoId;
     private String title;
     private String description;

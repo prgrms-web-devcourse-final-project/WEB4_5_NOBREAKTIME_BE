@@ -23,7 +23,13 @@ public class YoutubeService {
 	private String apiKey;
 
 	// 검색: 키워드 기반으로 videoId만 가져오기
-	public List<String> searchVideoIds(String query, String regionCode, String relevanceLanguage, long maxResults) throws IOException {
+	public List<String> searchVideoIds(
+		String query,
+		String regionCode,
+		String relevanceLanguage,
+		String categoryId,
+		long maxResults
+	) throws IOException {
 		YouTube youtubeService = YouTubeClient.getClient();
 
 		YouTube.Search.List searchRequest = youtubeService.search()
@@ -32,10 +38,17 @@ public class YoutubeService {
 		searchRequest.setQ(query);
 		searchRequest.setType(List.of("video"));
 		searchRequest.setVideoLicense("creativeCommon");
+		searchRequest.setOrder("relevance");
 		searchRequest.setRelevanceLanguage(relevanceLanguage);
 		searchRequest.setRegionCode(regionCode);
+
+		// 카테고리 필터 (존재할 경우)
+		if (categoryId != null && !categoryId.isBlank()) {
+			searchRequest.setVideoCategoryId(categoryId);
+		}
+
 		searchRequest.setMaxResults(maxResults);
-		searchRequest.setVideoDuration("any"); // 모든 길이
+		searchRequest.setVideoDuration("medium"); // 4~20분
 		searchRequest.setKey(apiKey);
 
 		SearchListResponse response = searchRequest.execute();

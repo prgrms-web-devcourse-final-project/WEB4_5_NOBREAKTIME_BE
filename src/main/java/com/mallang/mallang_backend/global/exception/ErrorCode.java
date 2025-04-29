@@ -12,8 +12,11 @@ public enum ErrorCode {
     USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
 
     // Token Errors
-    TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED);
+    TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
 
+    VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
