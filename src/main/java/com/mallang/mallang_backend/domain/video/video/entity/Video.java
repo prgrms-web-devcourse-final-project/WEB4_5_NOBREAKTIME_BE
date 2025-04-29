@@ -14,11 +14,8 @@ public class Video {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_id")
-    private Long id;
-
-    @Column(nullable = false)
-    private String youtubeId;
+    @Column(nullable = false, name = "video_id")
+    private String id;
 
     @Column(nullable = false)
     private String videoTitle;
@@ -35,13 +32,13 @@ public class Video {
 
     @Builder
     public Video(
-        String youtubeId,
+        String id,
         String videoTitle,
         String thumbnailImageUrl,
         String channelTitle,
         Language language
     ) {
-        this.youtubeId = youtubeId;
+        this.id = id;
         this.videoTitle = videoTitle;
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;

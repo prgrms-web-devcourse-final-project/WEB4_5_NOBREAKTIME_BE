@@ -20,7 +20,7 @@ public class VideoHistory {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
-    public VideoHistory(Long memberId, Long videoId) {
-        id = new VideoHistoryId(memberId, videoId);
+    public VideoHistory(Long memberId, String videoId) {
+        this.id = new VideoHistoryId(memberId, videoId);
     }
 }

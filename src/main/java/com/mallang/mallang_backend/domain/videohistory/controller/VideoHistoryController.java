@@ -16,20 +16,33 @@ public class VideoHistoryController {
 
     // 시청 기록 저장
     @PostMapping("/{videoId}")
-    public void save(@PathVariable Long videoId,
-                     @AuthenticationPrincipal(expression = "member.id") Long memberId) {
+    public ResponseEntity<RsData<Void>> save(@PathVariable String videoId, @RequestParam Long memberId) {
         videoHistoryService.save(memberId, videoId);
+        return ResponseEntity.ok(new RsData<>(
+            "",
+            "시청 기록 저장 완료 (memberId: " + memberId + ", videoId: " + videoId + ")"
+        ));
     }
 
     // 최근 시청한 영상 기록 조회 (5개)
     @GetMapping("/videos/summary")
-    public List<VideoHistoryResponse> getRecentVideos(@AuthenticationPrincipal(expression = "member.id") Long memberId) {
-        return videoHistoryService.getRecentHistories(memberId);
+    public ResponseEntity<RsData<List<VideoHistoryResponse>>> getRecentVideos(@RequestParam Long memberId) {
+        List<VideoHistoryResponse> recentHistories = videoHistoryService.getRecentHistories(memberId);
+        return ResponseEntity.ok(new RsData<>(
+            "",
+            "최근 시청 기록 조회 완료",
+            recentHistories
+        ));
     }
 
     // 전체 시청 영상
     @GetMapping("/videos/history")
-    public List<VideoHistoryResponse> getFullHistory(@AuthenticationPrincipal(expression = "member.id") Long memberId) {
-        return videoHistoryService.getAllHistories(memberId);
+    public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(@RequestParam Long memberId) {
+        List<VideoHistoryResponse> allHistories = videoHistoryService.getAllHistories(memberId);
+        return ResponseEntity.ok(new RsData<>(
+            "",
+            "전체 시청 영상 조회 완료",
+            allHistories
+        ));
     }
 }

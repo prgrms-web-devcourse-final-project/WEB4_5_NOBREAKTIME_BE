@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VideoHistoryResponse {
-    private Long videoId;
+    private String videoId;
     private String title;
     private String thumbnailUrl;
     private LocalDateTime createdAt;
