@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.controller;
+package com.mallang.mallang_backend.domain.video.video.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
