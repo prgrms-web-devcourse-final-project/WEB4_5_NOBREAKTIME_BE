@@ -25,6 +25,5 @@ public class VideoController {
         @RequestParam(defaultValue = "10") long maxResults
     ) {
         return videoService.getVideosByLanguage(q, category, language, maxResults);
-        // return videoService.getVideosByLanguage(language, maxResults);
     }
 }

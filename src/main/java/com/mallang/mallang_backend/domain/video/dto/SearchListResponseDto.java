@@ -2,8 +2,6 @@ package com.mallang.mallang_backend.domain.video.dto;
 
 import java.util.List;
 
-import com.google.api.services.youtube.model.PageInfo;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
