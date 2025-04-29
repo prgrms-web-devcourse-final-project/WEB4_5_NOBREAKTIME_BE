@@ -8,7 +8,11 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class TranscriptParserTest {
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+class TranscriptParserImplTest {
+
+	private final TranscriptParserImpl transcriptParserImpl = new TranscriptParserImpl(new ObjectMapper());
 
 	@Test
 	@DisplayName("Clova Speech의 실제 응답을 Transcript 형식으로 변환할 수 있다")
@@ -52,7 +56,7 @@ class TranscriptParserTest {
         }
         """;
 
-		Transcript transcript = TranscriptParser.parseTranscriptJson(json);
+		Transcript transcript = transcriptParserImpl.parseTranscriptJson(json);
 
 		List<TranscriptSegment> segments = transcript.getSegments();
 		assertThat(segments).hasSize(5);

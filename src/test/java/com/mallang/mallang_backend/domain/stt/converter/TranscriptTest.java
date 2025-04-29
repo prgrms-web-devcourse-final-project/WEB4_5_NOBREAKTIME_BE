@@ -8,7 +8,11 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 class TranscriptTest {
+
+	private final TranscriptParserImpl transcriptParserImpl = new TranscriptParserImpl(new ObjectMapper());
 
 	@Test
 	@DisplayName("Transcript 객체로 변환한 Clova Speech 응답을 OpenAI에 사용하기 위한 문자열로 변환할 수 있다")
@@ -52,7 +56,7 @@ class TranscriptTest {
         }
         """;
 
-		Transcript transcript = TranscriptParser.parseTranscriptJson(json);
+		Transcript transcript = transcriptParserImpl.parseTranscriptJson(json);
 
 		List<TranscriptSegment> segments = transcript.getSegments();
 		assertThat(segments).hasSize(5);
