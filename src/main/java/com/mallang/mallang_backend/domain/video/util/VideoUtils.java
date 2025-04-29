@@ -15,7 +15,6 @@ import java.util.Optional;
  * Video 관련 공통 유틸리티 클래스
  */
 public final class VideoUtils {
-	;
 
 	// 인스턴스화 방지
 	private VideoUtils() {}
@@ -48,16 +47,16 @@ public final class VideoUtils {
 	}
 
 	/**
-	 * VideoResponse DTO로 매핑
+	 * VideoResponse DTO로 매핑 (Setter 사용)
 	 */
 	public static VideoResponse toVideoResponse(Video video) {
 		var snip = video.getSnippet();
-		return VideoResponse.builder()
-			.videoId(video.getId())
-			.title(snip.getTitle())
-			.description(snip.getDescription())
-			.thumbnailUrl(snip.getThumbnails().getMedium().getUrl())
-			.build();
+		VideoResponse dto = new VideoResponse();
+		dto.setVideoId(video.getId());
+		dto.setTitle(snip.getTitle());
+		dto.setDescription(snip.getDescription());
+		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
+		return dto;
 	}
 
 	/**
@@ -72,3 +71,4 @@ public final class VideoUtils {
 		return copy;
 	}
 }
+
