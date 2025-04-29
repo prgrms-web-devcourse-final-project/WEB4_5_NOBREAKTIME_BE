@@ -1,8 +1,8 @@
-package com.mallang.mallang_backend.domain.video.service.impl;
+package com.mallang.mallang_backend.domain.video.video.service.impl;
 
 import com.google.api.services.youtube.model.Video;
-import com.mallang.mallang_backend.domain.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.service.VideoService;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;

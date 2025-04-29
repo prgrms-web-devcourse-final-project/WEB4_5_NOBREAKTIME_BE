@@ -2,7 +2,7 @@ package com.mallang.mallang_backend.domain.video.util;
 
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.video.youtube.mapper.DurationMapper;
-import com.mallang.mallang_backend.domain.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import static com.mallang.mallang_backend.global.constants.AppConstants.CC_LICENSE;
 
 import java.time.Duration;

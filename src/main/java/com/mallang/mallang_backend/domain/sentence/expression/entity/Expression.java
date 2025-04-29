@@ -2,7 +2,7 @@ package com.mallang.mallang_backend.domain.sentence.expression.entity;
 
 import java.time.LocalTime;
 
-import com.mallang.mallang_backend.domain.video.entity.Video;
+import com.mallang.mallang_backend.domain.video.video.entity.Video;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

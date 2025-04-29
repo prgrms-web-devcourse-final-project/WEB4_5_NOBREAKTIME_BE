@@ -1,6 +1,5 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
-import com.mallang.mallang_backend.domain.video.entity.Video;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.dto;
+package com.mallang.mallang_backend.domain.video.video.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

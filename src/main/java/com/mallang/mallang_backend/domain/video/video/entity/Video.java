@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.entity;
+package com.mallang.mallang_backend.domain.video.video.entity;
 
 import com.mallang.mallang_backend.global.common.Language;
 import jakarta.persistence.*;

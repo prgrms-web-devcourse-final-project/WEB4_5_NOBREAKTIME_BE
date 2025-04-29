@@ -1,6 +1,6 @@
-package com.mallang.mallang_backend.domain.video.service;
+package com.mallang.mallang_backend.domain.video.video.service;
 
-import com.mallang.mallang_backend.domain.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 
 import java.util.List;
 
