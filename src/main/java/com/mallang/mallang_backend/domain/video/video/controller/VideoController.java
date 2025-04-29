@@ -1,33 +1,32 @@
 package com.mallang.mallang_backend.domain.video.video.controller;
 
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.mallang.mallang_backend.domain.video.service.VideoService;
+import java.util.List;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/video")
 @RequiredArgsConstructor
 public class VideoController {
 
-	@Autowired
-	private final VideoService videoService;
+    private final VideoService videoService;
 
 	/**
 	 * Youtube ID 로 영상을 분석해 원어 자막, 번역 자막, 핵심 단어를 응답하는 메서드
@@ -73,4 +72,14 @@ public class VideoController {
 				.body(null);  // 파일을 찾을 수 없으면 404 반환
 		}
 	}
+
+    @GetMapping("/list")
+    public List<VideoResponse> getVideoList(
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "en") String language,
+        @RequestParam(defaultValue = "10") long maxResults
+    ) {
+        return videoService.getVideosByLanguage(q, category, language, maxResults);
+    }
 }

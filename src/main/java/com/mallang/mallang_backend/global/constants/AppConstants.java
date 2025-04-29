@@ -23,4 +23,8 @@ public class AppConstants {
      * Youtube Video ID 로 전체 URL 을 만들기 위한 Youtbe 영상 Base URL
      */
     public static final String YOUTUBE_VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
+	/**
+	 * Youtube 라이센스 타입
+	 */
+    public static final String CC_LICENSE = "creativeCommon";
 }
