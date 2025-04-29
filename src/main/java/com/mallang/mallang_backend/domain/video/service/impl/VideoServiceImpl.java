@@ -8,31 +8,22 @@ import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProper
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
+import com.mallang.mallang_backend.global.util.YoutubeAudioExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-import com.mallang.mallang_backend.domain.video.service.VideoService;
-import com.mallang.mallang_backend.global.util.YoutubeAudioExtractor;
-
-import lombok.RequiredArgsConstructor;
-
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -40,6 +31,7 @@ public class VideoServiceImpl implements VideoService {
 
 	private final VideoSearchProperties youtubeSearchProperties;
 	private final YoutubeService youtubeService;
+	private final YoutubeAudioExtractor youtubeAudioExtractor;
 
 	@Override
 	public List<VideoResponse> getVideosByLanguage(
@@ -108,9 +100,6 @@ public class VideoServiceImpl implements VideoService {
 			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
 		}
 	}
-public class VideoServiceImpl implements VideoService {
-
-	private final YoutubeAudioExtractor youtubeAudioExtractor;
 
 	@Override
 	public String analyzeVideo(String videoUrl) throws IOException, InterruptedException {
