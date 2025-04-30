@@ -46,6 +46,11 @@ public class WordQuizController {
 		));
 	}
 
+	/**
+	 * 단어장 아이템 대한 퀴즈 결과를 저장합니다.
+	 * @param request 단어장아이템별 퀴즈 결과
+	 * @return 퀴즈 결과 저장 완료
+	 */
 	@PostMapping("/wordbook/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
 		@RequestBody WordQuizResultSaveRequest request
@@ -57,6 +62,25 @@ public class WordQuizController {
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어장 퀴즈 결과 저장 완료"
+		));
+	}
+
+	/**
+	 * 통합 단어장 퀴즈를 요청합니다.
+	 * @return 통합 단어장 퀴즈
+	 */
+	@GetMapping("/total")
+	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
+	) {
+		// TODO: 실제 인증 적용 후 대체
+		Member member = memberRepository.findById(1L).get();
+
+		WordQuizResponse quizResponse = wordQuizService.generateWordbookTotalQuiz(member);
+
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장 퀴즈 문제를 조회했습니다.",
+			quizResponse
 		));
 	}
 

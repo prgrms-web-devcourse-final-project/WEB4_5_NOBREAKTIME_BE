@@ -1,13 +1,16 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
 import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.INDIVIDUAL;
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.TOTAL;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepo
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -32,7 +36,6 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class WordQuizServiceImpl implements WordQuizService {
 
@@ -43,6 +46,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 	private final WordRepository wordRepository;
 	private final WordQuizRepository wordQuizRepository;
 
+	@Transactional
 	@Override
 	public WordQuizResponse generateWordbookQuiz(Long wordbookId, Member member) {
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
@@ -131,5 +135,68 @@ public class WordQuizServiceImpl implements WordQuizService {
 		wordbookItem.updateLearned(true);
 
 		wordQuizResultRepository.save(result);
+	}
+
+	// 통합 퀴즈
+	@Transactional
+	@Override
+	public WordQuizResponse generateWordbookTotalQuiz(Member member) {
+		int goal = member.getWordGoal();
+
+		// 1. 조건에 맞는 단어 조회
+		List<WordbookItem> newWords = wordbookItemRepository.findByMemberAndStatus(member, WordStatus.NEW);
+		List<WordbookItem> reviewWords = wordbookItemRepository.findReviewTargetWords(member, LocalDateTime.now());
+
+		int newCount = newWords.size();
+		int reviewCount = reviewWords.size();
+
+		// 2. 전체 단어 수 부족 시 예외
+		if (newCount + reviewCount < goal) {
+			throw new ServiceException(NOT_ENOUGH_WORDS_FOR_QUIZ);
+		}
+
+		// 3. 우선 비율 계산 (예: 4:6)
+		int newTarget = (int) Math.round(goal * 0.4); // 이상적인 목표
+		int reviewTarget = goal - newTarget; // 이상적인 목표 복습 개수
+
+		// 4. 부족한 항목 재조정
+		if (newCount < newTarget) {
+			reviewTarget += (newTarget - newCount);
+			newTarget = newCount;
+		}
+		if (reviewCount < reviewTarget) {
+			newTarget += (reviewTarget - reviewCount);
+			reviewTarget = reviewCount;
+		}
+
+		// 5. 랜덤 추출
+		Collections.shuffle(newWords);
+		Collections.shuffle(reviewWords);
+
+		List<WordbookItem> selectedNew = newWords.subList(0, newTarget);
+		List<WordbookItem> selectedReview = reviewWords.subList(0, reviewTarget); // 복습
+
+
+		// 6. 문제 리스트 구성
+		List<WordQuizItem> quizItems = Stream.concat(selectedNew.stream(), selectedReview.stream())
+			.map(this::convertToQuizDto)
+			.collect(Collectors.toList());
+
+		Collections.shuffle(quizItems); // 문제 순서도 랜덤하게
+
+		// total word quiz 생성
+		WordQuiz wordQuiz = WordQuiz.builder()
+			.member(member)
+			.quizType(TOTAL)
+			.language(member.getLanguage())
+			.build();
+
+		Long quizId = wordQuizRepository.save(wordQuiz).getId();
+
+		WordQuizResponse response = new WordQuizResponse();
+		response.setId(quizId);
+		response.setQuizItems(quizItems);
+
+		return response;
 	}
 }

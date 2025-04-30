@@ -8,4 +8,6 @@ public interface WordQuizService {
 	WordQuizResponse generateWordbookQuiz(Long wordbookId, Member member);
 
 	void saveWordbookQuizResult(WordQuizResultSaveRequest request, Member member);
+
+	WordQuizResponse generateWordbookTotalQuiz(Member member);
 }
