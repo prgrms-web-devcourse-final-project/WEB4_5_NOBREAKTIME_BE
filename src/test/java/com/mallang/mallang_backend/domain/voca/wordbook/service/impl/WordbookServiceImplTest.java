@@ -7,10 +7,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
@@ -33,6 +31,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -524,26 +523,56 @@ class WordbookServiceImplTest {
 		}
 	}
 
-	@Transactional(readOnly = true)
-	@Override
-	public List<WordResDto> getWordsRandomly(Long wordbookId, Member member) {
-		// 1. 단어장 존재 여부 및 권한 확인
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
-			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+	@Nested
+	@DisplayName("단어장 단어 조회")
+	class getWordbookInWords {
+		@Test
+		@DisplayName("성공 - 단어장 내 단어들을 무작위로 조회한다")
+		void getWordsRandomly_success() {
+			Long wordbookId = 1L;
 
-		// 2. 단어장 아이템 조회
-		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+			Wordbook wordbook = Wordbook.builder().member(savedMember).build();
+			setId(wordbook, wordbookId);
 
-		// 3. 무작위 섞기
-		Collections.shuffle(items);
+			WordbookItem item1 = WordbookItem.builder()
+				.word("apple")
+				.videoId(1L)
+				.subtitleId(1L)
+				.wordbook(wordbook)
+				.build();
 
-		// 4. DTO 변환 후 반환
-		return items.stream()
-			.map(item -> WordResDto.builder()
-				.word(item.getWord())
-				.originalSentence(item.getOriginalSentence())
-				.videoId(item.getVideoId())
-				.build()
-			).collect(Collectors.toList());
+			WordbookItem item2 = WordbookItem.builder()
+				.word("banana")
+				.videoId(1L)
+				.subtitleId(2L)
+				.wordbook(wordbook)
+				.build();
+
+			List<WordbookItem> items = new ArrayList<>(List.of(item1, item2));
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(items);
+
+			List<WordResDto> result = wordbookService.getWordsRandomly(wordbookId, savedMember);
+
+			assertThat(result).hasSize(2);
+			assertThat(result)
+				.extracting("word")
+				.containsExactlyInAnyOrder("apple", "banana");
+		}
+
+		@Test
+		@DisplayName("예외 - 단어장이 존재하지 않거나 권한이 없을 경우 단어장 조회에 실패한다")
+		void getWordsRandomly_wordbookNotFound() {
+			Long wordbookId = 99L;
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.getWordsRandomly(wordbookId, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
+		}
 	}
 }
