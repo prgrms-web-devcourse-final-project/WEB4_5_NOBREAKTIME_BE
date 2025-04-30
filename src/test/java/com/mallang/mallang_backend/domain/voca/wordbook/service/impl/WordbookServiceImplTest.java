@@ -167,13 +167,11 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
 		void createWordbook_failIfNameIsDefault() {
-			// given
 			WordbookCreateRequest request = new WordbookCreateRequest();
 			request.setName("기본");
 
 			savedMember.updateSubscription(Subscription.STANDARD);
 
-			// when & then
 			ServiceException exception = assertThrows(ServiceException.class, () ->
 				wordbookService.createWordbook(request, savedMember)
 			);
@@ -207,7 +205,6 @@ class WordbookServiceImplTest {
 			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
 				.willReturn(Optional.of(savedDefaultWordBook));
 
-			// when & then
 			ServiceException exception = assertThrows(ServiceException.class, () ->
 				wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
 			);
@@ -235,25 +232,20 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("성공 - 추가 단어장을 삭제할 수 있다")
 		void deleteWordbook_success() {
-			// given
 			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
 				.willReturn(Optional.of(savedWordbook));
 
-			// when
 			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember);
 
-			// then
 			then(wordbookRepository).should().delete(savedWordbook);
 		}
 
 		@Test
 		@DisplayName("실패 - 단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
 		void deleteWordbook_notFoundOrForbidden() {
-			// given
 			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
 				.willReturn(Optional.empty());
 
-			// when & then
 			ServiceException exception = assertThrows(ServiceException.class, () ->
 				wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
 			);
@@ -264,11 +256,9 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("실패 - \"기본\" 단어장은 삭제할 수 없다")
 		void deleteWordbook_failIfDefault() {
-			// given
 			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
 				.willReturn(Optional.of(savedDefaultWordBook));
 
-			// when & then
 			ServiceException exception = assertThrows(ServiceException.class, () ->
 				wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
 			);
@@ -277,67 +267,173 @@ class WordbookServiceImplTest {
 		}
 	}
 
-	@Test
-	@DisplayName("단어들을 다른 단어장으로 이동할 수 있다")
-	void moveWords_success() {
-		Long fromId1 = 1L;
-		Long fromId2 = 2L;
-		Long toId = 10L;
+	@Nested
+	@DisplayName("단어장 단어 이동")
+	class MoveWordBook {
+		@Test
+		@DisplayName("성공 - 단어들을 다른 단어장으로 이동할 수 있다")
+		void moveWords_success() {
+			Long fromId1 = 1L;
+			Long fromId2 = 2L;
+			Long toId = 10L;
 
-		// destination 단어장
-		Wordbook toWordbook = Wordbook.builder().member(savedMember).build();
-		setId(toWordbook, toId);
+			// destination 단어장
+			Wordbook toWordbook = Wordbook.builder().member(savedMember).build();
+			setId(toWordbook, toId);
 
-		// source 단어장 1, 2
-		Wordbook fromWordbook1 = Wordbook.builder().member(savedMember).build();
-		Wordbook fromWordbook2 = Wordbook.builder().member(savedMember).build();
-		setId(fromWordbook1, fromId1);
-		setId(fromWordbook2, fromId2);
+			// source 단어장 1, 2
+			Wordbook fromWordbook1 = Wordbook.builder().member(savedMember).build();
+			Wordbook fromWordbook2 = Wordbook.builder().member(savedMember).build();
+			setId(fromWordbook1, fromId1);
+			setId(fromWordbook2, fromId2);
 
-		// 기존 WordbookItem
-		WordbookItem item1 = WordbookItem.builder()
-			.wordbook(fromWordbook1)
-			.word("apple")
-			.subtitleId(100L)
-			.videoId(200L)
-			.build();
-		setId(item1, 1000L);
+			// 기존 WordbookItem
+			WordbookItem item1 = WordbookItem.builder()
+				.wordbook(fromWordbook1)
+				.word("apple")
+				.subtitleId(100L)
+				.videoId(200L)
+				.build();
+			setId(item1, 1000L);
 
-		WordbookItem item2 = WordbookItem.builder()
-			.wordbook(fromWordbook2)
-			.word("banana")
-			.subtitleId(110L)
-			.videoId(210L)
-			.build();
-		setId(item2, 1001L);
+			WordbookItem item2 = WordbookItem.builder()
+				.wordbook(fromWordbook2)
+				.word("banana")
+				.subtitleId(110L)
+				.videoId(210L)
+				.build();
+			setId(item2, 1001L);
 
-		// 이동 요청 DTO
-		WordMoveRequest request = new WordMoveRequest();
-		request.setDestinationWordbookId(toId);
+			// 이동 요청 DTO
+			WordMoveRequest request = new WordMoveRequest();
+			request.setDestinationWordbookId(toId);
 
-		WordMoveItem wordMoveItem1 = new WordMoveItem();
-		wordMoveItem1.setFromWordbookId(fromId1);
-		wordMoveItem1.setWord("apple");
+			WordMoveItem wordMoveItem1 = new WordMoveItem();
+			wordMoveItem1.setFromWordbookId(fromId1);
+			wordMoveItem1.setWord("apple");
 
-		WordMoveItem wordMoveItem2 = new WordMoveItem();
-		wordMoveItem2.setFromWordbookId(fromId2);
-		wordMoveItem2.setWord("banana");
+			WordMoveItem wordMoveItem2 = new WordMoveItem();
+			wordMoveItem2.setFromWordbookId(fromId2);
+			wordMoveItem2.setWord("banana");
 
-		request.setWords(List.of(
-			wordMoveItem1,
-			wordMoveItem2
-		));
+			request.setWords(List.of(
+				wordMoveItem1,
+				wordMoveItem2
+			));
 
-		given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
-		given(wordbookRepository.findByIdAndMember(fromId1, savedMember)).willReturn(Optional.of(fromWordbook1));
-		given(wordbookRepository.findByIdAndMember(fromId2, savedMember)).willReturn(Optional.of(fromWordbook2));
+			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
+			given(wordbookRepository.findByIdAndMember(fromId1, savedMember)).willReturn(Optional.of(fromWordbook1));
+			given(wordbookRepository.findByIdAndMember(fromId2, savedMember)).willReturn(Optional.of(fromWordbook2));
 
-		given(wordbookItemRepository.findByWordbookAndWord(fromWordbook1, "apple")).willReturn(Optional.of(item1));
-		given(wordbookItemRepository.findByWordbookAndWord(fromWordbook2, "banana")).willReturn(Optional.of(item2));
+			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook1, "apple")).willReturn(Optional.of(item1));
+			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook2, "banana")).willReturn(Optional.of(item2));
 
-		wordbookService.moveWords(request, savedMember);
+			wordbookService.moveWords(request, savedMember);
 
-		then(wordbookItemRepository).should(times(2)).delete(any(WordbookItem.class));
-		then(wordbookItemRepository).should(times(2)).save(any(WordbookItem.class));
+			then(wordbookItemRepository).should(times(2)).delete(any(WordbookItem.class));
+			then(wordbookItemRepository).should(times(2)).save(any(WordbookItem.class));
+		}
+
+		@Test
+		@DisplayName("실패 - 목적지 단어장이 존재하지 않거나 접근 권한이 없으면 예외 발생")
+		void moveWords_destinationWordbookNotFoundOrForbidden() {
+			Long toId = 999L;
+
+			WordMoveRequest request = new WordMoveRequest();
+			request.setDestinationWordbookId(toId);
+			request.setWords(List.of()); // words는 비워도 됨
+
+			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.moveWords(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+		}
+
+		@Test
+		@DisplayName("실패 - 출발 단어장이 존재하지 않거나 접근 권한이 없으면 예외 발생")
+		void moveWords_sourceWordbookNotFoundOrForbidden() {
+			Long fromId = 1L;
+			Long toId = 10L;
+
+			WordMoveRequest request = new WordMoveRequest();
+			request.setDestinationWordbookId(toId);
+
+			WordMoveItem wordMoveItem = new WordMoveItem();
+			wordMoveItem.setFromWordbookId(fromId);
+			wordMoveItem.setWord("apple");
+
+			request.setWords(List.of(wordMoveItem));
+
+			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(
+				Optional.of(Wordbook.builder().member(savedMember).build()));
+			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.moveWords(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+		}
+
+		@Test
+		@DisplayName("실패 - 출발 단어장에 단어가 없으면 예외 발생")
+		void moveWords_wordNotFoundInSourceWordbook() {
+			Long fromId = 1L;
+			Long toId = 10L;
+
+			Wordbook fromWordbook = Wordbook.builder().member(savedMember).build();
+			setId(fromWordbook, fromId);
+
+			Wordbook toWordbook = Wordbook.builder().member(savedMember).build();
+			setId(toWordbook, toId);
+
+			WordMoveRequest request = new WordMoveRequest();
+			request.setDestinationWordbookId(toId);
+
+			WordMoveItem wordMoveItem = new WordMoveItem();
+			wordMoveItem.setFromWordbookId(fromId);
+			wordMoveItem.setWord("apple");
+
+			request.setWords(List.of(wordMoveItem));
+
+			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
+			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.of(fromWordbook));
+			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook, "apple")).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.moveWords(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("wordbook.item.not.found");
+		}
+
+		@Test
+		@DisplayName("성공 - 같은 단어장으로 이동하려는 경우 무시하고 넘어간다")
+		void moveWords_sameWordbookIgnored() {
+			Long fromId = 1L;
+
+			Wordbook wordbook = Wordbook.builder().member(savedMember).build();
+			setId(wordbook, fromId);
+
+			WordMoveRequest request = new WordMoveRequest();
+			request.setDestinationWordbookId(fromId); // 동일
+
+			WordMoveItem wordMoveItem = new WordMoveItem();
+			wordMoveItem.setFromWordbookId(fromId);
+			wordMoveItem.setWord("apple");
+
+			request.setWords(List.of(wordMoveItem));
+
+			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.of(wordbook));
+
+			wordbookService.moveWords(request, savedMember);
+
+			// delete, save 동작하지 않음
+			then(wordbookItemRepository).should(never()).delete(any());
+			then(wordbookItemRepository).should(never()).save(any());
+		}
 	}
 }
