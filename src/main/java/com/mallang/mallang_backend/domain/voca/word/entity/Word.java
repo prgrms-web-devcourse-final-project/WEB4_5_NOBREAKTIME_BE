@@ -34,6 +34,12 @@ public class Word {
     @Column(nullable = false)
     private Difficulty difficulty;  // 난이도
 
+    @Column(nullable = false)
+    private String exampleSentence;
+
+    @Column(nullable = false)
+    private String translatedSentence;
+
     @Builder
     public Word(
         String word,
