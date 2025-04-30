@@ -1,17 +1,20 @@
-package com.mallang.mallang_backend.domain.video.video.dto;
+package com.mallang.mallang_backend.domain.videohistory.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VideoResponse {
+public class VideoHistoryResponse {
     private String videoId;
     private String title;
-    private String description;
     private String thumbnailUrl;
+    private LocalDateTime createdAt;
 }
+

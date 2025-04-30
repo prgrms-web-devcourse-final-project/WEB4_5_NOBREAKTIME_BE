@@ -10,15 +10,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Video {
+public class Videos {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_id")
-    private Long id;
-
-    @Column(nullable = false)
-    private String youtubeId;
+    @Column(nullable = false, name = "video_id")
+    private String id;
 
     @Column(nullable = false)
     private String videoTitle;
@@ -34,17 +30,32 @@ public class Video {
     private Language language;
 
     @Builder
-    public Video(
-        String youtubeId,
+    private Videos(
+        String id,
         String videoTitle,
         String thumbnailImageUrl,
         String channelTitle,
         Language language
     ) {
-        this.youtubeId = youtubeId;
+        this.id = id;
         this.videoTitle = videoTitle;
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;
         this.language = language;
+    }
+
+    /**
+     * 필드 변경 시 사용하는 메서드
+     */
+    public void updateTitleAndThumbnail(
+        String newTitle,
+        String newThumbnailUrl,
+        String newChannelTitle,
+        Language newLanguage
+    ) {
+        this.videoTitle = newTitle;
+        this.thumbnailImageUrl = newThumbnailUrl;
+        this.channelTitle = newChannelTitle;
+        this.language = newLanguage;
     }
 }
