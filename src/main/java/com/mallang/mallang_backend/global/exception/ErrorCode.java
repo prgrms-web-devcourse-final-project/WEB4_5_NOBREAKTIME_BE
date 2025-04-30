@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -34,7 +33,13 @@ public enum ErrorCode {
 
     // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
-    WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Wordbook Errors
+    // 해당 단어장이 없거나 권한이 없음
+    NO_WORDBOOK_EXIST_OR_FORBIDDEN("403-1", "no.wordbook.exist.or.forbidden", HttpStatus.FORBIDDEN),
+    // 단어장을 만들 권한이 없음(구독 플랜)
+    NO_WORDBOOK_CREATE_PERMISSION("403-1", "wordbook.create.failed", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

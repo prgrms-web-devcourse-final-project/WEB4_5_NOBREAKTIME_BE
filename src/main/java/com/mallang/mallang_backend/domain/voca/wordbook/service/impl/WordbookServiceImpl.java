@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -11,11 +13,13 @@ import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -65,7 +69,7 @@ public class WordbookServiceImpl implements WordbookService {
 	public void addWordCustom(Long wordbookId, AddWordRequest request, Member member) {
 		// 단어장 존재 + 권한 체크
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
-			.orElseThrow(() -> new IllegalArgumentException("해당 단어장이 존재하지 않거나 권한이 없습니다."));
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		String word = request.getWord();
 		// 단어가 이미 있는지 확인하고 없으면 저장
@@ -88,5 +92,21 @@ public class WordbookServiceImpl implements WordbookService {
 
 			wordbookItemRepository.save(item);
 		}
+	}
+
+	@Transactional
+	@Override
+	public Long createWordbook(WordbookCreateRequest request, Member member) {
+		if (!member.canCreateWordBook()) {
+			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
+		}
+
+		Wordbook wordbook = Wordbook.builder()
+			.member(member)
+			.name(request.getName())
+			.language(member.getLanguage())
+			.build();
+
+		return wordbookRepository.save(wordbook).getId();
 	}
 }

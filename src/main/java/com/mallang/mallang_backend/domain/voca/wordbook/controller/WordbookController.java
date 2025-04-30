@@ -11,6 +11,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 
@@ -64,6 +65,26 @@ public class WordbookController {
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어장에 단어가 추가되었습니다."
+		));
+	}
+
+	/**
+	 * 추가 단어장 생성
+	 * @param request
+	 * @return
+	 */
+	@PostMapping
+	public ResponseEntity<RsData<Long>> createWordbook(
+		@RequestBody WordbookCreateRequest request
+	) {
+		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
+		Member member = memberRepository.findById(1L).get();
+
+		Long id = wordbookService.createWordbook(request, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장에 단어가 추가되었습니다.",
+			id
 		));
 	}
 }
