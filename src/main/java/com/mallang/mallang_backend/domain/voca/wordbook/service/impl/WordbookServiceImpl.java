@@ -145,7 +145,8 @@ public class WordbookServiceImpl implements WordbookService {
 		if (DEFAULT_WORDBOOK_NAME.equals(wordbook.getName())) {
 			throw new ServiceException(WORDBOOK_DELETE_DEFAULT_FORBIDDEN);
 		}
-
+		// 추가 단어장 삭제 시 들어있는 단어 아이템들도 삭제
+		wordbookItemRepository.deleteAllByWordbookId(wordbookId);
 		wordbookRepository.delete(wordbook);
 	}
 

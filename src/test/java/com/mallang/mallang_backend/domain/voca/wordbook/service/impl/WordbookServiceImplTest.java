@@ -247,6 +247,41 @@ class WordbookServiceImplTest {
 		}
 
 		@Test
+		@DisplayName("성공 - 추가 단어장 삭제 시 해당 단어 아이템도 함께 삭제된다")
+		void deleteWordbookAlsoDeletesItems() {
+			Long wordbookId = 1L;
+
+			Wordbook wordbook = Wordbook.builder()
+				.name("MyWordbook")
+				.member(savedMember)
+				.build();
+			setId(wordbook, wordbookId);
+
+			WordbookItem item1 = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("apple")
+				.subtitleId(101L)
+				.videoId("ABC1")
+				.build();
+			setId(item1, 1001L);
+
+			WordbookItem item2 = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("banana")
+				.subtitleId(102L)
+				.videoId("ABC2")
+				.build();
+			setId(item2, 1002L);
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+
+			wordbookService.deleteWordbook(wordbookId, savedMember);
+
+			then(wordbookItemRepository).should().deleteAllByWordbookId(wordbookId);
+			then(wordbookRepository).should().delete(wordbook);
+		}
+
+		@Test
 		@DisplayName("실패 - 단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
 		void deleteWordbook_notFoundOrForbidden() {
 			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))

@@ -12,4 +12,5 @@ public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long
 	Optional<WordbookItem> findByWordbookIdAndWord(long wordbookId, String word);
 	Optional<WordbookItem> findByWordbookAndWord(Wordbook wordbook, String word);
 	List<WordbookItem> findAllByWordbook(Wordbook wordbook);
+	void deleteAllByWordbookId(Long wordbookId);
 }

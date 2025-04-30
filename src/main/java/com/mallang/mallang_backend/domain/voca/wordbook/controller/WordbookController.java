@@ -23,6 +23,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateReques
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
+import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.dto.RsData;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class WordbookController {
 
 	private final WordbookService wordbookService;
 	private final MemberRepository memberRepository;
+	private final WordbookItemRepository wordbookItemRepository;
 
 	/**
 	 * 영상 학습 중 1개 이상의 단어를 추가합니다.
