@@ -1,10 +1,10 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.controller;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,6 +43,20 @@ public class WordQuizController {
 			"200-1",
 			"단어장 퀴즈 문제를 조회했습니다.",
 			quizResponse
+		));
+	}
+
+	@PostMapping("/wordbook/result")
+	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
+		@RequestBody WordQuizResultSaveRequest request
+	) {
+		// TODO: 인증 후 member 교체
+		Member member = memberRepository.findById(1L).orElseThrow();
+
+		wordQuizService.saveWordbookQuizResult(request, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장 퀴즈 결과 저장 완료"
 		));
 	}
 

@@ -51,7 +51,9 @@ public enum ErrorCode {
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
 
     // Word Quiz Errors
-    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST);
+    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST),
+    // 퀴즈를 찾을 수 없음
+    WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
