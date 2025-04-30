@@ -13,6 +13,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -125,6 +126,25 @@ public class WordbookController {
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어장이 삭제되었습니다."
+		));
+	}
+
+	/**
+	 * 단어장의 단어를 다른 단어장으로 이동합니다.
+	 * @param request 목적지 단어장 ID, 기존 단어장 ID, 단어
+	 * @return 단어 이동 성공 응답
+	 */
+	@PatchMapping("/words/move")
+	public ResponseEntity<RsData<Void>> moveWords(
+		@RequestBody WordMoveRequest request
+	) {
+		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
+		Member member = memberRepository.findById(1L).get();
+
+		wordbookService.moveWords(request, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어들이 이동되었습니다."
 		));
 	}
 }

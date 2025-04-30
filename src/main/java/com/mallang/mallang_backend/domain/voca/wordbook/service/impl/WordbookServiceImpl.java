@@ -14,6 +14,8 @@ import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -139,5 +141,43 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 
 		wordbookRepository.delete(wordbook);
+	}
+
+	// 단어장의 단어 이동
+	@Transactional
+	@Override
+	public void moveWords(WordMoveRequest request, Member member) {
+		Long toId = request.getDestinationWordbookId();
+
+		Wordbook toWordbook = wordbookRepository.findByIdAndMember(toId, member)
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+		for (WordMoveItem item : request.getWords()) {
+			// 같은 단어장으로 이동하려고 하면 통과
+			if (toId.equals(item.getFromWordbookId())) {
+				continue;
+			}
+
+			// 기존 단어장 조회
+			Wordbook fromWordbook = wordbookRepository.findByIdAndMember(item.getFromWordbookId(), member)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+			// 기존 WordbookItem 찾기
+			WordbookItem existingItem = wordbookItemRepository.findByWordbookAndWord(fromWordbook, item.getWord())
+				.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
+
+			// 기존 데이터 삭제
+			wordbookItemRepository.delete(existingItem);
+
+			// 새 WordbookItem 생성 후 저장 (id 새로 생성됨)
+			WordbookItem movedItem = WordbookItem.builder()
+				.wordbook(toWordbook)
+				.word(existingItem.getWord())
+				.subtitleId(existingItem.getSubtitleId())
+				.videoId(existingItem.getVideoId())
+				.build();
+
+			wordbookItemRepository.save(movedItem);
+		}
 	}
 }
