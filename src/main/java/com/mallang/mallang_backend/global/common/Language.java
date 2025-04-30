@@ -8,7 +8,6 @@ import lombok.Getter;
 public enum Language {
     ENGLISH("en-US"),
     JAPANESE("ja"),
-    CHINESE("zh-cn"),
     NONE("none");
 
     private final String languageCode;
@@ -18,7 +17,7 @@ public enum Language {
     }
 
     /**
-     * API가 주는 code(ex: "en", "en-US", "ja", "zh", "zh-CN")를
+     * API가 주는 code(ex: "en", "en-US", "ja")를
      * 이 enum에 매핑하여 반환, 없을 경우 NONE 리턴
      */
     public static Language fromCode(String code) {

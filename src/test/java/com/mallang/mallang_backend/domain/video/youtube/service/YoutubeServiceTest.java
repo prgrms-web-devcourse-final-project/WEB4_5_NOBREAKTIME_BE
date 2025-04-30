@@ -54,6 +54,7 @@ class YoutubeServiceTest {
 	}
 
 	@Test
+	@DisplayName("searchVideoIds(): IOException 발생 시 재시도 후 성공해야 한다")
 	void retryUntilSuccess() throws IOException {
 		// IOException → retry → retry → 성공 (빈 리스트)
 		List<String> ids = youtubeService.searchVideoIds("foo", "KR", "ko", null, 5);

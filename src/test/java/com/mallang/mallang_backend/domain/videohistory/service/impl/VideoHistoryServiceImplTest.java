@@ -11,6 +11,7 @@ import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.mapper.VideoHistoryMapper;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -72,6 +73,7 @@ class VideoHistoryServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("save() 호출 시 VideoHistory 엔티티가 정상 저장된다")
 	void save_shouldPersistHistory() {
 		// given: video meta stub
 		VideoDetailResponse detail = new VideoDetailResponse(VIDEO_ID1, TITLE1, "desc", THUMB1, "chan", null);
@@ -91,6 +93,7 @@ class VideoHistoryServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("getRecentHistories() 호출 시 최신 5개 기록을 DTO로 변환하여 반환한다")
 	void getRecentHistories_shouldReturnMappedDtos() {
 		// given
 		VideoHistory e1 = VideoHistory.builder().member(member).videos(videos1).build();
@@ -111,6 +114,7 @@ class VideoHistoryServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("getAllHistories() 호출 시 전체 기록을 DTO로 변환하여 반환한다")
 	void getAllHistories_shouldReturnMappedDtos() {
 		// given
 		VideoHistory e1 = VideoHistory.builder().member(member).videos(videos1).build();

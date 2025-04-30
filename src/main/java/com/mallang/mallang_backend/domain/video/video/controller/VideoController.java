@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.AUDIO_DOWNLOAD_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @RestController
 @RequestMapping("/api/v1/video")
@@ -51,19 +52,16 @@ public class VideoController {
 	 */
 	@GetMapping("/uploaded/{fileName}")
 	public ResponseEntity<RsData<byte[]>> getAudioFile(@PathVariable String fileName) {
-		byte[] audioData;
 		try {
-			audioData = videoService.getAudioFile(fileName);
+			byte[] audioData = videoService.getAudioFile(fileName);
+			return ResponseEntity.ok(new RsData<>(
+				"200",
+				"오디오 파일 제공",
+				audioData
+			));
 		} catch (IOException e) {
-			return ResponseEntity.status(404)
-				.body(new RsData<>("404-NOT_FOUND", "파일을 찾을 수 없습니다."));
+			throw new ServiceException(AUDIO_FILE_NOT_FOUND);
 		}
-
-		return ResponseEntity.ok(new RsData<>(
-			"200",
-			"오디오 파일 제공",
-			audioData
-		));
 	}
 
 	/**

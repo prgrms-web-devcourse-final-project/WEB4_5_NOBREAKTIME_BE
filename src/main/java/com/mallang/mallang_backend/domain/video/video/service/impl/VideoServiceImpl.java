@@ -4,7 +4,6 @@ import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.factory.VideosFactory;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
@@ -31,13 +30,13 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class VideoServiceImpl implements VideoService {
 
 	private final VideoRepository videoRepository;
 	private final VideoSearchProperties youtubeSearchProperties;
 	private final YoutubeService youtubeService;
-	private final VideosFactory videosFactory;
 	private final YoutubeAudioExtractor youtubeAudioExtractor;
 
 	@Override
@@ -77,7 +76,6 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	@Override
-	@Transactional(readOnly = true)
 	public VideoDetailResponse fetchDetail(String videoId) {
 		try {
 			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
@@ -139,7 +137,7 @@ public class VideoServiceImpl implements VideoService {
 			);
 		} else {
 			// 없으면 새로 저장
-			Videos entity = videosFactory.fromDto(dto);
+			Videos entity = VideoDetailResponse.toEntity(dto);
 			videoRepository.save(entity);
 		}
 	}
