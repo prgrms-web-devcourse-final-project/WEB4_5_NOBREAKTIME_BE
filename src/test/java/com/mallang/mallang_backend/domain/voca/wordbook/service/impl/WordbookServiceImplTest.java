@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +26,8 @@ import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
@@ -105,7 +108,7 @@ class WordbookServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("단어장에 단어를 추가할 수 있다")
+	@DisplayName("단어장에 커스텀 단어를 추가할 수 있다")
 	void addWordCustom() {
 		AddWordRequest dto = new AddWordRequest();
 		dto.setWord("apple");
@@ -161,7 +164,7 @@ class WordbookServiceImplTest {
 				wordbookService.createWordbook(request, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.failed");
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_CREATE_PERMISSION.getMessageCode());
 		}
 
 		@Test
@@ -176,7 +179,7 @@ class WordbookServiceImplTest {
 				wordbookService.createWordbook(request, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.default.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_CREATE_DEFAULT_FORBIDDEN.getMessageCode());
 		}
 	}
 
@@ -209,7 +212,7 @@ class WordbookServiceImplTest {
 				wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("wordbook.rename.default.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_RENAME_DEFAULT_FORBIDDEN.getMessageCode());
 		}
 
 		@Test
@@ -222,7 +225,7 @@ class WordbookServiceImplTest {
 			ServiceException exception = assertThrows(ServiceException.class, () ->
 				wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember)
 			);
-			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
 	}
 
@@ -250,7 +253,7 @@ class WordbookServiceImplTest {
 				wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
 
 		@Test
@@ -263,7 +266,7 @@ class WordbookServiceImplTest {
 				wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("wordbook.delete.default.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_DELETE_DEFAULT_FORBIDDEN.getMessageCode());
 		}
 	}
 
@@ -349,7 +352,7 @@ class WordbookServiceImplTest {
 				wordbookService.moveWords(request, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
 
 		@Test
@@ -375,7 +378,7 @@ class WordbookServiceImplTest {
 				wordbookService.moveWords(request, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
 
 		@Test
@@ -407,7 +410,7 @@ class WordbookServiceImplTest {
 				wordbookService.moveWords(request, savedMember)
 			);
 
-			assertThat(exception.getMessageCode()).isEqualTo("wordbook.item.not.found");
+			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
 		}
 
 		@Test
@@ -434,6 +437,87 @@ class WordbookServiceImplTest {
 			// delete, save 동작하지 않음
 			then(wordbookItemRepository).should(never()).delete(any());
 			then(wordbookItemRepository).should(never()).save(any());
+		}
+	}
+
+	@Nested
+	@DisplayName("단어장에서 단어 삭제")
+	class DeleteWordBookInWord {
+		@Test
+		@DisplayName("성공 - 단어장에 존재하는 단어를 삭제할 수 있다")
+		void deleteWords_success() {
+			Long wordbookId = 1L;
+
+			Wordbook wordbook = Wordbook.builder().member(savedMember).build();
+			setId(wordbook, wordbookId);
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("apple")
+				.subtitleId(100L)
+				.videoId(200L)
+				.build();
+			setId(item, 1000L);
+
+			WordDeleteItem deleteItem = new WordDeleteItem();
+			deleteItem.setWordbookId(wordbookId);
+			deleteItem.setWord("apple");
+
+			WordDeleteRequest request = new WordDeleteRequest();
+			request.setWords(List.of(deleteItem));
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookItemRepository.findByWordbookAndWord(wordbook, "apple")).willReturn(Optional.of(item));
+
+			wordbookService.deleteWords(request, savedMember);
+
+			then(wordbookItemRepository).should().delete(item);
+		}
+
+		@Test
+		@DisplayName("예외 - 단어장이 존재하지 않거나 권한이 없을 경우 예외 발생")
+		void deleteWords_wordbookNotFound() {
+			Long wordbookId = 1L;
+
+			WordDeleteItem deleteItem = new WordDeleteItem();
+			deleteItem.setWordbookId(wordbookId);
+			deleteItem.setWord("apple");
+
+			WordDeleteRequest request = new WordDeleteRequest();
+			request.setWords(List.of(deleteItem));
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.deleteWords(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
+		}
+
+		@Test
+		@DisplayName("예외 - 단어장이 존재하지만 해당 단어가 없을 경우 예외 발생")
+		void deleteWords_wordNotFound() {
+			Long wordbookId = 1L;
+
+			Wordbook wordbook = Wordbook.builder().member(savedMember).build();
+			setId(wordbook, wordbookId);
+
+			WordDeleteItem deleteItem = new WordDeleteItem();
+			deleteItem.setWordbookId(wordbookId);
+			deleteItem.setWord("apple");
+
+			WordDeleteRequest request = new WordDeleteRequest();
+			request.setWords(List.of(deleteItem));
+
+			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookItemRepository.findByWordbookAndWord(wordbook, "apple")).willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.deleteWords(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
 		}
 	}
 }
