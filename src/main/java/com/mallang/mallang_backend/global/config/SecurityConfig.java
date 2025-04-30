@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 "/api/v1/video/**",
                                 "/api/v1/wordbooks/**"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        // .anyRequest().authenticated()
+                    .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(
