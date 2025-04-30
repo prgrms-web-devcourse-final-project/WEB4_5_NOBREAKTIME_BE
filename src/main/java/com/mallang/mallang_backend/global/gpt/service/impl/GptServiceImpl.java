@@ -27,8 +27,19 @@ public class GptServiceImpl implements GptService {
         String prompt = buildPromptforSearchWord(word);  // 프롬포트 생성
         OpenAiResponse response = callGptApi(prompt);   // GPT API 호출
         validateResponse(response); // 응답 검증
+        return callAndValidate(buildPromptforSearchWord(word)); // 호출
+    }
 
-        // 결과 반환
+    // 결과 반환
+    /**
+     * OpenAI API 호출 및 응답 유효성 검증 후 응답 내용 반환
+     *
+     * @param prompt 생성된 프롬프트 문자열
+     * @return GPT 응답의 content 필드 값
+     */
+    private String callAndValidate(String prompt) {
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
         String content = response.getChoices().get(0).getMessage().getContent();
         log.debug("[GptService] GPT 응답 결과:\n{}", content);
 
@@ -42,19 +53,22 @@ public class GptServiceImpl implements GptService {
         return String.format("""
             당신은 영어 단어를 분석하는 도우미입니다.
             사용자가 단어 하나를 입력하면, 그 단어가 가질 수 있는 모든 품사와 해석을 제시하세요.
-
+            
             각 항목은 다음 형식으로 출력하세요:
             {품사} | {해석} | {1~5 숫자}
-
+            
             예시:
-            형용사 | 가벼운 | 1
-            명사 | 빛 | 1
-
+            형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.
+            명사 | 빛 | 1 | The light was too bright. | 빛이 너무 밝았다.
+            
             조건:
             - 난이도는 1, 2, 3, 4, 5 중 하나입니다. (1 = 가장 쉬움, 5 = 가장 어려움)
+            - 난이도는 1(가장 쉬움)부터 5(가장 어려움)까지의 숫자로 표시하세요.
             - 품사와 해석은 반드시 한국어로 작성하세요.
+            - 예문은 해당 품사로 쓰인 실제 문장을 포함하세요.
+            - 예문의 한국어 번역도 반드시 포함하세요.
             - 추가적인 설명 없이 위 형식으로만 출력하세요.
-
+            
             입력된 단어: %s
             """, word);
     }
@@ -97,7 +111,7 @@ public class GptServiceImpl implements GptService {
     private OpenAiRequest buildRequestBody(String prompt) {
         return new OpenAiRequest(
                 "gpt-4o",
-                new Message[] { new Message("user", prompt) }
+                new Message[]{new Message("user", prompt)}
         );
     }
 }
