@@ -213,4 +213,48 @@ class WordbookServiceImplTest {
 
 		assertThat(exception.getMessageCode()).isEqualTo("wordbook.rename.default.forbidden");
 	}
+
+	@Test
+	@DisplayName("추가 단어장을 삭제할 수 있다")
+	void deleteWordbook_success() {
+		// given
+		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			.willReturn(Optional.of(savedWordbook));
+
+		// when
+		wordbookService.deleteWordbook(savedWordbook.getId(), savedMember);
+
+		// then
+		then(wordbookRepository).should().delete(savedWordbook);
+	}
+
+	@Test
+	@DisplayName("단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
+	void deleteWordbook_notFoundOrForbidden() {
+		// given
+		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			.willReturn(Optional.empty());
+
+		// when & then
+		ServiceException exception = assertThrows(ServiceException.class, () ->
+			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
+		);
+
+		assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+	}
+
+	@Test
+	@DisplayName("\"기본\" 단어장은 삭제할 수 없다")
+	void deleteWordbook_failIfDefault() {
+		// given
+		given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+			.willReturn(Optional.of(savedDefaultWordBook));
+
+		// when & then
+		ServiceException exception = assertThrows(ServiceException.class, () ->
+			wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
+		);
+
+		assertThat(exception.getMessageCode()).isEqualTo("wordbook.delete.default.forbidden");
+	}
 }
