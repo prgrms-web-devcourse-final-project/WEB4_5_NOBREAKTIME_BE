@@ -52,6 +52,9 @@ public class WordbookItem {
     @Column(nullable = false)
     private LocalDateTime lastStudiedAt = createdAt; // 기본 값, 이후에 추가로 공부하면 변경
 
+    @Column(nullable = false)
+    private boolean isLearned = false;
+
     @Builder
     public WordbookItem(
         Wordbook wordbook,
@@ -69,5 +72,9 @@ public class WordbookItem {
     public void updateStatus(WordStatus status) {
         this.wordStatus = status;
         this.lastStudiedAt = LocalDateTime.now();
+    }
+
+    public void updateLearned(boolean isLearned) {
+        this.isLearned = isLearned;
     }
 }
