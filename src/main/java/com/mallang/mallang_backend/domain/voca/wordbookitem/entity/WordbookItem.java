@@ -37,7 +37,7 @@ public class WordbookItem {
     private String word;
 
     @Column(nullable = true, name = "video_id")
-    private Long videoId;
+    private String videoId;
     
     @Column(nullable = true, name = "subtitle_id")
     private Long subtitleId; // 해석
@@ -57,7 +57,7 @@ public class WordbookItem {
         Wordbook wordbook,
         String word,
         Long subtitleId,
-        Long videoId
+        String videoId
     ) {
         this.wordbook = wordbook;
         this.word = word;

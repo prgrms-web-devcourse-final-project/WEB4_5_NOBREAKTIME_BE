@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class WordResDto {
 	private String word;
-	private Long videoId;
+	private String videoId;
 	private Long subtitleId;
 	private LocalDateTime createdAt;
 }

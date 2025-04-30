@@ -8,5 +8,5 @@ import lombok.Setter;
 public class AddWordToWordbookRequest {
 	private String word;
 	private Long subtitleId;
-	private Long videoId;
+	private String videoId;
 }

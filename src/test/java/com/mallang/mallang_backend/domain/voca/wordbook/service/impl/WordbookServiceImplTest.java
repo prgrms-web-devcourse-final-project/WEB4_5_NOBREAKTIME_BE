@@ -92,7 +92,7 @@ class WordbookServiceImplTest {
 	void addWords() {
 		AddWordToWordbookRequest dto = new AddWordToWordbookRequest();
 		dto.setWord("apple");
-		dto.setVideoId(10L);
+		dto.setVideoId("ABCDE");
 		dto.setSubtitleId(20L);
 
 		AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
@@ -297,7 +297,7 @@ class WordbookServiceImplTest {
 				.wordbook(fromWordbook1)
 				.word("apple")
 				.subtitleId(100L)
-				.videoId(200L)
+				.videoId("ABCDE")
 				.build();
 			setId(item1, 1000L);
 
@@ -305,7 +305,7 @@ class WordbookServiceImplTest {
 				.wordbook(fromWordbook2)
 				.word("banana")
 				.subtitleId(110L)
-				.videoId(210L)
+				.videoId("BBBBB")
 				.build();
 			setId(item2, 1001L);
 
@@ -457,7 +457,7 @@ class WordbookServiceImplTest {
 				.wordbook(wordbook)
 				.word("apple")
 				.subtitleId(100L)
-				.videoId(200L)
+				.videoId("ABCDE")
 				.build();
 			setId(item, 1000L);
 
@@ -536,14 +536,14 @@ class WordbookServiceImplTest {
 
 			WordbookItem item1 = WordbookItem.builder()
 				.word("apple")
-				.videoId(1L)
+				.videoId("ABCDE")
 				.subtitleId(1L)
 				.wordbook(wordbook)
 				.build();
 
 			WordbookItem item2 = WordbookItem.builder()
 				.word("banana")
-				.videoId(1L)
+				.videoId("BBBBB")
 				.subtitleId(2L)
 				.wordbook(wordbook)
 				.build();
