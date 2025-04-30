@@ -5,9 +5,10 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_IS
 import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItemDto;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
+import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizResult;
+import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
@@ -33,6 +39,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.util.ReflectionTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class WordQuizServiceImplTest {
@@ -47,25 +54,31 @@ public class WordQuizServiceImplTest {
 	private WordRepository wordRepository;
 
 	@Mock
+	private WordQuizRepository wordQuizRepository;
+
+	@Mock
 	private WordbookItemRepository wordbookItemRepository;
 
 	@Mock
 	private SubtitleRepository subtitleRepository;
 
+	@Mock
+	private WordQuizResultRepository wordQuizResultRepository;
+
+	private Member savedMember;
+
+	@BeforeEach
+	void setUp() {
+		// Member
+		savedMember = Member.builder()
+			.language(Language.ENGLISH)
+			.build();
+		setId(savedMember, 1L);
+	}
+
 	@Nested
 	@DisplayName("단어장 퀴즈 생성")
 	class GenerateWordbookQuizTest {
-
-		private Member savedMember;
-
-		@BeforeEach
-		void setUp() {
-			// Member
-			savedMember = Member.builder()
-				.language(Language.ENGLISH)
-				.build();
-			setId(savedMember, 1L);
-		}
 
 		@Test
 		@DisplayName("성공 - 자막 기반 단어와 커스텀 단어가 혼합된 퀴즈를 생성할 수 있다")
@@ -74,6 +87,7 @@ public class WordQuizServiceImplTest {
 
 			Wordbook wordbook = Wordbook.builder()
 				.member(savedMember)
+				.language(Language.ENGLISH)
 				.build();
 			setId(wordbook, wordbookId);
 
@@ -104,18 +118,22 @@ public class WordQuizServiceImplTest {
 			setId(subtitle, 200L );
 
 			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
-			given(wordbookItemRepository.findAllByWordbook(wordbook))
-				.willReturn(new ArrayList<>(List.of(customItem, subtitleItem)));
-
+			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(List.of(customItem, subtitleItem));
 			given(wordRepository.findByWord("apple")).willReturn(List.of(customWord));
 			given(subtitleRepository.findById(200L)).willReturn(Optional.of(subtitle));
+			given(wordQuizRepository.save(any())).willAnswer(invocation -> {
+				WordQuiz quiz = invocation.getArgument(0);
+				setId(quiz, 999L);
+				return quiz;
+			});
 
-			List<WordQuizItemDto> quizList = wordQuizService.generateWordbookQuiz(wordbookId, savedMember);
+			WordQuizResponse response = wordQuizService.generateWordbookQuiz(wordbookId, savedMember);
 
-			assertThat(quizList).hasSize(2);
-			assertThat(quizList).extracting("word").containsExactlyInAnyOrder("apple", "banana");
-			assertThat(quizList).extracting("original").contains("This is an apple.", "I like bananas.");
-			assertThat(quizList).extracting("translated").contains("이것은 사과입니다.", "나는 바나나를 좋아해.");
+			assertThat(response.getId()).isEqualTo(999L);
+			assertThat(response.getQuizItems()).hasSize(2);
+			assertThat(response.getQuizItems()).extracting("word").containsExactlyInAnyOrder("apple", "banana");
+			assertThat(response.getQuizItems()).extracting("original").contains("This is an apple.", "I like bananas.");
+			assertThat(response.getQuizItems()).extracting("translated").contains("이것은 사과입니다.", "나는 바나나를 좋아해.");
 		}
 
 		@Test
@@ -149,4 +167,36 @@ public class WordQuizServiceImplTest {
 		}
 	}
 
+	@Test
+	@DisplayName("성공 - 퀴즈 결과 저장, 학습 시간 반영 및 단어 학습 표시")
+	void saveWordbookQuizResult_success() {
+		Long wordbookItemId = 10L;
+		Long quizId = 20L;
+		Long learningTime = 5000L;
+
+		WordbookItem wordbookItem = WordbookItem.builder()
+			.word("test")
+			.build();
+		ReflectionTestUtil.setId(wordbookItem, wordbookItemId);
+
+		WordQuiz wordQuiz = WordQuiz.builder()
+			.member(savedMember)
+			.language(Language.ENGLISH)
+			.build();
+		ReflectionTestUtil.setId(wordQuiz, quizId);
+
+		WordQuizResultSaveRequest request = new WordQuizResultSaveRequest();
+		request.setQuizId(quizId);
+		request.setWordbookItemId(wordbookItemId);
+		request.setIsCorrect(true);
+		request.setLearningTime(learningTime);
+
+		given(wordbookItemRepository.findById(wordbookItemId)).willReturn(Optional.of(wordbookItem));
+		given(wordQuizRepository.findById(quizId)).willReturn(Optional.of(wordQuiz));
+
+		wordQuizService.saveWordbookQuizResult(request, savedMember);
+
+		verify(wordQuizResultRepository).save(any(WordQuizResult.class));
+		assertThat(wordbookItem.isLearned()).isTrue();
+	}
 }
