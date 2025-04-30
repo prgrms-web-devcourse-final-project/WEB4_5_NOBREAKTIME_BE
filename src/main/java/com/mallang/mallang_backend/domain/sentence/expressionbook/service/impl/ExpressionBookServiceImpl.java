@@ -39,14 +39,14 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         String description = request.getDescription();
         LocalTime subtitleAt = request.getSubtitleAt();
 
-        // 1. 표현북 조회
+        // 표현북 조회
         ExpressionBook expressionBook = expressionBookRepository.findById(expressionbookId)
                 .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
 
-        // 2. 표현 조회 또는 생성
+        // 표현 조회 또는 생성
         Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
 
-        // 3. 표현함에 연결 여부 확인 후 저장
+        // 표현함에 연결 여부 확인 후 저장
         ExpressionBookItemId itemId = new ExpressionBookItemId(expression.getId(), expressionBook.getId());
         if (!expressionBookItemRepository.existsById(itemId)) {
             expressionBookItemRepository.save(new ExpressionBookItem(itemId.getExpressionId(), itemId.getExpressionBookId()));
