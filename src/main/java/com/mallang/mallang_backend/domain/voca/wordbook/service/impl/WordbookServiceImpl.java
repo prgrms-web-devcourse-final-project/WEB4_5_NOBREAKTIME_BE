@@ -22,6 +22,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -223,5 +224,18 @@ public class WordbookServiceImpl implements WordbookService {
 					item.getCreatedAt()
 				)
 			).collect(Collectors.toList());
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<WordbookResponse> getWordbooks(Member member) {
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
+
+		return wordbooks.stream()
+			.map(w -> new WordbookResponse(
+				w.getId(),
+				w.getName(),
+				w.getLanguage()
+			)).toList();
 	}
 }

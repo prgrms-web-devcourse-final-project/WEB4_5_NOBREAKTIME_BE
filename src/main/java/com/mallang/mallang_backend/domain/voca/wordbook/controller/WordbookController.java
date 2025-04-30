@@ -21,6 +21,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 
@@ -189,6 +190,23 @@ public class WordbookController {
 			"200-1",
 			"단어 목록이 조회되었습니다.",
 			words
+		));
+	}
+
+	/**
+	 * 사용자의 단어장 목록 조회
+	 * @return 단어장 리스트
+	 */
+	@GetMapping
+	public ResponseEntity<RsData<List<WordbookResponse>>> getWordbooks() {
+		// 추후 인증 필터 적용 시 로그인 사용자로 교체
+		Member member = memberRepository.findById(1L).get();
+
+		List<WordbookResponse> wordbooks = wordbookService.getWordbooks(member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장 목록 조회에 성공했습니다.",
+			wordbooks
 		));
 	}
 }

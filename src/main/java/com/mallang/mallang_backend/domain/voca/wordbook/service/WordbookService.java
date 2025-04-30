@@ -9,6 +9,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 
 public interface WordbookService {
 	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member);
@@ -26,4 +27,6 @@ public interface WordbookService {
 	void deleteWords(WordDeleteRequest request, Member member);
 
 	List<WordResponse> getWordsRandomly(Long wordbookId, Member member);
+
+	List<WordbookResponse> getWordbooks(Member member);
 }
