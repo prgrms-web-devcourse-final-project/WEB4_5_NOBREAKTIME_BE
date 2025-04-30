@@ -43,7 +43,9 @@ public enum ErrorCode {
     // 기본 댠어장과 동일한 이름의 단어장을 생성 실패
     WORDBOOK_CREATE_DEFAULT_FORBIDDEN("403-1", "wordbook.create.default.forbidden", HttpStatus.FORBIDDEN),
     // 기본 단어장과 동일한 이름의 단어장으로 이름 변경 실패 또는 기본 단어장 이름 변경 실패
-    WORDBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "wordbook.rename.default.forbidden", HttpStatus.FORBIDDEN);
+    WORDBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "wordbook.rename.default.forbidden", HttpStatus.FORBIDDEN),
+    // 기본 단어장은 삭제할 수 없음
+    WORDBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "wordbook.delete.default.forbidden", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

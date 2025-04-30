@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,7 +74,7 @@ public class WordbookController {
 	/**
 	 * 추가 단어장 생성
 	 * @param request 추가할 단어장 이름
-	 * @return
+	 * @return 생성 성공 응답, 생성된 단어장 ID
 	 */
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
@@ -93,7 +94,7 @@ public class WordbookController {
 	/**
 	 * 단어장 이름 변경
 	 * @param request 변경할 이름
-	 * @return
+	 * @return 변경 성공 응답
 	 */
 	@PatchMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> renameWordbook(
@@ -107,6 +108,23 @@ public class WordbookController {
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어장의 이름이 변경되었습니다."
+		));
+	}
+
+	/**
+	 * 추가 단어장 삭제
+	 * @param wordbookId 삭제할 단어장 ID
+	 * @return 삭제 성공 응답
+	 */
+	@DeleteMapping("/{wordbookId}")
+	public ResponseEntity<RsData<Void>> deleteWordbook(@PathVariable Long wordbookId) {
+		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
+		Member member = memberRepository.findById(1L).get();
+
+		wordbookService.deleteWordbook(wordbookId, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장이 삭제되었습니다."
 		));
 	}
 }

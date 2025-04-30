@@ -33,6 +33,7 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordRepository wordRepository;
 	private final WordbookItemRepository wordbookItemRepository;
 
+	// 단어장에 단어 추가
 	@Transactional
 	@Override
 	public void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member) {
@@ -64,7 +65,7 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
-	// 커스텀 단어 추가
+	// 단어장에 커스텀 단어 추가
 	@Transactional
 	@Override
 	public void addWordCustom(Long wordbookId, AddWordRequest request, Member member) {
@@ -95,7 +96,7 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
-	// 단어장 생성
+	// 추가 단어장 생성
 	@Transactional
 	@Override
 	public Long createWordbook(WordbookCreateRequest request, Member member) {
@@ -116,7 +117,7 @@ public class WordbookServiceImpl implements WordbookService {
 		return wordbookRepository.save(wordbook).getId();
 	}
 
-	// 단어장 이름 변경
+	// 추가 단어장 이름 변경
 	@Transactional
 	@Override
 	public void renameWordbook(Long wordbookId, String name, Member member) {
@@ -124,5 +125,19 @@ public class WordbookServiceImpl implements WordbookService {
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		wordbook.updateName(name);
+	}
+
+	// 추가 단어장 삭제
+	@Transactional
+	@Override
+	public void deleteWordbook(Long wordbookId, Member member) {
+		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+		if (DEFAULT_WORDBOOK_NAME.equals(wordbook.getName())) {
+			throw new ServiceException(WORDBOOK_DELETE_DEFAULT_FORBIDDEN);
+		}
+
+		wordbookRepository.delete(wordbook);
 	}
 }

@@ -10,4 +10,5 @@ public interface WordbookService {
 	void addWordCustom(Long wordbookId, AddWordRequest request, Member member);
 	Long createWordbook(WordbookCreateRequest request, Member member);
 	void renameWordbook(Long wordbookId, String name, Member member);
+	void deleteWordbook(Long wordbookId, Member member);
 }
