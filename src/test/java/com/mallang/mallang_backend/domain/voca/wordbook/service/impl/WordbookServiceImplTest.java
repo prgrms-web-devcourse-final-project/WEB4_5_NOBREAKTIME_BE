@@ -31,7 +31,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -553,7 +553,7 @@ class WordbookServiceImplTest {
 			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
 			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(items);
 
-			List<WordResDto> result = wordbookService.getWordsRandomly(wordbookId, savedMember);
+			List<WordResponse> result = wordbookService.getWordsRandomly(wordbookId, savedMember);
 
 			assertThat(result).hasSize(2);
 			assertThat(result)

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class WordResDto {
+public class WordResponse {
 	private String word;
 	private String videoId;
 	private Long subtitleId;

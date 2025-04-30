@@ -20,7 +20,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -204,7 +204,7 @@ public class WordbookServiceImpl implements WordbookService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<WordResDto> getWordsRandomly(Long wordbookId, Member member) {
+	public List<WordResponse> getWordsRandomly(Long wordbookId, Member member) {
 		// 단어장 존재 여부 및 권한 확인
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
@@ -216,7 +216,7 @@ public class WordbookServiceImpl implements WordbookService {
 		Collections.shuffle(items);
 
 		return items.stream()
-			.map(item -> new WordResDto(
+			.map(item -> new WordResponse(
 					item.getWord(),
 					item.getVideoId(),
 					item.getSubtitleId(),

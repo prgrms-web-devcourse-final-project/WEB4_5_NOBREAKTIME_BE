@@ -18,7 +18,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -178,13 +178,13 @@ public class WordbookController {
 	 * @return 단어장의 단어들 리스트
 	 */
 	@GetMapping("/{wordbookId}/words")
-	public ResponseEntity<RsData<List<WordResDto>>> getWords(
+	public ResponseEntity<RsData<List<WordResponse>>> getWords(
 		@PathVariable Long wordbookId
 	) {
 		// 추후 인증 필터 적용 후 로그인한 회원으로 변경
 		Member member = memberRepository.findById(1L).get();
 
-		List<WordResDto> words = wordbookService.getWordsRandomly(wordbookId, member);
+		List<WordResponse> words = wordbookService.getWordsRandomly(wordbookId, member);
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어 목록이 조회되었습니다.",
