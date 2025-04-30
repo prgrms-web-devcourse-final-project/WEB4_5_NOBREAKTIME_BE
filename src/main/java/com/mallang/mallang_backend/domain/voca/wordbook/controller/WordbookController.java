@@ -1,7 +1,10 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +18,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -165,6 +169,26 @@ public class WordbookController {
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어들이 삭제되었습니다."
+		));
+	}
+
+	/**
+	 * 단어장의 단어들을 조회한다. 단어의 순서는 무작위로 섞인다.
+	 * @param wordbookId 단어장 ID
+	 * @return 단어장의 단어들 리스트
+	 */
+	@GetMapping("/{wordbookId}/words")
+	public ResponseEntity<RsData<List<WordResDto>>> getWords(
+		@PathVariable Long wordbookId
+	) {
+		// 추후 인증 필터 적용 후 로그인한 회원으로 변경
+		Member member = memberRepository.findById(1L).get();
+
+		List<WordResDto> words = wordbookService.getWordsRandomly(wordbookId, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어 목록이 조회되었습니다.",
+			words
 		));
 	}
 }

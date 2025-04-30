@@ -1,10 +1,13 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service;
 
+import java.util.List;
+
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 
 public interface WordbookService {
@@ -21,4 +24,6 @@ public interface WordbookService {
 	void moveWords(WordMoveRequest request, Member member);
 
 	void deleteWords(WordDeleteRequest request, Member member);
+
+	List<WordResDto> getWordsRandomly(Long wordbookId, Member member);
 }

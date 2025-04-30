@@ -7,8 +7,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
@@ -519,5 +522,28 @@ class WordbookServiceImplTest {
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
 		}
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<WordResDto> getWordsRandomly(Long wordbookId, Member member) {
+		// 1. 단어장 존재 여부 및 권한 확인
+		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+		// 2. 단어장 아이템 조회
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+
+		// 3. 무작위 섞기
+		Collections.shuffle(items);
+
+		// 4. DTO 변환 후 반환
+		return items.stream()
+			.map(item -> WordResDto.builder()
+				.word(item.getWord())
+				.originalSentence(item.getOriginalSentence())
+				.videoId(item.getVideoId())
+				.build()
+			).collect(Collectors.toList());
 	}
 }

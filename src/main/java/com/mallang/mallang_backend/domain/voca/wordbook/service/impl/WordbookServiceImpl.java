@@ -3,7 +3,9 @@ package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResDto;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -197,5 +200,28 @@ public class WordbookServiceImpl implements WordbookService {
 
 			wordbookItemRepository.delete(itemToDelete);
 		}
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<WordResDto> getWordsRandomly(Long wordbookId, Member member) {
+		// 단어장 존재 여부 및 권한 확인
+		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+		// 단어장 아이템 조회
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+
+		// 무작위 순서로 섞기
+		Collections.shuffle(items);
+
+		return items.stream()
+			.map(item -> new WordResDto(
+					item.getWord(),
+					item.getVideoId(),
+					item.getSubtitleId(),
+					item.getCreatedAt()
+				)
+			).collect(Collectors.toList());
 	}
 }
