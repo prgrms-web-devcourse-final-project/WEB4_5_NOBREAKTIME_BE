@@ -28,16 +28,26 @@ public class Word {
     @Column(nullable = false)
     private Difficulty difficulty;  // 난이도
 
+    @Column(nullable = false)
+    private String exampleSentence; // 예문
+
+    @Column(nullable = false)
+    private String translatedSentence;  // 예문 번역
+
     @Builder
     public Word(
         String word,
         String pos,
         String meaning,
-        Difficulty difficulty
+        Difficulty difficulty,
+        String exampleSentence,
+        String translatedSentence
     ) {
         this.word = word;
         this.pos = pos;
         this.meaning = meaning;
         this.difficulty = difficulty;
+        this.exampleSentence = exampleSentence;
+        this.translatedSentence = translatedSentence;
     }
 }
