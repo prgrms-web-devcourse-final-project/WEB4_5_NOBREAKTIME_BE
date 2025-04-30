@@ -1,5 +1,11 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.mapper.VideoHistoryMapper;
@@ -12,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -24,6 +31,15 @@ class VideoHistoryServiceImplTest {
 
 	@Mock
 	private VideoHistoryMapper mapper;
+
+	@Mock
+	private VideoService videoService;
+
+	@Mock
+	private MemberRepository memberRepository;
+
+	@Mock
+	private VideoRepository videoRepository;
 
 	@InjectMocks
 	private VideoHistoryServiceImpl service;
@@ -39,39 +55,48 @@ class VideoHistoryServiceImplTest {
 	private final String TITLE2 = "Second Video";
 	private final String THUMB2 = "http://img/second.jpg";
 
+	private Member member;
+	private Videos videos1;
+	private Videos videos2;
 	private VideoHistoryResponse dto1;
 	private VideoHistoryResponse dto2;
 
 	@BeforeEach
 	void setUp() {
-		LocalDateTime now1 = LocalDateTime.of(2025, 4, 29, 10, 0);
-		LocalDateTime now2 = LocalDateTime.of(2025, 4, 28, 9, 30);
+		member = mock(Member.class);
+		videos1 = mock(Videos.class);
+		videos2 = mock(Videos.class);
 
-		dto1 = new VideoHistoryResponse(VIDEO_ID1, TITLE1, THUMB1, now1);
-		dto2 = new VideoHistoryResponse(VIDEO_ID2, TITLE2, THUMB2, now2);
+		dto1 = new VideoHistoryResponse(VIDEO_ID1, TITLE1, THUMB1, LocalDateTime.of(2025, 4, 29, 10, 0));
+		dto2 = new VideoHistoryResponse(VIDEO_ID2, TITLE2, THUMB2, LocalDateTime.of(2025, 4, 28, 9, 30));
 	}
 
 	@Test
 	void save_shouldPersistHistory() {
+		// given: video meta stub
+		VideoDetailResponse detail = new VideoDetailResponse(VIDEO_ID1, TITLE1, "desc", THUMB1, "chan", null);
+		given(videoService.getVideoDetail(VIDEO_ID1)).willReturn(detail);
+		given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
+		given(videoRepository.findById(VIDEO_ID1)).willReturn(Optional.of(videos1));
+
 		// when
 		service.save(MEMBER_ID, VIDEO_ID1);
 
-		// then: repository.save() 호출과 전달된 엔티티 검사
+		// then: captured entity
 		then(repository).should().save(historyCaptor.capture());
 		VideoHistory saved = historyCaptor.getValue();
-		assertThat(saved.getId().getMemberId()).isEqualTo(MEMBER_ID);
-		assertThat(saved.getId().getVideoId()).isEqualTo(VIDEO_ID1);
+		assertThat(saved.getMember()).isEqualTo(member);
+		assertThat(saved.getVideos()).isEqualTo(videos1);
 		assertThat(saved.getCreatedAt()).isNotNull();
 	}
 
 	@Test
 	void getRecentHistories_shouldReturnMappedDtos() {
-		// given: 엔티티 생성 (createdAt은 매핑에 쓰이지 않으므로 값은 상관없음)
-		VideoHistory e1 = VideoHistory.builder().memberId(MEMBER_ID).videoId(VIDEO_ID1).build();
-		VideoHistory e2 = VideoHistory.builder().memberId(MEMBER_ID).videoId(VIDEO_ID2).build();
-
-		given(repository.findTop5ByIdMemberIdOrderByCreatedAtDesc(MEMBER_ID))
-			.willReturn(List.of(e1, e2));
+		// given
+		VideoHistory e1 = VideoHistory.builder().member(member).videos(videos1).build();
+		VideoHistory e2 = VideoHistory.builder().member(member).videos(videos2).build();
+		given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
+		given(repository.findTop5ByMemberOrderByCreatedAtDesc(member)).willReturn(List.of(e1, e2));
 		given(mapper.toDto(e1)).willReturn(dto1);
 		given(mapper.toDto(e2)).willReturn(dto2);
 
@@ -80,7 +105,7 @@ class VideoHistoryServiceImplTest {
 
 		// then
 		assertThat(result).containsExactly(dto1, dto2);
-		then(repository).should().findTop5ByIdMemberIdOrderByCreatedAtDesc(MEMBER_ID);
+		then(repository).should().findTop5ByMemberOrderByCreatedAtDesc(member);
 		then(mapper).should(times(1)).toDto(e1);
 		then(mapper).should(times(1)).toDto(e2);
 	}
@@ -88,11 +113,10 @@ class VideoHistoryServiceImplTest {
 	@Test
 	void getAllHistories_shouldReturnMappedDtos() {
 		// given
-		VideoHistory e1 = VideoHistory.builder().memberId(MEMBER_ID).videoId(VIDEO_ID1).build();
-		VideoHistory e2 = VideoHistory.builder().memberId(MEMBER_ID).videoId(VIDEO_ID2).build();
-
-		given(repository.findAllByIdMemberIdOrderByCreatedAtDesc(MEMBER_ID))
-			.willReturn(List.of(e2, e1));
+		VideoHistory e1 = VideoHistory.builder().member(member).videos(videos1).build();
+		VideoHistory e2 = VideoHistory.builder().member(member).videos(videos2).build();
+		given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
+		given(repository.findAllByMemberOrderByCreatedAtDesc(member)).willReturn(List.of(e2, e1));
 		given(mapper.toDto(e2)).willReturn(dto2);
 		given(mapper.toDto(e1)).willReturn(dto1);
 
@@ -101,7 +125,7 @@ class VideoHistoryServiceImplTest {
 
 		// then
 		assertThat(result).containsExactly(dto2, dto1);
-		then(repository).should().findAllByIdMemberIdOrderByCreatedAtDesc(MEMBER_ID);
+		then(repository).should().findAllByMemberOrderByCreatedAtDesc(member);
 		then(mapper).should(times(1)).toDto(e2);
 		then(mapper).should(times(1)).toDto(e1);
 	}

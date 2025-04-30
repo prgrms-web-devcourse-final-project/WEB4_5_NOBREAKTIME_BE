@@ -7,7 +7,6 @@ import com.mallang.mallang_backend.global.dto.RsData;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class VideoHistoryController {
     public ResponseEntity<RsData<Void>> save(@PathVariable String videoId, @RequestParam Long memberId) {
         videoHistoryService.save(memberId, videoId);
         return ResponseEntity.ok(new RsData<>(
-            "",
+            "200",
             "시청 기록 저장 완료 (memberId: " + memberId + ", videoId: " + videoId + ")"
         ));
     }
@@ -33,7 +32,7 @@ public class VideoHistoryController {
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getRecentVideos(@RequestParam Long memberId) {
         List<VideoHistoryResponse> recentHistories = videoHistoryService.getRecentHistories(memberId);
         return ResponseEntity.ok(new RsData<>(
-            "",
+            "200",
             "최근 시청 기록 조회 완료",
             recentHistories
         ));
@@ -44,7 +43,7 @@ public class VideoHistoryController {
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(@RequestParam Long memberId) {
         List<VideoHistoryResponse> allHistories = videoHistoryService.getAllHistories(memberId);
         return ResponseEntity.ok(new RsData<>(
-            "",
+            "200",
             "전체 시청 영상 조회 완료",
             allHistories
         ));

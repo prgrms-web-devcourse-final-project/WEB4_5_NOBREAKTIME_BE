@@ -1,12 +1,15 @@
 package com.mallang.mallang_backend.domain.videohistory.repository;
 
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
-import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistoryId;
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 
-public interface VideoHistoryRepository extends JpaRepository<VideoHistory, VideoHistoryId> {
-    List<VideoHistory> findTop5ByIdMemberIdOrderByCreatedAtDesc(Long memberId);
-    List<VideoHistory> findAllByIdMemberIdOrderByCreatedAtDesc(Long memberId);
+public interface VideoHistoryRepository extends JpaRepository<VideoHistory, Long> {
+
+    // 최근 5개
+    List<VideoHistory> findTop5ByMemberOrderByCreatedAtDesc(Member member);
+
+    // 전체 조회
+    List<VideoHistory> findAllByMemberOrderByCreatedAtDesc(Member member);
 }

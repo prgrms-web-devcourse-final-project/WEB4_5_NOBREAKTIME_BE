@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/h2-console/**",
                                 "/api/v1/video/**"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        // .anyRequest().authenticated()
+                    .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(

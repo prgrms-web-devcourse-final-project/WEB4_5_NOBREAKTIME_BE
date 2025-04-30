@@ -1,28 +1,23 @@
 package com.mallang.mallang_backend.domain.videohistory.mapper;
 
-import com.mallang.mallang_backend.domain.video.video.entity.Video;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class VideoHistoryMapper {
 
-    private final VideoRepository videoRepository;
-
+    /**
+     * VideoHistory 엔티티를 DTO로 변환
+     * 연관된 Video 엔티티에서 직접 데이터 추출
+     */
     public VideoHistoryResponse toDto(VideoHistory videoHistory) {
-        String videoId = videoHistory.getId().getVideoId();
-        Video video = videoRepository.findById(videoId)
-                .orElseThrow(() -> new IllegalArgumentException("Video not found with id: " + videoId));
-
+        var video = videoHistory.getVideos();
         return new VideoHistoryResponse(
-                videoId,
-                video.getVideoTitle(),
-                video.getThumbnailImageUrl(),
-                videoHistory.getCreatedAt()
+            video.getId(),
+            video.getVideoTitle(),
+            video.getThumbnailImageUrl(),
+            videoHistory.getCreatedAt()
         );
     }
 }
