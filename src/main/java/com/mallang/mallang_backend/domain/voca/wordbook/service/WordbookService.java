@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.voca.wordbook.service;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 
@@ -18,4 +19,6 @@ public interface WordbookService {
 	void deleteWordbook(Long wordbookId, Member member);
 
 	void moveWords(WordMoveRequest request, Member member);
+
+	void deleteWords(WordDeleteRequest request, Member member);
 }

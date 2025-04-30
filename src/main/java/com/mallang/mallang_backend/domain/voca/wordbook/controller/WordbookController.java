@@ -151,6 +151,8 @@ public class WordbookController {
 
 	/**
 	 * 단어장 내 단어 일괄 삭제
+	 * @param request 삭제할 단어들의 단어장 ID, 단어
+	 * @return 삭제 성공 응답
 	 */
 	@PostMapping("/words/delete")
 	public ResponseEntity<RsData<Void>> deleteWords(

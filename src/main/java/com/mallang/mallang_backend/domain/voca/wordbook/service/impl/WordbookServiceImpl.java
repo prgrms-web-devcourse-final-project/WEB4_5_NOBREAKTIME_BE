@@ -14,6 +14,8 @@ import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
@@ -178,6 +180,22 @@ public class WordbookServiceImpl implements WordbookService {
 				.build();
 
 			wordbookItemRepository.save(movedItem);
+		}
+	}
+
+	@Transactional
+	@Override
+	public void deleteWords(WordDeleteRequest request, Member member) {
+		for (WordDeleteItem item : request.getWords()) {
+			// 단어장 조회 및 권한 체크
+			Wordbook wordbook = wordbookRepository.findByIdAndMember(item.getWordbookId(), member)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+			// WordbookItem 조회
+			WordbookItem itemToDelete = wordbookItemRepository.findByWordbookAndWord(wordbook, item.getWord())
+				.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
+
+			wordbookItemRepository.delete(itemToDelete);
 		}
 	}
 }
