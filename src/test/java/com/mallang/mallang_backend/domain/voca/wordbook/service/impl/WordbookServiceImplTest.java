@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
@@ -74,6 +75,21 @@ class WordbookServiceImplTest {
 		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(Optional.empty());
 
 		wordbookService.addWords(savedWordbook.getId(), request, savedMember);
+
+		then(wordbookItemRepository).should().save(any(WordbookItem.class));
+	}
+
+	@Test
+	@DisplayName("단어장에 단어를 추가할 수 있다")
+	void addWordCustom() {
+		AddWordRequest dto = new AddWordRequest();
+		dto.setWord("apple");
+
+		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(Optional.of(savedWordbook));
+		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
+		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(Optional.empty());
+
+		wordbookService.addWordCustom(savedWordbook.getId(), dto, savedMember);
 
 		then(wordbookItemRepository).should().save(any(WordbookItem.class));
 	}
