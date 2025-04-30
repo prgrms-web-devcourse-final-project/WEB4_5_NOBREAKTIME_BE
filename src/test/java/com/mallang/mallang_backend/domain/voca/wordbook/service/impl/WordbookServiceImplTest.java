@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -90,9 +91,11 @@ class WordbookServiceImplTest {
 		AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
 		request.setWords(List.of(dto));
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(Optional.of(savedWordbook));
+		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(
+			Optional.of(savedWordbook));
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
-		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(Optional.empty());
+		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
+			Optional.empty());
 
 		wordbookService.addWords(savedWordbook.getId(), request, savedMember);
 
@@ -107,154 +110,168 @@ class WordbookServiceImplTest {
 
 		savedMember.updateSubscription(Subscription.STANDARD);
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(Optional.of(savedWordbook));
+		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(
+			Optional.of(savedWordbook));
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
-		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(Optional.empty());
+		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
+			Optional.empty());
 
 		wordbookService.addWordCustom(savedWordbook.getId(), dto, savedMember);
 
 		then(wordbookItemRepository).should().save(any(WordbookItem.class));
 	}
 
-	@Test
-	@DisplayName("추가 단어장을 생성할 수 있다")
-	void createWordbook_success() {
-		WordbookCreateRequest request = new WordbookCreateRequest();
-		request.setName("My Vocab");
+	@Nested
+	@DisplayName("추가 단어장 생성")
+	class CreateWordBook {
+		@Test
+		@DisplayName("성공 - 추가 단어장을 생성할 수 있다")
+		void createWordbook_success() {
+			WordbookCreateRequest request = new WordbookCreateRequest();
+			request.setName("My Vocab");
 
-		savedMember.updateSubscription(Subscription.STANDARD);
+			savedMember.updateSubscription(Subscription.STANDARD);
 
-		Wordbook wordbook = Wordbook.builder()
-			.member(savedMember)
-			.name(request.getName())
-			.language(savedMember.getLanguage())
-			.build();
-		setId(wordbook, 999L);
+			Wordbook wordbook = Wordbook.builder()
+				.member(savedMember)
+				.name(request.getName())
+				.language(savedMember.getLanguage())
+				.build();
+			setId(wordbook, 999L);
 
-		given(wordbookRepository.save(any(Wordbook.class))).willReturn(wordbook);
+			given(wordbookRepository.save(any(Wordbook.class))).willReturn(wordbook);
 
-		Long result = wordbookService.createWordbook(request, savedMember);
+			Long result = wordbookService.createWordbook(request, savedMember);
 
-		assertThat(result).isEqualTo(999L);
-		then(wordbookRepository).should().save(any(Wordbook.class));
+			assertThat(result).isEqualTo(999L);
+			then(wordbookRepository).should().save(any(Wordbook.class));
+		}
+
+		@Test
+		@DisplayName("실패 - 단어장 생성 권한이 없으면 예외가 발생한다")
+		void createWordbook_noPermission() {
+			WordbookCreateRequest request = new WordbookCreateRequest();
+			request.setName("My Vocab");
+
+			savedMember.updateSubscription(Subscription.BASIC);
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.createWordbook(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.failed");
+		}
+
+		@Test
+		@DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
+		void createWordbook_failIfNameIsDefault() {
+			// given
+			WordbookCreateRequest request = new WordbookCreateRequest();
+			request.setName("기본");
+
+			savedMember.updateSubscription(Subscription.STANDARD);
+
+			// when & then
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.createWordbook(request, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.default.forbidden");
+		}
 	}
 
-	@Test
-	@DisplayName("단어장 생성 권한이 없으면 예외가 발생한다")
-	void createWordbook_noPermission() {
-		WordbookCreateRequest request = new WordbookCreateRequest();
-		request.setName("My Vocab");
+	@Nested
+	@DisplayName("추가 단어장 이름 변경")
+	class RenameWordbook {
+		@Test
+		@DisplayName("성공 - 추가 단어장의 이름을 변경할 수 있다")
+		void renameWordbook_success() {
+			String newName = "Updated Wordbook Name";
+			savedWordbook.updateName("내 단어장"); // 기존 이름이 "기본"이 아님
 
-		savedMember.updateSubscription(Subscription.BASIC);
+			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+				.willReturn(Optional.of(savedWordbook));
 
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.createWordbook(request, savedMember)
-		);
+			wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember);
 
-		assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.failed");
+			assertThat(savedWordbook.getName()).isEqualTo(newName);
+		}
+
+		@Test
+		@DisplayName("실패 - \"기본\" 단어장의 이름은 변경할 수 없다")
+		void renameWordbook_failIfDefaultName() {
+			String newName = "새 이름";
+
+			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+				.willReturn(Optional.of(savedDefaultWordBook));
+
+			// when & then
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo("wordbook.rename.default.forbidden");
+		}
+
+		@Test
+		@DisplayName("실패 - 단어장 이름 변경 시 단어장이 존재하지 않거나 권한이 없으면 예외가 발생한다")
+		void renameWordbook_notFoundOrForbidden() {
+			String newName = "Updated Wordbook Name";
+			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+				.willReturn(Optional.empty());
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember)
+			);
+			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+		}
 	}
 
-	@Test
-	@DisplayName("추가 단어장의 이름을 변경할 수 있다")
-	void renameWordbook_success() {
-		String newName = "Updated Wordbook Name";
-		savedWordbook.updateName("내 단어장"); // 기존 이름이 "기본"이 아님
+	@Nested
+	@DisplayName("추가 단어장 삭제")
+	class DeleteWordbook {
+		@Test
+		@DisplayName("성공 - 추가 단어장을 삭제할 수 있다")
+		void deleteWordbook_success() {
+			// given
+			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+				.willReturn(Optional.of(savedWordbook));
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
-			.willReturn(Optional.of(savedWordbook));
+			// when
+			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember);
 
-		wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember);
+			// then
+			then(wordbookRepository).should().delete(savedWordbook);
+		}
 
-		assertThat(savedWordbook.getName()).isEqualTo(newName);
-	}
+		@Test
+		@DisplayName("실패 - 단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
+		void deleteWordbook_notFoundOrForbidden() {
+			// given
+			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+				.willReturn(Optional.empty());
 
-	@Test
-	@DisplayName("단어장 이름 변경 시 단어장이 존재하지 않거나 권한이 없으면 예외가 발생한다")
-	void renameWordbook_notFoundOrForbidden() {
-		String newName = "Updated Wordbook Name";
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
-			.willReturn(Optional.empty());
+			// when & then
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
+			);
 
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember)
-		);
-		assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
-	}
+			assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
+		}
 
-	@Test
-	@DisplayName("\"기본\" 단어장은 생성할 수 없다")
-	void createWordbook_failIfNameIsDefault() {
-		// given
-		WordbookCreateRequest request = new WordbookCreateRequest();
-		request.setName("기본");
+		@Test
+		@DisplayName("실패 - \"기본\" 단어장은 삭제할 수 없다")
+		void deleteWordbook_failIfDefault() {
+			// given
+			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+				.willReturn(Optional.of(savedDefaultWordBook));
 
-		savedMember.updateSubscription(Subscription.STANDARD);
+			// when & then
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
+			);
 
-		// when & then
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.createWordbook(request, savedMember)
-		);
-
-		assertThat(exception.getMessageCode()).isEqualTo("wordbook.create.default.forbidden");
-	}
-
-	@Test
-	@DisplayName("\"기본\" 단어장의 이름은 변경할 수 없다")
-	void renameWordbook_failIfDefaultName() {
-		String newName = "새 이름";
-
-		given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
-			.willReturn(Optional.of(savedDefaultWordBook));
-
-		// when & then
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
-		);
-
-		assertThat(exception.getMessageCode()).isEqualTo("wordbook.rename.default.forbidden");
-	}
-
-	@Test
-	@DisplayName("추가 단어장을 삭제할 수 있다")
-	void deleteWordbook_success() {
-		// given
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
-			.willReturn(Optional.of(savedWordbook));
-
-		// when
-		wordbookService.deleteWordbook(savedWordbook.getId(), savedMember);
-
-		// then
-		then(wordbookRepository).should().delete(savedWordbook);
-	}
-
-	@Test
-	@DisplayName("단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
-	void deleteWordbook_notFoundOrForbidden() {
-		// given
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
-			.willReturn(Optional.empty());
-
-		// when & then
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
-		);
-
-		assertThat(exception.getMessageCode()).isEqualTo("no.wordbook.exist.or.forbidden");
-	}
-
-	@Test
-	@DisplayName("\"기본\" 단어장은 삭제할 수 없다")
-	void deleteWordbook_failIfDefault() {
-		// given
-		given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
-			.willReturn(Optional.of(savedDefaultWordBook));
-
-		// when & then
-		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
-		);
-
-		assertThat(exception.getMessageCode()).isEqualTo("wordbook.delete.default.forbidden");
+			assertThat(exception.getMessageCode()).isEqualTo("wordbook.delete.default.forbidden");
+		}
 	}
 }
