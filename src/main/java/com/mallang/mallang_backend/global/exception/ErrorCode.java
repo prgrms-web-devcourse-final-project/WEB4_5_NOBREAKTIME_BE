@@ -48,7 +48,10 @@ public enum ErrorCode {
     // 기본 단어장은 삭제할 수 없음
     WORDBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "wordbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
     // 단어장에 해당 단어가 없음
-    WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND);
+    WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
+
+    // Word Quiz Errors
+    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
