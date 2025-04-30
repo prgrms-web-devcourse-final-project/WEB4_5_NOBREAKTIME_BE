@@ -9,4 +9,5 @@ public interface WordbookService {
 	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member);
 	void addWordCustom(Long wordbookId, AddWordRequest request, Member member);
 	Long createWordbook(WordbookCreateRequest request, Member member);
+	void renameWordbook(Long wordbookId, String name, Member member);
 }

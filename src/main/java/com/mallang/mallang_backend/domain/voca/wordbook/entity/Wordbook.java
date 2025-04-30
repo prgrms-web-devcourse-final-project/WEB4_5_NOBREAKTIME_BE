@@ -36,4 +36,8 @@ public class Wordbook {
         this.name = name;
         this.language = language;
     }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }

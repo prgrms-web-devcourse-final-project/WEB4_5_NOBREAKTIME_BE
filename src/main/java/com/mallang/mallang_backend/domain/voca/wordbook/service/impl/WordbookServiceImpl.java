@@ -94,11 +94,16 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
+	// 단어장 생성
 	@Transactional
 	@Override
 	public Long createWordbook(WordbookCreateRequest request, Member member) {
 		if (!member.canCreateWordBook()) {
 			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
+		}
+
+		if (request.getName().equals("기본")) {
+			throw new ServiceException(WORDBOOK_CREATE_DEFAULT_FORBIDDEN);
 		}
 
 		Wordbook wordbook = Wordbook.builder()
@@ -108,5 +113,23 @@ public class WordbookServiceImpl implements WordbookService {
 			.build();
 
 		return wordbookRepository.save(wordbook).getId();
+	}
+
+	// 단어장 이름 변경
+	@Transactional
+	@Override
+	public void renameWordbook(Long wordbookId, String name, Member member) {
+		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+		if ("기본".equals(wordbook.getName())) {
+			throw new ServiceException(WORDBOOK_RENAME_DEFAULT_FORBIDDEN);
+		}
+
+		if ("기본".equals(name)) {
+			throw new ServiceException(WORDBOOK_RENAME_DEFAULT_FORBIDDEN);
+		}
+
+		wordbook.updateName(name);
 	}
 }

@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,7 @@ import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 
@@ -83,8 +85,23 @@ public class WordbookController {
 		Long id = wordbookService.createWordbook(request, member);
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
-			"단어장에 단어가 추가되었습니다.",
+			"추가 단어장이 생성되었습니다.",
 			id
+		));
+	}
+
+	@PatchMapping("/{wordbookId}")
+	public ResponseEntity<RsData<Void>> renameWordbook(
+		@PathVariable Long wordbookId,
+		@RequestBody WordbookRenameRequest request
+	) {
+		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
+		Member member = memberRepository.findById(1L).get();
+
+		wordbookService.renameWordbook(wordbookId, request.getName(), member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장의 이름이 변경되었습니다."
 		));
 	}
 }
