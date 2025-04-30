@@ -25,6 +25,8 @@ import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -273,5 +275,69 @@ class WordbookServiceImplTest {
 
 			assertThat(exception.getMessageCode()).isEqualTo("wordbook.delete.default.forbidden");
 		}
+	}
+
+	@Test
+	@DisplayName("단어들을 다른 단어장으로 이동할 수 있다")
+	void moveWords_success() {
+		Long fromId1 = 1L;
+		Long fromId2 = 2L;
+		Long toId = 10L;
+
+		// destination 단어장
+		Wordbook toWordbook = Wordbook.builder().member(savedMember).build();
+		setId(toWordbook, toId);
+
+		// source 단어장 1, 2
+		Wordbook fromWordbook1 = Wordbook.builder().member(savedMember).build();
+		Wordbook fromWordbook2 = Wordbook.builder().member(savedMember).build();
+		setId(fromWordbook1, fromId1);
+		setId(fromWordbook2, fromId2);
+
+		// 기존 WordbookItem
+		WordbookItem item1 = WordbookItem.builder()
+			.wordbook(fromWordbook1)
+			.word("apple")
+			.subtitleId(100L)
+			.videoId(200L)
+			.build();
+		setId(item1, 1000L);
+
+		WordbookItem item2 = WordbookItem.builder()
+			.wordbook(fromWordbook2)
+			.word("banana")
+			.subtitleId(110L)
+			.videoId(210L)
+			.build();
+		setId(item2, 1001L);
+
+		// 이동 요청 DTO
+		WordMoveRequest request = new WordMoveRequest();
+		request.setDestinationWordbookId(toId);
+
+		WordMoveItem wordMoveItem1 = new WordMoveItem();
+		wordMoveItem1.setFromWordbookId(fromId1);
+		wordMoveItem1.setWord("apple");
+
+		WordMoveItem wordMoveItem2 = new WordMoveItem();
+		wordMoveItem2.setFromWordbookId(fromId2);
+		wordMoveItem2.setWord("banana");
+
+		request.setWords(List.of(
+			wordMoveItem1,
+			wordMoveItem2
+		));
+
+		given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
+		given(wordbookRepository.findByIdAndMember(fromId1, savedMember)).willReturn(Optional.of(fromWordbook1));
+		given(wordbookRepository.findByIdAndMember(fromId2, savedMember)).willReturn(Optional.of(fromWordbook2));
+
+		given(wordbookItemRepository.findByWordbookAndWord(fromWordbook1, "apple")).willReturn(Optional.of(item1));
+		given(wordbookItemRepository.findByWordbookAndWord(fromWordbook2, "banana")).willReturn(Optional.of(item2));
+
+		wordbookService.moveWords(request, savedMember);
+
+		then(wordbookItemRepository).should(times(2)).delete(any(WordbookItem.class));
+		then(wordbookItemRepository).should(times(2)).save(any(WordbookItem.class));
 	}
 }
