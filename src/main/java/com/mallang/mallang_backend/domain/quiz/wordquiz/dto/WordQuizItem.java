@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class WordQuizItemDto {
+public class WordQuizItem {
     private Long id;
     private String word;
     private String original;

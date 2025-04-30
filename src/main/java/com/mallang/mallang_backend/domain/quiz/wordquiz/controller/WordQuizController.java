@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItemDto;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
 
@@ -30,18 +31,18 @@ public class WordQuizController {
 	 * @return 단어장에 대한 퀴즈
 	 */
 	@GetMapping("/wordbooks/{wordbookId}")
-	public ResponseEntity<RsData<List<WordQuizItemDto>>> getWordbookQuiz(
+	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId
 	) {
 		// TODO: 실제 인증 적용 후 대체
 		Member member = memberRepository.findById(1L).get();
 
-		List<WordQuizItemDto> quizItems = wordQuizService.generateWordbookQuiz(wordbookId, member);
+		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"단어장 퀴즈 문제를 조회했습니다.",
-			quizItems
+			quizResponse
 		));
 	}
 
