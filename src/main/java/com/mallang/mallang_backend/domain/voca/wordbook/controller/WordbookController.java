@@ -72,7 +72,7 @@ public class WordbookController {
 
 	/**
 	 * 추가 단어장 생성
-	 * @param request
+	 * @param request 추가할 단어장 이름
 	 * @return
 	 */
 	@PostMapping
@@ -90,6 +90,11 @@ public class WordbookController {
 		));
 	}
 
+	/**
+	 * 단어장 이름 변경
+	 * @param request 변경할 이름
+	 * @return
+	 */
 	@PatchMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> renameWordbook(
 		@PathVariable Long wordbookId,
