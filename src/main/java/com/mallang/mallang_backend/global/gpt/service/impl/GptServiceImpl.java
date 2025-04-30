@@ -9,8 +9,12 @@ import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.io.IOException;
 
 @Slf4j
 @Service
@@ -28,6 +32,12 @@ public class GptServiceImpl implements GptService {
         OpenAiResponse response = callGptApi(prompt);   // GPT API 호출
         validateResponse(response); // 응답 검증
         return callAndValidate(buildPromptforSearchWord(word)); // 호출
+    }
+
+    @Override
+    public String analyzeSentence(String sentence, String translatedSentence) {
+        String prompt = buildPromptForAnalyzeSentence(sentence, translatedSentence);
+        return callAndValidate(prompt);
     }
 
     // 결과 반환
@@ -74,8 +84,31 @@ public class GptServiceImpl implements GptService {
     }
 
     /**
+     * 문장 분석용 프롬프트 생성
+     */
+    private String buildPromptForAnalyzeSentence(String sentence, String translatedSentence) {
+        return String.format("""
+        당신은 영어 문장을 분석해주는 전문 언어 분석 도우미입니다.
+        사용자가 원어 문장과 그 번역을 함께 입력하면 다음 정보를 순서대로 분석해 출력하세요.
+
+        - 숙어/표현:핵심 구나 숙어가 있다면 의미와 쓰임을 간단히 설명 (없으면 '없음').
+        - 문법 구조:SVO 구조, 시제, 수동태, 조동사 등 주요 문법 요소를 간략히 분석.
+        - 화용/의도: 이 문장이 어떤 의도(명령, 요청 등)를 전달하는지, 어떤 상황에서 쓰이는지 분석.
+
+        출력 형식:
+        숙어/표현: ...
+        문법 구조: ...
+        화용/의도: ...
+
+        원문: %s
+        번역: %s
+        """, sentence, translatedSentence);
+    }
+
+    /**
      * GPT API 호출
      */
+    @Retryable(retryFor = java.io.IOException.class, interceptor = "retryOperationsInterceptor")
     private OpenAiResponse callGptApi(String prompt) {
         log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
 
@@ -113,5 +146,15 @@ public class GptServiceImpl implements GptService {
                 "gpt-4o",
                 new Message[]{new Message("user", prompt)}
         );
+    }
+
+    /**
+     * 재시도 실패 후 호출되는 메서드 (최대 재시도 후에도 예외 발생 시 호출)
+     * @Recover 어노테이션을 사용하여 재시도 실패 후 처리
+     */
+    @Recover
+    public String recoverCallGptApi(IOException ex, String prompt) {
+        log.error("[GptService] GPT 호출에 실패했습니다. 재시도 후에도 실패하였습니다. 예외: {}", ex.getMessage());
+        throw new ServiceException(ErrorCode.GPT_API_CALL_FAILED); // 재시도 실패 시 서비스 예외 처리
     }
 }
