@@ -33,6 +33,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
@@ -574,5 +575,31 @@ class WordbookServiceImplTest {
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
+	}
+
+	@Test
+	@DisplayName("회원의 단어장 목록을 조회할 수 있다")
+	void getWordbooks_success() {
+		Wordbook wb1 = Wordbook.builder()
+			.member(savedMember)
+			.name("My First Book")
+			.language(Language.ENGLISH)
+			.build();
+		setId(wb1, 1L);
+
+		Wordbook wb2 = Wordbook.builder()
+			.member(savedMember)
+			.name("TOEIC Book")
+			.language(Language.ENGLISH)
+			.build();
+		setId(wb2, 2L);
+
+		given(wordbookRepository.findAllByMember(savedMember)).willReturn(List.of(wb1, wb2));
+
+		List<WordbookResponse> result = wordbookService.getWordbooks(savedMember);
+
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).getName()).isEqualTo("My First Book");
+		assertThat(result.get(1).getName()).isEqualTo("TOEIC Book");
 	}
 }
