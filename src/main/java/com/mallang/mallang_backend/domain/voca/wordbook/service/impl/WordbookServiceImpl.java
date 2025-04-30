@@ -187,6 +187,7 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
+	// 단어장에서 단어 삭제
 	@Transactional
 	@Override
 	public void deleteWords(WordDeleteRequest request, Member member) {
@@ -203,6 +204,7 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
+	// 단어장에 단어들 조회(랜덤 순서)
 	@Transactional(readOnly = true)
 	@Override
 	public List<WordResponse> getWordsRandomly(Long wordbookId, Member member) {
@@ -226,6 +228,7 @@ public class WordbookServiceImpl implements WordbookService {
 			).collect(Collectors.toList());
 	}
 
+	// 단어장 조회
 	@Transactional(readOnly = true)
 	@Override
 	public List<WordbookResponse> getWordbooks(Member member) {
