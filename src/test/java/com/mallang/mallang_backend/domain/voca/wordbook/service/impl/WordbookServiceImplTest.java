@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,6 +48,7 @@ class WordbookServiceImplTest {
 	private WordbookItemRepository wordbookItemRepository;
 
 	private Member savedMember;
+	private Wordbook savedDefaultWordBook;
 	private Wordbook savedWordbook;
 	private Word savedWord;
 
@@ -59,11 +61,21 @@ class WordbookServiceImplTest {
 		setId(savedMember, 1L);
 
 		// Wordbook
-		savedWordbook = Wordbook.builder().member(savedMember).build();
+		savedDefaultWordBook = Wordbook.builder()
+			.name(DEFAULT_WORDBOOK_NAME)
+			.language(Language.ENGLISH)
+			.build();
+		setId(savedDefaultWordBook, 1L);
+
+		savedWordbook = Wordbook.builder()
+			.member(savedMember)
+			.build();
 		setId(savedWordbook, 100L);
 
 		// Word
-		savedWord = Word.builder().word("apple").build();
+		savedWord = Word.builder()
+			.word("apple")
+			.build();
 		setId(savedWord, 200L);
 	}
 
@@ -189,17 +201,14 @@ class WordbookServiceImplTest {
 	@Test
 	@DisplayName("\"기본\" 단어장의 이름은 변경할 수 없다")
 	void renameWordbook_failIfDefaultName() {
-		// given
-		String originalName = "기본";
 		String newName = "새 이름";
-		savedWordbook.updateName(originalName); // 기존 이름이 "기본"인 상태
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
-			.willReturn(Optional.of(savedWordbook));
+		given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+			.willReturn(Optional.of(savedDefaultWordBook));
 
 		// when & then
 		ServiceException exception = assertThrows(ServiceException.class, () ->
-			wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember)
+			wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
 		);
 
 		assertThat(exception.getMessageCode()).isEqualTo("wordbook.rename.default.forbidden");

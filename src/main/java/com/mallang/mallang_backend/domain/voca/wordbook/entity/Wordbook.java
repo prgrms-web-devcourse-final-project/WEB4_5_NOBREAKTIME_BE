@@ -1,7 +1,12 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.entity;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +14,6 @@ import lombok.*;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Wordbook {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wordbook_id")
@@ -38,6 +42,9 @@ public class Wordbook {
     }
 
     public void updateName(String name) {
+        if (DEFAULT_WORDBOOK_NAME.equals(this.name) || DEFAULT_WORDBOOK_NAME.equals(name)) {
+            throw new ServiceException(WORDBOOK_RENAME_DEFAULT_FORBIDDEN);
+        }
         this.name = name;
     }
 }

@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.List;
@@ -102,7 +103,7 @@ public class WordbookServiceImpl implements WordbookService {
 			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
 		}
 
-		if (request.getName().equals("기본")) {
+		if (request.getName().equals(DEFAULT_WORDBOOK_NAME)) {
 			throw new ServiceException(WORDBOOK_CREATE_DEFAULT_FORBIDDEN);
 		}
 
@@ -121,14 +122,6 @@ public class WordbookServiceImpl implements WordbookService {
 	public void renameWordbook(Long wordbookId, String name, Member member) {
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
-
-		if ("기본".equals(wordbook.getName())) {
-			throw new ServiceException(WORDBOOK_RENAME_DEFAULT_FORBIDDEN);
-		}
-
-		if ("기본".equals(name)) {
-			throw new ServiceException(WORDBOOK_RENAME_DEFAULT_FORBIDDEN);
-		}
 
 		wordbook.updateName(name);
 	}
