@@ -1,29 +1,46 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WordbookItem {
 
-    @EmbeddedId
-    private WordbookItemId id; // 단어 + 단어장 id 를 복합 키로 사용 -> 하나의 단어장 안에 포함되어있는 여러 단어들
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "wordbook_item_id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "wordbook_id", nullable = false)
+    private Wordbook wordbook;
+
+    @Column(nullable = false)
+    private String word;
 
     @Column(nullable = true, name = "video_id")
-    private Long videoId;
-    
-    @Column(nullable = false)
-    private String description; // 해석
+    private String videoId;
 
-    @Column(nullable = false)
-    private String originalSentence; // 영상에서 발췌한 예문
+    @Column(nullable = true, name = "subtitle_id")
+    private Long subtitleId; // 해석
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -37,17 +54,14 @@ public class WordbookItem {
 
     @Builder
     public WordbookItem(
-        Long wordbookId,
+        Wordbook wordbook,
         String word,
-        String description,
-        String originalSentence,
-        Long videoId
+        Long subtitleId,
+        String videoId
     ) {
-        this.id = new WordbookItemId(wordbookId, word);
-        this.description = description;
-        this.originalSentence = originalSentence;
-        this.createdAt = LocalDateTime.now();
-        this.wordStatus = WordStatus.NEW;
+        this.wordbook = wordbook;
+        this.word = word;
+        this.subtitleId = subtitleId;
         this.videoId = videoId;
     }
 
