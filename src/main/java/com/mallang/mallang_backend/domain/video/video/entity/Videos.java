@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Video {
+public class Videos {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, name = "video_id")
     private String id;
 
@@ -31,7 +30,7 @@ public class Video {
     private Language language;
 
     @Builder
-    public Video(
+    private Videos(
         String id,
         String videoTitle,
         String thumbnailImageUrl,
@@ -43,5 +42,20 @@ public class Video {
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;
         this.language = language;
+    }
+
+    /**
+     * 필드 변경 시 사용하는 메서드
+     */
+    public void updateTitleAndThumbnail(
+        String newTitle,
+        String newThumbnailUrl,
+        String newChannelTitle,
+        Language newLanguage
+    ) {
+        this.videoTitle = newTitle;
+        this.thumbnailImageUrl = newThumbnailUrl;
+        this.channelTitle = newChannelTitle;
+        this.language = newLanguage;
     }
 }

@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.video.subtitle.entity;
 
-import com.mallang.mallang_backend.domain.video.video.entity.Video;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,7 +26,7 @@ public class Subtitle {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "video_id", nullable = false)
-	private Video video;
+	private Videos videos;
 
 	@Column(nullable = false)
 	private String startTime;
@@ -45,14 +45,14 @@ public class Subtitle {
 
 	@Builder
 	public Subtitle(
-		Video video,
+		Videos videos,
 		String startTime,
 		String endTime,
 		String originalSentence,
 		String translatedSentence,
 		String speaker
 	) {
-		this.video = video;
+		this.videos = videos;
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.originalSentence = originalSentence;
