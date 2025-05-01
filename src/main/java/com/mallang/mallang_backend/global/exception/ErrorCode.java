@@ -17,6 +17,8 @@ public enum ErrorCode {
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
+    TOKEN_NOT_FOUND("401-2", "token.not.found", HttpStatus.UNAUTHORIZED),
+    IN_BLACKLIST("403-1", "in.blacklist", HttpStatus.FORBIDDEN),
 
     // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -28,6 +30,7 @@ public enum ErrorCode {
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
     GPT_API_CALL_FAILED("500-4", "gpt.api.call.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -35,7 +38,10 @@ public enum ErrorCode {
 
     // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
-    WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Parse Errors
+    INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
