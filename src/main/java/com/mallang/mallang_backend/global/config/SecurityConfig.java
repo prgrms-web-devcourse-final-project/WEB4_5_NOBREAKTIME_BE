@@ -1,6 +1,8 @@
 package com.mallang.mallang_backend.global.config;
 
 import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,13 +10,16 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * oauth2Login
@@ -23,16 +28,14 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Value("${custom.site.frontUrl}")
     private String frontUrl;
 
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
-
-    public SecurityConfig(CustomOAuth2SuccessHandler customOAuth2SuccessHandler) {
-        this.customOAuth2SuccessHandler = customOAuth2SuccessHandler;
-    }
+    private final CustomAuthenticationFilter customAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -44,18 +47,26 @@ public class SecurityConfig {
                                 "/oauth/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/v1/video/**"
+                                "/api/v1/video/**",
+                                "/api/v1/expressionbooks/**",
+                                "/api/v1/expressions/**",
+                                "/api/v1/expressionbookItems/**",
+                                "/api/v1/wordbooks/**",
+                                "/test/**"
                         ).permitAll()
-                        // .anyRequest().authenticated()
-                    .anyRequest().permitAll()
+                        .requestMatchers("/api/**").hasRole("BASIC")
+                        .requestMatchers("/api/**").hasRole("STANDARD")
+                        .requestMatchers("/api/**").hasRole("PREMIUM")
+                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(
                                 XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sessionManagement -> {
-                    sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-                })
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sessionManagement ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 ->
                         oauth2.successHandler(customOAuth2SuccessHandler)
                 );
@@ -77,7 +88,7 @@ public class SecurityConfig {
         // 자격 증명 허용 설정
         configuration.setAllowCredentials(true);
         // 허용할 헤더 설정
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         // CORS 설정을 소스에 등록
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);

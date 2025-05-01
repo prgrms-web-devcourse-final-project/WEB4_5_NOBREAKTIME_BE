@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+
+import io.github.resilience4j.retry.annotation.Retry;
 
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
@@ -27,7 +27,7 @@ public class YoutubeService {
 	private String apiKey;
 
 	// 검색: 키워드 기반으로 videoId만 가져오기
-	@Retryable(retryFor = IOException.class, interceptor = "retryOperationsInterceptor")
+	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchVideoIds")
 	public List<String> searchVideoIds(
 		String query,
 		String regionCode,
@@ -37,68 +37,65 @@ public class YoutubeService {
 	) throws IOException {
 		YouTube youtubeService = YouTubeClient.getClient();
 
-		YouTube.Search.List searchRequest = youtubeService.search()
-			.list(List.of("id"));
-
-		searchRequest.setQ(query);
-		searchRequest.setType(List.of("video"));
-		searchRequest.setVideoLicense("creativeCommon");
-		searchRequest.setOrder("relevance");
-		searchRequest.setRelevanceLanguage(relevanceLanguage);
-		searchRequest.setRegionCode(regionCode);
+		// Search List 요청 빌드
+		YouTube.Search.List request = youtubeService.search()
+			.list(List.of("id"))
+			.setQ(query)
+			.setType(List.of("video"))
+			.setVideoLicense("creativeCommon")
+			.setOrder("relevance")
+			.setRelevanceLanguage(relevanceLanguage)
+			.setRegionCode(regionCode);
 
 		// 카테고리 필터 (존재할 경우)
 		if (categoryId != null && !categoryId.isBlank()) {
-			searchRequest.setVideoCategoryId(categoryId);
+			request.setVideoCategoryId(categoryId);
 		}
 
-		searchRequest.setMaxResults(maxResults);
-		searchRequest.setVideoDuration("medium"); // 4~20분
-		searchRequest.setKey(apiKey);
+		// 최대 결과 수와 영상 길이, API 키 설정
+		request
+			.setMaxResults(maxResults)
+			.setVideoDuration("medium") // 4~20분
+			.setKey(apiKey);
 
-		SearchListResponse response = searchRequest.execute();
+		// 실제 호출 및 응답 반환
+		SearchListResponse response = request.execute();
 		return response.getItems().stream()
 			.map(item -> item.getId().getVideoId())
 			.collect(Collectors.toList());
 	}
 
 	// 상세조회: videoId 리스트로 Video 정보 가져오기
-	@Retryable(retryFor = IOException.class, interceptor = "retryOperationsInterceptor")
+	@Retry(name = "apiRetry", fallbackMethod = "fallbackFetchVideosByIds")
 	public List<Video> fetchVideosByIds(List<String> videoIds) throws IOException {
 		YouTube youtubeService = YouTubeClient.getClient();
 
-		YouTube.Videos.List videosRequest = youtubeService.videos()
-			.list(List.of("id", "snippet", "contentDetails", "status"));
+		VideoListResponse response = youtubeService.videos()
+			.list(List.of("id", "snippet", "contentDetails", "status"))
+			.setId(videoIds)
+			.setKey(apiKey)
+			.execute();
 
-		videosRequest.setId(videoIds);
-		videosRequest.setKey(apiKey);
-
-		VideoListResponse response = videosRequest.execute();
 		return response.getItems();
 	}
 
-
-
 	/** searchVideoIds() 최대 재시도 후에도 IOException을 던지면 호출 */
-	@Recover
-	public List<String> recoverSearchVideoIds(
-		IOException ex,
+	public List<String> fallbackSearchVideoIds(
 		String query,
 		String regionCode,
 		String relevanceLanguage,
 		String categoryId,
-		long maxResults
+		long maxResults,
+		Throwable t
 	) {
 		throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
 	}
 
-	/** fetchVideosByIds() 최대 재시도 후에도 IOException을 던지면 호출*/
-	@Recover
-	public List<Video> recoverFetchVideosByIds(
-		IOException ex,
-		List<String> videoIds
+	/** fetchVideosByIds() 최대 재시도 후에도 IOException을 던지면 호출 */
+	public List<Video> fallbackFetchVideosByIds(
+		List<String> videoIds,
+		Throwable t
 	) {
 		throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
 	}
-
 }

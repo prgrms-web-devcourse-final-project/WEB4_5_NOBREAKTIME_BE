@@ -1,9 +1,8 @@
 package com.mallang.mallang_backend.global.exception;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -16,6 +15,8 @@ public enum ErrorCode {
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
+    TOKEN_NOT_FOUND("401-2", "token.not.found", HttpStatus.UNAUTHORIZED),
+    IN_BLACKLIST("403-1", "in.blacklist", HttpStatus.FORBIDDEN),
 
     // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -27,6 +28,7 @@ public enum ErrorCode {
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
     GPT_API_CALL_FAILED("500-4", "gpt.api.call.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -35,6 +37,13 @@ public enum ErrorCode {
     // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // ExpressionBook Errors
+    EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
+    FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+
+    // Expression Errors
+    EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
 
     // Wordbook Errors
     // 해당 단어장이 없거나 권한이 없음
@@ -50,12 +59,16 @@ public enum ErrorCode {
     // 단어장에 해당 단어가 없음
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
 
-    // Word Quiz Errors
-    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST),
-    // 퀴즈를 찾을 수 없음
-    WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND),
-    // 퀴즈 생성에 가능한 단어가 부족합니다.
-    NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST);
+    // Parse Errors
+    INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST),
+
+	// Word Quiz Errors
+	// 단어장에 단어가 없습니다.
+	WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST),
+	// 퀴즈를 찾을 수 없음
+	WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND),
+	// 퀴즈 생성에 가능한 단어가 부족합니다.
+	NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
