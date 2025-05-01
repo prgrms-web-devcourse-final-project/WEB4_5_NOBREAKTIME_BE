@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class WordbookItemRepositoryImpl implements WordbookItemRepositoryCustom {
+public class WordbookItemRepositoryCustomImpl implements WordbookItemRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 
@@ -65,7 +65,6 @@ public class WordbookItemRepositoryImpl implements WordbookItemRepositoryCustom 
 	 * DATE_ADD 함수로 LocalDateTime에 일수를 더하는 표현식 생성.
 	 */
 	private DateTimeExpression<LocalDateTime> dateTimePlusDays(DateTimePath<LocalDateTime> dateTimePath, int days) {
-		// H2와 MySQL에서 모두 동작하는 방식으로 수정
 		return Expressions.dateTimeTemplate(
 			LocalDateTime.class,
 			"{0} + {1} * INTERVAL '1' DAY",
