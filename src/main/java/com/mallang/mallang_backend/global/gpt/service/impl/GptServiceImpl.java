@@ -31,10 +31,10 @@ public class GptServiceImpl implements GptService {
     @Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
     @Override
     public String searchWord(String word)  {
-        String prompt = buildPromptforSearchWord(word);  // 프롬프트 생성
-        OpenAiResponse response = callGptApi(prompt);     // GPT API 호출
-        validateResponse(response);                       // 응답 검증
-        return response.getChoices().get(0).getMessage().getContent(); // 결과 반환
+        String prompt = buildPromptforSearchWord(word);
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
+        return response.getChoices().get(0).getMessage().getContent();
     }
 
     /**
@@ -52,9 +52,9 @@ public class GptServiceImpl implements GptService {
     @Override
     public String analyzeSentence(String sentence, String translatedSentence) {
         String prompt = buildPromptForAnalyzeSentence(sentence, translatedSentence);
-        OpenAiResponse response = callGptApi(prompt);     // GPT API 호출
-        validateResponse(response);                       // 응답 검증
-        return response.getChoices().get(0).getMessage().getContent(); // 결과 반환
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
+        return response.getChoices().get(0).getMessage().getContent();
     }
 
     /**
