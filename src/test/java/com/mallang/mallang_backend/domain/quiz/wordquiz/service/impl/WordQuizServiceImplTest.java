@@ -4,7 +4,9 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_
 import static com.mallang.mallang_backend.global.exception.ErrorCode.NO_WORDBOOK_EXIST_OR_FORBIDDEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_IS_EMPTY;
 import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -47,7 +49,6 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.util.ReflectionTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 public class WordQuizServiceImplTest {
@@ -76,6 +77,9 @@ public class WordQuizServiceImplTest {
 	private Member savedMember;
 
 	private Wordbook savedWordbook;
+
+	@Mock
+	private Member member;
 
 	@BeforeEach
 	void setUp() {
@@ -196,19 +200,18 @@ public class WordQuizServiceImplTest {
 		WordbookItem wordbookItem = WordbookItem.builder()
 			.word("test")
 			.build();
-		ReflectionTestUtil.setId(wordbookItem, wordbookItemId);
+		setId(wordbookItem, wordbookItemId);
 
 		WordQuiz wordQuiz = WordQuiz.builder()
 			.member(savedMember)
 			.language(Language.ENGLISH)
 			.build();
-		ReflectionTestUtil.setId(wordQuiz, quizId);
+		setId(wordQuiz, quizId);
 
 		WordQuizResultSaveRequest request = new WordQuizResultSaveRequest();
 		request.setQuizId(quizId);
 		request.setWordbookItemId(wordbookItemId);
 		request.setIsCorrect(true);
-		request.setLearningTime(learningTime);
 
 		given(wordbookItemRepository.findById(wordbookItemId)).willReturn(Optional.of(wordbookItem));
 		given(wordQuizRepository.findById(quizId)).willReturn(Optional.of(wordQuiz));
@@ -357,8 +360,131 @@ public class WordQuizServiceImplTest {
 			item.updateStatus(status);
 			item.updateLastStudiedAt(LocalDateTime.now().minusDays(7));
 
-			ReflectionTestUtil.setId(item, ThreadLocalRandom.current().nextLong(1, 1000));
+			setId(item, ThreadLocalRandom.current().nextLong(1, 1000));
 			return item;
+		}
+	}
+
+	@Nested
+	@DisplayName("통합 퀴즈 결과")
+	class WordbookTotalQuizResult {
+
+		@DisplayName("단어 상태가 NEW일 때 정답이면 CORRECT 상태로 변경된다")
+		@Test
+		void applyLearningResult_NEW_Correct() {
+			// given
+			Wordbook wordbook = Wordbook.builder()
+				.name("기본")
+				.language(Language.ENGLISH)
+				.member(mock(Member.class)) // 간단히 목 처리
+				.build();
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("test")
+				.build();
+
+			// when
+			item.applyLearningResult(true);
+
+			// then
+			assertThat(item.getWordStatus()).isEqualTo(WordStatus.CORRECT);
+			assertThat(item.getLastStudiedAt()).isCloseTo(LocalDateTime.now(), within(1, SECONDS));
+		}
+
+		@DisplayName("단어 상태가 NEW일 때 오답이면 WRONG 상태로 변경된다")
+		@Test
+		void applyLearningResult_NEW_Wrong() {
+			// given
+			Wordbook wordbook = Wordbook.builder()
+				.name("기본")
+				.language(Language.ENGLISH)
+				.member(mock(Member.class))
+				.build();
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("test")
+				.build();
+
+			// when
+			item.applyLearningResult(false);
+
+			// then
+			assertThat(item.getWordStatus()).isEqualTo(WordStatus.WRONG);
+			assertThat(item.getLastStudiedAt()).isCloseTo(LocalDateTime.now(), within(1, SECONDS));
+		}
+
+		@Test
+		@DisplayName("단어 상태가 WRONG일 때 정답을 맞추면 REVIEW_COUNT_1로 변경된다")
+		void testApplyLearningResult_WRONG_to_REVIEW_COUNT_1() {
+			// given
+			Wordbook wordbook = Wordbook.builder()
+				.member(member)
+				.language(Language.ENGLISH)
+				.name("기본")
+				.build();
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("hello")
+				.build();
+			item.updateStatus(WordStatus.WRONG);
+
+			// when
+			item.applyLearningResult(true);
+
+			// then
+			assertThat(item.getWordStatus()).isEqualTo(WordStatus.REVIEW_COUNT_1);
+			assertThat(item.getLastStudiedAt()).isCloseTo(LocalDateTime.now(), within(1, SECONDS));
+		}
+
+		@Test
+		@DisplayName("단어 상태가 CORRECT일 때 정답을 맞추면 MASTERED로 변경된다")
+		void testApplyLearningResult_CORRECT_to_MASTERED() {
+			// given
+			Wordbook wordbook = Wordbook.builder()
+				.member(member)
+				.language(Language.ENGLISH)
+				.name("기본")
+				.build();
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("complete")
+				.build();
+			item.updateStatus(WordStatus.CORRECT);
+
+			// when
+			item.applyLearningResult(true);
+
+			// then
+			assertThat(item.getWordStatus()).isEqualTo(WordStatus.MASTERED);
+			assertThat(item.getLastStudiedAt()).isCloseTo(LocalDateTime.now(), within(1, SECONDS));
+		}
+
+		@Test
+		@DisplayName("단어 상태가 CORRECT일 때 오답이면 WRONG으로 변경된다")
+		void testApplyLearningResult_CORRECT_to_WRONG() {
+			// given
+			Wordbook wordbook = Wordbook.builder()
+				.member(member)
+				.language(Language.ENGLISH)
+				.name("기본")
+				.build();
+
+			WordbookItem item = WordbookItem.builder()
+				.wordbook(wordbook)
+				.word("mistake")
+				.build();
+			item.updateStatus(WordStatus.CORRECT);
+
+			// when
+			item.applyLearningResult(false);
+
+			// then
+			assertThat(item.getWordStatus()).isEqualTo(WordStatus.WRONG);
+			assertThat(item.getLastStudiedAt()).isCloseTo(LocalDateTime.now(), within(1, SECONDS));
 		}
 	}
 }
