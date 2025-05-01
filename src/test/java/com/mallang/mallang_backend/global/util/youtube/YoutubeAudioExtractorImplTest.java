@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.util;
+package com.mallang.mallang_backend.global.util.youtube;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static org.assertj.core.api.Assertions.*;

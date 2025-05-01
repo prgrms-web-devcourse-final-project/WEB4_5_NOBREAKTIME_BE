@@ -25,5 +25,6 @@ public class ExpressionBookItem {
             Long expressionBookId
     ) {
         this.id = new ExpressionBookItemId(expressionId, expressionBookId);
+        this.createdAt = LocalDateTime.now();
     }
 }

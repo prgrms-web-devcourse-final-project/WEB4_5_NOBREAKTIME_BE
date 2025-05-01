@@ -1,5 +1,5 @@
 
-package com.mallang.mallang_backend.global.util;
+package com.mallang.mallang_backend.global.util.clova;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

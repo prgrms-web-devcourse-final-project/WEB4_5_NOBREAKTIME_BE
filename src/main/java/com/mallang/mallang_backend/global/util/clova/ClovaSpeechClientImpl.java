@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.util;
+package com.mallang.mallang_backend.global.util.clova;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;

@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/error",
                                 "/h2-console/**",
                                 "/api/v1/video/**",
+                                "/api/v1/wordbooks/**",
                                 "/test/**"
                         ).permitAll()
                         .requestMatchers("/api/**").hasRole("BASIC")
