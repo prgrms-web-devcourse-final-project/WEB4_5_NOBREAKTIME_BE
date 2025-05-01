@@ -7,5 +7,6 @@ public interface MemberService {
 
     Boolean isExistEmail(String email);
     Long signupByOauth(String id, String nickname, String profileImage, LoginPlatform loginPlatform);
-    Long getMemberId(String email);
+    Long getMemberByEmail (String email);
+    String getSubscription(Long memberId);
 }
