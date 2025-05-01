@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -465,6 +466,111 @@ class WordQuizControllerTest {
 			assertThat(total).isEqualTo(newCount + reviewCount);
 			assertEquals(14, newCount, "NEW 단어 수가 14이 아님");
 			assertEquals(6, reviewCount, "REVIEW 단어 수가 16이 아님");
+		}
+
+		@Test
+		@DisplayName("통합 퀴즈 조회 - 복습 단어는 복습 시점(복습 대상이 된 시점) 기준으로 오래된 순서대로 포함된다")
+		void getTotalQuizContent_ReviewWordsSortedByReviewDueDate() throws Exception {
+			// given: 복습 단어 3개 삽입, 각각 다른 lastStudiedAt 설정
+			LocalDateTime now = LocalDateTime.now();
+
+			// REVIEW_COUNT_1, 복습 대상 날 부터 11일, 12일, 13일, ... 20일 뒤까지
+			for (int i = 0; i < 10; i++) {
+				WordbookItem item = WordbookItem.builder()
+					.wordbook(wordbook)
+					.word("reviewWord-R1-" + i)
+					.build();
+
+				item.updateStatus(WordStatus.REVIEW_COUNT_1); // +7일 후 복습 대상
+				item.updateLastStudiedAt(now.minusDays(7 + i)); // 복습 대상 날 부터 11일, 12일, 13일, ... 20일 뒤
+
+				wordbookItemRepository.save(item);
+
+				Word word = Word.builder()
+					.word("reviewWord-R1-" + i)
+					.meaning("복습 단어" + i)
+					.pos("형용사")
+					.difficulty(Difficulty.EASY)
+					.exampleSentence("This is reviewWord" + i)
+					.translatedSentence("복습 단어" + i + "입니다.")
+					.build();
+
+				wordRepository.save(word);
+			}
+
+			// REVIEW_COUNT_2, 복습 대상 날 부터 1일, 2일, 3일, ... 10일 뒤까지
+			for (int i = 0; i < 10; i++) {
+				WordbookItem item = WordbookItem.builder()
+					.wordbook(wordbook)
+					.word("reviewWord-R2-" + i)
+					.build();
+
+				item.updateStatus(WordStatus.REVIEW_COUNT_2); // +30일 후 복습 대상
+				item.updateLastStudiedAt(now.minusDays(30 + i)); // 복습 대상 날 부터 1일, 2일, 3일, ... 10일 뒤
+
+				wordbookItemRepository.save(item);
+
+				Word word = Word.builder()
+					.word("reviewWord-R2-" + i)
+					.meaning("복습 단어" + i)
+					.pos("형용사")
+					.difficulty(Difficulty.EASY)
+					.exampleSentence("This is reviewWord" + i)
+					.translatedSentence("복습 단어" + i + "입니다.")
+					.build();
+
+				wordRepository.save(word);
+			}
+
+			// 목표 수를 맞추기 위해 새로운 단어도 추가
+			for (int i = 0; i < 10; i++) {
+				WordbookItem item = WordbookItem.builder()
+					.wordbook(wordbook)
+					.word("newWord" + i)
+					.build();
+
+				wordbookItemRepository.save(item);
+
+				Word word = Word.builder()
+					.word("newWord" + i)
+					.meaning("새로운 단어" + i)
+					.pos("명사")
+					.difficulty(Difficulty.EASY)
+					.exampleSentence("This is newWord" + i)
+					.translatedSentence("새로운 단어" + i + "입니다.")
+					.build();
+
+				wordRepository.save(word);
+			}
+
+			// when
+			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.code").value("200"))
+				.andReturn();
+
+			// then
+			String content = result.getResponse().getContentAsString();
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode root = mapper.readTree(content);
+			JsonNode quizItems = root.path("data").path("quizItems");
+
+			// 복습 단어만 필터링하고 순서 검증
+			List<String> reviewWords = new ArrayList<>();
+			for (JsonNode item : quizItems) {
+				String word = item.get("word").asText();
+				if (word.startsWith("reviewWord")) {
+					reviewWords.add(word);
+				}
+			}
+
+			System.out.println(result.getResponse().getContentAsString());
+
+			// 정렬 순서 검증: reviewWord2 (10일전) → reviewWord1 (9일전) → reviewWord0 (8일전)
+			assertThat(reviewWords)
+				.contains("reviewWord-R2-9", "reviewWord-R1-9", "reviewWord-R2-8", "reviewWord-R1-8",
+					"reviewWord-R2-7", "reviewWord-R1-7", "reviewWord-R2-6", "reviewWord-R1-6",
+					"reviewWord-R2-5", "reviewWord-R1-5", "reviewWord-R2-4", "reviewWord-R1-4");
 		}
 	}
 }

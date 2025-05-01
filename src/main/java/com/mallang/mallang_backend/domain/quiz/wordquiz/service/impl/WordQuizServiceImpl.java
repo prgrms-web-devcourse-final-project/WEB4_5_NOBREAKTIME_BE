@@ -4,9 +4,11 @@ import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.I
 import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.TOTAL;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -174,7 +176,15 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 		// 5. 랜덤 추출
 		Collections.shuffle(newWords);
-		Collections.shuffle(reviewWords);
+		// 5-1. 복습 단어 WordStatus로부터 가장 오래된 것부터, 동일하다면 현재로부터 가장 오랜된 것부터
+		LocalDateTime now = LocalDateTime.now();
+		reviewWords = reviewWords.stream()
+			.sorted(Comparator.comparing((WordbookItem w) -> {
+				LocalDateTime reviewedAt = w.getLastStudiedAt().plus(w.getWordStatus().getReviewInterval());
+				return Duration.between(reviewedAt, now);
+			}).reversed()
+				.thenComparing(WordbookItem::getLastStudiedAt))
+			.toList();
 
 		List<WordbookItem> selectedNew = newWords.subList(0, newTarget);
 		List<WordbookItem> selectedReview = reviewWords.subList(0, reviewTarget); // 복습
