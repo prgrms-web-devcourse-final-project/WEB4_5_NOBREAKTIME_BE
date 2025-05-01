@@ -2,10 +2,6 @@ package com.mallang.mallang_backend.domain.sentence.expressionbookItem;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
-import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.AddExpressionToBookListRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.AddExpressionToBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
@@ -13,8 +9,6 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.impl.ExpressionBookItemServiceImpl;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,55 +27,17 @@ class ExpressionBookItemServiceImplTest {
     private ExpressionBookItemServiceImpl service;
 
     private ExpressionBookRepository expressionBookRepository;
-    private ExpressionRepository expressionRepository;
     private ExpressionBookItemRepository expressionBookItemRepository;
-    private VideoRepository videoRepository;
 
     @BeforeEach
     void setUp() {
         expressionBookRepository = mock(ExpressionBookRepository.class);
-        expressionRepository = mock(ExpressionRepository.class);
         expressionBookItemRepository = mock(ExpressionBookItemRepository.class);
-        videoRepository = mock(VideoRepository.class);
 
         service = new ExpressionBookItemServiceImpl(
                 expressionBookRepository,
-                expressionRepository,
-                expressionBookItemRepository,
-                videoRepository
+                expressionBookItemRepository
         );
-    }
-
-    @Test
-    @DisplayName("표현을 영상에서 표현함에 추가할 수 있다")
-    void addExpressionsFromVideo_success() throws Exception {
-        Long bookId = 1L;
-        Member member = mockMember(1L);
-        ExpressionBook book = mockBook(bookId, member);
-
-        AddExpressionToBookRequest expReq = new AddExpressionToBookRequest();
-        expReq.setSentence("Test");
-        expReq.setDescription("desc");
-        expReq.setSentenceAnalysis("analysis");
-        expReq.setSubtitleAt("00:00:10");
-        expReq.setVideoId("abc123");
-
-        AddExpressionToBookListRequest request = new AddExpressionToBookListRequest(List.of(expReq));
-        Videos video = Videos.builder().id("abc123").build();
-
-        when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(videoRepository.findById("abc123")).thenReturn(Optional.of(video));
-        when(expressionRepository.save(any())).thenAnswer(inv -> {
-            Expression exp = inv.getArgument(0);
-            Field id = Expression.class.getDeclaredField("id");
-            id.setAccessible(true);
-            id.set(exp, 10L);
-            return exp;
-        });
-
-        service.addExpressionsFromVideo(bookId, request, member);
-
-        verify(expressionBookItemRepository).save(any());
     }
 
     @Test

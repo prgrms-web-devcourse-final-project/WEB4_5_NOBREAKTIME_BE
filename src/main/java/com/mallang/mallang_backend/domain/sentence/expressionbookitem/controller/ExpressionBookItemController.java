@@ -1,8 +1,5 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.controller;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.AddExpressionToBookListRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.ExpressionBookItemService;
@@ -17,31 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ExpressionBookItemController {
     private final ExpressionBookItemService expressionBookItemService;
-    private final MemberRepository memberRepository;
-
-    /**
-     * 표현함에 표현 추가
-     * @param expressionbookId 표현함 ID
-     * @param request 추가할 표현들의 목록 객체 요청
-     * @return 성공 여부 및 메시지
-     */
-    @PostMapping("/{expressionbookId}/expressions")
-    public ResponseEntity<RsData<Void>> addExpressionsFromVideo(
-            @PathVariable Long expressionbookId,
-            @RequestBody AddExpressionToBookListRequest request
-    ) {
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("회원 없음"));
-
-        expressionBookItemService.addExpressionsFromVideo(expressionbookId, request, member);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new RsData<>(
-                        "",
-                        "표현이 표현함에 추가되었습니다."
-                ));
-    }
 
     /**
      * 표현함에서 표현 삭제
