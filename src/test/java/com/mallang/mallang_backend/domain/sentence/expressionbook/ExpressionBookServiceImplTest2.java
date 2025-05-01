@@ -28,7 +28,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class ExpressionBookServiceImplTest {
+class ExpressionBookServiceImplTest2 {
 
     private MemberRepository memberRepository;
     private ExpressionBookRepository expressionBookRepository;
