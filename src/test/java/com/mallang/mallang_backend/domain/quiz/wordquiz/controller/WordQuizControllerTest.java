@@ -166,7 +166,7 @@ class WordQuizControllerTest {
 
 			mockMvc.perform(get("/api/v1/quizzes/wordbooks/" + wordbook.getId()))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.code").value("200-1"))
+				.andExpect(jsonPath("$.code").value("200"))
 				.andExpect(jsonPath("$.data.quizItems").isArray())
 				.andExpect(jsonPath("$.data.quizItems.length()").value(100)); // 100개의 퀴즈 아이템이 반환되어야 합니다.
 		}
@@ -185,7 +185,7 @@ class WordQuizControllerTest {
 
 			mockMvc.perform(get("/api/v1/quizzes/total"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.code").value("200-1"))
+				.andExpect(jsonPath("$.code").value("200"))
 				.andExpect(jsonPath("$.data.quizItems").isArray())
 				.andExpect(jsonPath("$.data.quizItems.size()").value(100));
 		}
@@ -213,7 +213,7 @@ class WordQuizControllerTest {
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.code").value("200-1"));
+				.andExpect(jsonPath("$.code").value("200"));
 
 			// 저장된 결과 확인
 			var results = wordQuizResultRepository.findAll();
@@ -292,7 +292,7 @@ class WordQuizControllerTest {
 			// 요청 수행
 			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.code").value("200-1"))
+				.andExpect(jsonPath("$.code").value("200"))
 				.andReturn();
 
 			// 응답 파싱
@@ -438,7 +438,7 @@ class WordQuizControllerTest {
 			// 요청 수행
 			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.code").value("200-1"))
+				.andExpect(jsonPath("$.code").value("200"))
 				.andReturn();
 
 			// 응답 파싱

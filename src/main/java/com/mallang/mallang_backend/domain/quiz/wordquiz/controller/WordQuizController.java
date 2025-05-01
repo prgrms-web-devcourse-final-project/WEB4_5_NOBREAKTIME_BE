@@ -40,7 +40,7 @@ public class WordQuizController {
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장 퀴즈 문제를 조회했습니다.",
 			quizResponse
 		));
@@ -60,7 +60,7 @@ public class WordQuizController {
 
 		wordQuizService.saveWordbookQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장 퀴즈 결과 저장 완료"
 		));
 	}
@@ -78,8 +78,8 @@ public class WordQuizController {
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookTotalQuiz(member);
 
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
-			"단어장 퀴즈 문제를 조회했습니다.",
+			"200",
+			"단어장 통합 퀴즈 문제를 조회했습니다.",
 			quizResponse
 		));
 	}
@@ -98,8 +98,8 @@ public class WordQuizController {
 
 		wordQuizService.saveWordbookTotalQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
-			"단어장 퀴즈 결과 저장 완료"
+			"200",
+			"단어장 통합 퀴즈 결과 저장 완료"
 		));
 	}
 }
