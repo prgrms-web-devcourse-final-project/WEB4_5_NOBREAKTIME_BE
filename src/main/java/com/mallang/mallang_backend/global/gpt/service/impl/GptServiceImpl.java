@@ -6,15 +6,12 @@ import com.mallang.mallang_backend.global.gpt.dto.Message;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
+import com.mallang.mallang_backend.global.gpt.service.retry.GptRetryableCaller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import java.io.IOException;
 
 @Slf4j
 @Service
@@ -22,16 +19,15 @@ import java.io.IOException;
 public class GptServiceImpl implements GptService {
 
     private final WebClient openAiWebClient;
+    private final GptRetryableCaller gptRetryableCaller;
 
     @Value("${spring.ai.openai.api-key}")
     private String openAiApiKey;
 
     @Override
     public String searchWord(String word) {
-        String prompt = buildPromptforSearchWord(word);  // 프롬포트 생성
-        OpenAiResponse response = callGptApi(prompt);   // GPT API 호출
-        validateResponse(response); // 응답 검증
-        return callAndValidate(buildPromptforSearchWord(word)); // 호출
+        String prompt = buildPromptforSearchWord(word);
+        return callAndValidate(prompt);
     }
 
     @Override
@@ -48,12 +44,29 @@ public class GptServiceImpl implements GptService {
      * @return GPT 응답의 content 필드 값
      */
     private String callAndValidate(String prompt) {
-        OpenAiResponse response = callGptApi(prompt);
+        OpenAiResponse response = gptRetryableCaller.call(openAiWebClient, openAiApiKey, prompt);
         validateResponse(response);
-        String content = response.getChoices().get(0).getMessage().getContent();
-        log.debug("[GptService] GPT 응답 결과:\n{}", content);
+        return response.getChoices().get(0).getMessage().getContent();
+    }
 
-        return content;
+    /**
+     * GPT 응답이 null이거나 빈 경우를 검증
+     */
+    private void validateResponse(OpenAiResponse response) {
+        if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
+            log.error("[GptService] GPT 응답이 비어있습니다.");
+            throw new ServiceException(ErrorCode.GPT_RESPONSE_EMPTY);
+        }
+    }
+
+    /**
+     * GPT API 요청을 위한 OpenAiRequest 객체를 생성.
+     */
+    private OpenAiRequest buildRequestBody(String prompt) {
+        return new OpenAiRequest(
+                "gpt-4o",
+                new Message[]{new Message("user", prompt)}
+        );
     }
 
     /**
@@ -103,58 +116,5 @@ public class GptServiceImpl implements GptService {
         원문: %s
         번역: %s
         """, sentence, translatedSentence);
-    }
-
-    /**
-     * GPT API 호출
-     */
-    @Retryable(retryFor = java.io.IOException.class, interceptor = "retryOperationsInterceptor")
-    private OpenAiResponse callGptApi(String prompt) {
-        log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
-
-        return openAiWebClient.post()
-                .header("Authorization", "Bearer " + openAiApiKey)
-                .bodyValue(buildRequestBody(prompt))
-                .retrieve()
-                .onStatus(
-                        status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .map(body -> {
-                                    log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
-                                    return new ServiceException(ErrorCode.GPT_API_CALL_FAILED);
-                                })
-                )
-                .bodyToMono(OpenAiResponse.class)
-                .block();
-    }
-
-    /**
-     * GPT 응답이 null이거나 빈 경우를 검증
-     */
-    private void validateResponse(OpenAiResponse response) {
-        if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
-            log.error("[GptService] GPT 응답이 비어있습니다.");
-            throw new ServiceException(ErrorCode.GPT_RESPONSE_EMPTY);
-        }
-    }
-
-    /**
-     * GPT API 요청을 위한 OpenAiRequest 객체를 생성.
-     */
-    private OpenAiRequest buildRequestBody(String prompt) {
-        return new OpenAiRequest(
-                "gpt-4o",
-                new Message[]{new Message("user", prompt)}
-        );
-    }
-
-    /**
-     * 재시도 실패 후 호출되는 메서드 (최대 재시도 후에도 예외 발생 시 호출)
-     * @Recover 어노테이션을 사용하여 재시도 실패 후 처리
-     */
-    @Recover
-    public String recoverCallGptApi(IOException ex, String prompt) {
-        log.error("[GptService] GPT 호출에 실패했습니다. 재시도 후에도 실패하였습니다. 예외: {}", ex.getMessage());
-        throw new ServiceException(ErrorCode.GPT_API_CALL_FAILED); // 재시도 실패 시 서비스 예외 처리
     }
 }
