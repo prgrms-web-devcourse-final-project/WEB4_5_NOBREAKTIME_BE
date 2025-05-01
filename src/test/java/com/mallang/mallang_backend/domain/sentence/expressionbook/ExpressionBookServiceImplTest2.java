@@ -48,7 +48,9 @@ class ExpressionBookServiceImplTest2 {
                 expressionBookRepository,
                 memberRepository,
                 expressionBookItemRepository,
-                expressionRepository
+                expressionRepository,
+                null,
+                null
         );
     }
 
