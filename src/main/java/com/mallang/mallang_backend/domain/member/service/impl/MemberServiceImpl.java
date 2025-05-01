@@ -28,6 +28,16 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.findByEmail(email).isPresent();
     }
 
+    /**
+     * email 로 memberId 조회
+     * @param email (로그인 시 이용하는 ID 값)
+     * @return memberId (Long, PK)
+     */
+    public Long getMemberByEmail (String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() ->
+                new ServiceException(USER_NOT_FOUND)).getId();
+    }
+
     // 소셜 로그인 회원 멤버 가입
     @Transactional
     public Long signupByOauth(String id, String nickname, String profileImage, LoginPlatform loginPlatform) {
@@ -45,15 +55,23 @@ public class MemberServiceImpl implements MemberService {
         return member.getId();
     }
 
-    @Override
-    public Long getMemberId(String email) {
-        return memberRepository.findByEmail(email).get().getId();
-    }
-
-    // 소셜 로그인 회원 언어 정보 추가 -> 변경 감지 이용
+    // 소셜 로그인 회원 언어 정보 추가
+    @Transactional
     public void updateLearningLanguage(Long id, Language language) {
         Member member = memberRepository.findById(id).orElseThrow(() ->
                 new ServiceException(USER_NOT_FOUND));
         member.updateLearningLanguage(language);
+    }
+
+    /**
+     * member 에 접근해서 구독 정보를 가져 오기
+     * @param memberId
+     * @return member 의 구독 타입에서 가져온 권한 정보
+     */
+    public String getSubscription(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow(() ->
+                new ServiceException(USER_NOT_FOUND));
+
+        return member.getSubscription().getRoleName();
     }
 }
