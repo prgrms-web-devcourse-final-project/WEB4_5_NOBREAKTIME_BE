@@ -10,4 +10,6 @@ public interface WordQuizService {
 	void saveWordbookQuizResult(WordQuizResultSaveRequest request, Member member);
 
 	WordQuizResponse generateWordbookTotalQuiz(Member member);
+
+	void saveWordbookTotalQuizResult(WordQuizResultSaveRequest request, Member member);
 }

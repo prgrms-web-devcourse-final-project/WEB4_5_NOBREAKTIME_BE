@@ -129,9 +129,6 @@ public class WordQuizServiceImpl implements WordQuizService {
 			.isCorrect(request.getIsCorrect())
 			.build();
 
-		// 퀴즈 학습 시간 업데이트
-		wordQuiz.addLearningTime(request.getLearningTime());
-
 		// 학습 표시
 		wordbookItem.updateLearned(true);
 
@@ -203,5 +200,28 @@ public class WordQuizServiceImpl implements WordQuizService {
 		response.setQuizItems(quizItems);
 
 		return response;
+	}
+
+	// 통합 단어 퀴즈 결과 저장
+	@Transactional
+	@Override
+	public void saveWordbookTotalQuizResult(WordQuizResultSaveRequest request, Member member) {
+
+		WordbookItem wordbookItem = wordbookItemRepository.findById(request.getWordbookItemId())
+			.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
+
+		// 단어의 현재 상태에 따라 변경
+		wordbookItem.applyLearningResult(request.getIsCorrect());
+
+		WordQuiz wordQuiz = wordQuizRepository.findById(request.getQuizId())
+			.orElseThrow(() -> new ServiceException(WORDQUIZ_NOT_FOUND));
+
+		WordQuizResult result = WordQuizResult.builder()
+			.wordQuiz(wordQuiz)
+			.wordbookItem(wordbookItem)
+			.isCorrect(request.getIsCorrect())
+			.build();
+
+		wordQuizResultRepository.save(result);
 	}
 }

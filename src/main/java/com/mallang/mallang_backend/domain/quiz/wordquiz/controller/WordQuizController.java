@@ -84,4 +84,22 @@ public class WordQuizController {
 		));
 	}
 
+	/**
+	 * 단어장 아이템 대한 통합 퀴즈 결과를 저장합니다.
+	 * @param request 단어장아이템별 퀴즈 결과
+	 * @return 퀴즈 결과 저장 완료
+	 */
+	@PostMapping("/wordbook/result")
+	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
+		@RequestBody WordQuizResultSaveRequest request
+	) {
+		// TODO: 인증 후 member 교체
+		Member member = memberRepository.findById(1L).orElseThrow();
+
+		wordQuizService.saveWordbookTotalQuizResult(request, member);
+		return ResponseEntity.ok(new RsData<>(
+			"200-1",
+			"단어장 퀴즈 결과 저장 완료"
+		));
+	}
 }

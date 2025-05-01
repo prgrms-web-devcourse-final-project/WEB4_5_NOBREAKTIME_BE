@@ -46,7 +46,7 @@ public class WordQuiz {
 
     /**
      * 퀴즈에서 학습한 시간을 추가합니다.
-     * @param learningTime 개별 퀴즈를 푸는데 걸린 시간
+     * @param learningTime 퀴즈를 푸는데 걸린 총 시간
      */
     public void addLearningTime(Long learningTime) {
         if (learningTime != null && 0 < learningTime) {

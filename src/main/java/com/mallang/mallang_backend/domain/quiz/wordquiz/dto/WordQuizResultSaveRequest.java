@@ -10,5 +10,4 @@ public class WordQuizResultSaveRequest {
 	private Long wordbookItemId;
 	private String word;
 	private Boolean isCorrect;
-	private Long learningTime;
 }
