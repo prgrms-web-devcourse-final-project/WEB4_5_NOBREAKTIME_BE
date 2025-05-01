@@ -44,9 +44,13 @@ public class SecurityConfig {
                                 "/oauth/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/v1/video/**"
+                                "/api/v1/video/**",
+                                "/test/**"
                         ).permitAll()
-                        // .anyRequest().authenticated()
+                        .requestMatchers("/api/**").hasRole("BASIC")
+                        .requestMatchers("/api/**").hasRole("STANDARD")
+                        .requestMatchers("/api/**").hasRole("PREMIUM")
+                        .requestMatchers("/api/**").hasRole("ADMIN")
                     .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
