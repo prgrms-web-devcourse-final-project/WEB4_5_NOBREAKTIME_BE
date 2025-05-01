@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook.service;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.savedExpressionsRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -17,4 +18,7 @@ public interface ExpressionBookService {
     void delete(Long expressionBookId, Long memberId);
 
     List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId);
+  
+    void save(savedExpressionsRequest request, Long expressionbookId);
+
 }

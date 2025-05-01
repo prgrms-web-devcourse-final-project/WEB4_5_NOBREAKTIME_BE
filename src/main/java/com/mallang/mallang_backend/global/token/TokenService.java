@@ -27,11 +27,12 @@ public class TokenService {
     public static final Map<String, Long> blacklist = new ConcurrentHashMap<>();
     private final JwtService jwtService;
 
-    // id, 이메일 정보를 담은 토큰 생성 (액세스 토큰, 리프레시 토큰)
-    public TokenPair createTokenPair(String email, Long id) {
+    // id, 권한 정보를 담은 토큰 생성 (액세스 토큰, 리프레시 토큰)
+    public TokenPair createTokenPair(Long memberId, String roleName) {
+
         Map<String, Object> claims = new HashMap<>();
-        claims.put("email", email);
-        claims.put("id", id);
+        claims.put("memberId", memberId);
+        claims.put("role", roleName);
 
         // 액세스 토큰 생성 (짧은 만료시간)
         String accessToken = jwtService.createToken(claims, access_expiration);
@@ -40,6 +41,16 @@ public class TokenService {
         String refreshToken = jwtService.createToken(claims, refresh_expiration);
 
         return new TokenPair(accessToken, refreshToken);
+    }
+
+    // 리프레시 토큰으로 액세스 토큰 재발급
+    public String createAccessToken(Long memberId, String roleName) {
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("memberId", memberId);
+        claims.put("role", roleName);
+
+        return jwtService.createToken(claims, access_expiration);
     }
 
     // 블랙리스트에서 토큰 확인

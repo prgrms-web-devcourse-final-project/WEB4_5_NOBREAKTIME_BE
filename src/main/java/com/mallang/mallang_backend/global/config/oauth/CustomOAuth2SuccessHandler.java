@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.global.config.oauth;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;
 import com.mallang.mallang_backend.global.token.TokenService;
@@ -20,11 +21,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_ATTRIBUTE_MAP;
+
 /**
  * 로그인 / 회원가입 후
- * 로그인 -> 대시보드 페이지 / 회원가입 -> 언어 선택 페이지로 리다이렉트 할 것
- *
- * 프론트: http://localhost:8080/oauth2/authorization/kakao 로 이동
+ * 로그인 -> 메인 페이지 / 회원가입 -> 언어 선택 페이지로 리다이렉트 할 것
+ * <p>
+ * 프론트: {URL}/oauth2/authorization/kakao 로 이동
  */
 
 @Slf4j
@@ -41,50 +44,79 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
     @Override
     public void onAuthenticationSuccess(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        Authentication authentication
-    ) throws IOException {
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication authentication) throws IOException {
 
-        // 사용자의 정보를 가져오기
+        // 1. 사용자 정보 추출
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        // 정보 제공자 판별 용도 -> 로그인 플랫폼 저장 용도
+        // 2. 로그인 플랫폼 추출
         LoginPlatform loginPlatform = LoginPlatform.from(extractProvider(authentication));
 
-        // id 값 추출 (이메일로 사용)
+        // 3. 이메일(id) 추출
         String email = String.valueOf(attributes.get("id"));
 
-        // 이미 존재하는 회원이라면 로그인 처리
+        // 4. 회원 존재 여부 확인
         if (memberService.isExistEmail(email)) {
-            setJwtToken(response, email, memberService.getMemberId(email));
-            response.sendRedirect(frontUrl + "/dashboard"); // 로그인 후 대시보드로 리다이렉트 처리
-        } else {
-            // properties 내부 정보 추출
-            Map<String, Object> properties = getProperties(attributes);
-            String nickname = (String) properties.get("nickname");
-            String profileImage = (String) properties.get("profile_image");
-            log.info("사용자 id: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
-
-            // 새롭게 회원 가입 처리
-            Long memberId = memberService.signupByOauth(email, nickname, profileImage, loginPlatform);
-            setJwtToken(response, email, memberId);
-            response.sendRedirect(frontUrl + "/additional_info"); // 언어 선택 창으로 이동
+            handleExistingMember(response, email);
+            response.sendRedirect(frontUrl + "/"); // 메인 페이지로 이동
+            return;
         }
+
+        // 5. 신규 회원 가입 처리
+        Map<String, Object> properties = getProperties(attributes);
+        String nickname = (String) properties.get("nickname");
+        String profileImage = (String) properties.get("profile_image");
+        log.info("사용자 id: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
+
+        Long memberId = memberService.signupByOauth(email, nickname, profileImage, loginPlatform);
+        setJwtToken(response, memberId, memberService.getSubscription(memberId));
+        response.sendRedirect(frontUrl + "/additional_info"); // 언어 선택 창으로 이동
     }
 
-    // 응답 헤더, 쿠키에 jwt 토큰 설정
-    private void setJwtToken(
-        HttpServletResponse response,
-        String email,
-        Long memberId
-    ) {
-        TokenPair tokenPair = tokenService.createTokenPair(email, memberId);
+    /**
+     * 기존 사용자는 추가 저장 없이 바로 로그인 시키기 위한 메서드
+     *
+     * @param response 응답에 토큰 세팅하기 위한 파라미터
+     * @param email    로그인 시 사용하는 id
+     */
+    private void handleExistingMember(HttpServletResponse response, String email) {
+        // 1. 이메일로 기존 회원 ID 조회
+        Long existMemberId = memberService.getMemberByEmail(email);
+
+        // 2. 회원의 구독 정보 추출
+        String subscription = memberService.getSubscription(existMemberId);
+
+        // 3. JWT 토큰 생성 및 응답 설정
+        setJwtToken(response, existMemberId, subscription);
+    }
+
+    /**
+     * jwt 토큰을 헤더, 쿠키에 저장하는 메서드
+     *
+     * @param response 응답에 저장하기 위한 파라미터
+     * @param memberId member 고유 값
+     * @param roleName 구독에서 가져온 구독별 권한 설정 값
+     */
+    private void setJwtToken(HttpServletResponse response, Long memberId, String roleName) {
+        // 1. 토큰 생성
+        TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
+
+        // 2. 액세스 토큰 헤더에 설정
         response.setHeader("Authorization", "Bearer " + tokenPair.getAccessToken());
+
+        // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(tokenPair.getRefreshToken(), response);
     }
 
+    /**
+     * 소셜 로그인 후 넘어온 Properties 값에서 유효한 값을 꺼내오기 위한 메서드
+     *
+     * @param attributes
+     * @return nickname, profile image url 을 반환
+     */
     private Map<String, Object> getProperties(Map<String, Object> attributes) {
         Object propObj = attributes.get("properties");
         Map<String, Object> properties = null;
@@ -98,16 +130,24 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             }
             return properties;
         } else {
-            throw new IllegalArgumentException("attributes 가 Map 타입으로 변환되지 않습니다.");
+            throw new ServiceException(INVALID_ATTRIBUTE_MAP);
         }
     }
 
+    /**
+     * 소셜 로그인 제공자를 찾기 위한 메서드
+     *
+     * @param authentication 시큐리티에서 넘어온 인증 객체
+     * @return 예: kakao / google / naver
+     */
     private String extractProvider(Authentication authentication) {
         String registrationId = null;
+
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             registrationId = oauthToken.getAuthorizedClientRegistrationId();
             log.info("registrationId: {}", registrationId); // registrationId: kakao
         }
+
         return registrationId;
     }
 }

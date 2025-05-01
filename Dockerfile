@@ -8,6 +8,6 @@ ARG ENV=blue
 ENV PROFILES=${PROFILES}
 ENV ENV=${ENV}
 
-COPY /build/libs/toolgether-0.0.1-SNAPSHOT.jar /app.jar
+COPY /build/libs/mallang-backend-0.0.1-SNAPSHOT.jar /app.jar
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=${PROFILES}", "-Dserver.env=${ENV}", "-jar", "/app.jar"]

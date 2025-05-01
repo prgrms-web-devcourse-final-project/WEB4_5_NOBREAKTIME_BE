@@ -70,23 +70,26 @@ public class WordServiceImpl implements WordService {
             if (line.isBlank()) continue;   // 빈 줄은 무시
 
             String[] parts = line.split("\\|"); // 한 줄을 '|' 기준으로 나누기
-            if (parts.length != 3) {
+            if (parts.length != 5) {
                 // 품사|뜻|난이도 형식이 아닌 경우
                 throw new ServiceException(ErrorCode.WORD_PARSE_FAILED);
             }
-
 
             try {
                 // 각 부분(품사, 뜻, 난이도)을 trim 처리
                 String pos = parts[0].trim();      // 품사
                 String meaning = parts[1].trim();  // 뜻
                 int difficultyValue = Integer.parseInt(parts[2].trim()); // 난이도
+                String exampleSentence = parts[3].trim();
+                String translatedSentence =  parts[4].trim();
 
                 Word newWord = Word.builder()
                         .word(word)
                         .pos(pos)
                         .meaning(meaning)
                         .difficulty(Difficulty.fromValue(difficultyValue))
+                        .exampleSentence(exampleSentence)
+                        .translatedSentence(translatedSentence)
                         .build();
                 words.add(newWord);
             } catch (NumberFormatException e) {

@@ -9,5 +9,5 @@ import java.util.List;
 public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBookItem, ExpressionBookItemId> {
     List<ExpressionBookItem> findAllById_ExpressionBookId(Long expressionBookId);
 
-    boolean existsById(ExpressionBookItemId newId);
+    boolean existsById(ExpressionBookItemId itemId);
 }

@@ -37,15 +37,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springframework.retry:spring-retry'
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
 	// JPA & DB
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-	implementation 'org.springframework.boot:spring-boot-starter-cache' // 캐시 이용
-	implementation 'org.springframework.session:spring-session-data-redis' // 세션 클러스터링
+	// implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// implementation 'org.springframework.boot:spring-boot-starter-cache' // 캐시 이용
+	// implementation 'org.springframework.session:spring-session-data-redis' // 세션 클러스터링
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
@@ -90,6 +89,10 @@ dependencies {
 	implementation 'com.google.oauth-client:google-oauth-client-jetty:1.23.0'
 	implementation 'com.google.apis:google-api-services-youtube:v3-rev20230816-2.0.0'
 	implementation 'com.google.http-client:google-http-client-jackson2:1.39.2'
+
+	// resilience4j api
+	implementation "io.github.resilience4j:resilience4j-spring-boot3:2.3.0"
+	implementation "io.github.resilience4j:resilience4j-retry"
 }
 
 tasks.named('test') {

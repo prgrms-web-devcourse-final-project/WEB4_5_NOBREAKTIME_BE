@@ -31,11 +31,11 @@ public class Videos {
 
     @Builder
     private Videos(
-            String id,
-            String videoTitle,
-            String thumbnailImageUrl,
-            String channelTitle,
-            Language language
+        String id,
+        String videoTitle,
+        String thumbnailImageUrl,
+        String channelTitle,
+        Language language
     ) {
         this.id = id;
         this.videoTitle = videoTitle;
@@ -48,10 +48,10 @@ public class Videos {
      * 필드 변경 시 사용하는 메서드
      */
     public void updateTitleAndThumbnail(
-            String newTitle,
-            String newThumbnailUrl,
-            String newChannelTitle,
-            Language newLanguage
+        String newTitle,
+        String newThumbnailUrl,
+        String newChannelTitle,
+        Language newLanguage
     ) {
         this.videoTitle = newTitle;
         this.thumbnailImageUrl = newThumbnailUrl;
