@@ -16,8 +16,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_ATT
 @RequiredArgsConstructor
 public class NaverUserProcessor implements OAuth2UserProcessor {
 
-    private static final String RESPONSE_KEY = "response";
-
     @Override
     public boolean supports(LoginPlatform loginPlatform) {
         return loginPlatform == LoginPlatform.NAVER;
@@ -34,7 +32,7 @@ public class NaverUserProcessor implements OAuth2UserProcessor {
      * @return nickname, profile_image 등이 포함된 맵
      */
     private Map<String, Object> extractResponse(Map<String, Object> attributes) {
-        Object propObj = attributes.get(RESPONSE_KEY);
+        Object propObj = attributes.get("response");
 
         if (propObj instanceof Map<?, ?> rawMap) {
             Map<String, Object> responseMap = convertToStringObjectMap(rawMap);
