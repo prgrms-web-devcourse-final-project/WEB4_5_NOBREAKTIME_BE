@@ -42,7 +42,9 @@ public class AppConstants {
             "/login/oauth2/code/**",
             "/api/v1/member/**",
             "/oauth2/**",
-            "/api/test/login"
+            "/api/test/login",
+            "/health",
+            "/env"
     };
     /**
      * 정적 리소스 확장자 패턴

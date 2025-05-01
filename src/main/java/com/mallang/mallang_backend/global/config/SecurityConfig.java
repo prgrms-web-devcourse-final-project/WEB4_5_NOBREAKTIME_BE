@@ -45,7 +45,9 @@ public class SecurityConfig {
                                 "/h2-console/**",
                                 "/api/v1/video/**",
                                 "/api/v1/wordbooks/**",
-                                "/api/test"
+                                "/api/test",
+                                "/health",
+                                "/env"
                         ).permitAll()
                         .requestMatchers("/api/**").hasAnyRole(
                                 "BASIC",
