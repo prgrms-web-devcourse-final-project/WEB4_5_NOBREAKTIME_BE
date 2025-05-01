@@ -1,14 +1,13 @@
 package com.mallang.mallang_backend.domain.sentence.expression.entity;
 
-import java.time.LocalTime;
-
-import com.mallang.mallang_backend.domain.video.video.entity.Video;
-
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalTime;
 
 @Getter
 @Entity
@@ -22,7 +21,7 @@ public class Expression {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_id", nullable = false)
-    private Video video;
+    private Videos videos;
 
     @Column(nullable = false)
     private String sentence;
@@ -41,13 +40,13 @@ public class Expression {
         String sentence,
         String description,
         String sentenceAnalysis,
-        Video video,
+        Videos videos,
         LocalTime subtitleAt
     ) {
         this.sentence = sentence;
         this.description = description;
         this.sentenceAnalysis = sentenceAnalysis;
-        this.video = video;
+        this.videos = videos;
         this.subtitleAt = subtitleAt;
     }
 }
