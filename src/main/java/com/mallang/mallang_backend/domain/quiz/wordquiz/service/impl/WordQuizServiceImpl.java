@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class WordQuizServiceImpl implements WordQuizService {
 
 	private final WordQuizResultRepository wordQuizResultRepository;
@@ -175,7 +176,6 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 		List<WordbookItem> selectedNew = newWords.subList(0, newTarget);
 		List<WordbookItem> selectedReview = reviewWords.subList(0, reviewTarget); // 복습
-
 
 		// 6. 문제 리스트 구성
 		List<WordQuizItem> quizItems = Stream.concat(selectedNew.stream(), selectedReview.stream())

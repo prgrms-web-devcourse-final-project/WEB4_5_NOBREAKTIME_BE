@@ -7,11 +7,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
@@ -35,6 +41,7 @@ import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
@@ -73,6 +80,7 @@ public class WordQuizServiceImplTest {
 		savedMember = Member.builder()
 			.language(Language.ENGLISH)
 			.build();
+		savedMember.updateWordGoal(100);
 		setId(savedMember, 1L);
 	}
 
@@ -115,7 +123,7 @@ public class WordQuizServiceImplTest {
 				.originalSentence("I like bananas.")
 				.translatedSentence("나는 바나나를 좋아해.")
 				.build();
-			setId(subtitle, 200L );
+			setId(subtitle, 200L);
 
 			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
 			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(List.of(customItem, subtitleItem));
@@ -198,5 +206,143 @@ public class WordQuizServiceImplTest {
 
 		verify(wordQuizResultRepository).save(any(WordQuizResult.class));
 		assertThat(wordbookItem.isLearned()).isTrue();
+	}
+
+	@Nested
+	@DisplayName("단어장 통합 퀴즈 생성")
+	class WordTotalQuiz {
+		@Test
+		@DisplayName("실패 - 단어 수 부족 시 예외가 발생해야 한다")
+		void testNotEnoughWords_ThrowsException() {
+			when(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW))
+				.thenReturn(createDistinctMockItems(10, WordStatus.NEW));
+			when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
+				.thenReturn(createDistinctMockItems(5, WordStatus.REVIEW_COUNT_1));
+
+			assertThrows(ServiceException.class, () -> {
+				wordQuizService.generateWordbookTotalQuiz(savedMember);
+			});
+		}
+
+		@Test
+		@DisplayName("성공 - NEW 50개 + REVIEW 60개 → 정상 생성")
+		void testEnoughWords_NormalCase() {
+			when(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW))
+				.thenReturn(createDistinctMockItems(50, WordStatus.NEW));
+			when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
+				.thenReturn(createDistinctMockItems(60, WordStatus.REVIEW_COUNT_1));
+			when(wordQuizRepository.save(any())).thenReturn(mock(WordQuiz.class));
+
+			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
+
+			assertThat(response).isNotNull();
+			assertThat(response.getQuizItems()).hasSize(100);
+		}
+
+		@Test
+		@DisplayName("성공 - NEW 부족 (20개), REVIEW 충분 (100개) → 정상 생성")
+		void testNewTooFew_ReviewEnough() {
+			when(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW))
+				.thenReturn(createDistinctMockItems(20, WordStatus.NEW));
+			when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
+				.thenReturn(createDistinctMockItems(100, WordStatus.REVIEW_COUNT_1));
+			when(wordQuizRepository.save(any())).thenReturn(mock(WordQuiz.class));
+
+			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
+
+			assertThat(response).isNotNull();
+			assertThat(response.getQuizItems()).hasSize(100);
+		}
+
+		@Test
+		@DisplayName("성공 - REVIEW 부족 (10개), NEW 충분 (100개) → 정상 생성")
+		void testReviewTooFew_NewEnough() {
+			when(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW))
+				.thenReturn(createDistinctMockItems(100, WordStatus.NEW));
+			when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
+				.thenReturn(createDistinctMockItems(10, WordStatus.REVIEW_COUNT_1));
+			when(wordQuizRepository.save(any())).thenReturn(mock(WordQuiz.class));
+
+			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
+
+			assertThat(response).isNotNull();
+			assertThat(response.getQuizItems()).hasSize(100);
+		}
+
+		@Test
+		@DisplayName("성공 - NEW 40개 + REVIEW 60개 → 정상 생성")
+		void testExactEnoughWords() {
+			when(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW))
+				.thenReturn(createDistinctMockItems(40, WordStatus.NEW));
+			when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
+				.thenReturn(createDistinctMockItems(60, WordStatus.REVIEW_COUNT_1));
+			when(wordQuizRepository.save(any())).thenReturn(mock(WordQuiz.class));
+
+			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
+
+			assertThat(response).isNotNull();
+			assertThat(response.getQuizItems()).hasSize(100);
+		}
+
+
+		private List<WordbookItem> createDistinctMockItems(int count, WordStatus status) {
+			return IntStream.range(0, count)
+				.mapToObj(i -> createMockItem((long) i, status, LocalDateTime.now().minusDays(i)))
+				.collect(Collectors.toList());
+		}
+
+		private WordbookItem createMockItem(Long id, WordStatus status, LocalDateTime studiedAt) {
+			WordbookItem item = WordbookItem.builder().build();
+			ReflectionTestUtils.setField(item, "id", id);
+			ReflectionTestUtils.setField(item, "wordStatus", status);
+			ReflectionTestUtils.setField(item, "lastStudiedAt", studiedAt);
+			return item;
+		}
+
+		@Test
+		@DisplayName("성공 - 학습 목표 수만큼 NEW + 복습 단어를 비율에 따라 뽑는다")
+		void generateWordbookTotalQuiz_success() {
+			// given
+			savedMember.updateWordGoal(20);
+
+			List<WordbookItem> newWords = IntStream.range(0, 10)
+				.mapToObj(i -> createItem("new" + i, WordStatus.NEW))
+				.collect(Collectors.toCollection(ArrayList::new));
+
+			List<WordbookItem> reviewWords = IntStream.range(0, 20)
+				.mapToObj(i -> {
+					WordStatus status = (i % 2 == 0) ? WordStatus.WRONG : WordStatus.REVIEW_COUNT_1;
+					return createItem("review" + i, status);
+				})
+				.collect(Collectors.toCollection(ArrayList::new));
+
+
+			given(wordbookItemRepository.findByMemberAndStatus(savedMember, WordStatus.NEW)).willReturn(newWords);
+			given(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any(LocalDateTime.class))).willReturn(reviewWords);
+			given(wordQuizRepository.save(any(WordQuiz.class))).willAnswer(inv -> {
+				WordQuiz quiz = inv.getArgument(0);
+				ReflectionTestUtil.setId(quiz, 999L);
+				return quiz;
+			});
+
+			// when
+			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
+
+			// then
+			assertThat(response.getId()).isEqualTo(999L);
+			assertThat(response.getQuizItems()).hasSize(20);
+		}
+
+		private WordbookItem createItem(String word, WordStatus status) {
+			WordbookItem item = WordbookItem.builder()
+				.word(word)
+				.build();
+
+			item.updateStatus(status);
+			item.updateLastStudiedAt(LocalDateTime.now().minusDays(7));
+
+			ReflectionTestUtil.setId(item, ThreadLocalRandom.current().nextLong(1, 1000));
+			return item;
+		}
 	}
 }

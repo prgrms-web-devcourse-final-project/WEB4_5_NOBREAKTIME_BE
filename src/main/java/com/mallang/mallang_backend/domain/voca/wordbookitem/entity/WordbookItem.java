@@ -77,4 +77,8 @@ public class WordbookItem {
     public void updateLearned(boolean isLearned) {
         this.isLearned = isLearned;
     }
+
+    public void updateLastStudiedAt(LocalDateTime lastStudiedAt) {
+        this.lastStudiedAt = lastStudiedAt;
+    }
 }

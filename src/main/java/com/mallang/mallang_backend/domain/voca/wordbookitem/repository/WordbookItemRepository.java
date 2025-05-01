@@ -14,5 +14,4 @@ public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long
 
 	List<WordbookItem> findByMemberAndStatus(Member member, WordStatus wordStatus);
 
-	List<WordbookItem> findByMemberAndStatusNot(Member member, WordStatus wordStatus);
 }
