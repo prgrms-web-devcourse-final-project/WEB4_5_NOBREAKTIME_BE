@@ -42,7 +42,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackSearchWord(String word, Throwable t) {
         log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.GPT_API_CALL_FAILED);
+        return "단어 분석 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
     }
 
     /**
@@ -62,7 +62,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackAnalyzeSentence(String sentence, String translatedSentence, Throwable t) {
         log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.GPT_API_CALL_FAILED);
+        return "문장 분석 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
     }
 
     // 결과 반환
