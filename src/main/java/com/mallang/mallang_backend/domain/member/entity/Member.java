@@ -1,13 +1,20 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
+import java.time.LocalDateTime;
+
 import com.mallang.mallang_backend.global.common.Language;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -73,5 +80,15 @@ public class Member {
     // 언어 선택 업데이트 로직 -> 소셜 로그인 회원
     public void updateLearningLanguage(Language language) {
         this.language = language;
+    }
+
+    // 단어장 추가 위해 구독 플랜 확인
+    public boolean canCreateWordBook() {
+        return subscription != Subscription.BASIC;
+    }
+
+    // 구독 플랜 업데이트
+    public void updateSubscription(Subscription subscription) {
+        this.subscription = subscription;
     }
 }

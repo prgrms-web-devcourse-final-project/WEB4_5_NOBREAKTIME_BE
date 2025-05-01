@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.util;
+package com.mallang.mallang_backend.global.util.clova;
 
 import lombok.Getter;
 import lombok.Setter;

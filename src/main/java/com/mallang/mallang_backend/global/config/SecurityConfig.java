@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,7 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
 
 /**
  * oauth2Login
@@ -44,7 +45,8 @@ public class SecurityConfig {
                                 "/oauth/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/v1/video/**"
+                                "/api/v1/video/**",
+                                "/api/v1/wordbooks/**"
                         ).permitAll()
                         // .anyRequest().authenticated()
                     .anyRequest().permitAll()
