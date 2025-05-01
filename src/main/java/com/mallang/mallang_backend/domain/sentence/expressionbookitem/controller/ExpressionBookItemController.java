@@ -29,7 +29,7 @@ public class ExpressionBookItemController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현이 표현함에서 삭제되었습니다."
                 ));
     }
@@ -48,7 +48,7 @@ public class ExpressionBookItemController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현이 다른 표현함으로 이동되었습니다."
                 ));
     }

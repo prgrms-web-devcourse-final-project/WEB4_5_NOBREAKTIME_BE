@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/h2-console/**",
                                 "/api/v1/video/**",
                                 "/api/v1/expressionbooks/**",
-                                "/api/v1/expressions/**"
+                                "/api/v1/expressions/**",
+                                "/api/v1/expressionbookItems/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

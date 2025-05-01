@@ -41,7 +41,7 @@ public class ExpressionBookController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "추가 표현함이 생성되었습니다.",
                         response
                 ));
@@ -60,7 +60,7 @@ public class ExpressionBookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현함 목록 조회 성공했습니다.",
                         response
                 ));
@@ -83,7 +83,7 @@ public class ExpressionBookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현함 이름이 수정되었습니다."
                 ));
     }
@@ -103,7 +103,7 @@ public class ExpressionBookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현함이 삭제되었습니다."
                 ));
     }
@@ -123,7 +123,7 @@ public class ExpressionBookController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new RsData<>(
-                        "",
+                        "200",
                         "표현함의 표현 목록 조회 성공했습니다.",
                         response
                 ));

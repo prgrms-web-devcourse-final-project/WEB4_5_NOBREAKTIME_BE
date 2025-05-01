@@ -30,7 +30,7 @@ public class ExpressionController {
     ) {
         List<ExpressionResponse> result = expressionService.searchExpressions(keyword);
         return ResponseEntity.ok(new RsData<>(
-                "",
+                "200",
                 "표현 검색 결과입니다.",
                 result
         ));
