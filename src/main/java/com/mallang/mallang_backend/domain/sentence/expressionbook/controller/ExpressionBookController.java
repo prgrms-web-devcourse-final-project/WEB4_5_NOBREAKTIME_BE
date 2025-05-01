@@ -1,15 +1,11 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.controller;
 
 
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.UpdateExpressionBookNameRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.savedExpressionsRequest;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.*;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.ExpressionBookItemService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.Login;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,21 +21,20 @@ import java.util.List;
 public class ExpressionBookController {
 
     private final ExpressionBookService expressionBookService;
-    private final MemberRepository memberRepository;
-    private final ExpressionBookItemService expressionBookItemService;
 
     /**
      * 추가 표현함 생성
      *
-     * @param request  표현함 이름과 언어 정보가 담긴 요청 객체
-     * @param memberId 회원 ID
+     * @param request     표현함 이름과 언어 정보가 담긴 요청 객체
+     * @param userDetails 로그인한 사용자 정보
      * @return 생성된 표현함 정보를 담은 응답 객체
      */
     @PostMapping
     public ResponseEntity<RsData<ExpressionBookResponse>> create(
             @RequestBody @Valid ExpressionBookRequest request,
-            @RequestParam Long memberId // 추후 @AuthenticationPrincipal 로 변경 해야할 것 같습니다.
+            @Login CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails.getMemberId();
         ExpressionBookResponse response = expressionBookService.create(request, memberId);
 
         return ResponseEntity
@@ -54,13 +49,14 @@ public class ExpressionBookController {
     /**
      * 추가 표현함 전체 조회
      *
-     * @param memberId 회원 ID
+     * @param userDetails 로그인한 사용자 정보
      * @return 표현함 목록을 담은 응답 객체
      */
     @GetMapping
     public ResponseEntity<RsData<List<ExpressionBookResponse>>> getAllByMember(
-            @RequestParam Long memberId
+            @Login CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails.getMemberId();
         List<ExpressionBookResponse> response = expressionBookService.getByMember(memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -75,16 +71,17 @@ public class ExpressionBookController {
      * 추가 표현함 이름 수정
      *
      * @param expressionbookId 수정할 표현함 ID
-     * @param memberId         회원 ID
+     * @param userDetails      로그인한 사용자 정보
      * @param request          표현함 이름 수정 요청 객체
      * @return 수정 성공 응답
      */
     @PatchMapping("/{expressionbookId}")
     public ResponseEntity<RsData<?>> updateName(
             @PathVariable Long expressionbookId,
-            @RequestParam Long memberId,
+            @Login CustomUserDetails userDetails,
             @RequestBody @Valid UpdateExpressionBookNameRequest request
     ) {
+        Long memberId = userDetails.getMemberId();
         expressionBookService.updateName(expressionbookId, memberId, request.getNewName());
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -98,14 +95,15 @@ public class ExpressionBookController {
      * 추가 표현함 삭제
      *
      * @param expressionbookId 삭제할 표현함 ID
-     * @param memberId         회원 ID
+     * @param userDetails      로그인한 사용자 정보
      * @return 삭제 성공 응답
      */
     @DeleteMapping("/{expressionbookId}")
     public ResponseEntity<RsData<?>> delete(
             @PathVariable Long expressionbookId,
-            @RequestParam Long memberId
+            @Login CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails.getMemberId();
         expressionBookService.delete(expressionbookId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -119,14 +117,15 @@ public class ExpressionBookController {
      * 특정 표현함의 표현 목록 조회
      *
      * @param expressionbookId 표현함 ID
-     * @param memberId         회원 ID
+     * @param userDetails      로그인한 사용자 정보
      * @return 표현 목록을 담은 응답 객체
      */
     @GetMapping("{expressionbookId}/words")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
             @PathVariable Long expressionbookId,
-            @RequestParam Long memberId
+            @Login CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails.getMemberId();
         List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(expressionbookId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
