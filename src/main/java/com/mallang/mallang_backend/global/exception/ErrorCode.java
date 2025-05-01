@@ -38,8 +38,12 @@ public enum ErrorCode {
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
-    // expressions Errors
-    EXPRESSION_BOOK_NOT_FOUND("500-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
+    // ExpressionBook Errors
+    EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
+    FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+
+    // Expression Errors
+    EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
 
     // Wordbook Errors
     // 해당 단어장이 없거나 권한이 없음
