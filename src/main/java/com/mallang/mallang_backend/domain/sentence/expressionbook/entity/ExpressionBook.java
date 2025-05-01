@@ -39,4 +39,8 @@ public class ExpressionBook {
         this.name = name;
         this.language = language;
     }
+
+    public void updateName(String newName) {
+        this.name = newName;
+    }
 }
