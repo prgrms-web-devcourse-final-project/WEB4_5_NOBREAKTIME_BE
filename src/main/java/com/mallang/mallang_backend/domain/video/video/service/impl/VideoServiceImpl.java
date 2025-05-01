@@ -1,23 +1,6 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import com.google.api.services.youtube.model.Video;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.domain.video.util.VideoUtils;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
-import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.util.YoutubeAudioExtractor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,7 +9,26 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.google.api.services.youtube.model.Video;
+import com.mallang.mallang_backend.domain.video.util.VideoUtils;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
+import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
+import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
