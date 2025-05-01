@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.global.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -36,7 +37,7 @@ public enum ErrorCode {
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // expressions Errors
-    EXPRESSION_BOOK_NOT_FOUND("500-1", "expression.book.not.found", HttpStatus.NOT_FOUND);
+    EXPRESSION_BOOK_NOT_FOUND("500-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
 
     // Wordbook Errors
     // 해당 단어장이 없거나 권한이 없음
