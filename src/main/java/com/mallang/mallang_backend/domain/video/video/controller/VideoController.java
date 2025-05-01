@@ -7,6 +7,8 @@ import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.Login;
 
 import lombok.RequiredArgsConstructor;
 
@@ -98,8 +100,10 @@ public class VideoController {
 	@GetMapping("/{videoId}")
 	public ResponseEntity<RsData<VideoDetailResponse>> getVideo(
 		@PathVariable String videoId,
-		@RequestParam Long memberId
+		@Login CustomUserDetails userDetail
 	) {
+		Long memberId = userDetail.getMemberId();
+
 		// 1) 동기 처리: 조회 + 엔티티 저장/업데이트
 		VideoDetailResponse dto = videoService.getVideoDetail(videoId);
 
