@@ -44,6 +44,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/h2-console/**",
                                 "/api/v1/video/**",
+                                "/api/v1/expressionbooks/**",
+                                "/api/v1/expressions/**",
+                                "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
                                 "/api/test",
                                 "/health",
@@ -78,7 +81,8 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 허용할 오리진 설정
-        configuration.setAllowedOrigins(Arrays.asList("https://cdpn.io",
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://cdpn.io",
                 "https://www.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
