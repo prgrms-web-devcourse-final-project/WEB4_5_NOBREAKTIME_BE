@@ -75,7 +75,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 		Long quizId = wordQuizRepository.save(wordQuiz).getId();
 		WordQuizResponse response = new WordQuizResponse();
-		response.setId(quizId);
+		response.setQuizId(quizId);
 		response.setQuizItems(quizzes);
 
 		return response;
@@ -105,7 +105,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	private WordQuizItem createDto(Long id, String word, String original, String translated) {
 		WordQuizItem dto = new WordQuizItem();
-		dto.setId(id);
+		dto.setWordQuizItemId(id);
 		dto.setWord(word);
 		dto.setOriginal(original);
 		dto.setTranslated(translated);
@@ -196,7 +196,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 		Long quizId = wordQuizRepository.save(wordQuiz).getId();
 
 		WordQuizResponse response = new WordQuizResponse();
-		response.setId(quizId);
+		response.setQuizId(quizId);
 		response.setQuizItems(quizItems);
 
 		return response;

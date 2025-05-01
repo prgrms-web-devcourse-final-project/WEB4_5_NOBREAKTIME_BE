@@ -8,6 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WordQuizResponse {
-	private Long id;
+	private Long quizId;
 	List<WordQuizItem> quizItems;
 }

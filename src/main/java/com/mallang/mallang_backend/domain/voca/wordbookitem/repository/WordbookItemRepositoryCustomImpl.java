@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.QWordbookItem
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.dsl.DateTimeExpression;
+import com.querydsl.core.types.dsl.DateTemplate;
 import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.EnumPath;
 import com.querydsl.core.types.dsl.Expressions;
@@ -37,9 +38,6 @@ public class WordbookItemRepositoryCustomImpl implements WordbookItemRepositoryC
 			.fetch();
 	}
 
-	/**
-	 * 단어의 상태별 복습 대상 조건을 구성하는 BooleanExpression.
-	 */
 	private BooleanBuilder isReviewDue(
 		EnumPath<WordStatus> status,
 		DateTimePath<LocalDateTime> studiedAt,
@@ -47,28 +45,21 @@ public class WordbookItemRepositoryCustomImpl implements WordbookItemRepositoryC
 	) {
 		BooleanBuilder builder = new BooleanBuilder();
 
+		DateTemplate<LocalDate> studiedDate = Expressions.dateTemplate(LocalDate.class, "DATE({0})", studiedAt);
+		LocalDate today = now.toLocalDate();
+
 		builder.or(status.eq(WordStatus.WRONG)
-			.and(dateTimePlusDays(studiedAt, 1).loe(now)));
+			.and(studiedDate.loe(today.minusDays(1))));
 		builder.or(status.eq(WordStatus.REVIEW_COUNT_1)
-			.and(dateTimePlusDays(studiedAt, 7).loe(now)));
+			.and(studiedDate.loe(today.minusDays(7))));
 		builder.or(status.eq(WordStatus.REVIEW_COUNT_2)
-			.and(dateTimePlusDays(studiedAt, 30).loe(now)));
+			.and(studiedDate.loe(today.minusDays(30))));
 		builder.or(status.eq(WordStatus.REVIEW_COUNT_3)
-			.and(dateTimePlusDays(studiedAt, 90).loe(now)));
+			.and(studiedDate.loe(today.minusDays(90))));
 		builder.or(status.eq(WordStatus.CORRECT)
-			.and(dateTimePlusDays(studiedAt, 180).loe(now)));
+			.and(studiedDate.loe(today.minusDays(180))));
 
 		return builder;
 	}
 
-	/**
-	 * DATE_ADD 함수로 LocalDateTime에 일수를 더하는 표현식 생성.
-	 */
-	private DateTimeExpression<LocalDateTime> dateTimePlusDays(DateTimePath<LocalDateTime> dateTimePath, int days) {
-		return Expressions.dateTimeTemplate(
-			LocalDateTime.class,
-			"{0} + {1} * INTERVAL '1' DAY",
-			dateTimePath, days
-		);
-	}
 }

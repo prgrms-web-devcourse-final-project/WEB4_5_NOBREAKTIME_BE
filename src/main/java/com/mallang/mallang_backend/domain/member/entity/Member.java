@@ -29,11 +29,13 @@ public class Member {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
     private String password;
 
     @Column(nullable = false)
     private String nickname;
 
+    @Column
     private String profileImageUrl;
 
     @Column(nullable = false)

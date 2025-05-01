@@ -35,7 +35,7 @@ public class WordQuizController {
 		@PathVariable Long wordbookId
 	) {
 		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findFirstByOrderByIdAsc();
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
@@ -56,7 +56,7 @@ public class WordQuizController {
 		@RequestBody WordQuizResultSaveRequest request
 	) {
 		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findById(1L).orElseThrow();
+		Member member = memberRepository.findFirstByOrderByIdAsc();
 
 		wordQuizService.saveWordbookQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -73,7 +73,7 @@ public class WordQuizController {
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
 	) {
 		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findFirstByOrderByIdAsc();
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookTotalQuiz(member);
 
@@ -89,12 +89,12 @@ public class WordQuizController {
 	 * @param request 단어장아이템별 퀴즈 결과
 	 * @return 퀴즈 결과 저장 완료
 	 */
-	@PostMapping("/wordbook/result")
+	@PostMapping("/wordbook/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
 		@RequestBody WordQuizResultSaveRequest request
 	) {
 		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findById(1L).orElseThrow();
+		Member member = memberRepository.findFirstByOrderByIdAsc();
 
 		wordQuizService.saveWordbookTotalQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(

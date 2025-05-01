@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WordQuizItem {
-    private Long id;
+    private Long wordQuizItemId;
     private String word;
     private String original;
     private String translated;

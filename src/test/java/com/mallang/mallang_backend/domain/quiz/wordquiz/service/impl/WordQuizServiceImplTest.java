@@ -152,7 +152,7 @@ public class WordQuizServiceImplTest {
 
 			WordQuizResponse response = wordQuizService.generateWordbookQuiz(wordbookId, savedMember);
 
-			assertThat(response.getId()).isEqualTo(999L);
+			assertThat(response.getQuizId()).isEqualTo(999L);
 			assertThat(response.getQuizItems()).hasSize(2);
 			assertThat(response.getQuizItems()).extracting("word").containsExactlyInAnyOrder("apple", "banana");
 			assertThat(response.getQuizItems()).extracting("original").contains("This is an apple.", "I like bananas.");
@@ -348,7 +348,7 @@ public class WordQuizServiceImplTest {
 			WordQuizResponse response = wordQuizService.generateWordbookTotalQuiz(savedMember);
 
 			// then
-			assertThat(response.getId()).isEqualTo(999L);
+			assertThat(response.getQuizId()).isEqualTo(999L);
 			assertThat(response.getQuizItems()).hasSize(20);
 		}
 
