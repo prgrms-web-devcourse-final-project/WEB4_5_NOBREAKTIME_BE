@@ -53,7 +53,7 @@ public class WordbookController {
 
 		wordbookService.addWords(wordbookId, request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장에 단어가 추가되었습니다."
 		));
 	}
@@ -75,7 +75,7 @@ public class WordbookController {
 		wordbookService.addWordCustom(wordbookId, request, member);
 
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장에 단어가 추가되었습니다."
 		));
 	}
@@ -94,7 +94,7 @@ public class WordbookController {
 
 		Long id = wordbookService.createWordbook(request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"추가 단어장이 생성되었습니다.",
 			id
 		));
@@ -115,7 +115,7 @@ public class WordbookController {
 
 		wordbookService.renameWordbook(wordbookId, request.getName(), member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장의 이름이 변경되었습니다."
 		));
 	}
@@ -132,7 +132,7 @@ public class WordbookController {
 
 		wordbookService.deleteWordbook(wordbookId, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장이 삭제되었습니다."
 		));
 	}
@@ -151,7 +151,7 @@ public class WordbookController {
 
 		wordbookService.moveWords(request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어들이 이동되었습니다."
 		));
 	}
@@ -170,7 +170,7 @@ public class WordbookController {
 
 		wordbookService.deleteWords(request, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어들이 삭제되었습니다."
 		));
 	}
@@ -189,7 +189,7 @@ public class WordbookController {
 
 		List<WordResponse> words = wordbookService.getWordsRandomly(wordbookId, member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어 목록이 조회되었습니다.",
 			words
 		));
@@ -206,7 +206,7 @@ public class WordbookController {
 
 		List<WordbookResponse> wordbooks = wordbookService.getWordbooks(member);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"단어장 목록 조회에 성공했습니다.",
 			wordbooks
 		));

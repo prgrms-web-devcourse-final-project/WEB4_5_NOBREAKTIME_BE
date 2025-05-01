@@ -9,7 +9,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 
-public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long> {
+public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long>, WordbookItemRepositoryCustom {
 	Optional<WordbookItem> findByWordbookIdAndWord(long wordbookId, String word);
 	Optional<WordbookItem> findByWordbookAndWord(Wordbook wordbook, String word);
 	List<WordbookItem> findAllByWordbook(Wordbook wordbook);

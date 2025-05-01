@@ -143,7 +143,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 	public WordQuizResponse generateWordbookTotalQuiz(Member member) {
 		int goal = member.getWordGoal();
 
-		List<Wordbook> wordbooks = wordbookRepository.findByMember(member);
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
 
 		// 1. 조건에 맞는 단어 조회
 		List<WordbookItem> newWords = new ArrayList<>();
