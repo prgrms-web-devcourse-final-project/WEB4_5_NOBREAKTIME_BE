@@ -144,8 +144,13 @@ public class WordQuizServiceImpl implements WordQuizService {
 	public WordQuizResponse generateWordbookTotalQuiz(Member member) {
 		int goal = member.getWordGoal();
 
+		List<Wordbook> wordbooks = wordbookRepository.findByMember(member);
+
 		// 1. 조건에 맞는 단어 조회
-		List<WordbookItem> newWords = wordbookItemRepository.findByMemberAndStatus(member, WordStatus.NEW);
+		List<WordbookItem> newWords = new ArrayList<>();
+		for (Wordbook wordbook : wordbooks) {
+			newWords.addAll(wordbookItemRepository.findAllByWordbookAndWordStatus(wordbook, WordStatus.NEW));
+		}
 		List<WordbookItem> reviewWords = wordbookItemRepository.findReviewTargetWords(member, LocalDateTime.now());
 
 		int newCount = newWords.size();
