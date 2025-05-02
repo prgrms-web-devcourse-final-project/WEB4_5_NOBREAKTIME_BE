@@ -10,7 +10,8 @@ import lombok.Getter;
 public enum ErrorCode {
 
     // User Errors
-    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),    //  사용자를 찾을 수 없음
+    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND), //  사용자를 찾을 수 없음
+    MEMBER_ALREADY_WITHDRAWN("410-1", "member.already.withdrawn", HttpStatus.GONE),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -81,6 +82,15 @@ public enum ErrorCode {
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
+
+    // file upload Errors
+    FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    NOT_EXIST_BUCKET("404-3", "not.exist.bucket", HttpStatus.NOT_FOUND),
+    FILE_EMPTY("404-4", "empty.file", HttpStatus.NOT_FOUND),
+    NOT_SUPPORTED_TYPE("400-5", "not.supported.type", HttpStatus.BAD_REQUEST),
+
+    // redirect Errors
+    REDIRECTION_FAILED("500-8", "redirection.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 공통 API 에러 (fallback 처리용)
     API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR),

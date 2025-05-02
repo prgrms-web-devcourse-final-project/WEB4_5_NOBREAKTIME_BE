@@ -3,48 +3,79 @@ package com.mallang.mallang_backend.domain.member.service.impl;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
-import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.config.QueryDslConfig;
+import com.mallang.mallang_backend.global.config.S3Config;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
+import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @ActiveProfiles("local")
-@DataJpaTest
-@Import({MemberServiceImpl.class, QueryDslConfig.class})
+@SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Transactional
 class MemberServiceImplTest {
 
     @Autowired
     private MemberRepository memberRepository;
 
     @Autowired
-    private WordbookRepository wordbookRepository;
+    MemberQueryRepository memberQueryRepository;
+
+    @Autowired
+    S3ImageUploader imageUploader;
+
+    @Autowired
+    EntityManager em;
+
+    @Autowired
+    SubscriptionService subscriptionService;
+
+    @Autowired
+    WordbookRepository wordbookRepository;
 
     @Autowired
     private MemberService memberService;
 
     // 공통 초기화 데이터
-    private Member createMember() {
+    private Member createMember1() {
         return Member.builder()
-                .email("test@example.com")
-                .nickname("testUser")
+                .email("test1@example.com")
+                .nickname("testUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
+                .language(Language.NONE)
+                .profileImageUrl("profile.jpg")
+                .build();
+    }
+
+    private Member createMember2() {
+        return Member.builder()
+                .email("test2@example.com")
+                .nickname("testUser2")
+                .loginPlatform(LoginPlatform.KAKAO)
                 .language(Language.NONE)
                 .profileImageUrl("profile.jpg")
                 .build();
@@ -71,7 +102,7 @@ class MemberServiceImplTest {
     @DisplayName("소셜 로그인 유저 언어 추가 성공")
     void updateLearningLanguage_Success() {
         // Given
-        Member member = createMember();
+        Member member = createMember1();
         Member savedMember = memberRepository.save(member);
 
         // When
@@ -95,7 +126,7 @@ class MemberServiceImplTest {
     @DisplayName("유저의 구독 정보 업데이트")
     void getSubscription_Success() {
         // Given: 구독 정보 포함한 멤버 저장
-        Member member = createMember();
+        Member member = createMember1();
         Member savedMember = memberRepository.save(member);
         savedMember.updateSubscription(Subscription.PREMIUM);
 
@@ -104,5 +135,28 @@ class MemberServiceImplTest {
 
         // Then
         assertEquals("ROLE_PREMIUM", role);
+    }
+
+    @Test
+    @DisplayName("6개월 후 자동 삭제 로직 검증")
+    void bulkDeleteExpiredMembers() throws Exception {
+        //given
+        Member m1 = createMember1();
+        m1.updateWithdrawalDate(LocalDateTime.now().minusMonths(7));
+        Member expiredMember = memberRepository.save(m1);
+        log.info("expiredMember: {}", expiredMember.getId());
+
+        Member m2 = createMember2();
+        Member activeMember = memberRepository.save(m2);
+        m2.updateWithdrawalDate(LocalDateTime.now().minusMonths(5));
+        log.info("activeMember: {}", activeMember.getId());
+
+        //when
+        LocalDateTime threshold = LocalDateTime.now().minusMonths(6);
+        long deletedCount = memberQueryRepository.bulkDeleteExpiredMembers(threshold);
+
+        //then
+        assertThat(deletedCount).isEqualTo(1);
+        // assertThat(memberRepository.findAll()).hasSize(1);
     }
 }
