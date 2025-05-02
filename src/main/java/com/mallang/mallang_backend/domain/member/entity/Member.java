@@ -29,11 +29,13 @@ public class Member {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
     private String password;
 
     @Column(nullable = false)
     private String nickname;
 
+    @Column
     private String profileImageUrl;
 
     @Column(nullable = false)
@@ -90,5 +92,13 @@ public class Member {
     // 구독 플랜 업데이트
     public void updateSubscription(Subscription subscription) {
         this.subscription = subscription;
+    }
+
+    public void updateWordGoal(int wordGoal) {
+        this.wordGoal = wordGoal;
+    }
+
+    public void updateVideoGoal(int videoGoal) {
+        this.videoGoal = videoGoal;
     }
 }

@@ -62,8 +62,17 @@ public enum ErrorCode {
     // Parse Errors
     INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST),
 
+    // Word Quiz Errors
+    // 단어장에 단어가 없습니다.
+    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST),
+    // 퀴즈를 찾을 수 없음
+    WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND),
+    // 퀴즈 생성에 가능한 단어가 부족합니다.
+    NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST),
+
     // 공통 API 에러 (fallback 처리용)
     API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR);
+
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

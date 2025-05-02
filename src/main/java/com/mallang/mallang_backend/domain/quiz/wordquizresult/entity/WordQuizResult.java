@@ -1,15 +1,22 @@
 package com.mallang.mallang_backend.domain.quiz.wordquizresult.entity;
 
-import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType;
+import java.time.LocalDateTime;
+
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 오늘의 학습 퀴즈 결과 -> 대시보드
@@ -29,11 +36,8 @@ public class WordQuizResult {
     private WordQuiz wordQuiz;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name = "wordbook_id", referencedColumnName = "wordbook_id"),
-            @JoinColumn(name = "word", referencedColumnName = "word")
-    })
-    private WordbookItem wordbookItem; // 복합 키 사용
+    @JoinColumn(name = "wordbook_item_id", nullable = false)
+    private WordbookItem wordbookItem;
 
     @Column(nullable = false)
     private Boolean isCorrect = false;

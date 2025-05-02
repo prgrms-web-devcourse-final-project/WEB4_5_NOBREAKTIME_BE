@@ -52,6 +52,7 @@ public class SecurityConfig {
                                 "/api/v1/expressions/**",
                                 "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
+                                "/api/v1/quizzes/**",
                                 "/test/**"
                         ).permitAll()
                         .requestMatchers("/api/**").hasRole("BASIC")
