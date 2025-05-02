@@ -3,9 +3,21 @@ package com.mallang.mallang_backend.domain.member.service.impl;
 import static com.mallang.mallang_backend.global.common.Language.NONE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.USER_NOT_FOUND;
 
+import java.sql.SQLTransientConnectionException;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
+import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
@@ -22,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
  */
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -29,6 +42,8 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final WordbookRepository wordbookRepository;
+    private final SubscriptionService subscriptionService;
+    private final MemberQueryRepository memberQueryRepository;
 
     // 이메일로 멤버가 존재하는지 확인
     public Boolean isExistEmail(String email) {
@@ -37,10 +52,11 @@ public class MemberServiceImpl implements MemberService {
 
     /**
      * email 로 memberId 조회
+     *
      * @param email (로그인 시 이용하는 ID 값)
      * @return memberId (Long, PK)
      */
-    public Long getMemberByEmail (String email) {
+    public Long getMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() ->
                 new ServiceException(USER_NOT_FOUND)).getId();
     }
@@ -63,31 +79,81 @@ public class MemberServiceImpl implements MemberService {
         List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
         wordbookRepository.saveAll(defaultWordbooks);
 
-        return member.getId();
+        return savedMember.getId();
     }
 
     // 소셜 로그인 회원 언어 정보 추가
     @Transactional
-    public void updateLearningLanguage(Long id, Language language) {
-        Member member = memberRepository.findById(id).orElseThrow(() ->
-                new ServiceException(USER_NOT_FOUND));
-        member.updateLearningLanguage(language);
+    public void updateLearningLanguage(Long memberId, Language language) {
+        findMemberOrThrow(memberId).updateLearningLanguage(language);
     }
 
     /**
      * member 에 접근해서 구독 정보를 가져 오기
+     *
      * @param memberId
      * @return member 의 구독 타입에서 가져온 권한 정보
      */
     public String getSubscription(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() ->
-                new ServiceException(USER_NOT_FOUND));
-
-        return member.getSubscription().getRoleName();
+        return findMemberOrThrow(memberId).getSubscription().getRoleName();
     }
 
     public Member getMemberById(Long memberId) {
+        return findMemberOrThrow(memberId);
+    }
+
+    /**
+     * 회원 탈퇴 처리
+     * - 활성 구독 존재 시 BASIC 등급으로 다운그레이드
+     * - 회원 탈퇴 일자를 withdrawalDate 으로 변경 후 개인정보 마스킹
+     *
+     * @param memberId 대상 회원 ID
+     * @throws -> 회원이 존재하지 않을 경우 발생
+     */
+    @Transactional
+    public void withdrawMember(Long memberId) {
+        Member member = findMemberOrThrow(memberId);
+
+        if (subscriptionService.hasActiveSubscription(memberId)) {
+            downgradeSubscriptionToBasic(memberId);
+        }
+
+        member.markAsWithdrawn();
+    }
+
+    private void downgradeSubscriptionToBasic(Long memberId) {
+        subscriptionService.updateSubscription(memberId, Subscription.BASIC);
+    }
+
+    /**
+     * 6개월 이상 경과한 탈퇴 회원 일괄 삭제
+     * - 매일 새벽 3시 실행
+     * - 일시적 오류 발생(DB 연결, 네트워크 오류) 시 최대 3회 재시도 (5초 간격)
+     * - 비즈니스 로직 오류 (외래키 제약 조건 등): 재시도 의미 없어 실행하지 않음
+     */
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 3000),
+            include = {TransientDataAccessException.class, SQLTransientConnectionException.class},
+            exclude = {IllegalArgumentException.class, DataIntegrityViolationException.class}
+    )
+    @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void scheduleAccountDeletion() {
+        LocalDateTime deletionThreshold = LocalDateTime.now().minusMonths(6);
+        long deletedCount = memberQueryRepository.bulkDeleteExpiredMembers(deletionThreshold);
+
+        log.info("탈퇴 완료 후 6개월 경과 회원 삭제 완료 - 삭제 건수: {}", deletedCount);
+    }
+
+    /**
+     * 회원을 조회하고, 없으면 예외를 발생
+     *
+     * @param memberId 회원 ID
+     * @return 회원 엔티티
+     */
+    private Member findMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
     }
 }

@@ -13,4 +13,6 @@ public interface MemberService {
     String getSubscription(Long memberId);
     Member getMemberById(Long memberId);
     void updateLearningLanguage(Long id, Language language);
+    void withdrawMember(Long memberId);
+    void scheduleAccountDeletion();
 }
