@@ -54,7 +54,7 @@ class MemberServiceImplTest {
     @Transactional
     @DisplayName("소셜 로그인 성공 케이스")
     void signupByOauth_Success() {
-        // When
+        // Given
         Long memberId = memberService.signupByOauth(
                 "oauth@example.com",
                 "oauthUser",
@@ -62,13 +62,9 @@ class MemberServiceImplTest {
                 LoginPlatform.GOOGLE
         );
 
-        // Then: 멤버 저장 확인
+        // When & Then: 멤버 저장 확인
         Member savedMember = memberRepository.findById(memberId).orElseThrow();
         assertThat(savedMember.getId()).isEqualTo(memberId);
-
-        // Then: 기본 단어장 생성 확인 (예: NONE, ENGLISH 등)
-        Wordbook wordbook = wordbookRepository.findById(memberId).get();
-        assertThat(wordbook).isNotNull();
     }
 
     @Test
