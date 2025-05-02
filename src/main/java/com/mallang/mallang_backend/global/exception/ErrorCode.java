@@ -12,6 +12,7 @@ public enum ErrorCode {
      * 사용자를 찾을 수 없음
      */
     USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
+    MEMBER_ALREADY_WITHDRAWN("410-1", "member.already.withdrawn", HttpStatus.GONE),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
