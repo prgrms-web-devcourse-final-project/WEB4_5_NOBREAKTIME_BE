@@ -13,12 +13,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.TOKEN_NOT_FOUND;
 
@@ -141,7 +146,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         Long memberId = ((Integer) claims.get("memberId")).longValue();
         String roleName = (String) claims.get("role");
         setAuthentication(memberId, roleName); // 인증 객체 설정
-        log.info("인증 객체가 설정, 사용자 ID: {}", memberId);
     }
 
     /**
@@ -161,14 +165,30 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         log.info("인증 성공: {}", authentication);
     }
 
+    /**
+     * 필터가 적용되면 안 되는 경로만 따로 상수 처리
+     * @param request
+     * @return 적용되는 경로에 대해 true 반환
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
 
-        // 필터링 제외 조건 통합
+        if (isExcludedPath(request)) {
+            return true;
+        }
+
         return requestURI.startsWith("/h2-console") ||
-                requestURI.startsWith("/login/oauth2/code/google") ||
-                requestURI.startsWith("/api/v1/member/") ||
-                requestURI.matches(".*\\.(css|js|gif|png|jpg|ico)$");
+                requestURI.matches(STATIC_RESOURCES_REGEX);
+    }
+
+    // 경로 제외 여부 확인
+    private boolean isExcludedPath(HttpServletRequest request) {
+        RequestMatcher matcher = new OrRequestMatcher(
+                Arrays.stream(EXCLUDE_PATH_PATTERNS)
+                        .map(AntPathRequestMatcher::new)
+                        .toArray(RequestMatcher[]::new)
+        );
+        return matcher.matches(request);
     }
 }

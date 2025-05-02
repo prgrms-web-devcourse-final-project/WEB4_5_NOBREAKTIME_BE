@@ -3,7 +3,6 @@ package com.mallang.mallang_backend.global.config;
 import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
 import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,9 +30,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${custom.site.frontUrl}")
-    private String frontUrl;
-
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
     private final CustomAuthenticationFilter customAuthenticationFilter;
 
@@ -44,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/login/**",
-                                "/oauth/**",
+                                "/oauth2/**",
                                 "/error",
                                 "/h2-console/**",
                                 "/api/v1/video/**",
@@ -52,13 +48,16 @@ public class SecurityConfig {
                                 "/api/v1/expressions/**",
                                 "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
+                                "/api/test",
                                 "/api/v1/quizzes/**",
-                                "/test/**"
+                                "/health",
+                                "/env"
                         ).permitAll()
-                        .requestMatchers("/api/**").hasRole("BASIC")
-                        .requestMatchers("/api/**").hasRole("STANDARD")
-                        .requestMatchers("/api/**").hasRole("PREMIUM")
-                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .requestMatchers("/api/**").hasAnyRole(
+                                "BASIC",
+                                "STANDARD",
+                                "PREMIUM",
+                                "ADMIN")
                         .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
@@ -83,7 +82,12 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 허용할 오리진 설정
-        configuration.setAllowedOrigins(Arrays.asList("https://cdpn.io", frontUrl, "http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://cdpn.io",
+                "https://www.mallang.site",
+                "http://localhost:3000",
+                "https://www.app4.qwas.shop",
+                "https://login.aleph.kr"));
         // 허용할 HTTP 메서드 설정
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         // 자격 증명 허용 설정

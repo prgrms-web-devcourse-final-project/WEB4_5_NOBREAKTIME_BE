@@ -70,6 +70,9 @@ public enum ErrorCode {
     // 퀴즈 생성에 가능한 단어가 부족합니다.
     NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST),
 
+    // login Errors
+    UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
+
     // 공통 API 에러 (fallback 처리용)
     API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR);
 
