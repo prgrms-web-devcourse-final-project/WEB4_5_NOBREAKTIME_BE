@@ -14,7 +14,7 @@ import lombok.Getter;
 public class VideoLearningExpressionQuizItem {
 	private String question;      // 원문
 	private List<String> choices; // 구두점 제거 + 셔플한 단어 목록
-	private String answer;        // 정답(원문)
+	private String meaning;        // 정답(원문)
 
 	/**
 	 * Expression 엔티티와 Random을 받아서
@@ -25,6 +25,7 @@ public class VideoLearningExpressionQuizItem {
 		Random random
 	) {
 		var sentence = expr.getSentence();
+		var description = expr.getDescription();
 
 		var words = Arrays.stream(sentence.split("\\s+"))
 			.map(w -> w.replaceAll("\\p{Punct}", ""))
@@ -34,7 +35,7 @@ public class VideoLearningExpressionQuizItem {
 		return VideoLearningExpressionQuizItem.builder()
 			.question(sentence)
 			.choices(words)
-			.answer(sentence)
+			.meaning(description)
 			.build();
 	}
 }
