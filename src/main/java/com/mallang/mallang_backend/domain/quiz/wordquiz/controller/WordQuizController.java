@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
@@ -26,12 +25,12 @@ import lombok.RequiredArgsConstructor;
 public class WordQuizController {
 
 	private final WordQuizService wordQuizService;
-	private final MemberRepository memberRepository;
 	private final MemberService memberService;
 
 	/**
 	 * 단어장에 대한 퀴즈를 요청합니다.
 	 * @param wordbookId 단어장 ID
+	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 단어장 퀴즈 문제
 	 */
 	@GetMapping("/wordbooks/{wordbookId}")
@@ -54,6 +53,7 @@ public class WordQuizController {
 	/**
 	 * 단어장 아이템 대한 퀴즈 결과를 저장합니다.
 	 * @param request 단어장아이템별 퀴즈 결과
+	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 퀴즈 결과 저장 완료
 	 */
 	@PostMapping("/wordbook/result")
@@ -73,6 +73,7 @@ public class WordQuizController {
 
 	/**
 	 * 통합(오늘의 학습) 퀴즈를 요청합니다.
+	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 문제
 	 */
 	@GetMapping("/total")
@@ -94,6 +95,7 @@ public class WordQuizController {
 	/**
 	 * 통합(오늘의 학습) 퀴즈 결과를 저장합니다.
 	 * @param request 단어장아이템별 퀴즈 결과
+	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 결과 저장 완료
 	 */
 	@PostMapping("/wordbook/total/result")
