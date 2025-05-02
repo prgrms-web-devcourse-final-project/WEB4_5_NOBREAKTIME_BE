@@ -1,8 +1,9 @@
 package com.mallang.mallang_backend.global.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -74,9 +75,10 @@ public enum ErrorCode {
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
 
     // 공통 API 에러 (fallback 처리용)
-    API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR);
+    API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR),
 
-
+    // 영상 학습 퀴즈용 에러
+    KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
     private final HttpStatus status;
