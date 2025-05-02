@@ -1,9 +1,11 @@
 package com.mallang.mallang_backend.domain.video.video.service;
 
+import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import java.util.List;
+
 import java.io.IOException;
+import java.util.List;
 
 
 public interface VideoService {
@@ -18,7 +20,7 @@ public interface VideoService {
 
 	VideoDetailResponse getVideoDetail(String videoId);
 
-	String analyzeVideo(String videoUrl) throws IOException, InterruptedException;
+	AnalyzeVideoResponse analyzeVideo(String videoID) throws IOException, InterruptedException;
 
 	byte[] getAudioFile(String fileName) throws IOException;
 }
