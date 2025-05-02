@@ -48,6 +48,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/h2-console/**",
                                 "/api/v1/video/**",
+                                "/api/v1/expressionbooks/**",
+                                "/api/v1/expressions/**",
+                                "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
                                 "/test/**"
                         ).permitAll()
@@ -55,7 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").hasRole("STANDARD")
                         .requestMatchers("/api/**").hasRole("PREMIUM")
                         .requestMatchers("/api/**").hasRole("ADMIN")
-                    .anyRequest().permitAll()
+                        .anyRequest().permitAll()
                 )
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(

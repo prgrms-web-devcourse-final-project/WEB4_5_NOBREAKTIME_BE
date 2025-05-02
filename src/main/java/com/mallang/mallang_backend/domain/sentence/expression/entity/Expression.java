@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.sentence.expression.entity;
 
+
 import java.time.LocalTime;
 
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
@@ -9,6 +10,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalTime;
 
 @Getter
 @Entity
