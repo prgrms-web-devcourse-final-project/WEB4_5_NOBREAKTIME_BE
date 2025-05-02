@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.video.video.service.impl;
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.stt.converter.Transcript;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptParser;
