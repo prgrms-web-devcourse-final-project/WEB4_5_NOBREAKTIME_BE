@@ -1,18 +1,14 @@
 package com.mallang.mallang_backend.domain.video.subtitle.entity;
 
+import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Entity
@@ -42,6 +38,9 @@ public class Subtitle {
 
 	@Column(nullable = false)
 	private String speaker;
+
+	@OneToMany(mappedBy = "subtitles", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+	private List<Keyword> keywords  = new ArrayList<>();;
 
 	@Builder
 	public Subtitle(

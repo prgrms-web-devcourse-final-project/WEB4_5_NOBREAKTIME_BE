@@ -9,10 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorCode {
 
-    /**
-     * 사용자를 찾을 수 없음
-     */
-    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
+    // User Errors
+    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),    //  사용자를 찾을 수 없음
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -48,7 +46,7 @@ public enum ErrorCode {
 
     // Wordbook Errors
     // 해당 단어장이 없거나 권한이 없음
-    NO_WORDBOOK_EXIST_OR_FORBIDDEN("403-1", "no.wordbook.exist.or.forbidden", HttpStatus.FORBIDDEN),
+    NO_WORDBOOK_EXIST_OR_FORBIDDEN("403-1", "no.wordbook.exist.or.forbidden", HttpStatus.FORBIDDEN),    // 해당 단어장이 없거나 권한이 없음
     // 단어장을 만들 권한이 없음(구독 플랜)
     NO_WORDBOOK_CREATE_PERMISSION("403-1", "wordbook.create.failed", HttpStatus.FORBIDDEN),
     // 기본 댠어장과 동일한 이름의 단어장을 생성 실패
@@ -89,6 +87,7 @@ public enum ErrorCode {
 
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
+
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
     private final HttpStatus status;
