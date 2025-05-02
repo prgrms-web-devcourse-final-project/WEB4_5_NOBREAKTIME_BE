@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
@@ -40,13 +41,14 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordbookRepository wordbookRepository;
 	private final WordRepository wordRepository;
 	private final WordbookItemRepository wordbookItemRepository;
+	private final MemberRepository memberRepository;
 
 	// 단어장에 단어 추가
 	@Transactional
 	@Override
-	public void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member) {
+	public void addWords(Long wordbookId, AddWordToWordbookListRequest request, Long memberId) {
 		// 단어장 존재 + 권한 체크
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 단어장이 존재하지 않거나 권한이 없습니다."));
 
 		for (AddWordToWordbookRequest dto : request.getWords()) {
@@ -76,9 +78,9 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장에 커스텀 단어 추가
 	@Transactional
 	@Override
-	public void addWordCustom(Long wordbookId, AddWordRequest request, Member member) {
+	public void addWordCustom(Long wordbookId, AddWordRequest request, Long memberId) {
 		// 단어장 존재 + 권한 체크
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		String word = request.getWord();
@@ -107,7 +109,9 @@ public class WordbookServiceImpl implements WordbookService {
 	// 추가 단어장 생성
 	@Transactional
 	@Override
-	public Long createWordbook(WordbookCreateRequest request, Member member) {
+	public Long createWordbook(WordbookCreateRequest request, Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
 		if (!member.canCreateWordBook()) {
 			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
 		}
@@ -128,8 +132,8 @@ public class WordbookServiceImpl implements WordbookService {
 	// 추가 단어장 이름 변경
 	@Transactional
 	@Override
-	public void renameWordbook(Long wordbookId, String name, Member member) {
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+	public void renameWordbook(Long wordbookId, String name, Long memberId) {
+		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		wordbook.updateName(name);
@@ -138,8 +142,8 @@ public class WordbookServiceImpl implements WordbookService {
 	// 추가 단어장 삭제
 	@Transactional
 	@Override
-	public void deleteWordbook(Long wordbookId, Member member) {
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+	public void deleteWordbook(Long wordbookId, Long memberId) {
+		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		if (DEFAULT_WORDBOOK_NAME.equals(wordbook.getName())) {
@@ -153,10 +157,10 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장의 단어 이동
 	@Transactional
 	@Override
-	public void moveWords(WordMoveRequest request, Member member) {
+	public void moveWords(WordMoveRequest request, Long memberId) {
 		Long toId = request.getDestinationWordbookId();
 
-		Wordbook toWordbook = wordbookRepository.findByIdAndMember(toId, member)
+		Wordbook toWordbook = wordbookRepository.findByIdAndMemberId(toId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		for (WordMoveItem item : request.getWords()) {
@@ -166,7 +170,7 @@ public class WordbookServiceImpl implements WordbookService {
 			}
 
 			// 기존 단어장 조회
-			Wordbook fromWordbook = wordbookRepository.findByIdAndMember(item.getFromWordbookId(), member)
+			Wordbook fromWordbook = wordbookRepository.findByIdAndMemberId(item.getFromWordbookId(), memberId)
 				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 			// 기존 WordbookItem 찾기
@@ -191,10 +195,10 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장에서 단어 삭제
 	@Transactional
 	@Override
-	public void deleteWords(WordDeleteRequest request, Member member) {
+	public void deleteWords(WordDeleteRequest request, Long memberId) {
 		for (WordDeleteItem item : request.getWords()) {
 			// 단어장 조회 및 권한 체크
-			Wordbook wordbook = wordbookRepository.findByIdAndMember(item.getWordbookId(), member)
+			Wordbook wordbook = wordbookRepository.findByIdAndMemberId(item.getWordbookId(), memberId)
 				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 			// WordbookItem 조회
@@ -208,9 +212,9 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장에 단어들 조회(랜덤 순서)
 	@Transactional(readOnly = true)
 	@Override
-	public List<WordResponse> getWordsRandomly(Long wordbookId, Member member) {
+	public List<WordResponse> getWordsRandomly(Long wordbookId, Long memberId) {
 		// 단어장 존재 여부 및 권한 확인
-		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
+		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		// 단어장 아이템 조회
@@ -232,8 +236,8 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장 조회
 	@Transactional(readOnly = true)
 	@Override
-	public List<WordbookResponse> getWordbooks(Member member) {
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
+	public List<WordbookResponse> getWordbooks(Long memberId) {
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberId(memberId);
 
 		return wordbooks.stream()
 			.map(w -> new WordbookResponse(
