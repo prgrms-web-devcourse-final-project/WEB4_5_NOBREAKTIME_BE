@@ -1,8 +1,9 @@
 package com.mallang.mallang_backend.global.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -69,6 +70,12 @@ public enum ErrorCode {
     WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND),
     // 퀴즈 생성에 가능한 단어가 부족합니다.
     NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST),
+
+    // Epression Quiz Errors
+    // 해당 표현함이 없거나 권한이 없음
+    NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN("403-1", "no.expressionbook.exist.or.forbidden", HttpStatus.FORBIDDEN),
+    // 표현함에 표현이 없습니다.
+    EXPRESSIONBOOK_IS_EMPTY("400-1", "expressionbook.is.empty", HttpStatus.BAD_REQUEST),
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),

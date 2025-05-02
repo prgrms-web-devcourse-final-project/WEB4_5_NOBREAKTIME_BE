@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.quiz.expressionquizresult;
+package com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity;
 
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
