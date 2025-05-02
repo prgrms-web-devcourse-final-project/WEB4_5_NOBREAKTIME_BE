@@ -88,7 +88,7 @@ public class YoutubeService {
 		long maxResults,
 		Throwable t
 	) {
-		throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
+		throw new ServiceException(ErrorCode.API_ERROR);
 	}
 
 	/** fetchVideosByIds() 최대 재시도 후에도 IOException을 던지면 호출 */
@@ -96,6 +96,6 @@ public class YoutubeService {
 		List<String> videoIds,
 		Throwable t
 	) {
-		throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
+		throw new ServiceException(ErrorCode.API_ERROR);
 	}
 }
