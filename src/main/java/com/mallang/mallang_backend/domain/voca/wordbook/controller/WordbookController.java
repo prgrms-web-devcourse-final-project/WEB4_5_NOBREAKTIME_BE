@@ -27,15 +27,14 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookI
 import com.mallang.mallang_backend.global.dto.RsData;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Wordbook", description = "단어장 관련 API")
 @RestController
 @RequestMapping("/api/v1/wordbooks")
 @RequiredArgsConstructor
-@Tag(name = "Wordbook", description = "단어장 관리 API")
 public class WordbookController {
 
 	private final WordbookService wordbookService;
@@ -48,21 +47,15 @@ public class WordbookController {
 	 * @param request 영상 ID, 추가할 단어, 단어의 원래 문장 Request 객체
 	 * @return 단어 추가 성공 응답
 	 */
+	@Operation(summary = "영상 학습 중 단어 추가", description = "영상 학습 중 1개 이상의 단어를 추가합니다.")
+	@ApiResponse(responseCode = "200", description = "단어장에 단어가 추가되었습니다.")
 	@PostMapping("/{wordbookId}/words")
-	@Operation(
-		summary = "학습 중 단어 추가",
-		description = "영상 학습 중 선택한 하나 이상의 단어를 지정된 단어장에 추가합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "단어 추가 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> addWords(
-		@Parameter(description = "단어장을 식별할 ID", example = "1")
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordToWordbookListRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.addWords(wordbookId, request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -77,21 +70,15 @@ public class WordbookController {
 	 * @param request 추가할 단어 객체
 	 * @return 단어 추가 성공 응답
 	 */
+	@Operation(summary = "사용자 정의 단어 추가", description = "회원이 직접 입력한 단어를 추가합니다.")
+	@ApiResponse(responseCode = "200", description = "단어장에 단어가 추가되었습니다.")
 	@PostMapping("/{wordbookId}/words/custom")
-	@Operation(
-		summary = "사용자 단어 직접 추가",
-		description = "회원이 직접 입력한 단어를 지정된 단어장에 추가합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "단어 추가 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> addWordCustom(
-		@Parameter(description = "단어장을 식별할 ID", example = "1")
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.addWordCustom(wordbookId, request, member);
 
@@ -106,19 +93,14 @@ public class WordbookController {
 	 * @param request 추가할 단어장 이름
 	 * @return 생성 성공 응답, 생성된 단어장 ID
 	 */
+	@Operation(summary = "단어장 생성", description = "추가 단어장 생성")
+	@ApiResponse(responseCode = "200", description = "추가 단어장이 생성되었습니다.")
 	@PostMapping
-	@Operation(
-		summary = "단어장 생성",
-		description = "새로운 단어장을 생성하고 생성된 ID를 반환합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "단어장 생성 성공")
-		}
-	)
 	public ResponseEntity<RsData<Long>> createWordbook(
 		@RequestBody WordbookCreateRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		Long id = wordbookService.createWordbook(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -133,21 +115,15 @@ public class WordbookController {
 	 * @param request 변경할 이름
 	 * @return 변경 성공 응답
 	 */
+	@Operation(summary = "단어장 이름 변경", description = "단어장 이름 변경")
+	@ApiResponse(responseCode = "200", description = "단어장의 이름이 변경되었습니다.")
 	@PatchMapping("/{wordbookId}")
-	@Operation(
-		summary = "단어장 이름 변경",
-		description = "지정된 단어장의 이름을 수정합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "이름 변경 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> renameWordbook(
-		@Parameter(description = "수정할 단어장 ID", example = "1")
 		@PathVariable Long wordbookId,
 		@RequestBody WordbookRenameRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.renameWordbook(wordbookId, request.getName(), member);
 		return ResponseEntity.ok(new RsData<>(
@@ -161,20 +137,14 @@ public class WordbookController {
 	 * @param wordbookId 삭제할 단어장 ID
 	 * @return 삭제 성공 응답
 	 */
+	@Operation(summary = "단어장 삭제", description = "추가 단어장 삭제")
+	@ApiResponse(responseCode = "200", description = "단어장이 삭제되었습니다.")
 	@DeleteMapping("/{wordbookId}")
-	@Operation(
-		summary = "단어장 삭제",
-		description = "지정된 단어장을 삭제합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "삭제 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> deleteWordbook(
-		@Parameter(description = "삭제할 단어장 ID", example = "1")
 		@PathVariable Long wordbookId
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.deleteWordbook(wordbookId, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -188,19 +158,14 @@ public class WordbookController {
 	 * @param request 목적지 단어장 ID, 기존 단어장 ID, 단어
 	 * @return 단어 이동 성공 응답
 	 */
+	@Operation(summary = "단어 이동", description = "단어장의 단어를 다른 단어장으로 이동합니다.")
+	@ApiResponse(responseCode = "200", description = "단어들이 이동되었습니다.")
 	@PatchMapping("/words/move")
-	@Operation(
-		summary = "단어 이동",
-		description = "한 단어장에서 다른 단어장으로 단어들을 이동합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "이동 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> moveWords(
 		@RequestBody WordMoveRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.moveWords(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -209,19 +174,19 @@ public class WordbookController {
 		));
 	}
 
+	/**
+	 * 단어장 내 단어 일괄 삭제
+	 * @param request 삭제할 단어들의 단어장 ID, 단어
+	 * @return 삭제 성공 응답
+	 */
+	@Operation(summary = "단어 일괄 삭제", description = "단어장 내 단어 일괄 삭제")
+	@ApiResponse(responseCode = "200", description = "단어들이 삭제되었습니다.")
 	@PostMapping("/words/delete")
-	@Operation(
-		summary = "단어 일괄 삭제",
-		description = "단어장 내 여러 단어를 한 번에 삭제합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "삭제 성공")
-		}
-	)
 	public ResponseEntity<RsData<Void>> deleteWords(
 		@RequestBody WordDeleteRequest request
 	) {
 		// 추후 인증 필터 추가되면 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		wordbookService.deleteWords(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -235,20 +200,14 @@ public class WordbookController {
 	 * @param wordbookId 단어장 ID
 	 * @return 단어장의 단어들 리스트
 	 */
+	@Operation(summary = "단어 목록 조회", description = "단어장의 단어들을 조회합니다. 단어의 순서는 무작위로 섞입니다.")
+	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
 	@GetMapping("/{wordbookId}/words")
-	@Operation(
-		summary = "단어 목록 조회",
-		description = "지정된 단어장의 단어들을 무작위 순서로 반환합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "조회 성공")
-		}
-	)
 	public ResponseEntity<RsData<List<WordResponse>>> getWords(
-		@Parameter(description = "조회할 단어장 ID", example = "1")
 		@PathVariable Long wordbookId
 	) {
 		// 추후 인증 필터 적용 후 로그인한 회원으로 변경
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		List<WordResponse> words = wordbookService.getWordsRandomly(wordbookId, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -262,17 +221,12 @@ public class WordbookController {
 	 * 사용자의 단어장 목록 조회
 	 * @return 단어장 리스트
 	 */
+	@Operation(summary = "단어장 목록 조회", description = "사용자의 단어장 목록 조회")
+	@ApiResponse(responseCode = "200", description = "단어장 목록 조회에 성공했습니다.")
 	@GetMapping
-	@Operation(
-		summary = "단어장 목록 조회",
-		description = "로그인한 사용자의 모든 단어장을 조회합니다.",
-		responses = {
-			@ApiResponse(responseCode = "200", description = "조회 성공")
-		}
-	)
 	public ResponseEntity<RsData<List<WordbookResponse>>> getWordbooks() {
 		// 추후 인증 필터 적용 시 로그인 사용자로 교체
-		Member member = memberRepository.findById(1L).get();
+		Member member = memberRepository.findById(1L).orElseThrow();
 
 		List<WordbookResponse> wordbooks = wordbookService.getWordbooks(member);
 		return ResponseEntity.ok(new RsData<>(
