@@ -121,8 +121,11 @@ class VideoLearningQuizServiceImplTest {
 		String videoId = "vid-001";
 		Expression expr1 = mock(Expression.class);
 		when(expr1.getSentence()).thenReturn("Let's learn expressions.");
+		when(expr1.getDescription()).thenReturn("표현을 배워 봅시다.");
+
 		Expression expr2 = mock(Expression.class);
 		when(expr2.getSentence()).thenReturn("This is a test expression.");
+		when(expr2.getDescription()).thenReturn("이것은 테스트 표현입니다.");
 
 		when(expressionRepository.findAllByVideosId(videoId))
 			.thenReturn(Arrays.asList(expr1, expr2));
@@ -139,14 +142,14 @@ class VideoLearningQuizServiceImplTest {
 			);
 
 		for (VideoLearningExpressionQuizItem item : items) {
-			assertThat(item.getAnswer()).isEqualTo(item.getQuestion());
-
-			List<String> choices = item.getChoices();
+			// meaning은 description 값을 그대로 가져와야 함
 			if (item.getQuestion().equals("Let's learn expressions.")) {
-				assertThat(choices)
+				assertThat(item.getMeaning()).isEqualTo("표현을 배워 봅시다.");
+				assertThat(item.getChoices())
 					.containsExactlyInAnyOrder("Lets", "learn", "expressions");
 			} else {
-				assertThat(choices)
+				assertThat(item.getMeaning()).isEqualTo("이것은 테스트 표현입니다.");
+				assertThat(item.getChoices())
 					.containsExactlyInAnyOrder("This", "is", "a", "test", "expression");
 			}
 		}
