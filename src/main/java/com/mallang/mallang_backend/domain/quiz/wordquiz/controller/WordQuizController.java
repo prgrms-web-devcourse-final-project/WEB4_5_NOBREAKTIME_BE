@@ -28,7 +28,7 @@ public class WordQuizController {
 	/**
 	 * 단어장에 대한 퀴즈를 요청합니다.
 	 * @param wordbookId 단어장 ID
-	 * @return 단어장에 대한 퀴즈
+	 * @return 단어장 퀴즈 문제
 	 */
 	@GetMapping("/wordbooks/{wordbookId}")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
@@ -66,8 +66,8 @@ public class WordQuizController {
 	}
 
 	/**
-	 * 통합 단어장 퀴즈를 요청합니다.
-	 * @return 통합 단어장 퀴즈
+	 * 통합(오늘의 학습) 퀴즈를 요청합니다.
+	 * @return 통합 퀴즈 문제
 	 */
 	@GetMapping("/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
@@ -79,15 +79,15 @@ public class WordQuizController {
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",
-			"단어장 통합 퀴즈 문제를 조회했습니다.",
+			"통합 퀴즈 문제를 조회했습니다.",
 			quizResponse
 		));
 	}
 
 	/**
-	 * 단어장 아이템 대한 통합 퀴즈 결과를 저장합니다.
+	 * 통합(오늘의 학습) 퀴즈 결과를 저장합니다.
 	 * @param request 단어장아이템별 퀴즈 결과
-	 * @return 퀴즈 결과 저장 완료
+	 * @return 통합 퀴즈 결과 저장 완료
 	 */
 	@PostMapping("/wordbook/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
@@ -99,7 +99,7 @@ public class WordQuizController {
 		wordQuizService.saveWordbookTotalQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
 			"200",
-			"단어장 통합 퀴즈 결과 저장 완료"
+			"통합 퀴즈 결과 저장 완료"
 		));
 	}
 }
