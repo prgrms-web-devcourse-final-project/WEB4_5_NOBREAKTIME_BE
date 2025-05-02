@@ -73,7 +73,7 @@ public enum ErrorCode {
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
 
     // 공통 API 에러 (fallback 처리용)
-    API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR);
+    API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
