@@ -30,7 +30,7 @@ public class VideoLearningQuizController {
 	) {
 		VideoLearningWordQuizListResponse body = videoLearningQuizService.makeQuizList(videoId);
 		return ResponseEntity.ok(new RsData<>(
-			"200-1",
+			"200",
 			"영상 단어 퀴즈 조회 성공",
 			body
 		));
