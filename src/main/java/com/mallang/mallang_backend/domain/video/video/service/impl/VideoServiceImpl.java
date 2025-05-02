@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ public class VideoServiceImpl implements VideoService {
 			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
 			var ytVideo = ytVideos.stream()
 				.findFirst()
-				.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+				.orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
 			// 언어 정보 파싱
 			Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
@@ -108,16 +109,48 @@ public class VideoServiceImpl implements VideoService {
 	 * @param videoId YouTube 비디오 ID
 	 * @return 조회 및 저장 완료된 비디오 정보 DTO
 	 */
+	/**
+	 * YouTube에서 상세정보 조회(fetch) 후
+	 * DB에 upsert하고 DTO 반환
+	 */
 	@Override
 	@Transactional
 	public VideoDetailResponse getVideoDetail(String videoId) {
-		// DTO 조회
-		VideoDetailResponse dto = fetchDetail(videoId);
+		try {
+			// YouTube API 호출
+			List<Video> ytList = youtubeService.fetchVideosByIds(List.of(videoId));
+			Video yt = ytList.stream()
+				.findFirst()
+				.orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
-		// 엔티티 보장
-		upsertVideoEntity(dto);
+			// DTO 생성
+			Language lang = Language.fromCode(yt.getSnippet().getDefaultAudioLanguage());
+			VideoDetailResponse dto = new VideoDetailResponse(
+				yt.getId(),
+				yt.getSnippet().getTitle(),
+				yt.getSnippet().getDescription(),
+				yt.getSnippet().getThumbnails().getMedium().getUrl(),
+				yt.getSnippet().getChannelTitle(),
+				lang
+			);
 
-		return dto;
+			// DB upsert
+			if (videoRepository.existsById(dto.getVideoId())) {
+				Videos existing = videoRepository.getReferenceById(dto.getVideoId());
+				existing.updateTitleAndThumbnail(
+					dto.getTitle(),
+					dto.getThumbnailUrl(),
+					dto.getChannelTitle(),
+					dto.getLanguage()
+				);
+			} else {
+				videoRepository.save(VideoDetailResponse.toEntity(dto));
+			}
+
+			return dto;
+		} catch (IOException e) {
+			throw new ServiceException(VIDEO_DETAIL_FETCH_FAILED);
+		}
 	}
 
 	/**
@@ -180,7 +213,7 @@ public class VideoServiceImpl implements VideoService {
 				maxResults
 			);
 		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
+			throw new ServiceException(VIDEO_ID_SEARCH_FAILED);
 		}
 	}
 

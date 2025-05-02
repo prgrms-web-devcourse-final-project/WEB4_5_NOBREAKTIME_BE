@@ -1,22 +1,27 @@
 package com.mallang.mallang_backend.domain.video.youtube.service;
 
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.*;
 
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
-import org.junit.jupiter.api.*;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
 
 @SpringBootTest
 @TestPropertySource(properties = {
@@ -43,7 +48,7 @@ class YoutubeServiceResilience4jTest {
 
 		when(youtubeMock.search()).thenReturn(searchMock);
 		when(searchMock.list(anyList())).thenReturn(listMock);
-		// fluent API 메서드 stubbing: 메서드 체인이 null이 아닌 listMock을 반환하도록 설정
+		// fluent API stubbing
 		when(listMock.setQ(anyString())).thenReturn(listMock);
 		when(listMock.setType(anyList())).thenReturn(listMock);
 		when(listMock.setVideoLicense(anyString())).thenReturn(listMock);
@@ -68,6 +73,7 @@ class YoutubeServiceResilience4jTest {
 	@Test
 	@DisplayName("searchVideoIds(): IOException 발생 시 3회 재시도 후 성공해야 한다")
 	void retryUntilSuccess() throws IOException {
+		// 원래 시그니처로 호출
 		List<String> ids = youtubeService.searchVideoIds("foo", "KR", "ko", null, 5);
 		assertTrue(ids.isEmpty(), "세 번 시도 후 빈 리스트를 반환해야 합니다");
 		verify(listMock, times(3)).execute();
