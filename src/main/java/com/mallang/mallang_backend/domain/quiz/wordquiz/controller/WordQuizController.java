@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.Login;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +27,7 @@ public class WordQuizController {
 
 	private final WordQuizService wordQuizService;
 	private final MemberRepository memberRepository;
+	private final MemberService memberService;
 
 	/**
 	 * 단어장에 대한 퀴즈를 요청합니다.
@@ -32,10 +36,11 @@ public class WordQuizController {
 	 */
 	@GetMapping("/wordbooks/{wordbookId}")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
-		@PathVariable Long wordbookId
+		@PathVariable Long wordbookId,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
@@ -53,10 +58,11 @@ public class WordQuizController {
 	 */
 	@PostMapping("/wordbook/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
-		@RequestBody WordQuizResultSaveRequest request
+		@RequestBody WordQuizResultSaveRequest request,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		wordQuizService.saveWordbookQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -71,9 +77,10 @@ public class WordQuizController {
 	 */
 	@GetMapping("/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookTotalQuiz(member);
 
@@ -91,10 +98,11 @@ public class WordQuizController {
 	 */
 	@PostMapping("/wordbook/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
-		@RequestBody WordQuizResultSaveRequest request
+		@RequestBody WordQuizResultSaveRequest request,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		wordQuizService.saveWordbookTotalQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
