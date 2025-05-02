@@ -38,14 +38,17 @@ public class AppConstants {
     /**
      *  필터링 제외 경로 패턴
      */
-    public static final String[] EXCLUDE_PATH_PATTERNS = {
-            "/login/oauth2/code/**",
-            "/api/v1/member/**",
-            "/oauth2/**",
-            "/api/test/login",
-            "/health",
-            "/env"
-    };
+	public static final String[] EXCLUDE_PATH_PATTERNS = {
+		"/login/oauth2/code/**",
+		"/api/v1/member/**",
+		"/oauth2/**",
+		"/api/test/login",
+		"/health",
+		"/env",
+		"/v3/api-docs",
+		"/swagger-ui.html",
+		"/swagger-ui"
+	};
     /**
      * 정적 리소스 확장자 패턴
      */
