@@ -210,7 +210,6 @@ public class WordbookServiceImpl implements WordbookService {
 	}
 
 	// 단어장에 단어들 조회(랜덤 순서)
-	@Transactional(readOnly = true)
 	@Override
 	public List<WordResponse> getWordsRandomly(Long wordbookId, Long memberId) {
 		// 단어장 존재 여부 및 권한 확인
@@ -234,7 +233,6 @@ public class WordbookServiceImpl implements WordbookService {
 	}
 
 	// 단어장 조회
-	@Transactional(readOnly = true)
 	@Override
 	public List<WordbookResponse> getWordbooks(Long memberId) {
 		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberId(memberId);
