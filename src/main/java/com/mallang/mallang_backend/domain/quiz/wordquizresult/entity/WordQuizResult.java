@@ -18,9 +18,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * 오늘의 학습 퀴즈 결과 -> 대시보드
- */
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
