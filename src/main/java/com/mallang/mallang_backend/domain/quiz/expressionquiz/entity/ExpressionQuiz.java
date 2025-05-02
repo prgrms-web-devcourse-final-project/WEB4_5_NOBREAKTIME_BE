@@ -2,8 +2,17 @@ package com.mallang.mallang_backend.domain.quiz.expressionquiz.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,7 +39,7 @@ public class ExpressionQuiz {
     private Member member;
 
     @Column(nullable = false)
-    private Integer learningTime;
+    private Long learningTime = 0L; // 분, 초
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -40,11 +49,9 @@ public class ExpressionQuiz {
     @Builder
     public ExpressionQuiz(
         Member member,
-        Integer learningTime,
         Language language
     ) {
         this.member = member;
-        this.learningTime = learningTime;
         this.language = language;
     }
 }
