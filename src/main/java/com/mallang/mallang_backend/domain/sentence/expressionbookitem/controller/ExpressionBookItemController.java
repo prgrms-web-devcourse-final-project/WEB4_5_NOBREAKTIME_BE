@@ -1,15 +1,24 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.ExpressionBookItemService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/expressionbookItems")
@@ -25,9 +34,16 @@ public class ExpressionBookItemController {
      * @return 성공 여부 및 메시지
      */
     @PostMapping("/expressions/delete")
+    @Operation(
+        summary = "표현 삭제",
+        description = "특정 표현함에서 표현을 삭제합니다.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공")
+        }
+    )
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
-            @RequestBody DeleteExpressionsRequest request,
-            @Login CustomUserDetails userDetails
+        @RequestBody DeleteExpressionsRequest request,
+        @Parameter(hidden = true) @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
         expressionBookItemService.deleteExpressionsFromBook(request, memberId);
@@ -48,9 +64,16 @@ public class ExpressionBookItemController {
      * @return 성공 여부 및 메시지
      */
     @PatchMapping("/expressions/move")
+    @Operation(
+        summary = "표현 이동",
+        description = "특정 표현함에서 다른 표현함으로 표현을 이동합니다.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "이동 성공")
+        }
+    )
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
-            @RequestBody MoveExpressionsRequest request,
-            @Login CustomUserDetails userDetails
+        @RequestBody MoveExpressionsRequest request,
+        @Parameter(hidden = true) @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
         expressionBookItemService.moveExpressions(request, memberId);

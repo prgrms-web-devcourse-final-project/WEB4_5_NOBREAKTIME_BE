@@ -1,28 +1,42 @@
 package com.mallang.mallang_backend.domain.videohistory.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/videohistory")
+@Tag(name = "VideoHistory", description = "사용자의 영상 시청 기록 조회 API")
 public class VideoHistoryController {
     private final VideoHistoryService videoHistoryService;
 
     // 최근 시청한 영상 기록 조회 (5개)
     @GetMapping("/videos/summary")
+    @Operation(
+        summary = "최근 시청 기록 조회",
+        description = "로그인한 사용자의 최근 5개 영상 시청 기록을 조회합니다.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "최근 시청 기록 조회 성공")
+        }
+    )
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getRecentVideos(
-        @Login CustomUserDetails userDetail
+        @Parameter(hidden = true) @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
         List<VideoHistoryResponse> recentHistories = videoHistoryService.getRecentHistories(memberId);
@@ -35,8 +49,15 @@ public class VideoHistoryController {
 
     // 전체 시청 영상
     @GetMapping("/videos/history")
+    @Operation(
+        summary = "전체 시청 기록 조회",
+        description = "로그인한 사용자의 전체 영상 시청 기록을 조회합니다.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "전체 시청 기록 조회 성공")
+        }
+    )
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(
-        @Login CustomUserDetails userDetail
+        @Parameter(hidden = true) @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
         List<VideoHistoryResponse> allHistories = videoHistoryService.getAllHistories(memberId);

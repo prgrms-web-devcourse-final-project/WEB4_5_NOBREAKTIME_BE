@@ -25,6 +25,9 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -42,8 +45,24 @@ public class VideoController {
 	 * @return 원어 자막, 번역 자막, 핵심 단어 리스트
 	 */
 	@GetMapping("/{youtubeVideoId}/analysis")
-	public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(@PathVariable String youtubeVideoId) throws IOException, InterruptedException {
-		AnalyzeVideoResponse response = videoService.analyzeVideo(youtubeVideoId);
+	@Operation(
+		summary = "영상 분석",
+		description = "YouTube ID로 영상을 분석하여 자막과 핵심 단어를 추출합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "분석 성공")
+		}
+	)
+	public ResponseEntity<RsData<String>> videoAnalysis(
+		@Parameter(description = "YouTube 영상 ID", example = "DF3KVSnyUWI")
+		@PathVariable String youtubeVideoId
+	) {
+		String result;
+		try {
+			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
+		} catch (Exception e) {
+			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
+		}
+
 		return ResponseEntity.ok(new RsData<>(
 			"200",
 			"영상 분석이 완료되었습니다.",
@@ -57,7 +76,17 @@ public class VideoController {
 	 * @return 음성 리소스
 	 */
 	@GetMapping("/uploaded/{fileName}")
-	public ResponseEntity<RsData<byte[]>> getAudioFile(@PathVariable String fileName) {
+	@Operation(
+		summary = "오디오 파일 제공",
+		description = "Clova Speech용 음성 리소스 파일을 반환합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "오디오 파일 제공 성공")
+		}
+	)
+	public ResponseEntity<RsData<byte[]>> getAudioFile(
+		@Parameter(description = "리소스 파일명", example = "audio123.wav")
+		@PathVariable String fileName
+	) {
 		try {
 			byte[] audioData = videoService.getAudioFile(fileName);
 			return ResponseEntity.ok(new RsData<>(
@@ -79,10 +108,21 @@ public class VideoController {
 	 * @return 검색 결과 리스트
 	 */
 	@GetMapping("/list")
+	@Operation(
+		summary = "영상 목록 검색",
+		description = "검색어, 카테고리, 언어, 최대 결과 수를 기준으로 YouTube 영상 목록을 조회합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "영상 목록 조회 성공")
+		}
+	)
 	public ResponseEntity<RsData<List<VideoResponse>>> getVideoList(
+		@Parameter(description = "검색어 (옵션)", example = "Spring Boot")
 		@RequestParam(required = false) String q,
+		@Parameter(description = "카테고리 (옵션)", example = "Education")
 		@RequestParam(required = false) String category,
+		@Parameter(description = "언어 코드", example = "en")
 		@RequestParam(defaultValue = "en") String language,
+		@Parameter(description = "최대 결과 수", example = "10")
 		@RequestParam(defaultValue = "10") long maxResults
 	) {
 		List<VideoResponse> list = videoService.getVideosByLanguage(q, category, language, maxResults);
@@ -98,9 +138,17 @@ public class VideoController {
 	 * 2) 히스토리 저장 이벤트 발행 (비동기)
 	 */
 	@PostMapping("/{videoId}")
+	@Operation(
+		summary = "영상 상세 조회",
+		description = "비디오 ID로 저장/업데이트 후 상세 정보를 조회하고 시청 이력을 기록합니다.",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "상세 정보 조회 성공")
+		}
+	)
 	public ResponseEntity<RsData<VideoDetailResponse>> getVideo(
+		@Parameter(description = "조회할 비디오 ID", example = "vid-001")
 		@PathVariable String videoId,
-		@Login CustomUserDetails userDetail
+		@Parameter(hidden = true) @Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
 

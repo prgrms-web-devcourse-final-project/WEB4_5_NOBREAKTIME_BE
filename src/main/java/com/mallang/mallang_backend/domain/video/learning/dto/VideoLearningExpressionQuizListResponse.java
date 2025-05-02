@@ -6,6 +6,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class VideoLearningWordQuizListResponse {
-	private List<VideoLearningWordQuizItem> quiz;
+public class VideoLearningExpressionQuizListResponse {
+	private final List<VideoLearningExpressionQuizItem> quiz;
 }
