@@ -51,7 +51,10 @@ public class SecurityConfig {
                                 "/api/test",
                                 "/api/v1/quizzes/**",
                                 "/health",
-                                "/env"
+                                "/env",
+                                "/v3/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/**").hasAnyRole(
                                 "BASIC",
@@ -89,7 +92,7 @@ public class SecurityConfig {
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));
         // 허용할 HTTP 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         // 자격 증명 허용 설정
         configuration.setAllowCredentials(true);
         // 허용할 헤더 설정
