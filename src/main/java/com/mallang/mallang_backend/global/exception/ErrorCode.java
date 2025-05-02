@@ -69,6 +69,16 @@ public enum ErrorCode {
     // 퀴즈 생성에 가능한 단어가 부족합니다.
     NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST),
 
+    // Epression Quiz Errors
+    // 해당 표현함이 없거나 권한이 없음
+    NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN("403-1", "no.expressionbook.exist.or.forbidden", HttpStatus.FORBIDDEN),
+    // 표현함에 표현이 없습니다.
+    EXPRESSIONBOOK_IS_EMPTY("400-1", "expressionbook.is.empty", HttpStatus.BAD_REQUEST),
+    // 표현함의 표현을 찾을 수 없음
+    EXPRESSIONBOOK_ITEM_NOT_FOUND("404-1", "expressionbook.item.not.found", HttpStatus.NOT_FOUND),
+    // 표현 퀴즈를 찾을 수 없음
+    EXPRESSIONQUIZ_NOT_FOUND("404-1", "expressionquiz.not.found", HttpStatus.NOT_FOUND),
+
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
 

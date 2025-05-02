@@ -17,14 +17,10 @@ import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "WordQuiz", description = "단어 퀴즈 관련 API")
 @RestController
-@RequestMapping("/api/v1/quizzes")
+@RequestMapping("/api/v1/wordbooks")
 @RequiredArgsConstructor
 public class WordQuizController {
 
@@ -37,9 +33,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 단어장 퀴즈 문제
 	 */
-	@Operation(summary = "단어장 퀴즈 조회", description = "단어장에 대한 퀴즈를 요청합니다.")
-	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 문제를 조회했습니다.")
-	@GetMapping("/wordbooks/{wordbookId}")
+	@GetMapping("/{wordbookId}/quiz")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
 		@Login CustomUserDetails userDetail
@@ -62,9 +56,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 퀴즈 결과 저장 완료
 	 */
-	@Operation(summary = "단어장 퀴즈 결과 저장", description = "단어장 아이템 대한 퀴즈 결과를 저장합니다.")
-	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 결과 저장 완료")
-	@PostMapping("/wordbook/result")
+	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
 		@Login CustomUserDetails userDetail
@@ -84,9 +76,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 문제
 	 */
-	@Operation(summary = "통합 퀴즈 조회", description = "통합(오늘의 학습) 퀴즈를 요청합니다.")
-	@ApiResponse(responseCode = "200", description = "통합 퀴즈 문제를 조회했습니다.")
-	@GetMapping("/total")
+	@GetMapping("/quiz/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
 		@Login CustomUserDetails userDetail
 	) {
@@ -108,9 +98,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 결과 저장 완료
 	 */
-	@Operation(summary = "통합 퀴즈 결과 저장", description = "통합(오늘의 학습) 퀴즈 결과를 저장합니다.")
-	@ApiResponse(responseCode = "200", description = "통합 퀴즈 결과 저장 완료")
-	@PostMapping("/wordbook/total/result")
+	@PostMapping("/quiz/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
 		@Login CustomUserDetails userDetail
