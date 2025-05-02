@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.common.Language.NONE;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.USER_NOT_FOUND;
 
 import java.util.List;
 
@@ -17,8 +18,6 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
-
-import static com.mallang.mallang_backend.global.common.Language.NONE;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
@@ -67,7 +66,7 @@ public class MemberServiceImpl implements MemberService {
         return member.getId();
     }
 
-    // 소셜 로그인 회원 언어 정보 추가 -> 변경 감지 이용
+    // 소셜 로그인 회원 언어 정보 추가
     @Transactional
     public void updateLearningLanguage(Long id, Language language) {
         Member member = memberRepository.findById(id).orElseThrow(() ->
@@ -85,5 +84,10 @@ public class MemberServiceImpl implements MemberService {
                 new ServiceException(USER_NOT_FOUND));
 
         return member.getSubscription().getRoleName();
+    }
+
+    public Member getMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
     }
 }

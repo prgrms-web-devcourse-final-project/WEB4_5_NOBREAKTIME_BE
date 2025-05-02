@@ -1,5 +1,8 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.stt.converter.Transcript;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptParser;
@@ -17,13 +20,14 @@ import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,8 +38,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 
 @Slf4j
 @Service
@@ -50,7 +52,6 @@ public class VideoServiceImpl implements VideoService {
     private final GptService gptService;
     private final SubtitleRepository subtitleRepository;
     private final TranscriptParser transcriptParser;
-
 
     @Override
     public List<VideoResponse> getVideosByLanguage(
@@ -274,5 +275,4 @@ public class VideoServiceImpl implements VideoService {
         Path path = Paths.get(UPLOADS_DIR, fileName);
         return java.nio.file.Files.readAllBytes(path);
     }
-
 }

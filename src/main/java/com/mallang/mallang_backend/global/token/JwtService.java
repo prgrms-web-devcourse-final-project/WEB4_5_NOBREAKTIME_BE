@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -71,18 +70,15 @@ public class JwtService {
     }
 
     //JWT -> 쿠키에 저장 (세션 쿠키)
-    public void setJwtSessionCookie(String token, HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie
-                .from(token)
-                .httpOnly(true) // 자바스크립트 접근 차단 (XSS 방지)
-                .path("/") // 전체 사이트에서 접근 가능
-                .sameSite("None") // 외부 사이트 요청 차단 (CSRF 방지)
-                .secure(true) // HTTPS 통신 시에만 전송
-                .build();
+    public void setJwtSessionCookie(String tokenName, String token, HttpServletResponse response) {
+        Cookie cookie = new Cookie(tokenName, token);
+        cookie.setHttpOnly(true);      // 자바스크립트 접근 차단 (XSS 방지)
+        cookie.setPath("/");           // 전체 사이트에서 접근 가능
+        cookie.setSecure(true);        // HTTPS 통신 시에만 전송
+        cookie.setAttribute("SameSite", "None"); // SameSite=None 속성 직접 추가
 
-        response.addHeader("Set-Cookie", cookie.toString());
+        response.addCookie(cookie);
     }
-
 
     // 쿠키에서 JWT 추출
     public Optional<String> getTokenByCookieName(HttpServletRequest request) {
