@@ -163,7 +163,7 @@ class WordQuizControllerTest {
 		@DisplayName("단어장 퀴즈 조회 성공")
 		void getWordbookQuiz() throws Exception {
 
-			mockMvc.perform(get("/api/v1/quizzes/wordbooks/" + wordbook.getId()))
+			mockMvc.perform(get("/api/v1/wordbooks/" + wordbook.getId() + "/quiz"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value("200"))
 				.andExpect(jsonPath("$.data.quizItems").isArray())
@@ -182,7 +182,7 @@ class WordQuizControllerTest {
 				wordbookItemRepository.save(item);
 			}
 
-			mockMvc.perform(get("/api/v1/quizzes/total"))
+			mockMvc.perform(get("/api/v1/wordbooks/quiz/total"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value("200"))
 				.andExpect(jsonPath("$.data.quizItems").isArray())
@@ -208,7 +208,7 @@ class WordQuizControllerTest {
 			request.setIsCorrect(true);
 
 			// 퀴즈 결과 저장 요청
-			mockMvc.perform(post("/api/v1/quizzes/wordbook/total/result")
+			mockMvc.perform(post("/api/v1/wordbooks/quiz/total/result")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
@@ -290,7 +290,7 @@ class WordQuizControllerTest {
 			}
 
 			// 요청 수행
-			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
+			MvcResult result = mockMvc.perform(get("/api/v1/wordbooks/quiz/total"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value("200"))
 				.andReturn();
@@ -386,7 +386,7 @@ class WordQuizControllerTest {
 			}
 
 			// 요청 수행
-			mockMvc.perform(get("/api/v1/quizzes/total"))
+			mockMvc.perform(get("/api/v1/wordbooks/quiz/total"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value("400-1"))
 				.andExpect(jsonPath("$.message").value("퀴즈 생성에 가능한 단어가 부족합니다."))
@@ -436,7 +436,7 @@ class WordQuizControllerTest {
 			}
 
 			// 요청 수행
-			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
+			MvcResult result = mockMvc.perform(get("/api/v1/wordbooks/quiz/total"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value("200"))
 				.andReturn();
@@ -544,7 +544,7 @@ class WordQuizControllerTest {
 			}
 
 			// when
-			MvcResult result = mockMvc.perform(get("/api/v1/quizzes/total"))
+			MvcResult result = mockMvc.perform(get("/api/v1/wordbooks/quiz/total"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value("200"))
 				.andReturn();

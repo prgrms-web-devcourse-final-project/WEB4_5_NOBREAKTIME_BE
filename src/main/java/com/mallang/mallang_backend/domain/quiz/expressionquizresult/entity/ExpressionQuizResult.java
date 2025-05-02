@@ -1,16 +1,23 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity;
 
-import com.mallang.mallang_backend.global.common.Language;
+import java.time.LocalDateTime;
+
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * 표현함 퀴즈 결과
@@ -27,7 +34,7 @@ public class ExpressionQuizResult {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ExpressionBook_id", nullable = false)
-    private ExpressionBook ExpressionBook;
+    private ExpressionBook expressionBook;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expression_quiz_id", nullable = false)
@@ -40,26 +47,20 @@ public class ExpressionQuizResult {
     @Column(nullable = false)
     private Boolean isCorrect;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Language language;
-
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // 생성 메서드
     @Builder
     public ExpressionQuizResult(
-        ExpressionBook ExpressionBook,
+        ExpressionBook expressionBook,
         Expression expression,
         ExpressionQuiz expressionQuiz,
-        Boolean isCorrect,
-        Language language
+        Boolean isCorrect
     ) {
-        this.ExpressionBook = ExpressionBook;
+        this.expressionBook = expressionBook;
         this.expression = expression;
         this.expressionQuiz = expressionQuiz;
         this.isCorrect = isCorrect;
-        this.language = language;
     }
 }

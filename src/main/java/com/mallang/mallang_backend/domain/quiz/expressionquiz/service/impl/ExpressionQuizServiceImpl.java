@@ -1,7 +1,6 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONBOOK_IS_EMPTY;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,18 +10,23 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizItem;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResponse;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.repository.ExpressionQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.ExpressionQuizService;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItem;
+import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
@@ -36,13 +40,16 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 	private final ExpressionBookItemRepository expressionBookItemRepository;
 	private final ExpressionRepository expressionRepository;
 	private final ExpressionQuizRepository expressionQuizRepository;
+	private final ExpressionQuizResultRepository expressionQuizResultRepository;
 
+	@Override
+	@Transactional
 	public ExpressionQuizResponse generateExpressionBookQuiz(Long expressionBookId, Member member) {
 		// 받은 아이디로 문제 만들거 가져오기
 		ExpressionBook expressionBook = expressionBookRepository.findByIdAndMember(expressionBookId, member)
 			.orElseThrow(() -> new ServiceException(NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN));
 
-		List<ExpressionBookItem> items = expressionBookItemRepository.findAllByExpressionBook(expressionBook);
+		List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
 		if (items.isEmpty()) {
 			throw new ServiceException(EXPRESSIONBOOK_IS_EMPTY);
 		}
@@ -55,7 +62,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 
 		Collections.shuffle(quizzes);
 
-		// expression  quiz 생성
+		// expression quiz 생성
 		ExpressionQuiz wordQuiz = ExpressionQuiz.builder()
 			.member(member)
 			.language(expressionBook.getLanguage())
@@ -89,4 +96,37 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		return Arrays.asList(cleaned.trim().split("\\s+"));
 	}
 
+	// 표현 퀴즈 결과 저장
+	@Override
+	@Transactional
+	public void saveExpressionQuizResult(ExpressionQuizResultSaveRequest request, Member member) {
+		// 표현함의 표현
+		ExpressionBookItemId expressionBookItemId = new ExpressionBookItemId(request.getExpressionBookId(), request.getExpressionId());
+		ExpressionBookItem expressionBookItem = expressionBookItemRepository.findById(expressionBookItemId)
+			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_ITEM_NOT_FOUND));
+
+		// 표현함 퀴즈
+		ExpressionQuiz expressionQuiz = expressionQuizRepository.findById(request.getQuizId())
+			.orElseThrow(() -> new ServiceException(EXPRESSIONQUIZ_NOT_FOUND));
+
+		// 표현
+		Expression expression = expressionRepository.findById(request.getExpressionId())
+			.orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND));
+
+		// 표현함
+		ExpressionBook expressionBook = expressionBookRepository.findById(request.getExpressionBookId())
+			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+		ExpressionQuizResult result = ExpressionQuizResult.builder()
+			.expression(expression)
+			.expressionBook(expressionBook)
+			.expressionQuiz(expressionQuiz)
+			.isCorrect(request.isCorrect())
+			.build();
+
+		// 학습 표시
+		expressionBookItem.updateLearned(true);
+
+		expressionQuizResultRepository.save(result);
+	}
 }
