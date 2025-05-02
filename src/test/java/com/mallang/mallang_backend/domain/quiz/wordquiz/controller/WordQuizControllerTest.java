@@ -43,6 +43,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.util.SecurityTestUtils;
 
 @Transactional
 @SpringBootTest
@@ -90,6 +91,7 @@ class WordQuizControllerTest {
 				.build();
 			member.updateWordGoal(100);
 			member = memberRepository.save(member);
+			SecurityTestUtils.authenticateAs(member);
 
 			// Wordbook 생성
 			wordbook = Wordbook.builder()
@@ -160,9 +162,6 @@ class WordQuizControllerTest {
 		@Test
 		@DisplayName("단어장 퀴즈 조회 성공")
 		void getWordbookQuiz() throws Exception {
-			Member member1 = memberRepository.findById(member.getId())
-				.orElseThrow(() -> new IllegalArgumentException("해당 ID의 멤버가 존재하지 않습니다."));
-			System.out.println(">>> memberId = " + member.getId());
 
 			mockMvc.perform(get("/api/v1/quizzes/wordbooks/" + wordbook.getId()))
 				.andExpect(status().isOk())
@@ -181,6 +180,16 @@ class WordQuizControllerTest {
 					.word("word" + i)
 					.build();
 				wordbookItemRepository.save(item);
+
+				Word word = Word.builder()
+					.word("word" + i)
+					.meaning("word 단어" + i)
+					.pos("형용사")
+					.difficulty(Difficulty.EASY)
+					.exampleSentence("This is word" + i)
+					.translatedSentence("word 단어" + i + "입니다.")
+					.build();
+				wordRepository.save(word);
 			}
 
 			mockMvc.perform(get("/api/v1/quizzes/total"))
@@ -237,6 +246,7 @@ class WordQuizControllerTest {
 				.build();
 			member.updateWordGoal(20);
 			member = memberRepository.save(member);
+			SecurityTestUtils.authenticateAs(member);
 
 			// Wordbook 생성
 			wordbook = Wordbook.builder()

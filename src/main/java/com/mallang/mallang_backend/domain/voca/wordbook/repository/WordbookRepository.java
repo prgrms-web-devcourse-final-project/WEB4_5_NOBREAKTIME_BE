@@ -11,4 +11,6 @@ import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 public interface WordbookRepository extends JpaRepository<Wordbook, Long> {
 	Optional<Wordbook> findByIdAndMember(Long wordbookId, Member member);
 	List<Wordbook> findAllByMember(Member member);
+	List<Wordbook> findAllByMemberId(Long memberId);
+	Optional<Wordbook> findByIdAndMemberId(Long wordbookId, Long memberId);
 }

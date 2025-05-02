@@ -31,6 +31,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.UNSUPPORTED
  * <p>
  * kakao: {URL}/oauth2/authorization/kakao 로 이동
  * naver: {URL}/oauth2/authorization/naver 로 이동
+ * google: {URL}/oauth2/authorization/google 로 이동
  */
 
 /**
