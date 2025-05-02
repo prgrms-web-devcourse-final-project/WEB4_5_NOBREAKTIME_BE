@@ -38,6 +38,7 @@ public class WordbookController {
 	 * 영상 학습 중 1개 이상의 단어를 추가합니다.
 	 * @param wordbookId 단어들을 추가할 단어장 ID
 	 * @param request 영상 ID, 추가할 단어, 단어의 원래 문장 Request 객체
+	 * @param userDetail 로그인한 회원
 	 * @return 단어 추가 성공 응답
 	 */
 	@PostMapping("/{wordbookId}/words")
@@ -59,6 +60,7 @@ public class WordbookController {
 	 * 회원이 직접 입력한 단어를 추가합니다.
 	 * @param wordbookId 단어들을 추가할 단어장 ID
 	 * @param request 추가할 단어 객체
+	 * @param userDetail 로그인한 회원
 	 * @return 단어 추가 성공 응답
 	 */
 	@PostMapping("/{wordbookId}/words/custom")
@@ -80,6 +82,7 @@ public class WordbookController {
 	/**
 	 * 추가 단어장 생성
 	 * @param request 추가할 단어장 이름
+	 * @param userDetail 로그인한 회원
 	 * @return 생성 성공 응답, 생성된 단어장 ID
 	 */
 	@PostMapping
@@ -100,6 +103,7 @@ public class WordbookController {
 	/**
 	 * 단어장 이름 변경
 	 * @param request 변경할 이름
+	 * @param userDetail 로그인한 회원
 	 * @return 변경 성공 응답
 	 */
 	@PatchMapping("/{wordbookId}")
@@ -120,6 +124,7 @@ public class WordbookController {
 	/**
 	 * 추가 단어장 삭제
 	 * @param wordbookId 삭제할 단어장 ID
+	 * @param userDetail 로그인한 회원
 	 * @return 삭제 성공 응답
 	 */
 	@DeleteMapping("/{wordbookId}")
@@ -139,6 +144,7 @@ public class WordbookController {
 	/**
 	 * 단어장의 단어를 다른 단어장으로 이동합니다.
 	 * @param request 목적지 단어장 ID, 기존 단어장 ID, 단어
+	 * @param userDetail 로그인한 회원
 	 * @return 단어 이동 성공 응답
 	 */
 	@PatchMapping("/words/move")
@@ -158,6 +164,7 @@ public class WordbookController {
 	/**
 	 * 단어장 내 단어 일괄 삭제
 	 * @param request 삭제할 단어들의 단어장 ID, 단어
+	 * @param userDetail 로그인한 회원
 	 * @return 삭제 성공 응답
 	 */
 	@PostMapping("/words/delete")
@@ -177,6 +184,7 @@ public class WordbookController {
 	/**
 	 * 단어장의 단어들을 조회한다. 단어의 순서는 무작위로 섞인다.
 	 * @param wordbookId 단어장 ID
+	 * @param userDetail 로그인한 회원
 	 * @return 단어장의 단어들 리스트
 	 */
 	@GetMapping("/{wordbookId}/words")
@@ -196,6 +204,7 @@ public class WordbookController {
 
 	/**
 	 * 사용자의 단어장 목록 조회
+	 * @param userDetail 로그인한 회원
 	 * @return 단어장 리스트
 	 */
 	@GetMapping
