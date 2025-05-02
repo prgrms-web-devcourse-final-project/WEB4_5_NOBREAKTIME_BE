@@ -10,8 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 핵심 단어
- */
+
+ 핵심 단어*/
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

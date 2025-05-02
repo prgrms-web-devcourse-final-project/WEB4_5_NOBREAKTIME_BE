@@ -1,7 +1,6 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
-import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.INDIVIDUAL;
-import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.TOTAL;
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.Duration;
@@ -33,6 +32,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepos
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
@@ -143,66 +143,29 @@ public class WordQuizServiceImpl implements WordQuizService {
 	public WordQuizResponse generateWordbookTotalQuiz(Member member) {
 		int goal = member.getWordGoal();
 
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
-
-		// 1. 조건에 맞는 단어 조회
-		List<WordbookItem> newWords = new ArrayList<>();
-		for (Wordbook wordbook : wordbooks) {
-			newWords.addAll(wordbookItemRepository.findAllByWordbookAndWordStatus(wordbook, WordStatus.NEW));
-		}
+		// 1. 퀴즈 대상 단어 수집
+		List<WordbookItem> newWords = wordbookRepository.findAllByMember(member).stream()
+			.flatMap(wb -> wordbookItemRepository.findAllByWordbookAndWordStatus(wb, WordStatus.NEW).stream())
+			.collect(Collectors.toList());
 		List<WordbookItem> reviewWords = wordbookItemRepository.findReviewTargetWords(member, LocalDateTime.now());
 
-		int newCount = newWords.size();
-		int reviewCount = reviewWords.size();
+		// 2. 퀴즈 대상 단어 선정
+		List<WordbookItem> selectedNew = new ArrayList<>();
+		List<WordbookItem> selectedReview = new ArrayList<>();
+		selectWordsForQuiz(goal, newWords, reviewWords, selectedNew, selectedReview);
 
-		// 2. 전체 단어 수 부족 시 예외
-		if (newCount + reviewCount < goal) {
-			throw new ServiceException(NOT_ENOUGH_WORDS_FOR_QUIZ);
-		}
-
-		// 3. 우선 비율 계산 (예: 4:6)
-		int newTarget = (int) Math.round(goal * 0.4); // 이상적인 목표
-		int reviewTarget = goal - newTarget; // 이상적인 목표 복습 개수
-
-		// 4. 부족한 항목 재조정
-		if (newCount < newTarget) {
-			reviewTarget += (newTarget - newCount);
-			newTarget = newCount;
-		}
-		if (reviewCount < reviewTarget) {
-			newTarget += (reviewTarget - reviewCount);
-			reviewTarget = reviewCount;
-		}
-
-		// 5. 랜덤 추출
-		Collections.shuffle(newWords);
-		// 5-1. 복습 단어 WordStatus로부터 가장 오래된 것부터, 동일하다면 현재로부터 가장 오랜된 것부터
-		LocalDateTime now = LocalDateTime.now();
-		reviewWords = reviewWords.stream()
-			.sorted(Comparator.comparing((WordbookItem w) -> {
-				LocalDateTime reviewedAt = w.getLastStudiedAt().plus(w.getWordStatus().getReviewInterval());
-				return Duration.between(reviewedAt, now);
-			}).reversed()
-				.thenComparing(WordbookItem::getLastStudiedAt))
-			.toList();
-
-		List<WordbookItem> selectedNew = newWords.subList(0, newTarget);
-		List<WordbookItem> selectedReview = reviewWords.subList(0, reviewTarget); // 복습
-
-		// 6. 문제 리스트 구성
+		// 3. 퀴즈 응답 생성 및 저장
 		List<WordQuizItem> quizItems = Stream.concat(selectedNew.stream(), selectedReview.stream())
 			.map(this::convertToQuizDto)
 			.collect(Collectors.toList());
+		Collections.shuffle(quizItems);
 
-		Collections.shuffle(quizItems); // 문제 순서도 랜덤하게
-
-		// total word quiz 생성
+		// 4. 통합 퀴즈 생성 및 응답
 		WordQuiz wordQuiz = WordQuiz.builder()
 			.member(member)
 			.quizType(TOTAL)
 			.language(member.getLanguage())
 			.build();
-
 		Long quizId = wordQuizRepository.save(wordQuiz).getId();
 
 		WordQuizResponse response = new WordQuizResponse();
@@ -210,6 +173,49 @@ public class WordQuizServiceImpl implements WordQuizService {
 		response.setQuizItems(quizItems);
 
 		return response;
+	}
+
+	public void selectWordsForQuiz(
+		int goal,
+		List<WordbookItem> newWords,
+		List<WordbookItem> reviewWords,
+		List<WordbookItem> selectedNew,
+		List<WordbookItem> selectedReview
+	) {
+
+		// 전체 단어 수 부족 시 예외
+		if (newWords.size() + reviewWords.size() < goal) {
+			throw new ServiceException(ErrorCode.NOT_ENOUGH_WORDS_FOR_QUIZ);
+		}
+
+		// 1. 우선 비율 계산 (예: 4:6)
+		int newTarget = (int) Math.round(goal * 0.4);
+		int reviewTarget = goal - newTarget;
+
+		// 2. 부족한 항목 재조정
+		if (newWords.size() < newTarget) {
+			reviewTarget += (newTarget - newWords.size());
+			newTarget = newWords.size();
+		}
+		if (reviewWords.size() < reviewTarget) {
+			newTarget += (reviewTarget - reviewWords.size());
+			reviewTarget = reviewWords.size();
+		}
+
+		// 3. 랜덤 추출
+		Collections.shuffle(newWords);
+		selectedNew.addAll(newWords.subList(0, newTarget));
+
+		// 3-1. 복습 단어 WordStatus로부터 가장 오래된 것부터, 동일하다면 현재로부터 가장 오랜된 것부터
+		LocalDateTime now = LocalDateTime.now();
+		List<WordbookItem> sortedReviews = reviewWords.stream()
+			.sorted(Comparator.comparing((WordbookItem w) -> {
+				LocalDateTime due = w.getLastStudiedAt().plus(w.getWordStatus().getReviewInterval());
+				return Duration.between(due, now);
+			}).reversed().thenComparing(WordbookItem::getLastStudiedAt))
+			.collect(Collectors.toList());
+
+		selectedReview.addAll(sortedReviews.subList(0, reviewTarget));
 	}
 
 	// 통합 단어 퀴즈 결과 저장
