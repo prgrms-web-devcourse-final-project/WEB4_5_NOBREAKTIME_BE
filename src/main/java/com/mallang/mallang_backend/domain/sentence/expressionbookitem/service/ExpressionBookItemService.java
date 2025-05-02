@@ -4,7 +4,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpr
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 
 public interface ExpressionBookItemService {
-    void deleteExpressionsFromBook(DeleteExpressionsRequest request);
+    void deleteExpressionsFromBook(DeleteExpressionsRequest request, Long memberId);
 
-    void moveExpressions(MoveExpressionsRequest request);
+    void moveExpressions(MoveExpressionsRequest request, Long memberId);
 }

@@ -45,14 +45,14 @@ class ExpressionBookItemServiceImplTest {
     void deleteExpressionsFromBook_forbidden() {
         DeleteExpressionsRequest request = new DeleteExpressionsRequest();
         request.setExpressionBookId(1L);
-        request.setMemberId(1L);
+        Long memberId = 1L;
         request.setExpressionIds(List.of(100L));
 
         ExpressionBook book = mockBook(1L, mockMember(2L)); // 다른 사람
 
         when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(book));
 
-        assertThrows(ServiceException.class, () -> service.deleteExpressionsFromBook(request));
+        assertThrows(ServiceException.class, () -> service.deleteExpressionsFromBook(request, memberId));
     }
 
     @Test
@@ -67,7 +67,6 @@ class ExpressionBookItemServiceImplTest {
         ExpressionBook target = mockBook(targetId, source.getMember());
 
         MoveExpressionsRequest req = new MoveExpressionsRequest();
-        req.setMemberId(memberId);
         req.setSourceExpressionBookId(sourceId);
         req.setTargetExpressionBookId(targetId);
         req.setExpressionIds(expressionIds);
@@ -76,7 +75,7 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(targetId)).thenReturn(Optional.of(target));
         when(expressionBookItemRepository.existsById(any())).thenReturn(false);
 
-        service.moveExpressions(req);
+        service.moveExpressions(req, memberId);
 
         verify(expressionBookItemRepository).deleteAllById(any());
         verify(expressionBookItemRepository).save(any());
@@ -112,7 +111,7 @@ class ExpressionBookItemServiceImplTest {
     }
 
     @Test
-    @DisplayName("deleteExpressionsFromBook()는 표현을 성공적으로 삭제한다")
+    @DisplayName("표현 삭제 - 표현을 성공적으로 삭제")
     void testDeleteExpressionsFromBookSuccess() throws Exception {
         // given
         Long memberId = 1L;
@@ -140,12 +139,14 @@ class ExpressionBookItemServiceImplTest {
         bookIdField.set(book, expressionBookId);
 
         List<Long> expressionIds = List.of(expressionId1, expressionId2);
-        DeleteExpressionsRequest request = new DeleteExpressionsRequest(expressionBookId, memberId, expressionIds);
+        DeleteExpressionsRequest request = new DeleteExpressionsRequest();
+        request.setExpressionBookId(expressionBookId);
+        request.setExpressionIds(expressionIds);
 
         when(expressionBookRepository.findById(expressionBookId)).thenReturn(Optional.of(book));
 
         // when
-        service.deleteExpressionsFromBook(request);
+        service.deleteExpressionsFromBook(request, memberId);
 
         // then
         List<ExpressionBookItemId> expectedIds = expressionIds.stream()
