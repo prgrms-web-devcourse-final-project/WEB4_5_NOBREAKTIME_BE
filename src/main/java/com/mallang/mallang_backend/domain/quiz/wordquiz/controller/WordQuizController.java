@@ -20,7 +20,7 @@ import com.mallang.mallang_backend.global.filter.Login;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/quizzes")
+@RequestMapping("/api/v1/wordbooks")
 @RequiredArgsConstructor
 public class WordQuizController {
 
@@ -33,7 +33,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 단어장 퀴즈 문제
 	 */
-	@GetMapping("/wordbooks/{wordbookId}")
+	@GetMapping("/{wordbookId}/quiz")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
 		@Login CustomUserDetails userDetail
@@ -56,7 +56,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 퀴즈 결과 저장 완료
 	 */
-	@PostMapping("/wordbook/result")
+	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
 		@Login CustomUserDetails userDetail
@@ -76,7 +76,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 문제
 	 */
-	@GetMapping("/total")
+	@GetMapping("/quiz/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
 		@Login CustomUserDetails userDetail
 	) {
@@ -98,7 +98,7 @@ public class WordQuizController {
 	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 통합 퀴즈 결과 저장 완료
 	 */
-	@PostMapping("/wordbook/total/result")
+	@PostMapping("/quiz/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
 		@Login CustomUserDetails userDetail
