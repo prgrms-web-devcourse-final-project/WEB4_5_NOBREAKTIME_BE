@@ -4,7 +4,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBookItem, Long> {
+public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBookItem, ExpressionBookItemId> {
 
     boolean existsById(ExpressionBookItemId itemId);
 }
