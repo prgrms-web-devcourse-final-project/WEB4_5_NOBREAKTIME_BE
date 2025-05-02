@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.global.config;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,10 +17,8 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * oauth2Login
@@ -38,43 +36,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                    "/",
-                    "/login/**",
-                    "/oauth2/**",
-                    "/error",
-                    "/h2-console/**",
-                    "/api/v1/video/**",
-                    "/api/v1/expressionbooks/**",
-                    "/api/v1/expressions/**",
-                    "/api/v1/expressionbookItems/**",
-                    "/api/v1/wordbooks/**",
-                    "/api/test",
-                    "/api/v1/quizzes/**",
-                    "/health",
-                    "/env",
-                    "/v3/api-docs",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-                .requestMatchers("/api/**").hasAnyRole(
-                    "BASIC",
-                    "STANDARD",
-                    "PREMIUM",
-                    "ADMIN")
-                .anyRequest().permitAll()
-            )
-            .headers((headers) -> headers
-                .addHeaderWriter(new XFrameOptionsHeaderWriter(
-                    XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(sessionManagement ->
-                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .oauth2Login(oauth2 ->
-                oauth2.successHandler(customOAuth2SuccessHandler)
-            );
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(
+                                "/",
+                                "/login/**",
+                                "/oauth2/**",
+                                "/error",
+                                "/h2-console/**",
+                                "/api/v1/video/**",
+                                "/api/v1/expressionbooks/**",
+                                "/api/v1/expressions/**",
+                                "/api/v1/expressionbookItems/**",
+                                "/api/v1/wordbooks/**",
+                                "/api/test",
+                                "/api/v1/quizzes/**",
+                                "/health",
+                                "/env"
+                        ).permitAll()
+                        .requestMatchers("/api/**").hasAnyRole(
+                                "BASIC",
+                                "STANDARD",
+                                "PREMIUM",
+                                "ADMIN")
+                        .anyRequest().permitAll()
+                )
+                .headers((headers) -> headers
+                        .addHeaderWriter(new XFrameOptionsHeaderWriter(
+                                XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sessionManagement ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth2 ->
+                        oauth2.successHandler(customOAuth2SuccessHandler)
+                );
         return http.build();
     }
 
@@ -88,13 +83,13 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // 허용할 오리진 설정
         configuration.setAllowedOrigins(Arrays.asList(
-            "https://cdpn.io",
-            "https://www.mallang.site",
-            "http://localhost:3000",
-            "https://www.app4.qwas.shop",
-            "https://login.aleph.kr"));
+                "https://cdpn.io",
+                "https://www.mallang.site",
+                "http://localhost:3000",
+                "https://www.app4.qwas.shop",
+                "https://login.aleph.kr"));
         // 허용할 HTTP 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         // 자격 증명 허용 설정
         configuration.setAllowCredentials(true);
         // 허용할 헤더 설정
