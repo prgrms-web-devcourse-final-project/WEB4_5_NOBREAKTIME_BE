@@ -1,15 +1,17 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
 import static com.mallang.mallang_backend.global.common.Language.NONE;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.USER_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.sql.SQLTransientConnectionException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
+import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.TransientDataAccessException;
@@ -30,6 +32,7 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
@@ -40,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
+    private final S3ImageUploader imageUploader;
     private final MemberRepository memberRepository;
     private final WordbookRepository wordbookRepository;
     private final SubscriptionService subscriptionService;
@@ -105,14 +109,14 @@ public class MemberServiceImpl implements MemberService {
     /**
      * 회원 탈퇴 처리
      * - 활성 구독 존재 시 BASIC 등급으로 다운그레이드
-     * - 회원 탈퇴 일자를 withdrawalDate 으로 변경 후 개인정보 마스킹
+     * - 회원 탈퇴 일자를 withdrawalDate 에 추가 후 개인정보 마스킹
      *
      * @param memberId 대상 회원 ID
-     * @throws -> 회원이 존재하지 않을 경우 발생
      */
     @Transactional
     public void withdrawMember(Long memberId) {
         Member member = findMemberOrThrow(memberId);
+        deleteOldProfileImage(member);
 
         if (subscriptionService.hasActiveSubscription(memberId)) {
             downgradeSubscriptionToBasic(memberId);
@@ -144,6 +148,73 @@ public class MemberServiceImpl implements MemberService {
         long deletedCount = memberQueryRepository.bulkDeleteExpiredMembers(deletionThreshold);
 
         log.info("탈퇴 완료 후 6개월 경과 회원 삭제 완료 - 삭제 건수: {}", deletedCount);
+    }
+
+    /**
+     * 회원의 프로필 이미지를 변경합니다.
+     *
+     * @param memberId 프로필을 변경할 회원의 ID
+     * @param file     새로 업로드할 프로필 이미지 파일
+     * @return 변경된 프로필 이미지의 URL
+     * @throws ServiceException 파일이 비어있거나 지원하지 않는 타입일 경우, 회원이 존재하지 않을 경우 발생
+     */
+    @Override
+    @Transactional
+    public String changeProfile(Long memberId,
+                                MultipartFile file) {
+
+        validateImageFile(file);
+
+        Member member = findMemberOrThrow(memberId);
+
+        deleteOldProfileImage(member);
+
+        String newImageUrl = uploadNewProfileImage(file);
+        member.updateProfileImageUrl(newImageUrl);
+
+        return newImageUrl;
+    }
+
+    /**
+     * 이미지 파일의 유효성을 검사합니다.
+     *
+     * @param file 업로드된 파일
+     * @throws ServiceException 파일이 비어있거나 지원하지 않는 타입일 경우 발생
+     */
+    private void validateImageFile(MultipartFile file) {
+
+        if (file.isEmpty()) {
+            throw new ServiceException(FILE_EMPTY);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ServiceException(NOT_SUPPORTED_TYPE);
+        }
+    }
+
+    /**
+     * 기존 프로필 이미지를 삭제합니다.
+     *
+     * @param member 대상 회원 엔티티
+     */
+    private void deleteOldProfileImage(Member member) {
+
+        String oldProfileUrl = member.getProfileImageUrl();
+        if (oldProfileUrl != null && !oldProfileUrl.isBlank()) {
+            imageUploader.deleteObjectByUrl(oldProfileUrl);
+        }
+    }
+
+    /**
+     * 새 이미지를 업로드하고 URL을 반환합니다.
+     *
+     * @param file 업로드할 이미지 파일
+     * @return 업로드된 이미지의 URL
+     */
+    private String uploadNewProfileImage(MultipartFile file) {
+        ImageUploadRequest request = new ImageUploadRequest(file);
+        return imageUploader.uploadImageURL(request);
     }
 
     /**
