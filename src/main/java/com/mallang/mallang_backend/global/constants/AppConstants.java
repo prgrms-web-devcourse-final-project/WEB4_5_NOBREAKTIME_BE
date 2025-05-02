@@ -56,4 +56,10 @@ public class AppConstants {
     public static final String ID_KEY = "id";
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
+
+	/**
+	 * 영상 학습 퀴즈 최대 개수
+	 */
+	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+
 }
