@@ -8,10 +8,8 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ErrorCode {
 
-    /**
-     * 사용자를 찾을 수 없음
-     */
-    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),
+    // User Errors
+    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND),    //  사용자를 찾을 수 없음
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -38,12 +36,16 @@ public enum ErrorCode {
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
-    // expressions Errors
-    EXPRESSION_BOOK_NOT_FOUND("500-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
+    // ExpressionBook Errors
+    EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
+    FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+
+    // Expression Errors
+    EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
 
     // Wordbook Errors
     // 해당 단어장이 없거나 권한이 없음
-    NO_WORDBOOK_EXIST_OR_FORBIDDEN("403-1", "no.wordbook.exist.or.forbidden", HttpStatus.FORBIDDEN),
+    NO_WORDBOOK_EXIST_OR_FORBIDDEN("403-1", "no.wordbook.exist.or.forbidden", HttpStatus.FORBIDDEN),    // 해당 단어장이 없거나 권한이 없음
     // 단어장을 만들 권한이 없음(구독 플랜)
     NO_WORDBOOK_CREATE_PERMISSION("403-1", "wordbook.create.failed", HttpStatus.FORBIDDEN),
     // 기본 댠어장과 동일한 이름의 단어장을 생성 실패
@@ -56,7 +58,21 @@ public enum ErrorCode {
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
 
     // Parse Errors
-    INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST);
+    INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST),
+
+    // Word Quiz Errors
+    // 단어장에 단어가 없습니다.
+    WORDBOOK_IS_EMPTY("400-1", "wordbook.is.empty", HttpStatus.BAD_REQUEST),
+    // 퀴즈를 찾을 수 없음
+    WORDQUIZ_NOT_FOUND("404-1", "wordquiz.not.found", HttpStatus.NOT_FOUND),
+    // 퀴즈 생성에 가능한 단어가 부족합니다.
+    NOT_ENOUGH_WORDS_FOR_QUIZ("400-1", "not.enough.words.for.quiz", HttpStatus.BAD_REQUEST),
+
+    // login Errors
+    UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
+
+    // 공통 API 에러 (fallback 처리용)
+    API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
