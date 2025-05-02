@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.member.service;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.global.common.Language;
 
 public interface MemberService {
 
@@ -11,4 +12,5 @@ public interface MemberService {
     Long getMemberByEmail (String email);
     String getSubscription(Long memberId);
     Member getMemberById(Long memberId);
+    void updateLearningLanguage(Long id, Language language);
 }

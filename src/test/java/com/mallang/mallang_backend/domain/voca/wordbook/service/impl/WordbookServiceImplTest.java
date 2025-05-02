@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
@@ -55,6 +56,9 @@ class WordbookServiceImplTest {
 
 	@Mock
 	private WordbookItemRepository wordbookItemRepository;
+
+	@Mock
+	private MemberRepository memberRepository;
 
 	private Member savedMember;
 	private Wordbook savedDefaultWordBook;
@@ -99,13 +103,13 @@ class WordbookServiceImplTest {
 		AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
 		request.setWords(List.of(dto));
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(
+		given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId())).willReturn(
 			Optional.of(savedWordbook));
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
 		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
 			Optional.empty());
 
-		wordbookService.addWords(savedWordbook.getId(), request, savedMember);
+		wordbookService.addWords(savedWordbook.getId(), request, savedMember.getId());
 
 		then(wordbookItemRepository).should().save(any(WordbookItem.class));
 	}
@@ -118,13 +122,13 @@ class WordbookServiceImplTest {
 
 		savedMember.updateSubscription(Subscription.STANDARD);
 
-		given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember)).willReturn(
+		given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId())).willReturn(
 			Optional.of(savedWordbook));
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
 		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
 			Optional.empty());
 
-		wordbookService.addWordCustom(savedWordbook.getId(), dto, savedMember);
+		wordbookService.addWordCustom(savedWordbook.getId(), dto, savedMember.getId());
 
 		then(wordbookItemRepository).should().save(any(WordbookItem.class));
 	}
@@ -147,9 +151,10 @@ class WordbookServiceImplTest {
 				.build();
 			setId(wordbook, 999L);
 
+			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
 			given(wordbookRepository.save(any(Wordbook.class))).willReturn(wordbook);
 
-			Long result = wordbookService.createWordbook(request, savedMember);
+			Long result = wordbookService.createWordbook(request, savedMember.getId());
 
 			assertThat(result).isEqualTo(999L);
 			then(wordbookRepository).should().save(any(Wordbook.class));
@@ -163,8 +168,10 @@ class WordbookServiceImplTest {
 
 			savedMember.updateSubscription(Subscription.BASIC);
 
+			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.createWordbook(request, savedMember)
+				wordbookService.createWordbook(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_CREATE_PERMISSION.getMessageCode());
@@ -178,8 +185,10 @@ class WordbookServiceImplTest {
 
 			savedMember.updateSubscription(Subscription.STANDARD);
 
+			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.createWordbook(request, savedMember)
+				wordbookService.createWordbook(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_CREATE_DEFAULT_FORBIDDEN.getMessageCode());
@@ -195,10 +204,10 @@ class WordbookServiceImplTest {
 			String newName = "Updated Wordbook Name";
 			savedWordbook.updateName("내 단어장"); // 기존 이름이 "기본"이 아님
 
-			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId()))
 				.willReturn(Optional.of(savedWordbook));
 
-			wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember);
+			wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember.getId());
 
 			assertThat(savedWordbook.getName()).isEqualTo(newName);
 		}
@@ -208,11 +217,11 @@ class WordbookServiceImplTest {
 		void renameWordbook_failIfDefaultName() {
 			String newName = "새 이름";
 
-			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedDefaultWordBook.getId(), savedMember.getId()))
 				.willReturn(Optional.of(savedDefaultWordBook));
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember)
+				wordbookService.renameWordbook(savedDefaultWordBook.getId(), newName, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_RENAME_DEFAULT_FORBIDDEN.getMessageCode());
@@ -222,11 +231,11 @@ class WordbookServiceImplTest {
 		@DisplayName("실패 - 단어장 이름 변경 시 단어장이 존재하지 않거나 권한이 없으면 예외가 발생한다")
 		void renameWordbook_notFoundOrForbidden() {
 			String newName = "Updated Wordbook Name";
-			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId()))
 				.willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember)
+				wordbookService.renameWordbook(savedWordbook.getId(), newName, savedMember.getId())
 			);
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
 		}
@@ -238,10 +247,10 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("성공 - 추가 단어장을 삭제할 수 있다")
 		void deleteWordbook_success() {
-			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId()))
 				.willReturn(Optional.of(savedWordbook));
 
-			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember);
+			wordbookService.deleteWordbook(savedWordbook.getId(), savedMember.getId());
 
 			then(wordbookRepository).should().delete(savedWordbook);
 		}
@@ -273,9 +282,9 @@ class WordbookServiceImplTest {
 				.build();
 			setId(item2, 1002L);
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.of(wordbook));
 
-			wordbookService.deleteWordbook(wordbookId, savedMember);
+			wordbookService.deleteWordbook(wordbookId, savedMember.getId());
 
 			then(wordbookItemRepository).should().deleteAllByWordbookId(wordbookId);
 			then(wordbookRepository).should().delete(wordbook);
@@ -284,11 +293,11 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("실패 - 단어장이 존재하지 않거나 권한이 없으면 삭제할 수 없다")
 		void deleteWordbook_notFoundOrForbidden() {
-			given(wordbookRepository.findByIdAndMember(savedWordbook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId()))
 				.willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.deleteWordbook(savedWordbook.getId(), savedMember)
+				wordbookService.deleteWordbook(savedWordbook.getId(), savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
@@ -297,11 +306,11 @@ class WordbookServiceImplTest {
 		@Test
 		@DisplayName("실패 - \"기본\" 단어장은 삭제할 수 없다")
 		void deleteWordbook_failIfDefault() {
-			given(wordbookRepository.findByIdAndMember(savedDefaultWordBook.getId(), savedMember))
+			given(wordbookRepository.findByIdAndMemberId(savedDefaultWordBook.getId(), savedMember.getId()))
 				.willReturn(Optional.of(savedDefaultWordBook));
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember)
+				wordbookService.deleteWordbook(savedDefaultWordBook.getId(), savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_DELETE_DEFAULT_FORBIDDEN.getMessageCode());
@@ -362,14 +371,14 @@ class WordbookServiceImplTest {
 				wordMoveItem2
 			));
 
-			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
-			given(wordbookRepository.findByIdAndMember(fromId1, savedMember)).willReturn(Optional.of(fromWordbook1));
-			given(wordbookRepository.findByIdAndMember(fromId2, savedMember)).willReturn(Optional.of(fromWordbook2));
+			given(wordbookRepository.findByIdAndMemberId(toId, savedMember.getId())).willReturn(Optional.of(toWordbook));
+			given(wordbookRepository.findByIdAndMemberId(fromId1, savedMember.getId())).willReturn(Optional.of(fromWordbook1));
+			given(wordbookRepository.findByIdAndMemberId(fromId2, savedMember.getId())).willReturn(Optional.of(fromWordbook2));
 
 			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook1, "apple")).willReturn(Optional.of(item1));
 			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook2, "banana")).willReturn(Optional.of(item2));
 
-			wordbookService.moveWords(request, savedMember);
+			wordbookService.moveWords(request, savedMember.getId());
 
 			then(wordbookItemRepository).should(times(2)).delete(any(WordbookItem.class));
 			then(wordbookItemRepository).should(times(2)).save(any(WordbookItem.class));
@@ -384,10 +393,10 @@ class WordbookServiceImplTest {
 			request.setDestinationWordbookId(toId);
 			request.setWords(List.of()); // words는 비워도 됨
 
-			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.empty());
+			given(wordbookRepository.findByIdAndMemberId(toId, savedMember.getId())).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.moveWords(request, savedMember)
+				wordbookService.moveWords(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
@@ -408,12 +417,12 @@ class WordbookServiceImplTest {
 
 			request.setWords(List.of(wordMoveItem));
 
-			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(
+			given(wordbookRepository.findByIdAndMemberId(toId, savedMember.getId())).willReturn(
 				Optional.of(Wordbook.builder().member(savedMember).build()));
-			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.empty());
+			given(wordbookRepository.findByIdAndMemberId(fromId, savedMember.getId())).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.moveWords(request, savedMember)
+				wordbookService.moveWords(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
@@ -440,12 +449,12 @@ class WordbookServiceImplTest {
 
 			request.setWords(List.of(wordMoveItem));
 
-			given(wordbookRepository.findByIdAndMember(toId, savedMember)).willReturn(Optional.of(toWordbook));
-			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.of(fromWordbook));
+			given(wordbookRepository.findByIdAndMemberId(toId, savedMember.getId())).willReturn(Optional.of(toWordbook));
+			given(wordbookRepository.findByIdAndMemberId(fromId, savedMember.getId())).willReturn(Optional.of(fromWordbook));
 			given(wordbookItemRepository.findByWordbookAndWord(fromWordbook, "apple")).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.moveWords(request, savedMember)
+				wordbookService.moveWords(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
@@ -468,9 +477,9 @@ class WordbookServiceImplTest {
 
 			request.setWords(List.of(wordMoveItem));
 
-			given(wordbookRepository.findByIdAndMember(fromId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookRepository.findByIdAndMemberId(fromId, savedMember.getId())).willReturn(Optional.of(wordbook));
 
-			wordbookService.moveWords(request, savedMember);
+			wordbookService.moveWords(request, savedMember.getId());
 
 			// delete, save 동작하지 않음
 			then(wordbookItemRepository).should(never()).delete(any());
@@ -504,10 +513,10 @@ class WordbookServiceImplTest {
 			WordDeleteRequest request = new WordDeleteRequest();
 			request.setWords(List.of(deleteItem));
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.of(wordbook));
 			given(wordbookItemRepository.findByWordbookAndWord(wordbook, "apple")).willReturn(Optional.of(item));
 
-			wordbookService.deleteWords(request, savedMember);
+			wordbookService.deleteWords(request, savedMember.getId());
 
 			then(wordbookItemRepository).should().delete(item);
 		}
@@ -524,10 +533,10 @@ class WordbookServiceImplTest {
 			WordDeleteRequest request = new WordDeleteRequest();
 			request.setWords(List.of(deleteItem));
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.empty());
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.deleteWords(request, savedMember)
+				wordbookService.deleteWords(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
@@ -548,11 +557,11 @@ class WordbookServiceImplTest {
 			WordDeleteRequest request = new WordDeleteRequest();
 			request.setWords(List.of(deleteItem));
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.of(wordbook));
 			given(wordbookItemRepository.findByWordbookAndWord(wordbook, "apple")).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.deleteWords(request, savedMember)
+				wordbookService.deleteWords(request, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
@@ -586,10 +595,10 @@ class WordbookServiceImplTest {
 
 			List<WordbookItem> items = new ArrayList<>(List.of(item1, item2));
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.of(wordbook));
 			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(items);
 
-			List<WordResponse> result = wordbookService.getWordsRandomly(wordbookId, savedMember);
+			List<WordResponse> result = wordbookService.getWordsRandomly(wordbookId, savedMember.getId());
 
 			assertThat(result).hasSize(2);
 			assertThat(result)
@@ -602,10 +611,10 @@ class WordbookServiceImplTest {
 		void getWordsRandomly_wordbookNotFound() {
 			Long wordbookId = 99L;
 
-			given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.empty());
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.empty());
 
 			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.getWordsRandomly(wordbookId, savedMember)
+				wordbookService.getWordsRandomly(wordbookId, savedMember.getId())
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
@@ -629,9 +638,9 @@ class WordbookServiceImplTest {
 			.build();
 		setId(wb2, 2L);
 
-		given(wordbookRepository.findAllByMember(savedMember)).willReturn(List.of(wb1, wb2));
+		given(wordbookRepository.findAllByMemberId(savedMember.getId())).willReturn(List.of(wb1, wb2));
 
-		List<WordbookResponse> result = wordbookService.getWordbooks(savedMember);
+		List<WordbookResponse> result = wordbookService.getWordbooks(savedMember.getId());
 
 		assertThat(result).hasSize(2);
 		assertThat(result.get(0).getName()).isEqualTo("My First Book");

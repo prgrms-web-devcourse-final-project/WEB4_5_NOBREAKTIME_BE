@@ -66,7 +66,7 @@ public class MemberServiceImpl implements MemberService {
         return member.getId();
     }
 
-    // 소셜 로그인 회원 언어 정보 추가 -> 변경 감지 이용
+    // 소셜 로그인 회원 언어 정보 추가
     @Transactional
     public void updateLearningLanguage(Long id, Language language) {
         Member member = memberRepository.findById(id).orElseThrow(() ->

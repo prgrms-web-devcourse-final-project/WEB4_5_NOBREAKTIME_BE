@@ -4,6 +4,8 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpr
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.ExpressionBookItemService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.Login;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +19,18 @@ public class ExpressionBookItemController {
 
     /**
      * 표현함에서 표현 삭제
-     * @param request 삭제할 표현 ID 리스트와 표현함 ID, 회원 ID를 포함한 요청 객체
+     *
+     * @param request     삭제할 표현 ID 리스트와 표현함 ID, 회원 ID를 포함한 요청 객체
+     * @param userDetails 로그인한 사용자 정보
      * @return 성공 여부 및 메시지
      */
     @PostMapping("/expressions/delete")
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
-            @RequestBody DeleteExpressionsRequest request
+            @RequestBody DeleteExpressionsRequest request,
+            @Login CustomUserDetails userDetails
     ) {
-        expressionBookItemService.deleteExpressionsFromBook(request);
+        Long memberId = userDetails.getMemberId();
+        expressionBookItemService.deleteExpressionsFromBook(request, memberId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -36,14 +42,18 @@ public class ExpressionBookItemController {
 
     /**
      * 표현함에서 표현 이동
-     * @param request 이동할 표현 ID 리스트와 이동할 표현함 ID, 회원 ID를 포함한 요청 객체
-     * @return  성공 여부 및 메시지
+     *
+     * @param request     이동할 표현 ID 리스트와 이동할 표현함 ID, 회원 ID를 포함한 요청 객체
+     * @param userDetails 로그인한 사용자 정보
+     * @return 성공 여부 및 메시지
      */
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
-            @RequestBody MoveExpressionsRequest request
+            @RequestBody MoveExpressionsRequest request,
+            @Login CustomUserDetails userDetails
     ) {
-        expressionBookItemService.moveExpressions(request);
+        Long memberId = userDetails.getMemberId();
+        expressionBookItemService.moveExpressions(request, memberId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
