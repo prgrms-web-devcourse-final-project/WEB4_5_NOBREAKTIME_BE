@@ -52,24 +52,15 @@ public class VideoController {
 			@ApiResponse(responseCode = "200", description = "분석 성공")
 		}
 	)
-	public ResponseEntity<RsData<String>> videoAnalysis(
-		@Parameter(description = "YouTube 영상 ID", example = "DF3KVSnyUWI")
-		@PathVariable String youtubeVideoId
-	) {
-		String result;
-		try {
-			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
-		} catch (Exception e) {
-			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
-		}
-
+	@GetMapping("/{youtubeVideoId}/analysis")
+	public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(@PathVariable String youtubeVideoId) throws IOException, InterruptedException {
+		AnalyzeVideoResponse response = videoService.analyzeVideo(youtubeVideoId);
 		return ResponseEntity.ok(new RsData<>(
 			"200",
 			"영상 분석이 완료되었습니다.",
 			response
 		));
 	}
-
 	/**
 	 * Clova Speech 에 음성 리소스를 제공하기 위한 메서드
 	 * @param fileName 리소스 파일명
