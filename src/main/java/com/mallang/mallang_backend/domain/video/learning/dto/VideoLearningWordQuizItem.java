@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VideoLearningQuizItem {
+public class VideoLearningWordQuizItem {
 	private Long subtitleId;         // Subtitle.id
 	private String startTime;        // Subtitle.startTime
 	private String endTime;          // Subtitle.endTime
@@ -24,14 +24,14 @@ public class VideoLearningQuizItem {
 	private String sentence;         // 빈칸 처리된 originalSentence
 	private String sentenceMeaning;  // Subtitle.translatedSentence
 
-	public static VideoLearningQuizItem from(Keyword k) {
+	public static VideoLearningWordQuizItem from(Keyword k) {
 		var sub = k.getSubtitles();
 		String original = sub.getOriginalSentence();
 		String blanked = Pattern.compile("\\b" + Pattern.quote(k.getWord()) + "\\b")
 			.matcher(original)
 			.replaceFirst("{}");
 
-		return VideoLearningQuizItem.builder()
+		return VideoLearningWordQuizItem.builder()
 			.subtitleId(sub.getId())
 			.startTime(sub.getStartTime())
 			.endTime(sub.getEndTime())

@@ -13,6 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VideoLearningQuizListResponse {
-	private List<VideoLearningQuizItem> quiz;
+public class VideoLearningWordQuizListResponse {
+	private List<VideoLearningWordQuizItem> quiz;
 }

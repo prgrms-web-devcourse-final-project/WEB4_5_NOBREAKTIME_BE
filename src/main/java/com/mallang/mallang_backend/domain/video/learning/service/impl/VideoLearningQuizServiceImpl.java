@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
-import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningQuizItem;
-import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningQuizListResponse;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.service.VideoLearningQuizService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -34,7 +34,7 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	 */
 	@Override
 	@Transactional(readOnly = true)
-	public VideoLearningQuizListResponse makeQuizList(String videoId) {
+	public VideoLearningWordQuizListResponse makeQuizList(String videoId) {
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
 		if (pool.isEmpty()) {
 			throw new ServiceException(ErrorCode.KEYWORD_NOT_FOUND);
@@ -42,12 +42,12 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 
 		Collections.shuffle(pool, random);
 
-		List<VideoLearningQuizItem> items = pool.stream()
+		List<VideoLearningWordQuizItem> items = pool.stream()
 			.limit(MAX_VIDEO_LEARNING_QUIZ_ITEMS)
-			.map(VideoLearningQuizItem::from)
+			.map(VideoLearningWordQuizItem::from)
 			.collect(Collectors.toList());
 
-		return VideoLearningQuizListResponse.builder()
+		return VideoLearningWordQuizListResponse.builder()
 			.quiz(items)
 			.build();
 	}

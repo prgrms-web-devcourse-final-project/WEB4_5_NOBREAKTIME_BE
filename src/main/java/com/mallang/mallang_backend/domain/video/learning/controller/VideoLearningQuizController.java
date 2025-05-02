@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningQuizListResponse;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.service.VideoLearningQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
 
@@ -25,10 +25,10 @@ public class VideoLearningQuizController {
 	 * @return ResponseEntity<RsData<VideoLearningQuizListResponse>>
 	 */
 	@GetMapping("/words")
-	public ResponseEntity<RsData<VideoLearningQuizListResponse>> getWordsQuiz(
+	public ResponseEntity<RsData<VideoLearningWordQuizListResponse>> getWordsQuiz(
 		@PathVariable String videoId
 	) {
-		VideoLearningQuizListResponse body = videoLearningQuizService.makeQuizList(videoId);
+		VideoLearningWordQuizListResponse body = videoLearningQuizService.makeQuizList(videoId);
 		return ResponseEntity.ok(new RsData<>(
 			"200-1",
 			"영상 단어 퀴즈 조회 성공",

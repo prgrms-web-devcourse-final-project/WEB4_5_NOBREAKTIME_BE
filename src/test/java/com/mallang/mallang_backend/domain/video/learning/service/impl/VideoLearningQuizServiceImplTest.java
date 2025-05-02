@@ -16,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
-import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningQuizItem;
-import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningQuizListResponse;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
@@ -73,11 +73,11 @@ class VideoLearningQuizServiceImplTest {
 		when(keywordRepository.findAllByVideosId(videoId))
 			.thenReturn(keywords);
 
-		VideoLearningQuizListResponse response = quizService.makeQuizList(videoId);
+		VideoLearningWordQuizListResponse response = quizService.makeQuizList(videoId);
 
-		List<VideoLearningQuizItem> items = response.getQuiz();
+		List<VideoLearningWordQuizItem> items = response.getQuiz();
 		assertThat(items).hasSize(2);
-		assertThat(items).extracting(VideoLearningQuizItem::getWord)
+		assertThat(items).extracting(VideoLearningWordQuizItem::getWord)
 			.containsExactlyInAnyOrder("Hello", "Test");
 	}
 }
