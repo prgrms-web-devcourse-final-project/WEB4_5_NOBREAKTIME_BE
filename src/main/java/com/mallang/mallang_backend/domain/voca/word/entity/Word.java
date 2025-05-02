@@ -1,6 +1,12 @@
 package com.mallang.mallang_backend.domain.voca.word.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,8 +52,8 @@ public class Word {
         this.word = word;
         this.pos = pos;
         this.meaning = meaning;
-        this.difficulty = difficulty;
         this.exampleSentence = exampleSentence;
-        this.translatedSentence = translatedSentence;
-    }
+		this.translatedSentence = translatedSentence;
+		this.difficulty = difficulty;
+	}
 }

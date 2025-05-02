@@ -30,7 +30,7 @@ public class AppConstants {
 	/**
 	 * Youtube 라이센스 타입
 	 */
-    public static final String CC_LICENSE = "creativeCommon";
+	public static final String CC_LICENSE = "creativeCommon";
 	/**
 	 * 기본 단어장 이름
 	 */

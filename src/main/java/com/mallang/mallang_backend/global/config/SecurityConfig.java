@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
                                 "/api/test",
+                                "/api/v1/quizzes/**",
                                 "/health",
                                 "/env"
                         ).permitAll()
