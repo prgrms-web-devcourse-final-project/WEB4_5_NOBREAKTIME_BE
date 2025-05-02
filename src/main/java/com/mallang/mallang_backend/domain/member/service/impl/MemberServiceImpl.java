@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.common.Language.NONE;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.USER_NOT_FOUND;
 
 import java.util.List;
 
@@ -17,8 +18,6 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
-
-import static com.mallang.mallang_backend.global.common.Language.NONE;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
@@ -85,5 +84,10 @@ public class MemberServiceImpl implements MemberService {
                 new ServiceException(USER_NOT_FOUND));
 
         return member.getSubscription().getRoleName();
+    }
+
+    public Member getMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
     }
 }

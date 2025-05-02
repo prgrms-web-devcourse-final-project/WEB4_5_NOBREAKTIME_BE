@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.Login;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,19 +25,21 @@ import lombok.RequiredArgsConstructor;
 public class WordQuizController {
 
 	private final WordQuizService wordQuizService;
-	private final MemberRepository memberRepository;
+	private final MemberService memberService;
 
 	/**
 	 * 단어장에 대한 퀴즈를 요청합니다.
 	 * @param wordbookId 단어장 ID
-	 * @return 단어장에 대한 퀴즈
+	 * @param userDetail 로그인한 사용자의 정보
+	 * @return 단어장 퀴즈 문제
 	 */
 	@GetMapping("/wordbooks/{wordbookId}")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
-		@PathVariable Long wordbookId
+		@PathVariable Long wordbookId,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
@@ -49,14 +53,16 @@ public class WordQuizController {
 	/**
 	 * 단어장 아이템 대한 퀴즈 결과를 저장합니다.
 	 * @param request 단어장아이템별 퀴즈 결과
+	 * @param userDetail 로그인한 사용자의 정보
 	 * @return 퀴즈 결과 저장 완료
 	 */
 	@PostMapping("/wordbook/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
-		@RequestBody WordQuizResultSaveRequest request
+		@RequestBody WordQuizResultSaveRequest request,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		wordQuizService.saveWordbookQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
@@ -66,40 +72,44 @@ public class WordQuizController {
 	}
 
 	/**
-	 * 통합 단어장 퀴즈를 요청합니다.
-	 * @return 통합 단어장 퀴즈
+	 * 통합(오늘의 학습) 퀴즈를 요청합니다.
+	 * @param userDetail 로그인한 사용자의 정보
+	 * @return 통합 퀴즈 문제
 	 */
 	@GetMapping("/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 실제 인증 적용 후 대체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		WordQuizResponse quizResponse = wordQuizService.generateWordbookTotalQuiz(member);
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",
-			"단어장 통합 퀴즈 문제를 조회했습니다.",
+			"통합 퀴즈 문제를 조회했습니다.",
 			quizResponse
 		));
 	}
 
 	/**
-	 * 단어장 아이템 대한 통합 퀴즈 결과를 저장합니다.
+	 * 통합(오늘의 학습) 퀴즈 결과를 저장합니다.
 	 * @param request 단어장아이템별 퀴즈 결과
-	 * @return 퀴즈 결과 저장 완료
+	 * @param userDetail 로그인한 사용자의 정보
+	 * @return 통합 퀴즈 결과 저장 완료
 	 */
 	@PostMapping("/wordbook/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
-		@RequestBody WordQuizResultSaveRequest request
+		@RequestBody WordQuizResultSaveRequest request,
+		@Login CustomUserDetails userDetail
 	) {
-		// TODO: 인증 후 member 교체
-		Member member = memberRepository.findFirstByOrderByIdAsc();
+		Long memberId = userDetail.getMemberId();
+		Member member = memberService.getMemberById(memberId);
 
 		wordQuizService.saveWordbookTotalQuizResult(request, member);
 		return ResponseEntity.ok(new RsData<>(
 			"200",
-			"단어장 통합 퀴즈 결과 저장 완료"
+			"통합 퀴즈 결과 저장 완료"
 		));
 	}
 }
