@@ -1,14 +1,16 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
-import static java.time.temporal.ChronoUnit.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.eq;
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.NO_WORDBOOK_EXIST_OR_FORBIDDEN;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_IS_EMPTY;
+import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -180,16 +180,6 @@ class WordQuizControllerTest {
 					.word("word" + i)
 					.build();
 				wordbookItemRepository.save(item);
-
-				Word word = Word.builder()
-					.word("word" + i)
-					.meaning("word 단어" + i)
-					.pos("형용사")
-					.difficulty(Difficulty.EASY)
-					.exampleSentence("This is word" + i)
-					.translatedSentence("word 단어" + i + "입니다.")
-					.build();
-				wordRepository.save(word);
 			}
 
 			mockMvc.perform(get("/api/v1/quizzes/total"))
