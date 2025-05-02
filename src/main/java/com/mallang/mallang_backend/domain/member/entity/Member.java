@@ -123,10 +123,12 @@ public class Member {
     private void maskSensitiveData() {
         this.nickname = "탈퇴회원-" + this.id;
         this.email = "withdrawn_" + this.id;
-        this.profileImageUrl = null;
-        this.loginPlatform = null;
-        this.language = null;
-        this.subscription = null;
-        this.subscribedAt = null;
+        this.profileImageUrl = "delete";
+        this.loginPlatform = LoginPlatform.NONE;
+        this.subscription = Subscription.NONE;
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
