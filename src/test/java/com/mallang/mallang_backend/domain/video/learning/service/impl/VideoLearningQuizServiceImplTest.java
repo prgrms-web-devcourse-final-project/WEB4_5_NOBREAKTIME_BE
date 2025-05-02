@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
@@ -49,7 +50,7 @@ class VideoLearningQuizServiceImplTest {
 	void makeQuizList_withKeywords() {
 		String videoId = "vid-001";
 		// 두 개의 subtitle/keyword를 생성
-		var sub1 = Subtitle.builder()
+		Subtitle sub1 = Subtitle.builder()
 			.videos(null)
 			.startTime("00:00:01")
 			.endTime("00:00:02")
@@ -57,7 +58,7 @@ class VideoLearningQuizServiceImplTest {
 			.translatedSentence("안녕 세상")
 			.speaker("Speaker1")
 			.build();
-		var sub2 = Subtitle.builder()
+		Subtitle sub2 = Subtitle.builder()
 			.videos(null)
 			.startTime("00:00:03")
 			.endTime("00:00:04")
@@ -65,10 +66,24 @@ class VideoLearningQuizServiceImplTest {
 			.translatedSentence("테스트 코드")
 			.speaker("Speaker2")
 			.build();
-		Keyword kw1 = Keyword.builder().videos(null).subtitle(sub1)
-			.word("Hello").meaning("안녕").difficulty(Difficulty.EASY).build();
-		Keyword kw2 = Keyword.builder().videos(null).subtitle(sub2)
-			.word("Test").meaning("테스트").difficulty(Difficulty.NORMAL).build();
+		// 테스트용으로 id 세팅
+		ReflectionTestUtils.setField(sub1, "id", 1L);
+		ReflectionTestUtils.setField(sub2, "id", 2L);
+
+		Keyword kw1 = Keyword.builder()
+			.videos(null)
+			.subtitle(sub1)
+			.word("Hello")
+			.meaning("안녕")
+			.difficulty(Difficulty.EASY)
+			.build();
+		Keyword kw2 = Keyword.builder()
+			.videos(null)
+			.subtitle(sub2)
+			.word("Test")
+			.meaning("테스트")
+			.difficulty(Difficulty.NORMAL)
+			.build();
 		List<Keyword> keywords = Arrays.asList(kw1, kw2);
 		when(keywordRepository.findAllByVideosId(videoId))
 			.thenReturn(keywords);
