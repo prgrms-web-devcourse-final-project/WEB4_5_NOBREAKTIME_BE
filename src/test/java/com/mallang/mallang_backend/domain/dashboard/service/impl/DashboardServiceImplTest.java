@@ -3,11 +3,11 @@ package com.mallang.mallang_backend.domain.dashboard.service.impl;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -52,13 +52,12 @@ class DashBoardServiceImplTest {
 			.build();
 		member.updateVideoGoal(3);
 		member.updateWordGoal(5);
+		member.updateMeasuredAt(LocalDateTime.now());
 	}
 
 	@Test
+	@DisplayName("대시보드 정보를 조회할 수 있다")
 	void getStatistics_shouldReturnCorrectStatisticResponse() {
-		// given
-		LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-
 		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 		when(videoHistoryRepository.countByMember(member)).thenReturn(100);
 		when(videoHistoryRepository.countByMemberAndCreatedAtAfter(eq(member), any()))
@@ -68,10 +67,8 @@ class DashBoardServiceImplTest {
 		when(expressionQuizResultRepository.countByExpressionQuiz_Member(eq(member)))
 			.thenReturn(200);
 
-		// when
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
 
-		// then
 		assertThat(response.getUserName()).isEqualTo("TestUser");
 		assertThat(response.getWatchedVideoCount()).isEqualTo(100);
 
@@ -83,7 +80,22 @@ class DashBoardServiceImplTest {
 		LevelStatus levelStatus = response.getLevelStatus();
 		assertThat(levelStatus.getRemeasurable()).isTrue();
 
-		// 성취도는 (2/3 * 100 + 4/5 * 100) / 2 = (66.66 + 80) / 2 = 73.33
-		assertThat(dailyGoal.getAchievementRate()).isCloseTo(73.33, within(0.1));
+		// 성취도는 (2/3 * 100 + 4/5 * 100) / 2 = (66.66 + 80) / 2 = 73.33 -> 소수점 1자리까지 반올림 73.3
+		assertThat(dailyGoal.getAchievementRate()).isEqualTo(73.3);
+	}
+
+	@Test
+	@DisplayName("첫 레벨 측정 시 푼 퀴즈가 200개 미만이면 재측정 불가능하다")
+	void getStatistics_notMeasurable() {
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+		when(videoHistoryRepository.countByMember(member)).thenReturn(100);
+		when(wordQuizResultRepository.countByWordQuiz_Member(eq(member)))
+			.thenReturn(0);
+		when(expressionQuizResultRepository.countByExpressionQuiz_Member(eq(member)))
+			.thenReturn(199);
+
+		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
+
+		assertThat(response.getLevelStatus().getRemeasurable()).isFalse();
 	}
 }
