@@ -40,7 +40,13 @@ out/
 
 ## querydsl
 src/main/generated/
+src/test/generated_tests
 
-src/main/resources/application.yml
-/uploads
+## files
+uploads
+.DS_Store
+
+## properties
+application.yml
 src/test/**
+./.github/workflows/CI.yml
