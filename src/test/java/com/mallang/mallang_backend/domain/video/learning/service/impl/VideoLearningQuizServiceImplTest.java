@@ -17,6 +17,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
+import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
+import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizItem;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
@@ -29,6 +33,9 @@ class VideoLearningQuizServiceImplTest {
 
 	@Mock
 	private KeywordRepository keywordRepository;
+
+	@Mock
+	private ExpressionRepository expressionRepository;
 
 	@InjectMocks
 	private VideoLearningQuizServiceImpl quizService;
@@ -49,7 +56,8 @@ class VideoLearningQuizServiceImplTest {
 	@DisplayName("키워드가 있으면 최대 개수만큼 퀴즈 항목 반환")
 	void makeQuizList_withKeywords() {
 		String videoId = "vid-001";
-		// 두 개의 subtitle/keyword를 생성
+
+		// Subtitle/Keyword 준비 (id 필드는 빌더로 세팅 후 reflection 사용 가능)
 		Subtitle sub1 = Subtitle.builder()
 			.videos(null)
 			.startTime("00:00:01")
@@ -66,7 +74,6 @@ class VideoLearningQuizServiceImplTest {
 			.translatedSentence("테스트 코드")
 			.speaker("Speaker2")
 			.build();
-		// 테스트용으로 id 세팅
 		ReflectionTestUtils.setField(sub1, "id", 1L);
 		ReflectionTestUtils.setField(sub2, "id", 2L);
 
@@ -84,15 +91,67 @@ class VideoLearningQuizServiceImplTest {
 			.meaning("테스트")
 			.difficulty(Difficulty.NORMAL)
 			.build();
-		List<Keyword> keywords = Arrays.asList(kw1, kw2);
+
 		when(keywordRepository.findAllByVideosId(videoId))
-			.thenReturn(keywords);
+			.thenReturn(Arrays.asList(kw1, kw2));
 
 		VideoLearningWordQuizListResponse response = quizService.makeQuizList(videoId);
-
 		List<VideoLearningWordQuizItem> items = response.getQuiz();
+
 		assertThat(items).hasSize(2);
 		assertThat(items).extracting(VideoLearningWordQuizItem::getWord)
 			.containsExactlyInAnyOrder("Hello", "Test");
+	}
+
+	@Test
+	@DisplayName("표현 퀴즈 빈 리스트 예외(EXPRESSION_NOT_FOUND)")
+	void makeExpressionQuizList_emptyPool() {
+		String videoId = "vid-001";
+		when(expressionRepository.findAllByVideosId(videoId))
+			.thenReturn(Collections.emptyList());
+
+		assertThatThrownBy(() -> quizService.makeExpressionQuizList(videoId))
+			.isInstanceOf(ServiceException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.EXPRESSION_NOT_FOUND);
+	}
+
+	@Test
+	@DisplayName("표현 퀴즈 생성 - 정상 동작")
+	void makeExpressionQuizList_withExpressions() {
+		String videoId = "vid-001";
+		Expression expr1 = mock(Expression.class);
+		when(expr1.getSentence()).thenReturn("Let's learn expressions.");
+		when(expr1.getDescription()).thenReturn("표현을 배워 봅시다.");
+
+		Expression expr2 = mock(Expression.class);
+		when(expr2.getSentence()).thenReturn("This is a test expression.");
+		when(expr2.getDescription()).thenReturn("이것은 테스트 표현입니다.");
+
+		when(expressionRepository.findAllByVideosId(videoId))
+			.thenReturn(Arrays.asList(expr1, expr2));
+
+		VideoLearningExpressionQuizListResponse response =
+			quizService.makeExpressionQuizList(videoId);
+		List<VideoLearningExpressionQuizItem> items = response.getQuiz();
+
+		assertThat(items).hasSize(2);
+		assertThat(items).extracting(VideoLearningExpressionQuizItem::getQuestion)
+			.containsExactlyInAnyOrder(
+				"Let's learn expressions.",
+				"This is a test expression."
+			);
+
+		for (VideoLearningExpressionQuizItem item : items) {
+			// meaning은 description 값을 그대로 가져와야 함
+			if (item.getQuestion().equals("Let's learn expressions.")) {
+				assertThat(item.getMeaning()).isEqualTo("표현을 배워 봅시다.");
+				assertThat(item.getChoices())
+					.containsExactlyInAnyOrder("Lets", "learn", "expressions");
+			} else {
+				assertThat(item.getMeaning()).isEqualTo("이것은 테스트 표현입니다.");
+				assertThat(item.getChoices())
+					.containsExactlyInAnyOrder("This", "is", "a", "test", "expression");
+			}
+		}
 	}
 }

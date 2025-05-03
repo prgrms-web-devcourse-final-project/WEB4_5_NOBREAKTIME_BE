@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.video.learning.dto;
 import java.util.regex.Pattern;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,8 +25,12 @@ public class VideoLearningWordQuizItem {
 	private String sentence;         // 빈칸 처리된 originalSentence
 	private String sentenceMeaning;  // Subtitle.translatedSentence
 
+
+	/**
+	 * Keyword 엔티티를 받아 빈칸 퀴즈 아이템으로 변환하는 팩토리 메서드
+	 */
 	public static VideoLearningWordQuizItem from(Keyword k) {
-		var sub = k.getSubtitles();
+		Subtitle sub = k.getSubtitles();
 		String original = sub.getOriginalSentence();
 		String blanked = Pattern.compile("\\b" + Pattern.quote(k.getWord()) + "\\b")
 			.matcher(original)
