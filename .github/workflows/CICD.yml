@@ -1,0 +1,135 @@
+name: CICD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 코드 체크아웃
+      - uses: actions/checkout@v3
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Verify Java version
+        run: java -version
+
+      # Gradle Wrapper 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod 777 ./gradlew
+
+        # Gradle 캐시 설정 (빌드 속도 향상)
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: create application.yml
+        run: echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.yml
+
+      # Gradle 빌드 실행 + 테스트를 포함
+      - name: Build with Gradle
+        run: ./gradlew clean build --no-daemon
+
+      # 이미지를 만들고 DockerHub 에 Push
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker
+        run: docker build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server .
+      - name: Push Docker
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set target IP (default blue)
+        run: |
+          STATUS=$(curl -L -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}/env")
+
+          echo "📊 HTTP Status Code: $STATUS"
+          if [ $STATUS = 200 ]; then
+            CURRENT_UPSTREAM=$(curl -L -s "http://${{ secrets.MALLANG_SERVER_IP }}/env")
+            echo "🎯 Current upstream from /env: $CURRENT_UPSTREAM"
+          else
+            CURRENT_UPSTREAM=green
+          fi
+          echo CURRENT_UPSTREAM=$CURRENT_UPSTREAM >> $GITHUB_ENV
+          if [ $CURRENT_UPSTREAM = blue ]; then
+            echo "🔵 Blue active → CURRENT_PORT 8080 -> change 8081"
+            echo "CURRENT_PORT=8080" >> $GITHUB_ENV
+            echo "STOPPED_PORT=8081" >> $GITHUB_ENV
+            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
+          elif [ $CURRENT_UPSTREAM = green ]; then
+            echo "🟢 Green active → CURRENT_PORT 8081 -> change 8080"
+            echo "CURRENT_PORT=8081" >> $GITHUB_ENV
+            echo "STOPPED_PORT=8080" >> $GITHUB_ENV
+            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
+          else
+            echo "error"
+            exit 1
+          fi
+
+      - name: Docker compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          username: ubuntu
+          host: ${{ secrets.MALLANG_SERVER_PUBLIC }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            docker compose down || true
+            docker rmi -f $(docker images | awk 'NR>1 {print $3}') || true
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
+            docker compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
+
+      - name: Check deploy server
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: "http://${{ secrets.MALLANG_SERVER_IP }}:${{env.STOPPED_PORT}}/env"
+          max-attempts: 5
+          retry-delay: 10s
+
+      # 호스트 nginx 로 변경
+      - name: Change nginx upstream
+        uses: appleboy/ssh-action@master
+        with:
+          username: ubuntu
+          host: ${{ secrets.MALLANG_SERVER_PUBLIC }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" | sudo tee /etc/nginx/conf.d/service-env.inc
+            sudo nginx -s reload
+
+      #- name: Stop current server
+        #uses: appleboy/ssh-action@master
+        #with:
+          #username: ubuntu
+          #host: ${{ secrets.MALLANG_SERVER_PUBLIC }}
+          #key: ${{ secrets.EC2_SSH_KEY }}
+          #script_stop: true
+          #script: |
+            #docker stop ${{env.CURRENT_UPSTREAM}}
+            #docker rm ${{env.CURRENT_UPSTREAM}}

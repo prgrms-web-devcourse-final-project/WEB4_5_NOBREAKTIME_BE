@@ -1,0 +1,32 @@
+package com.mallang.mallang_backend.domain.voca.wordbook.service;
+
+import java.util.List;
+
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+
+public interface WordbookService {
+	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member);
+
+	void addWordCustom(Long wordbookId, AddWordRequest request, Member member);
+
+	Long createWordbook(WordbookCreateRequest request, Member member);
+
+	void renameWordbook(Long wordbookId, String name, Member member);
+
+	void deleteWordbook(Long wordbookId, Member member);
+
+	void moveWords(WordMoveRequest request, Member member);
+
+	void deleteWords(WordDeleteRequest request, Member member);
+
+	List<WordResponse> getWordsRandomly(Long wordbookId, Member member);
+
+	List<WordbookResponse> getWordbooks(Member member);
+}

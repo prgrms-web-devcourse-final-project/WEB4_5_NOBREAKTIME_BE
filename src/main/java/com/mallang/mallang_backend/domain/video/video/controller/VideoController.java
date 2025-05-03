@@ -1,0 +1,104 @@
+package com.mallang.mallang_backend.domain.video.video.controller;
+
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
+import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.List;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+@RestController
+@RequestMapping("/api/v1/video")
+@RequiredArgsConstructor
+public class VideoController {
+
+	private final VideoService videoService;
+
+	/**
+	 * Youtube ID 로 영상을 분석해 원어 자막, 번역 자막, 핵심 단어를 응답하는 메서드
+	 * @param youtubeVideoId 유튜브 영상의 ID, ex) DF3KVSnyUWI
+	 * @return 원어 자막, 번역 자막, 핵심 단어
+	 */
+	@GetMapping("/{youtubeVideoId}/analysis")
+	public ResponseEntity<RsData<String>> videoAnalysis(@PathVariable String youtubeVideoId) {
+		String result;
+		try {
+			result = videoService.analyzeVideo(YOUTUBE_VIDEO_BASE_URL + youtubeVideoId);
+		} catch (Exception e) {
+			throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
+		}
+
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"영상이 분석되었습니다.",
+			result
+		));
+	}
+
+	/**
+	 * Clova Speech 에 음성 리소스를 제공하기 위한 메서드
+	 * @param fileName 리소스 파일명
+	 * @return 음성 리소스
+	 */
+	@GetMapping("/uploaded/{fileName}")
+	public ResponseEntity<RsData<byte[]>> getAudioFile(@PathVariable String fileName) {
+		try {
+			byte[] audioData = videoService.getAudioFile(fileName);
+			return ResponseEntity.ok(new RsData<>(
+				"200",
+				"오디오 파일 제공",
+				audioData
+			));
+		} catch (IOException e) {
+			throw new ServiceException(AUDIO_FILE_NOT_FOUND);
+		}
+	}
+
+	/**
+	 * Youtube API 를 통해 영상 목록을 가져오는 메서드(다건)
+	 * @param q 검색어 쿼리
+	 * @param category 동영상 카테고리
+	 * @param language 동영상 언어
+	 * @param maxResults 결과값 갯수
+	 * @return 검색 결과 리스트
+	 */
+	@GetMapping("/list")
+	public ResponseEntity<RsData<List<VideoResponse>>> getVideoList(
+		@RequestParam(required = false) String q,
+		@RequestParam(required = false) String category,
+		@RequestParam(defaultValue = "en") String language,
+		@RequestParam(defaultValue = "10") long maxResults
+	) {
+		List<VideoResponse> list = videoService.getVideosByLanguage(q, category, language, maxResults);
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"영상 목록 조회 완료",
+			list
+		));
+	}
+
+	/**
+	 * Youtube API 를 통해 영상 상세정보를 가져오는 메서드(단건)
+	 * @param videoId 영상 유튜브 ID
+	 * @return 영상 상세정보
+	 */
+	@GetMapping("/{videoId}")
+	public ResponseEntity<RsData<VideoDetailResponse>> getVideoDetail(@PathVariable String videoId) {
+		VideoDetailResponse detail = videoService.getVideoDetail(videoId);
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"영상 상세정보 조회 완료",
+			detail
+		));
+	}
+}
