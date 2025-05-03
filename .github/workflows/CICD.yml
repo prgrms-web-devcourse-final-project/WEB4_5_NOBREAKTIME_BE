@@ -66,12 +66,9 @@ jobs:
     steps:
       - name: Set target IP (default blue)
         run: |
-          STATUS=$(curl -L -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}/env")
-
-          echo "📊 HTTP Status Code: $STATUS"
+          STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}/env")
           if [ $STATUS = 200 ]; then
-            CURRENT_UPSTREAM=$(curl -L -s "http://${{ secrets.MALLANG_SERVER_IP }}/env")
-            echo "🎯 Current upstream from /env: $CURRENT_UPSTREAM"
+            CURRENT_UPSTREAM=$(curl -s "http://${{ secrets.MALLANG_SERVER_IP }}/env")
           else
             CURRENT_UPSTREAM=green
           fi
@@ -107,7 +104,7 @@ jobs:
       - name: Check deploy server
         uses: jtalk/url-health-check-action@v3
         with:
-          url: "http://${{ secrets.MALLANG_SERVER_IP }}:${{env.STOPPED_PORT}}/env"
+          url: "https://${{ secrets.MALLANG_SERVER_IP }}:${{env.STOPPED_PORT}}/env"
           max-attempts: 5
           retry-delay: 10s
 
