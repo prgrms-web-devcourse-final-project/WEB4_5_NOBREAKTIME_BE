@@ -35,7 +35,7 @@ public class ExpressionQuizResult {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ExpressionBook_id", nullable = false)
     private ExpressionBook expressionBook;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expression_quiz_id", nullable = false)
     private ExpressionQuiz expressionQuiz;
@@ -53,10 +53,10 @@ public class ExpressionQuizResult {
     // 생성 메서드
     @Builder
     public ExpressionQuizResult(
-        ExpressionBook expressionBook,
-        Expression expression,
-        ExpressionQuiz expressionQuiz,
-        Boolean isCorrect
+            ExpressionBook expressionBook,
+            Expression expression,
+            ExpressionQuiz expressionQuiz,
+            Boolean isCorrect
     ) {
         this.expressionBook = expressionBook;
         this.expression = expression;

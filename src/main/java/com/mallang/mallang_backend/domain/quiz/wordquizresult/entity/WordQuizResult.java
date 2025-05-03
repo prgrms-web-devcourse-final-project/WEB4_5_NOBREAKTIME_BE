@@ -44,9 +44,9 @@ public class WordQuizResult {
 
     @Builder
     public WordQuizResult(
-        WordQuiz wordQuiz,
-        WordbookItem wordbookItem,
-        Boolean isCorrect
+            WordQuiz wordQuiz,
+            WordbookItem wordbookItem,
+            Boolean isCorrect
     ) {
         this.wordQuiz = wordQuiz;
         this.wordbookItem = wordbookItem;

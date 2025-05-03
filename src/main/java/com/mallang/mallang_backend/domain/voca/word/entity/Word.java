@@ -42,18 +42,18 @@ public class Word {
 
     @Builder
     public Word(
-        String word,
-        String pos,
-        String meaning,
-        Difficulty difficulty,
-        String exampleSentence,
-        String translatedSentence
+            String word,
+            String pos,
+            String meaning,
+            Difficulty difficulty,
+            String exampleSentence,
+            String translatedSentence
     ) {
         this.word = word;
         this.pos = pos;
         this.meaning = meaning;
         this.exampleSentence = exampleSentence;
-		this.translatedSentence = translatedSentence;
-		this.difficulty = difficulty;
-	}
+        this.translatedSentence = translatedSentence;
+        this.difficulty = difficulty;
+    }
 }

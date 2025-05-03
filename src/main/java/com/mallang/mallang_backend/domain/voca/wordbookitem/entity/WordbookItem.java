@@ -57,10 +57,10 @@ public class WordbookItem {
 
     @Builder
     public WordbookItem(
-        Wordbook wordbook,
-        String word,
-        Long subtitleId,
-        String videoId
+            Wordbook wordbook,
+            String word,
+            Long subtitleId,
+            String videoId
     ) {
         this.wordbook = wordbook;
         this.word = word;
