@@ -3,7 +3,6 @@ HELP.md
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
-!**/src/test/**/build/
 
 ### STS ###
 .apt_generated
@@ -41,3 +40,7 @@ out/
 
 ## querydsl
 src/main/generated/
+
+src/main/resources/application.yml
+/uploads
+src/test/**
