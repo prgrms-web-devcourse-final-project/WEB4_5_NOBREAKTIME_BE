@@ -123,13 +123,13 @@ jobs:
             echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" | sudo tee /etc/nginx/conf.d/service-env.inc
             sudo nginx -s reload
 
-      #- name: Stop current server
-        #uses: appleboy/ssh-action@master
-        #with:
-          #username: ubuntu
-          #host: ${{ secrets.MALLANG_SERVER_PUBLIC }}
-          #key: ${{ secrets.EC2_SSH_KEY }}
-          #script_stop: true
-          #script: |
-            #docker stop ${{env.CURRENT_UPSTREAM}}
-            #docker rm ${{env.CURRENT_UPSTREAM}}
+      - name: Stop current server
+        uses: appleboy/ssh-action@master
+        with:
+          username: ubuntu
+          host: ${{ secrets.MALLANG_SERVER_PUBLIC }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            docker stop ${{env.CURRENT_UPSTREAM}}
+            docker rm ${{env.CURRENT_UPSTREAM}}
