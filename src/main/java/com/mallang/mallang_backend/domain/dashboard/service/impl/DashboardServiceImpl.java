@@ -50,7 +50,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public StatisticResponse getStatistics(Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 
 		int watchedVideoCount = videoHistoryRepository.countByMember(member);
 
@@ -113,7 +113,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Transactional
 	public void updateGoal(UpdateGoalRequest request, Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 		member.updateVideoGoal(request.getVideoGoal());
 		member.updateWordGoal(request.getWordGoal());
 		memberRepository.save(member);
@@ -122,7 +122,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public LearningHistoryResponse getLearningStatisticsByPeriod(Long memberId, LocalDate now) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 
 		LocalDateTime todayStart = now.atStartOfDay();
 		LocalDateTime yesterdayStart = todayStart.minusDays(1);

@@ -104,7 +104,7 @@ class ExpressionBookServiceImplTest2 {
         ServiceException ex = assertThrows(ServiceException.class,
                 () -> service.create(request, memberId));
 
-        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        assertEquals(ErrorCode.MEMBER_NOT_FOUND, ex.getErrorCode());
         verify(memberRepository).findById(memberId);
         verify(expressionBookRepository, never()).save(any());
     }
