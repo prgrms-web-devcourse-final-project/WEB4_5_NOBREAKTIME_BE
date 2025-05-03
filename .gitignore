@@ -48,5 +48,5 @@ uploads
 
 ## properties
 application.yml
-src/test/java/**
+src/test/java/com/mallang/mallang_backend/**
 ./.github/workflows/CI.yml
