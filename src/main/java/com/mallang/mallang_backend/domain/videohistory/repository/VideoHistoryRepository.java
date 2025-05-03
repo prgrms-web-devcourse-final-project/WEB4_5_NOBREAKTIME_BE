@@ -20,4 +20,6 @@ public interface VideoHistoryRepository extends JpaRepository<VideoHistory, Long
 
     // 오늘 본 영상 갯수
     int countByMemberAndCreatedAtAfter(Member member, LocalDateTime todayStart);
+
+    List<VideoHistory> findByMemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
 }

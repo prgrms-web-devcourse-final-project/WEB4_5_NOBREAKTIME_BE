@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.quiz.wordquizresult.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,6 @@ public interface WordQuizResultRepository extends JpaRepository<WordQuizResult, 
 	int countByWordQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime dateTime);
 
 	int countByWordQuiz_Member(Member member);
+
+	List<WordQuizResult> findByWordQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
 }

@@ -1,11 +1,14 @@
 package com.mallang.mallang_backend.domain.dashboard.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistoryResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
 import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
@@ -32,8 +35,8 @@ public class DashboardController {
 	 * @param userDetail 로그인한 사용자
 	 * @return 대시보드 정보
 	 */
-	@Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
-	@ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
+	@Operation(summary = "대시보드 조회", description = "대시보드 정보를 조회합니다.")
+	@ApiResponse(responseCode = "200", description = "대시보드 조회에 성공했습니다.")
 	@GetMapping("/statistics")
 	public ResponseEntity<RsData<StatisticResponse>> statistics(
 		@Login CustomUserDetails userDetail
@@ -55,8 +58,8 @@ public class DashboardController {
 	 * @param userDetail 로그인한 사용자 정보
 	 * @return 목표 설정 완료
 	 */
-	@Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
-	@ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
+	@Operation(summary = "학습 목표 설정", description = "영상 학습 목표, 단어 학습 목표를 설정합니다.")
+	@ApiResponse(responseCode = "200", description = "학습 목표가 설정되었습니다.")
 	@PatchMapping("/goal")
 	public ResponseEntity<RsData<Void>> updateGoal(
 		UpdateGoalRequest request,
@@ -69,6 +72,23 @@ public class DashboardController {
 		return ResponseEntity.ok(new RsData<>(
 			"200",
 			"학습 목표가 설정되었습니다."
+		));
+	}
+
+	@Operation(summary = "기간별 학습 통계", description = "특정 기간에 대한 학습 통계 정보를 조회합니다.")
+	@ApiResponse(responseCode = "200", description = "학습 통계 정보가 조회되었습니다.")
+	@GetMapping("/calendar")
+	public ResponseEntity<RsData<LearningHistoryResponse>> getCalendarsData(
+		@Login CustomUserDetails userDetail
+	) {
+		Long memberId = userDetail.getMemberId();
+
+		LearningHistoryResponse response = dashboardService.getLearningStatisticsByPeriod(memberId, LocalDate.now());
+
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"학습 통계 정보가 조회되었습니다.",
+			response
 		));
 	}
 }
