@@ -48,5 +48,5 @@ uploads
 
 ## properties
 application.yml
-src/test/**
+src/test/java/**
 ./.github/workflows/CI.yml
