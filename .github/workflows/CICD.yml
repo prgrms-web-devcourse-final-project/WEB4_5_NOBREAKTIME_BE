@@ -69,22 +69,27 @@ jobs:
           STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}/env")
           if [ $STATUS = 200 ]; then
             CURRENT_UPSTREAM=$(curl -s "http://${{ secrets.MALLANG_SERVER_IP }}/env")
+            if [ "$CURRENT_UPSTREAM" = "blue" ]; then
+              TARGET_UPSTREAM="green"
+            else
+              TARGET_UPSTREAM="blue"
+            fi
           else
-            CURRENT_UPSTREAM=green
+            TARGET_UPSTREAM="green"
           fi
-          echo CURRENT_UPSTREAM=$CURRENT_UPSTREAM >> $GITHUB_ENV
-          if [ $CURRENT_UPSTREAM = blue ]; then
-            echo "🔵 Blue active → CURRENT_PORT 8080 -> change 8081"
-            echo "CURRENT_PORT=8080" >> $GITHUB_ENV
+
+          echo "TARGET_UPSTREAM=$TARGET_UPSTREAM" >> $GITHUB_ENV
+          
+          if [ "$TARGET_UPSTREAM" = "blue" ]; then
+            echo "🔵 Blue 배포 → 8080 포트 시작 / 8081 포트 중지"
+            echo "TARGET_PORT=8080" >> $GITHUB_ENV
             echo "STOPPED_PORT=8081" >> $GITHUB_ENV
-            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
-          elif [ $CURRENT_UPSTREAM = green ]; then
-            echo "🟢 Green active → CURRENT_PORT 8081 -> change 8080"
-            echo "CURRENT_PORT=8081" >> $GITHUB_ENV
+          elif [ "$TARGET_UPSTREAM" = "green" ]; then
+            echo "🟢 Green 배포 → 8081 포트 시작 / 8080 포트 중지"
+            echo "TARGET_PORT=8081" >> $GITHUB_ENV
             echo "STOPPED_PORT=8080" >> $GITHUB_ENV
-            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
           else
-            echo "error"
+            echo "❌ 잘못된 환경 값"
             exit 1
           fi
 
