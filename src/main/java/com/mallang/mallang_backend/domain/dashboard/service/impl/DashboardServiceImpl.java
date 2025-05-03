@@ -10,6 +10,7 @@ import com.mallang.mallang_backend.domain.dashboard.dto.AchievementDetail;
 import com.mallang.mallang_backend.domain.dashboard.dto.DailyGoal;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
+import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
 import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
@@ -73,5 +74,15 @@ public class DashboardServiceImpl implements DashboardService {
 			member.getCreatedAt(),
 			false
 		);
+	}
+
+	@Override
+	@Transactional
+	public void updateGoal(UpdateGoalRequest request, Long memberId){
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+		member.updateVideoGoal(request.getVideoGoal());
+		member.updateWordGoal(request.getWordGoal());
+		memberRepository.save(member);
 	}
 }
