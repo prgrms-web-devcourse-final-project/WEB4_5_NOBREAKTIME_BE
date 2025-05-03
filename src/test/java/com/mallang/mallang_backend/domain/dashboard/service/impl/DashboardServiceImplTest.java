@@ -15,9 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.DailyGoal;
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 import com.mallang.mallang_backend.global.common.Language;
@@ -33,6 +35,9 @@ class DashBoardServiceImplTest {
 
 	@Mock
 	private WordQuizResultRepository wordQuizResultRepository;
+
+	@Mock
+	private ExpressionQuizResultRepository expressionQuizResultRepository;
 
 	@InjectMocks
 	private DashboardServiceImpl dashboardServiceImpl;
@@ -60,6 +65,8 @@ class DashBoardServiceImplTest {
 			.thenReturn(2);
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
 			.thenReturn(4);
+		when(expressionQuizResultRepository.countByExpressionQuiz_Member(eq(member)))
+			.thenReturn(200);
 
 		// when
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
@@ -73,6 +80,8 @@ class DashBoardServiceImplTest {
 		assertThat(dailyGoal.getWordGoal()).isEqualTo(5);
 		assertThat(dailyGoal.getAchievementDetail().getCompletedVideos()).isEqualTo(2);
 		assertThat(dailyGoal.getAchievementDetail().getCompletedWords()).isEqualTo(4);
+		LevelStatus levelStatus = response.getLevelStatus();
+		assertThat(levelStatus.getRemeasurable()).isTrue();
 
 		// 성취도는 (2/3 * 100 + 4/5 * 100) / 2 = (66.66 + 80) / 2 = 73.33
 		assertThat(dailyGoal.getAchievementRate()).isCloseTo(73.33, within(0.1));

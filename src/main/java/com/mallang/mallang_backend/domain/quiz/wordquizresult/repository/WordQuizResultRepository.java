@@ -10,4 +10,6 @@ import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizRes
 public interface WordQuizResultRepository extends JpaRepository<WordQuizResult, Long> {
 
 	int countByWordQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime dateTime);
+
+	int countByWordQuiz_Member(Member member);
 }

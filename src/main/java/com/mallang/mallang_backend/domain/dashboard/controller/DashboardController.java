@@ -13,8 +13,12 @@ import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Dashboard", description = "대시보드 관련 API")
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
@@ -28,6 +32,8 @@ public class DashboardController {
 	 * @param userDetail 로그인한 사용자
 	 * @return 대시보드 정보
 	 */
+	@Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
+	@ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
 	@GetMapping("/statistics")
 	public ResponseEntity<RsData<StatisticResponse>> statistics(
 		@Login CustomUserDetails userDetail
@@ -49,6 +55,8 @@ public class DashboardController {
 	 * @param userDetail 로그인한 사용자 정보
 	 * @return 목표 설정 완료
 	 */
+	@Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
+	@ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
 	@PatchMapping("/goal")
 	public ResponseEntity<RsData<Void>> updateGoal(
 		UpdateGoalRequest request,

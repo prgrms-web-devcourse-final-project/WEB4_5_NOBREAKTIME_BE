@@ -12,10 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LevelStatus {
-	private String video;
-	private String voca;
-	private String grammar;
-	private String quiz;
+	private String word;
+	private String expression;
 	private LocalDateTime lastUpdated;
+	// 재측정 가능한지
 	private Boolean remeasurable;
 }

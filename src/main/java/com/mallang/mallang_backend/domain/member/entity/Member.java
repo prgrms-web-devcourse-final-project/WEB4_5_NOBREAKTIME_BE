@@ -1,10 +1,12 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.time.LocalDateTime;
 
 import com.mallang.mallang_backend.global.common.Language;
-
 import com.mallang.mallang_backend.global.exception.ServiceException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,8 +18,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALREADY_WITHDRAWN;
 
 @Entity
 @Getter
@@ -65,7 +65,16 @@ public class Member {
     @Column(nullable = false)
     private int videoGoal = 3;
 
+    @Column(nullable = false)
+    private Level wordLevel = Level.NONE;
+
+    @Column(nullable = false)
+    private Level expressionLevel = Level.NONE;
+
     private LocalDateTime withdrawalDate;
+
+    @Column(nullable = false)
+    private LocalDateTime measuredAt = createdAt;
 
     @Builder
     public Member(
@@ -111,6 +120,18 @@ public class Member {
         this.withdrawalDate = withdrawalDate;
     }
 
+    public void updateMeasuredAt(LocalDateTime measuredAt) {
+        this.measuredAt = measuredAt;
+    }
+
+    public void updateWordLevel(Level wordLevel) {
+        this.wordLevel = wordLevel;
+    }
+
+    public void updateExpressionLevel(Level expressionLevel) {
+        this.expressionLevel = expressionLevel;
+    }
+
     // 회원 탈퇴 후 마스킹 처리
     public void markAsWithdrawn() {
         if (this.withdrawalDate != null) {
@@ -130,5 +151,9 @@ public class Member {
 
     public void updateProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public boolean isFirstLevelMeasure() {
+        return getWordLevel().equals(Level.NONE) || getExpressionLevel().equals(Level.NONE);
     }
 }
