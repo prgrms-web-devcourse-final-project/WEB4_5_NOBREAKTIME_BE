@@ -13,6 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
+import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
+import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizItem;
+import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.service.VideoLearningQuizService;
@@ -26,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 
 	private final KeywordRepository keywordRepository;
+	private final ExpressionRepository expressionRepository;
 	private final Random random = new Random();
 
 	/**
@@ -36,17 +41,17 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	@Override
 	@Transactional(readOnly = true)
 	public VideoLearningWordQuizListResponse makeQuizList(String videoId) {
+		// 영상 id로 연관 키워드 조회
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
 		if (pool.isEmpty()) {
 			throw new ServiceException(ErrorCode.KEYWORD_NOT_FOUND);
 		}
 
-		// subtitleId별로 묶기
+		// 자막 id로 그룹핑
 		Map<Long, List<Keyword>> bySubtitle = pool.stream()
 			.collect(Collectors.groupingBy(k -> k.getSubtitles().getId()));
 
-
-		// 각 그룹에서 랜덤으로 하나씩 뽑기
+		// 각 그룹에서 랜덤 추출 리스트 변환
 		List<Keyword> picked = bySubtitle.values().stream()
 			.map(list -> {
 				Collections.shuffle(list, random);
@@ -54,14 +59,36 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 			})
 			.collect(Collectors.toList());
 
-		// 전체를 섞고, 최대 개수만큼 잘라내기
+		// 뽑힌 항목 전체 셔플 후 최대 갯수만큼 제한
 		Collections.shuffle(picked, random);
+
 		List<VideoLearningWordQuizItem> items = picked.stream()
 			.limit(MAX_VIDEO_LEARNING_QUIZ_ITEMS)
 			.map(VideoLearningWordQuizItem::from)
 			.collect(Collectors.toList());
 
 		return VideoLearningWordQuizListResponse.builder()
+			.quiz(items)
+			.build();
+	}
+
+	/**
+	 * 주어진 videoId에 해당하는 표현 퀴즈 목록을 생성해서 반환
+	 * @param videoId
+	 * @return VideoLearningExpressionQuizListResponse
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public VideoLearningExpressionQuizListResponse makeExpressionQuizList(String videoId) {
+		List<Expression> pool = expressionRepository.findAllByVideosId(videoId);
+		if (pool.isEmpty()) throw new ServiceException(ErrorCode.EXPRESSION_NOT_FOUND);
+
+		// 각 Expression 엔티티를 QuizItem 객체로 변환
+		List<VideoLearningExpressionQuizItem> items = pool.stream()
+			.map(expr -> VideoLearningExpressionQuizItem.of(expr, random))
+			.collect(Collectors.toList());
+
+		return VideoLearningExpressionQuizListResponse.builder()
 			.quiz(items)
 			.build();
 	}
