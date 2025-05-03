@@ -13,6 +13,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Subscription {
+    NONE("DELETE_USER"),
     BASIC("ROLE_BASIC"),
     STANDARD("ROLE_STANDARD"),
     PREMIUM("ROLE_PREMIUM"),

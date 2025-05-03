@@ -2,7 +2,6 @@ package com.mallang.mallang_backend.domain.voca.wordbook.service;
 
 import java.util.List;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
@@ -12,21 +11,21 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateReques
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 
 public interface WordbookService {
-	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Member member);
+	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Long memberId);
 
-	void addWordCustom(Long wordbookId, AddWordRequest request, Member member);
+	void addWordCustom(Long wordbookId, AddWordRequest request, Long memberId);
 
-	Long createWordbook(WordbookCreateRequest request, Member member);
+	Long createWordbook(WordbookCreateRequest request, Long memberId);
 
-	void renameWordbook(Long wordbookId, String name, Member member);
+	void renameWordbook(Long wordbookId, String name, Long memberId);
 
-	void deleteWordbook(Long wordbookId, Member member);
+	void deleteWordbook(Long wordbookId, Long memberId);
 
-	void moveWords(WordMoveRequest request, Member member);
+	void moveWords(WordMoveRequest request, Long memberId);
 
-	void deleteWords(WordDeleteRequest request, Member member);
+	void deleteWords(WordDeleteRequest request, Long memberId);
 
-	List<WordResponse> getWordsRandomly(Long wordbookId, Member member);
+	List<WordResponse> getWordsRandomly(Long wordbookId, Long memberId);
 
-	List<WordbookResponse> getWordbooks(Member member);
+	List<WordbookResponse> getWordbooks(Long memberId);
 }

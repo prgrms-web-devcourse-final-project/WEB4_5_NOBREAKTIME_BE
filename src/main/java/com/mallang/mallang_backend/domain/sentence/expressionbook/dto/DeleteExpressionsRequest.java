@@ -13,6 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class DeleteExpressionsRequest {
     private Long expressionBookId;
-    private Long memberId;
     private List<Long> expressionIds;
 }

@@ -14,6 +14,5 @@ import java.util.List;
 public class MoveExpressionsRequest {
     private Long sourceExpressionBookId;
     private Long targetExpressionBookId;
-    private Long memberId;
     private List<Long> expressionIds;
 }

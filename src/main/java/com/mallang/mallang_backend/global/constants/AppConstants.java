@@ -30,7 +30,7 @@ public class AppConstants {
 	/**
 	 * Youtube 라이센스 타입
 	 */
-    public static final String CC_LICENSE = "creativeCommon";
+	public static final String CC_LICENSE = "creativeCommon";
 	/**
 	 * 기본 단어장 이름
 	 */
@@ -44,7 +44,10 @@ public class AppConstants {
             "/oauth2/**",
             "/api/test/login",
             "/health",
-            "/env"
+            "/env",
+            "/v3/api-docs",
+            "/swagger-ui.html",
+            "/swagger-ui"
     };
     /**
      * 정적 리소스 확장자 패턴
@@ -56,4 +59,15 @@ public class AppConstants {
     public static final String ID_KEY = "id";
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
+
+	/**
+	 * 영상 학습 퀴즈 최대 개수
+	 */
+	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+
+    /**
+     * s3 에 업로드 할 프로필 사진의 prefix
+     */
+    public static final String IMAGE_PREFIX_KEY = "profile-images";
+    public static final String IMAGE_TYPE_KEY = "image/jpeg";
 }

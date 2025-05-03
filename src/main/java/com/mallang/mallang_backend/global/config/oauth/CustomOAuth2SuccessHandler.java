@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.config.oauth;
 
+import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.global.config.oauth.processor.OAuth2UserProcessor;
@@ -7,6 +8,7 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;
 import com.mallang.mallang_backend.global.token.TokenService;
+import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.UNSUPPORTED_OAUTH_PROVIDER;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
  * 로그인 / 회원가입 후
@@ -31,6 +33,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.UNSUPPORTED
  * <p>
  * kakao: {URL}/oauth2/authorization/kakao 로 이동
  * naver: {URL}/oauth2/authorization/naver 로 이동
+ * google: {URL}/oauth2/authorization/google 로 이동
  */
 
 /**
@@ -51,6 +54,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private final MemberService memberService;
     private final TokenService tokenService;
     private final JwtService jwtService;
+    private final S3ImageUploader imageUploader;
 
     /**
      * OAuth2 인증 성공시 호출되는 엔트리 포인트 메서드
@@ -74,25 +78,34 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     /**
      * OAuth2 로그인 처리 주요 흐름을 담당하는 메서드
      *
-     * @param response   응답 객체
-     * @param platform   로그인 플랫폼 정보
-     * @param user       OAuth2 인증 사용자 정보
+     * @param response 응답 객체
+     * @param platform 로그인 플랫폼 정보
+     * @param user     OAuth2 인증 사용자 정보
      * @throws IOException 리다이렉트 시 예외
      */
     private void processOAuthLogin(HttpServletResponse response,
                                    LoginPlatform platform,
-                                   OAuth2User user) throws IOException {
+                                   OAuth2User user) {
+
         Map<String, Object> userAttributes = parseUserAttributes(platform, user);
         String email = extractUniqueEmail(userAttributes);
 
-        if (isExistingMember(email)) {
+        if (memberService.isExistEmail(email)) {
             handleExistingMember(response, email);
-            redirectToMainPage(response);
+            try {
+                response.sendRedirect(frontUrl); // 메인 페이지 이동
+            } catch (IOException e) {
+                throw new ServiceException(REDIRECTION_FAILED, e);
+            }
             return;
         }
 
         registerNewMember(response, platform, userAttributes);
-        redirectToAdditionalInfoPage(response);
+        try {
+            response.sendRedirect(frontUrl + "/additional_info"); // 추가 정보 입력 페이지 이동
+        } catch (IOException e) {
+            throw new ServiceException(REDIRECTION_FAILED, e);
+        }
     }
 
     /**
@@ -104,11 +117,13 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
      */
     private Map<String, Object> parseUserAttributes(LoginPlatform platform,
                                                     OAuth2User user) {
+
         OAuth2UserProcessor processor = findSupportedProcessor(platform);
         return processor.parseAttributes(user.getAttributes());
     }
 
     private OAuth2UserProcessor findSupportedProcessor(LoginPlatform platform) {
+
         return processors.stream()
                 .filter(p -> p.supports(platform))
                 .findFirst()
@@ -131,7 +146,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
      * @param response 응답 객체
      * @param email    회원 이메일(고유 ID)
      */
-    private void handleExistingMember(HttpServletResponse response, String email) {
+    private void handleExistingMember(HttpServletResponse response,
+                                      String email) {
         // 1. 이메일로 기존 회원 ID 조회
         Long existMemberId = memberService.getMemberByEmail(email);
 
@@ -145,22 +161,28 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     /**
      * 신규 회원 가입 처리 메서드
      *
-     * @param response      응답 객체
-     * @param platform      로그인 플랫폼 정보
-     * @param attributes    OAuth2에서 추출한 사용자 속성 맵
+     * @param response   응답 객체
+     * @param platform   로그인 플랫폼 정보
+     * @param attributes OAuth2에서 추출한 사용자 속성 맵
      */
     private void registerNewMember(HttpServletResponse response,
                                    LoginPlatform platform,
                                    Map<String, Object> attributes) {
+
         String email = String.valueOf(attributes.get(ID_KEY));
         String nickname = (String) attributes.get(NICKNAME_KEY);
         String profileImage = (String) attributes.get(PROFILE_IMAGE_KEY);
 
         log.info("사용자 id: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
 
+        // S3에 프로필 이미지 업로드
+        ImageUploadRequest request = new ImageUploadRequest(profileImage);
+        String s3ProfileImageUrl = imageUploader.uploadImageURL(request);
+
         Long memberId = memberService.signupByOauth(
-                email, nickname, profileImage, platform
+                email, nickname, s3ProfileImageUrl, platform
         );
+
         setJwtToken(response, memberId, memberService.getSubscription(memberId));
     }
 
@@ -171,7 +193,10 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
      * @param memberId member 고유 값
      * @param roleName 구독에서 가져온 구독별 권한 설정 값
      */
-    private void setJwtToken(HttpServletResponse response, Long memberId, String roleName) {
+    private void setJwtToken(HttpServletResponse response,
+                             Long memberId,
+                             String roleName) {
+
         // 1. 토큰 생성
         TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
 
@@ -189,7 +214,9 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
      * @return 로그인 플랫폼 정보
      * @throws ServiceException 인증 타입이 잘못된 경우
      */
-    private LoginPlatform extractLoginPlatform(Authentication authentication) {
+    private LoginPlatform extractLoginPlatform(
+            Authentication authentication) {
+
         if (!(authentication instanceof OAuth2AuthenticationToken oauthToken)) {
             throw new ServiceException(UNSUPPORTED_OAUTH_PROVIDER);
         }
@@ -198,35 +225,5 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         log.info("OAuth2 제공자 식별자: {}", providerId);
 
         return LoginPlatform.from(providerId.toLowerCase());
-    }
-
-    /**
-     * 메인 페이지로 리다이렉트하는 메서드
-     *
-     * @param response 응답 객체
-     * @throws IOException 리다이렉트 시 예외
-     */
-    private void redirectToMainPage(HttpServletResponse response) throws IOException {
-        response.sendRedirect(frontUrl);
-    }
-
-    /**
-     * 추가 정보 입력 페이지로 리다이렉트하는 메서드
-     *
-     * @param response 응답 객체
-     * @throws IOException 리다이렉트 시 예외
-     */
-    private void redirectToAdditionalInfoPage(HttpServletResponse response) throws IOException {
-        response.sendRedirect(frontUrl + "/additional_info");
-    }
-
-    /**
-     * 회원 존재 여부 확인 메서드
-     *
-     * @param email 회원 이메일(고유 ID)
-     * @return 회원 존재 여부
-     */
-    private boolean isExistingMember(String email) {
-        return memberService.isExistEmail(email);
     }
 }

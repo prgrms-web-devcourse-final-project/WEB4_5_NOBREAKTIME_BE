@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.mallang.mallang_backend.global.common.Language;
 
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +16,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALREADY_WITHDRAWN;
 
 @Entity
 @Getter
@@ -29,11 +32,13 @@ public class Member {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
     private String password;
 
     @Column(nullable = false)
     private String nickname;
 
+    @Column
     private String profileImageUrl;
 
     @Column(nullable = false)
@@ -59,6 +64,8 @@ public class Member {
 
     @Column(nullable = false)
     private int videoGoal = 3;
+
+    private LocalDateTime withdrawalDate;
 
     @Builder
     public Member(
@@ -90,5 +97,38 @@ public class Member {
     // 구독 플랜 업데이트
     public void updateSubscription(Subscription subscription) {
         this.subscription = subscription;
+    }
+
+    public void updateWordGoal(int wordGoal) {
+        this.wordGoal = wordGoal;
+    }
+
+    public void updateVideoGoal(int videoGoal) {
+        this.videoGoal = videoGoal;
+    }
+
+    public void updateWithdrawalDate(LocalDateTime withdrawalDate) {
+        this.withdrawalDate = withdrawalDate;
+    }
+
+    // 회원 탈퇴 후 마스킹 처리
+    public void markAsWithdrawn() {
+        if (this.withdrawalDate != null) {
+            throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
+        }
+        this.withdrawalDate = LocalDateTime.now();
+        maskSensitiveData();
+    }
+
+    private void maskSensitiveData() {
+        this.nickname = "탈퇴회원-" + this.id;
+        this.email = "withdrawn_" + this.id;
+        this.profileImageUrl = "delete";
+        this.loginPlatform = LoginPlatform.NONE;
+        this.subscription = Subscription.NONE;
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

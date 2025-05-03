@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,8 +17,10 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * oauth2Login
@@ -49,8 +51,12 @@ public class SecurityConfig {
                                 "/api/v1/expressionbookItems/**",
                                 "/api/v1/wordbooks/**",
                                 "/api/test",
+                                "/api/v1/wordbooks/quiz/**",
+                                "/health",
                                 "/env",
-                                "/health"
+                                "/v3/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/**").hasAnyRole(
                                 "BASIC",
@@ -81,13 +87,14 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // 허용할 오리진 설정
-        configuration.setAllowedOrigins(Arrays.asList("https://cdpn.io",
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://cdpn.io",
                 "https://www.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));
         // 허용할 HTTP 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
         // 자격 증명 허용 설정
         configuration.setAllowCredentials(true);
         // 허용할 헤더 설정

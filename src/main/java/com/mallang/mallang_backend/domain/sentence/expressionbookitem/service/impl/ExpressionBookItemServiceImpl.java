@@ -26,11 +26,11 @@ public class ExpressionBookItemServiceImpl implements ExpressionBookItemService 
 
     @Transactional
     @Override
-    public void deleteExpressionsFromBook(DeleteExpressionsRequest request) {
+    public void deleteExpressionsFromBook(DeleteExpressionsRequest request, Long memberId) {
         ExpressionBook book = expressionBookRepository.findById(request.getExpressionBookId())
                 .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(request.getMemberId())) {
+        if (!book.getMember().getId().equals(memberId)) {
             throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
         }
 
@@ -43,9 +43,7 @@ public class ExpressionBookItemServiceImpl implements ExpressionBookItemService 
 
     @Transactional
     @Override
-    public void moveExpressions(MoveExpressionsRequest request) {
-        Long memberId = request.getMemberId();
-
+    public void moveExpressions(MoveExpressionsRequest request, Long memberId) {
         ExpressionBook sourceBook = expressionBookRepository.findById(request.getSourceExpressionBookId())
                 .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
 

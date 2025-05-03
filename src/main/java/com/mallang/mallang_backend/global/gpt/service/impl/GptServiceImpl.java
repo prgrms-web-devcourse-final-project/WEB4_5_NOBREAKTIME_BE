@@ -1,18 +1,22 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
-
+import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.List;
 
 
 @Slf4j
@@ -42,7 +46,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackSearchWord(String word, Throwable t) {
         log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-        return "단어 분석 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        throw new ServiceException(ErrorCode.API_ERROR);
     }
 
     /**
@@ -62,10 +66,38 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackAnalyzeSentence(String sentence, String translatedSentence, Throwable t) {
         log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
-        return "문장 분석 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        throw new ServiceException(ErrorCode.API_ERROR);
     }
 
-    // 결과 반환
+    /**
+     * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeSentence 호출
+     */
+    @Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
+    @Override
+    public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments) {
+        // prompt 생성
+        String script = GptScriptProcessor.prepareScriptInputText(segments);
+        String prompt = buildPromptForAnalyzeScript(script);
+
+        // GPT 호출
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
+
+        // GPT 응답 추출
+        String content = response.getChoices().get(0).getMessage().getContent();
+
+        // 응답 파싱
+        return GptScriptProcessor.parseAnalysisResult(content, segments);
+    }
+
+    /**
+     * 재시도 소진 후 스크립트(대본) 분석 fallback 처리
+     */
+    public String fallbackAnalyzeScript(List<TranscriptSegment> segments, Throwable t) {
+        log.error("[GptService] analyzeScript fallback 처리, 예외: {}", t.getMessage());
+        throw new ServiceException(ErrorCode.API_ERROR);
+    }
+
     /**
      * OpenAI API 호출 및 응답 유효성 검증 후 응답 내용 반환
      *
@@ -95,9 +127,8 @@ public class GptServiceImpl implements GptService {
             명사 | 빛 | 1 | The light was too bright. | 빛이 너무 밝았다.
             
             조건:
-            - 난이도는 1, 2, 3, 4, 5 중 하나입니다. (1 = 가장 쉬움, 5 = 가장 어려움)
-            - 난이도는 1(가장 쉬움)부터 5(가장 어려움)까지의 숫자로 표시하세요.
-            - 품사와 해석은 반드시 한국어로 작성하세요.
+            - 난이도는 1~5 숫자 중 하나로 지정.
+            - 품사와 해석은 반드시 한국어로 작성.
             - 예문은 해당 품사로 쓰인 실제 문장을 포함하세요.
             - 예문의 한국어 번역도 반드시 포함하세요.
             - 추가적인 설명 없이 위 형식으로만 출력하세요.
@@ -126,6 +157,33 @@ public class GptServiceImpl implements GptService {
         원문: %s
         번역: %s
         """, sentence, translatedSentence);
+    }
+
+    /**
+     * 영상 학습의 스크립트 분석용 프롬프트 생성
+     */
+    private String buildPromptForAnalyzeScript(String script) {
+        return String.format("""
+                당신은 영어 스크립트를 분석해주는 도우미입니다.
+                
+                입력 문자열은 사용자가 임의로 구분한 여러 블록의 문장으로 구성되어 있습니다. 각 블록은 `---` 기호로 구분되어 있으며, 블록 내부에는 문장 여러 개가 포함될 수 있습니다. 각 블록마다 아래 형식으로 출력하세요:
+                
+                출력 형식(각 블록별):
+                원문 | 번역 | 단어1 | 의미 | 난이도 | 단어2 | 의미 | 난이도 | 단어3 | 의미 | 난이도
+                
+                조건:
+                - 난이도는 1~5 숫자 중 하나로 지정
+                - 단어나 숙어 구분 없이, 학습에 도움이 되는 최대 3개의 표현을 선별
+                - 키워드가 없는 경우 단어 정보 없이 원문과 번역만 출력
+                - 각 블록은 `---` 기호로 구분
+                - 추가적인 설명 없이 지정된 형식으로만 출력
+                
+                예시:
+                Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it | 네가 보고 있다고 생각하는 사람이 누구지? 내가 1년에 얼마나 버는지 알아? 내가 말해도 안 믿을걸 | see | 보다 | 1 | believe | 믿다 | 2 | make a year | 1년에 얼마를 벌다 | 3
+                ---
+                
+                입력: %s
+                """, script);
     }
 
 
