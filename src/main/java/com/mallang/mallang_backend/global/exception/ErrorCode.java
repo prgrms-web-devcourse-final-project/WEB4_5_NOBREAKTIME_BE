@@ -79,6 +79,8 @@ public enum ErrorCode {
     EXPRESSIONBOOK_ITEM_NOT_FOUND("404-1", "expressionbook.item.not.found", HttpStatus.NOT_FOUND),
     // 표현 퀴즈를 찾을 수 없음
     EXPRESSIONQUIZ_NOT_FOUND("404-1", "expressionquiz.not.found", HttpStatus.NOT_FOUND),
+    // 표현함 생성 권한이 없음
+    NO_EXPRESSIONBOOK_CREATE_PERMISSION("403-1", "expressionbook.create.failed", HttpStatus.FORBIDDEN),
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),

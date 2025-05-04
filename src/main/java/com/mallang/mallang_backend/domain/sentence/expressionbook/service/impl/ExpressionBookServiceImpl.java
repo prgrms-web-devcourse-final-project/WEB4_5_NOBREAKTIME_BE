@@ -45,6 +45,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
+        if (!member.getSubscription().isStandardOrHigher()) {
+            throw new ServiceException(ErrorCode.NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
         ExpressionBook expressionBook = ExpressionBook.builder()
                 .name(request.getName())
                 .language(request.getLanguage())

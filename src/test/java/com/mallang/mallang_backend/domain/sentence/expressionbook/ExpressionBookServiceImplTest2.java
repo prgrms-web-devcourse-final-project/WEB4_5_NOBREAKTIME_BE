@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
@@ -55,7 +56,7 @@ class ExpressionBookServiceImplTest2 {
     }
 
     @Test
-    @DisplayName("create()는 표현함을 생성하고 저장된 결과를 반환한다")
+    @DisplayName("create()는 표현함을 생성하고 저장된 결과를 반환한다(Standard 이상)")
     void testCreateExpressionBook() throws Exception {
         // given
         Long memberId = 1L;
@@ -64,6 +65,7 @@ class ExpressionBookServiceImplTest2 {
         Field idField = Member.class.getDeclaredField("id");
         idField.setAccessible(true);
         idField.set(mockMember, memberId);
+        mockMember.updateSubscription(Subscription.STANDARD);
 
         ExpressionBookRequest request = new ExpressionBookRequest("My Book", Language.ENGLISH);
 
@@ -105,6 +107,40 @@ class ExpressionBookServiceImplTest2 {
                 () -> service.create(request, memberId));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(memberRepository).findById(memberId);
+        verify(expressionBookRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("create()는 BASIC 회원이 생성 시 예외를 던진다")
+    void testCreateExpressionBook_failsForBasicUser() throws Exception {
+        // given
+        Long memberId = 1L;
+
+        Member basicMember = Member.builder()
+                .email("basic@test.com")
+                .password("pw")
+                .nickname("basic")
+                .profileImageUrl(null)
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+
+        basicMember.updateSubscription(Subscription.BASIC);
+
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(basicMember, memberId);
+
+        ExpressionBookRequest request = new ExpressionBookRequest("Basic Book", Language.ENGLISH);
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(basicMember));
+
+        // expect
+        ServiceException ex = assertThrows(ServiceException.class,
+                () -> service.create(request, memberId));
+
+        assertEquals(ErrorCode.NO_EXPRESSIONBOOK_CREATE_PERMISSION, ex.getErrorCode());
         verify(memberRepository).findById(memberId);
         verify(expressionBookRepository, never()).save(any());
     }
