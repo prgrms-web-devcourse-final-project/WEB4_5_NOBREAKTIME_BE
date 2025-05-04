@@ -19,7 +19,7 @@ import lombok.Setter;
 public class KeywordInfo {
     private String word;
     private String meaning;
-    private int difficulity;    // 1 ~ 5
+    private int difficulty;    // 1 ~ 5
 
     public Keyword toEntity(Videos video, Subtitle subtitle) {
         return Keyword.builder()
@@ -27,7 +27,7 @@ public class KeywordInfo {
                 .subtitle(subtitle)
                 .word(word)
                 .meaning(meaning)
-                .difficulty(Difficulty.fromValue(difficulity))
+                .difficulty(Difficulty.fromValue(difficulty))
                 .build();
     }
 }
