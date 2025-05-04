@@ -55,6 +55,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(ErrorCode.EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN);
         }
 
+        if (expressionBookRepository.existsByMemberAndName(member, request.getName())) {
+            throw new ServiceException(ErrorCode.DUPLICATE_EXPRESSIONBOOK_NAME);
+        }
+
         ExpressionBook expressionBook = ExpressionBook.builder()
                 .name(request.getName())
                 .language(request.getLanguage())

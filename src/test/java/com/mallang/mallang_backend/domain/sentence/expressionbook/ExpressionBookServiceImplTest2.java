@@ -628,4 +628,40 @@ class ExpressionBookServiceImplTest2 {
         assertEquals(ErrorCode.EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN, ex.getErrorCode());
     }
 
+    @Test
+    @DisplayName("동일한 이름의 표현함이 이미 존재하면 예외가 발생한다")
+    void createExpressionBook_withDuplicateName_shouldThrowException() throws Exception {
+        // given
+        Long memberId = 1L;
+        String duplicateName = "MyBook";
+
+        Member mockMember = Member.builder()
+                .email("test@user.com")
+                .password("pw")
+                .nickname("tester")
+                .profileImageUrl(null)
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+        mockMember.updateSubscription(Subscription.STANDARD);
+
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(mockMember, memberId);
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(mockMember));
+        when(expressionBookRepository.existsByMemberAndName(mockMember, duplicateName)).thenReturn(true);
+
+        ExpressionBookRequest request = new ExpressionBookRequest(duplicateName, Language.ENGLISH);
+
+        // when & then
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
+            service.create(request, memberId);
+        });
+
+        assertEquals(ErrorCode.DUPLICATE_EXPRESSIONBOOK_NAME, exception.getErrorCode());
+        verify(expressionBookRepository, never()).save(any());
+    }
+
+
 }

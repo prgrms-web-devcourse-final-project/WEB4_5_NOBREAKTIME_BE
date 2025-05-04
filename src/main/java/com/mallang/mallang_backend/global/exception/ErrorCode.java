@@ -87,6 +87,9 @@ public enum ErrorCode {
     EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "expressionbook.rename.default.forbidden", HttpStatus.FORBIDDEN),
     // 기본 표현함은 삭제할 수 없음
     EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "expressionbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
+    // 표현함 이름이 중복됨
+    DUPLICATE_EXPRESSIONBOOK_NAME("400-2", "expressionbook.name.duplicate", HttpStatus.BAD_REQUEST),
+
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
