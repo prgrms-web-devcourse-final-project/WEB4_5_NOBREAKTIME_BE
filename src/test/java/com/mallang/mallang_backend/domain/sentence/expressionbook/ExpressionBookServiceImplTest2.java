@@ -537,4 +537,95 @@ class ExpressionBookServiceImplTest2 {
         verify(expressionBookRepository).delete(book);
     }
 
+    @Test
+    @DisplayName("회원 가입 시 기본 표현함이 언어별로 자동 생성된다")
+    void createDefaultExpressionBooks_success() throws Exception {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("tester")
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, 1L);
+
+        // when
+        List<ExpressionBook> defaults = ExpressionBook.createDefault(member);
+
+        // then
+        assertFalse(defaults.isEmpty());
+        for (ExpressionBook book : defaults) {
+            assertEquals("기본 표현함", book.getName());
+            assertEquals(member, book.getMember());
+            assertNotEquals(Language.NONE, book.getLanguage());
+        }
+    }
+
+    @Test
+    @DisplayName("기본 표현함 이름으로 수동 생성하려 하면 예외가 발생한다")
+    void createExpressionBook_withDefaultName_throwsException() throws Exception {
+        // given
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("tester")
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+        member.updateSubscription(Subscription.STANDARD);
+
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, 1L);
+
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+        ExpressionBookRequest request = new ExpressionBookRequest("기본 표현함", Language.ENGLISH);
+
+        // expect
+        ServiceException ex = assertThrows(ServiceException.class,
+                () -> service.create(request, 1L));
+
+        assertEquals(ErrorCode.EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("기본 표현함은 삭제할 수 없다")
+    void deleteDefaultExpressionBook_shouldThrowException() throws Exception {
+        // given
+        Long memberId = 1L;
+        Long bookId = 100L;
+
+        Member member = Member.builder()
+                .email("test@test.com")
+                .nickname("tester")
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+
+        ExpressionBook defaultBook = ExpressionBook.builder()
+                .name("기본 표현함")
+                .language(Language.ENGLISH)
+                .member(member)
+                .build();
+
+        Field bookIdField = ExpressionBook.class.getDeclaredField("id");
+        bookIdField.setAccessible(true);
+        bookIdField.set(defaultBook, bookId);
+
+        when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(defaultBook));
+
+        // expect
+        ServiceException ex = assertThrows(ServiceException.class,
+                () -> service.delete(bookId, memberId));
+
+        assertEquals(ErrorCode.EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN, ex.getErrorCode());
+    }
+
 }
