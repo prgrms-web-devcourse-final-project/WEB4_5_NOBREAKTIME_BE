@@ -106,7 +106,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN);
         }
 
-        expressionBookItemRepository.deleteAllByExpressionBookId(expressionBookId);
+        expressionBookItemRepository.deleteAllById_ExpressionBookId(expressionBookId);
 
         expressionBookRepository.delete(book);
     }

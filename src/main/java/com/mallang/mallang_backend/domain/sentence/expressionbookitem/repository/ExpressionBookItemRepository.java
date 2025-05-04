@@ -14,5 +14,5 @@ public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBo
 
 	Optional<ExpressionBookItem> findById(ExpressionBookItemId itemId);
 
-    void deleteAllByExpressionBookId(Long expressionBookId);
+    void deleteAllById_ExpressionBookId(Long expressionBookId);
 }

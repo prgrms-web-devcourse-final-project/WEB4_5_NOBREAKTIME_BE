@@ -533,7 +533,7 @@ class ExpressionBookServiceImplTest2 {
         service.delete(bookId, memberId);
 
         // then
-        verify(expressionBookItemRepository).deleteAllByExpressionBookId(bookId);
+        verify(expressionBookItemRepository).deleteAllById_ExpressionBookId(bookId);
         verify(expressionBookRepository).delete(book);
     }
 
