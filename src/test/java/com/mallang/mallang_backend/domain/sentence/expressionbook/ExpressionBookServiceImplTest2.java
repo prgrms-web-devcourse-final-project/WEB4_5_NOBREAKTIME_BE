@@ -499,4 +499,42 @@ class ExpressionBookServiceImplTest2 {
 
         assertEquals(ErrorCode.FORBIDDEN_EXPRESSION_BOOK, ex.getErrorCode());
     }
+
+    @Test
+    @DisplayName("delete()는 표현함과 그 안의 표현 아이템들을 모두 삭제한다")
+    void deleteExpressionBook_andItsItems() throws Exception {
+        // given
+        Long memberId = 1L;
+        Long bookId = 10L;
+
+        Member member = Member.builder()
+                .email("user@test.com")
+                .password("pw")
+                .nickname("user")
+                .loginPlatform(LoginPlatform.KAKAO)
+                .language(Language.ENGLISH)
+                .build();
+        Field memberIdField = Member.class.getDeclaredField("id");
+        memberIdField.setAccessible(true);
+        memberIdField.set(member, memberId);
+
+        ExpressionBook book = ExpressionBook.builder()
+                .name("My Book")
+                .language(Language.ENGLISH)
+                .member(member)
+                .build();
+        Field bookIdField = ExpressionBook.class.getDeclaredField("id");
+        bookIdField.setAccessible(true);
+        bookIdField.set(book, bookId);
+
+        when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(book));
+
+        // when
+        service.delete(bookId, memberId);
+
+        // then
+        verify(expressionBookItemRepository).deleteAllByExpressionBookId(bookId);
+        verify(expressionBookRepository).delete(book);
+    }
+
 }
