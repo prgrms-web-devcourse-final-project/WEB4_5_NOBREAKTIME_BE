@@ -81,6 +81,12 @@ public enum ErrorCode {
     EXPRESSIONQUIZ_NOT_FOUND("404-1", "expressionquiz.not.found", HttpStatus.NOT_FOUND),
     // 표현함 생성 권한이 없음
     NO_EXPRESSIONBOOK_CREATE_PERMISSION("403-1", "expressionbook.create.failed", HttpStatus.FORBIDDEN),
+    // 기본 표현함과 동일한 이름의 표현함을 생성 실패
+    EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN("403-1", "expressionbook.create.default.forbidden", HttpStatus.FORBIDDEN),
+    // 기본 표현함과 동일한 이름의 표현함으로 이름 변경 실패 또는 기본 표현함 이름 변경 실패
+    EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "expressionbook.rename.default.forbidden", HttpStatus.FORBIDDEN),
+    // 기본 표현함은 삭제할 수 없음
+    EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "expressionbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),

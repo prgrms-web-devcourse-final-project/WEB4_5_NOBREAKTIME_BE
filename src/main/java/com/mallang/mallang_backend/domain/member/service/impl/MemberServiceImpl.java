@@ -1,17 +1,21 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
-import static com.mallang.mallang_backend.global.common.Language.NONE;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.sql.SQLTransientConnectionException;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
+import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.TransientDataAccessException;
@@ -21,18 +25,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
-import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
-import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.sql.SQLTransientConnectionException;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static com.mallang.mallang_backend.global.common.Language.NONE;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
@@ -46,6 +46,7 @@ public class MemberServiceImpl implements MemberService {
     private final S3ImageUploader imageUploader;
     private final MemberRepository memberRepository;
     private final WordbookRepository wordbookRepository;
+    private final ExpressionBookRepository expressionBookRepository;
     private final SubscriptionService subscriptionService;
     private final MemberQueryRepository memberQueryRepository;
 
@@ -82,6 +83,10 @@ public class MemberServiceImpl implements MemberService {
         // 회원가입 시 언어별 기본 단어장 생성
         List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
         wordbookRepository.saveAll(defaultWordbooks);
+
+        // 회원가입 시 언어별 기본 표현함 생성
+        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
+        expressionBookRepository.saveAll(defaultBooks);
 
         return savedMember.getId();
     }
