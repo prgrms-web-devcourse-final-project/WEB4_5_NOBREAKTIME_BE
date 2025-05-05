@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.word.service.impl;
 
-import com.mallang.mallang_backend.domain.voca.word.dto.WordSavedResponse;
+import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
@@ -25,10 +25,10 @@ public class WordServiceImpl implements WordService {
     private final GptService gptService;
 
     @Override
-    public WordSavedResponse savedWord(String word) {
+    public WordSearchResponse savedWord(String word) {
         List<Word> words = wordRepository.findByWord(word); // DB 조회
         if (!words.isEmpty()) {
-            return new WordSavedResponse(convertToResponse(words));    // DB에 존재하면 변환하여 반환
+            return new WordSearchResponse(convertToResponse(words));    // DB에 존재하면 변환하여 반환
         }
 
         String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
@@ -40,7 +40,17 @@ public class WordServiceImpl implements WordService {
             throw new ServiceException(ErrorCode.WORD_SAVE_FAILED, e);
         }
 
-        return new WordSavedResponse(convertToResponse(generatedWords));   // 변환 후 반환
+        return new WordSearchResponse(convertToResponse(generatedWords));   // 변환 후 반환
+    }
+
+    @Override
+    public WordSearchResponse searchWord(String word) {
+        List<Word> words = wordRepository.findByWord(word);
+        if (words.isEmpty()) {
+            throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
+        }
+
+        return new WordSearchResponse(convertToResponse(words));
     }
 
     /**
@@ -49,9 +59,9 @@ public class WordServiceImpl implements WordService {
      * @param words 변환할 Word 리스트
      * @return 변환된 WordMeaning 리스트
      */
-    private List<WordSavedResponse.WordMeaning> convertToResponse(List<Word> words) {
+    private List<WordSearchResponse.WordMeaning> convertToResponse(List<Word> words) {
         return words.stream()
-                .map(WordSavedResponse.WordMeaning::fromEntity)
+                .map(WordSearchResponse.WordMeaning::fromEntity)
                 .collect(Collectors.toList());
     }
 

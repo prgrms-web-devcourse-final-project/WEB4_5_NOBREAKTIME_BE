@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.word;
 
-import com.mallang.mallang_backend.domain.voca.word.dto.WordSavedResponse;
+import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
@@ -39,7 +39,7 @@ public class WordServiceImplTest {
         when(wordRepository.findByWord("light")).thenReturn(List.of(word));
 
         // when
-        WordSavedResponse response = wordService.savedWord("light");
+        WordSearchResponse response = wordService.savedWord("light");
 
         // then
         assertThat(response.getMeanings()).hasSize(1);
@@ -55,7 +55,7 @@ public class WordServiceImplTest {
         when(gptService.searchWord("light")).thenReturn(gptResult);
 
         // when
-        WordSavedResponse response = wordService.savedWord("light");
+        WordSearchResponse response = wordService.savedWord("light");
 
         // then
         assertThat(response.getMeanings()).hasSize(1);
