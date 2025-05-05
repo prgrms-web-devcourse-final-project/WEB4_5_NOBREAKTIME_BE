@@ -37,6 +37,7 @@ public enum ErrorCode {
     // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    WORD_NOT_FOUND("404-1", "word.not.found", HttpStatus.NOT_FOUND),
 
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
