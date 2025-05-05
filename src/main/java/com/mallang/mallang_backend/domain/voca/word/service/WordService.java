@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.word.service;
 
-import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
+import com.mallang.mallang_backend.domain.voca.word.dto.WordSavedResponse;
 
 public interface WordService {
 
@@ -9,7 +9,7 @@ public interface WordService {
      * DB에 없으면 GPT를 통해 가져옵니다.
      *
      * @param word 검색할 단어
-     * @return WordSearchResponse
+     * @return WordSavedResponse
      */
-    WordSearchResponse searchWord(String word);
+    WordSavedResponse savedWord(String word);
 }
