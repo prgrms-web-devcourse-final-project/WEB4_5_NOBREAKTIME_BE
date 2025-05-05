@@ -10,10 +10,10 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class WordSavedResponse {
+public class WordSearchResponse {
     private List<WordMeaning> meanings;
 
-    public WordSavedResponse(List<WordMeaning> meanings) {
+    public WordSearchResponse(List<WordMeaning> meanings) {
         this.meanings = meanings;
     }
 

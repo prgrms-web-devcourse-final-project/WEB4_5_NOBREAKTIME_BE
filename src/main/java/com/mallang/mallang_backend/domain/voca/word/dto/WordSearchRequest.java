@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class WordSavedRequest {
+public class WordSearchRequest {
     private String word;
 }
