@@ -119,6 +119,8 @@ class VideoLearningQuizServiceImplTest {
 	@DisplayName("표현 퀴즈 생성 - 정상 동작")
 	void makeExpressionQuizList_withExpressions() {
 		String videoId = "vid-001";
+
+		// mock 표현 엔티티 준비
 		Expression expr1 = mock(Expression.class);
 		when(expr1.getSentence()).thenReturn("Let's learn expressions.");
 		when(expr1.getDescription()).thenReturn("표현을 배워 봅시다.");
@@ -130,27 +132,37 @@ class VideoLearningQuizServiceImplTest {
 		when(expressionRepository.findAllByVideosId(videoId))
 			.thenReturn(Arrays.asList(expr1, expr2));
 
+		// 실행
 		VideoLearningExpressionQuizListResponse response =
 			quizService.makeExpressionQuizList(videoId);
 		List<VideoLearningExpressionQuizItem> items = response.getQuiz();
 
+		// 개수 검증
 		assertThat(items).hasSize(2);
-		assertThat(items).extracting(VideoLearningExpressionQuizItem::getQuestion)
-			.containsExactlyInAnyOrder(
-				"Let's learn expressions.",
-				"This is a test expression."
-			);
 
+		// 각 아이템 검증
 		for (VideoLearningExpressionQuizItem item : items) {
-			// meaning은 description 값을 그대로 가져와야 함
-			if (item.getQuestion().equals("Let's learn expressions.")) {
+			String original = item.getOriginal();
+			if ("Let's learn expressions.".equals(original)) {
+				// 원문 필드
+				assertThat(item.getOriginal()).isEqualTo("Let's learn expressions.");
+				// 빈칸(question)은 "{} {} {}."
+				assertThat(item.getQuestion()).isEqualTo("{} {} {}.");
+				// 뜻
 				assertThat(item.getMeaning()).isEqualTo("표현을 배워 봅시다.");
+				// 선택지(choices)
 				assertThat(item.getChoices())
 					.containsExactlyInAnyOrder("Lets", "learn", "expressions");
-			} else {
+
+			} else if ("This is a test expression.".equals(original)) {
+				assertThat(item.getOriginal()).isEqualTo("This is a test expression.");
+				assertThat(item.getQuestion()).isEqualTo("{} {} {} {} {}.");
 				assertThat(item.getMeaning()).isEqualTo("이것은 테스트 표현입니다.");
 				assertThat(item.getChoices())
 					.containsExactlyInAnyOrder("This", "is", "a", "test", "expression");
+
+			} else {
+				fail("예상치 못한 original 값: " + original);
 			}
 		}
 	}
