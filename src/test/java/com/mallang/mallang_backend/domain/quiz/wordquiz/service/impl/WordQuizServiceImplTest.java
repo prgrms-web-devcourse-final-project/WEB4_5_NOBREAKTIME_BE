@@ -154,7 +154,7 @@ public class WordQuizServiceImplTest {
 			assertThat(response.getQuizItems()).hasSize(2);
 			assertThat(response.getQuizItems()).extracting("word").containsExactlyInAnyOrder("apple", "banana");
 			assertThat(response.getQuizItems()).extracting("original").contains("This is an apple.", "I like banana.");
-			assertThat(response.getQuizItems()).extracting("translated").contains("이것은 사과입니다.", "나는 바나나를 좋아해.");
+			assertThat(response.getQuizItems()).extracting("meaning").contains("이것은 사과입니다.", "나는 바나나를 좋아해.");
 			assertThat(response.getQuizItems()).extracting("question").contains("This is an {}.", "I like {}.");
 		}
 
