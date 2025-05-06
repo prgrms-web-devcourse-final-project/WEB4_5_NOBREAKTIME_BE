@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -20,6 +21,7 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
@@ -37,6 +39,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.service.GptService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +53,8 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordbookItemRepository wordbookItemRepository;
 	private final MemberRepository memberRepository;
 	private final SubtitleRepository subtitleRepository;
+	private final WordService wordService;
+	private final GptService gptService;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -60,12 +65,9 @@ public class WordbookServiceImpl implements WordbookService {
 			.orElseThrow(() -> new IllegalArgumentException("해당 단어장이 존재하지 않거나 권한이 없습니다."));
 
 		for (AddWordToWordbookRequest dto : request.getWords()) {
-			// 단어가 이미 있는지 확인하고 없으면 저장
-			List<Word> words = wordRepository.findByWord(dto.getWord());
-
-			if (words.isEmpty()) {
-				// TODO: 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-			}
+			// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
+			// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
+			saveWordIfNotExist(dto.getWord());
 
 			// 단어가 단어장에 저장되어 있지 않을 때만 저장
 			if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), dto.getWord()).isEmpty()) {
@@ -92,12 +94,10 @@ public class WordbookServiceImpl implements WordbookService {
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		String word = request.getWord();
-		// 단어가 이미 있는지 확인하고 없으면 저장
-		List<Word> words = wordRepository.findByWord(word);
 
-		if (words.isEmpty()) {
-			// TODO: 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-		}
+		// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
+		// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
+		saveWordIfNotExist(word);
 
 		// 단어가 단어장에 저장되어 있지 않을 때만 저장
 		if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), word).isEmpty()) {
@@ -111,6 +111,19 @@ public class WordbookServiceImpl implements WordbookService {
 				.build();
 
 			wordbookItemRepository.save(item);
+		}
+	}
+
+	/**
+	 * 단어가 WordRepository에 저장되어 있지 않으면 GPT 호출로 단어를 검색하고, WordRepository에 저장합니다.
+	 * @param word 저장되어야 하는 단어
+	 */
+	private void saveWordIfNotExist(String word) {
+		List<Word> words = wordRepository.findByWord(word); // DB 조회
+		if (words.isEmpty()) {
+			String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
+			List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
+			wordRepository.saveAll(generatedWords);
 		}
 	}
 
