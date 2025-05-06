@@ -20,4 +20,8 @@ public enum Subscription {
     ADMIN("ROLE_ADMIN"); // 추후 관리자 권한 사용 가능성으로 추가
 
     private final String roleName;
+
+    public boolean isStandardOrHigher() {
+        return this == STANDARD || this == PREMIUM || this == ADMIN;
+    }
 }
