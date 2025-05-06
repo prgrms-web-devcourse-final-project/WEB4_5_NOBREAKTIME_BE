@@ -8,6 +8,7 @@ import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
@@ -52,17 +53,6 @@ public class MemberServiceImpl implements MemberService {
     // 이메일로 멤버가 존재하는지 확인
     public Boolean isExistEmail(String email) {
         return memberRepository.findByEmail(email).isPresent();
-    }
-
-    /**
-     * email 로 memberId 조회
-     *
-     * @param email (로그인 시 이용하는 ID 값)
-     * @return memberId (Long, PK)
-     */
-    public Long getMemberIdByEmail(String email) {
-        return memberRepository.findByEmail(email).orElseThrow(() ->
-                new ServiceException(MEMBER_NOT_FOUND)).getId();
     }
 
     /**
