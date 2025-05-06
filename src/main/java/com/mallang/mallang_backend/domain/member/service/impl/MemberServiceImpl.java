@@ -63,7 +63,7 @@ public class MemberServiceImpl implements MemberService {
      */
     public Long getMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() ->
-                new ServiceException(USER_NOT_FOUND)).getId();
+                new ServiceException(MEMBER_NOT_FOUND)).getId();
     }
 
     // 소셜 로그인 회원 멤버 가입
@@ -230,6 +230,6 @@ public class MemberServiceImpl implements MemberService {
      */
     private Member findMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
     }
 }

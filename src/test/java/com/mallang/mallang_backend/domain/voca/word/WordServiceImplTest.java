@@ -25,7 +25,7 @@ public class WordServiceImplTest {
 
     @Test
     @DisplayName("DB에 단어가 있으면 GPT 호출 없이 결과 반환")
-    void searchWord_foundInDb() {
+    void savedWord_foundInDb() {
         //given
         Word word = Word.builder()
                 .word("light")
@@ -39,7 +39,7 @@ public class WordServiceImplTest {
         when(wordRepository.findByWord("light")).thenReturn(List.of(word));
 
         // when
-        WordSearchResponse response = wordService.searchWord("light");
+        WordSearchResponse response = wordService.savedWord("light");
 
         // then
         assertThat(response.getMeanings()).hasSize(1);
@@ -48,14 +48,14 @@ public class WordServiceImplTest {
 
     @Test
     @DisplayName("DB에 없으면 GPT 결과 파싱 후 저장하고 반환")
-    void searchWord_generatedFromGpt() {
+    void savedWord_generatedFromGpt() {
         // given
         String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
         when(wordRepository.findByWord("light")).thenReturn(List.of());
         when(gptService.searchWord("light")).thenReturn(gptResult);
 
         // when
-        WordSearchResponse response = wordService.searchWord("light");
+        WordSearchResponse response = wordService.savedWord("light");
 
         // then
         assertThat(response.getMeanings()).hasSize(1);
@@ -64,14 +64,14 @@ public class WordServiceImplTest {
 
     @Test
     @DisplayName("GPT 결과 형식이 잘못되면 파싱 예외 발생")
-    void searchWord_invalidGptFormat() {
+    void savedWord_invalidGptFormat() {
         // given
         String invalidGptResult = "형용사 | 가벼운 | This bag is very light."; // 잘못된 포맷
         when(wordRepository.findByWord("light")).thenReturn(List.of());
         when(gptService.searchWord("light")).thenReturn(invalidGptResult);
 
         // when & then
-        assertThatThrownBy(() -> wordService.searchWord("light"))
+        assertThatThrownBy(() -> wordService.savedWord("light"))
                 .isInstanceOf(ServiceException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.WORD_PARSE_FAILED);
@@ -80,7 +80,7 @@ public class WordServiceImplTest {
 
     @Test
     @DisplayName("GPT 파싱 후 저장 시 에러가 발생하면 예외 발생")
-    void searchWord_saveFail() {
+    void savedWord_saveFail() {
         // given
         String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
         when(wordRepository.findByWord("light")).thenReturn(List.of());
@@ -88,7 +88,7 @@ public class WordServiceImplTest {
         doThrow(new RuntimeException("DB Error")).when(wordRepository).saveAll(anyList());
 
         // when & then
-        assertThatThrownBy(() -> wordService.searchWord("light"))
+        assertThatThrownBy(() -> wordService.savedWord("light"))
                 .isInstanceOf(ServiceException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.WORD_SAVE_FAILED);

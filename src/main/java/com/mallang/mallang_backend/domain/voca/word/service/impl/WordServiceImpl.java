@@ -25,7 +25,7 @@ public class WordServiceImpl implements WordService {
     private final GptService gptService;
 
     @Override
-    public WordSearchResponse searchWord(String word) {
+    public WordSearchResponse savedWord(String word) {
         List<Word> words = wordRepository.findByWord(word); // DB 조회
         if (!words.isEmpty()) {
             return new WordSearchResponse(convertToResponse(words));    // DB에 존재하면 변환하여 반환
@@ -41,6 +41,16 @@ public class WordServiceImpl implements WordService {
         }
 
         return new WordSearchResponse(convertToResponse(generatedWords));   // 변환 후 반환
+    }
+
+    @Override
+    public WordSearchResponse searchWord(String word) {
+        List<Word> words = wordRepository.findByWord(word);
+        if (words.isEmpty()) {
+            throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
+        }
+
+        return new WordSearchResponse(convertToResponse(words));
     }
 
     /**

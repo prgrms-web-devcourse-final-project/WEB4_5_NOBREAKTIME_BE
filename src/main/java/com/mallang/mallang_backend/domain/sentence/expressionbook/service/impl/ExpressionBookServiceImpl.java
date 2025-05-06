@@ -45,7 +45,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public ExpressionBookResponse create(ExpressionBookRequest request, Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!member.getSubscription().isStandardOrHigher()) {
             throw new ServiceException(ErrorCode.NO_EXPRESSIONBOOK_CREATE_PERMISSION);
@@ -74,7 +74,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public List<ExpressionBookResponse> getByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 
         List<ExpressionBook> books = expressionBookRepository.findAllByMember(member);
 

@@ -19,13 +19,12 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ExpressionBookItemServiceImplTest {
 
     private ExpressionBookItemServiceImpl service;
-
     private ExpressionBookRepository expressionBookRepository;
     private ExpressionBookItemRepository expressionBookItemRepository;
 
@@ -33,38 +32,62 @@ class ExpressionBookItemServiceImplTest {
     void setUp() {
         expressionBookRepository = mock(ExpressionBookRepository.class);
         expressionBookItemRepository = mock(ExpressionBookItemRepository.class);
-
-        service = new ExpressionBookItemServiceImpl(
-                expressionBookRepository,
-                expressionBookItemRepository
-        );
+        service = new ExpressionBookItemServiceImpl(expressionBookRepository, expressionBookItemRepository);
     }
 
     @Test
-    @DisplayName("표현 삭제 - 표현함 주인이 아닌 경우 예외 발생")
-    void deleteExpressionsFromBook_forbidden() {
+    @DisplayName("deleteExpressionsFromBook(): 표현 삭제 성공")
+    void deleteExpressionsFromBook_shouldDeleteSuccessfully() throws Exception {
+        Long memberId = 1L;
+        Long bookId = 10L;
+        List<Long> expressionIds = List.of(100L, 101L);
+
+        Member member = mockMember(memberId);
+        ExpressionBook book = mockBook(bookId, member);
+
+        DeleteExpressionsRequest request = new DeleteExpressionsRequest();
+        request.setExpressionBookId(bookId);
+        request.setExpressionIds(expressionIds);
+
+        when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(book));
+
+        service.deleteExpressionsFromBook(request, memberId);
+
+        List<ExpressionBookItemId> expectedIds = expressionIds.stream()
+                .map(id -> new ExpressionBookItemId(id, bookId))
+                .toList();
+
+        verify(expressionBookRepository).findById(bookId);
+        verify(expressionBookItemRepository).deleteAllById(expectedIds);
+    }
+
+    @Test
+    @DisplayName("deleteExpressionsFromBook(): 표현함 소유자가 아니면 예외 발생")
+    void deleteExpressionsFromBook_shouldThrowExceptionWhenNotOwner() {
+        Long memberId = 1L;
+        ExpressionBook book = mockBook(1L, mockMember(999L)); // 다른 사람
+
         DeleteExpressionsRequest request = new DeleteExpressionsRequest();
         request.setExpressionBookId(1L);
-        Long memberId = 1L;
         request.setExpressionIds(List.of(100L));
-
-        ExpressionBook book = mockBook(1L, mockMember(2L)); // 다른 사람
 
         when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(book));
 
-        assertThrows(ServiceException.class, () -> service.deleteExpressionsFromBook(request, memberId));
+        assertThrows(ServiceException.class,
+                () -> service.deleteExpressionsFromBook(request, memberId));
     }
 
     @Test
-    @DisplayName("표현 이동 - 본인 소유 표현함일 경우 정상 이동")
-    void moveExpressions_success() throws Exception {
+    @DisplayName("moveExpressions(): 표현 이동 성공")
+    void moveExpressions_shouldMoveSuccessfully() throws Exception {
         Long memberId = 1L;
         Long sourceId = 10L;
         Long targetId = 20L;
         List<Long> expressionIds = List.of(100L);
 
-        ExpressionBook source = mockBook(sourceId, mockMember(memberId));
-        ExpressionBook target = mockBook(targetId, source.getMember());
+        Member member = mockMember(memberId);
+        ExpressionBook source = mockBook(sourceId, member);
+        ExpressionBook target = mockBook(targetId, member);
 
         MoveExpressionsRequest req = new MoveExpressionsRequest();
         req.setSourceExpressionBookId(sourceId);
@@ -80,6 +103,61 @@ class ExpressionBookItemServiceImplTest {
         verify(expressionBookItemRepository).deleteAllById(any());
         verify(expressionBookItemRepository).save(any());
     }
+
+    @Test
+    @DisplayName("moveExpressions(): source 표현함이 없으면 예외 발생")
+    void moveExpressions_shouldThrowWhenSourceNotFound() {
+        MoveExpressionsRequest request = new MoveExpressionsRequest();
+        request.setSourceExpressionBookId(1L);
+        request.setTargetExpressionBookId(2L);
+        request.setExpressionIds(List.of(100L));
+
+        when(expressionBookRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ServiceException.class,
+                () -> service.moveExpressions(request, 1L));
+    }
+
+    @Test
+    @DisplayName("moveExpressions(): target 표현함이 없으면 예외 발생")
+    void moveExpressions_shouldThrowWhenTargetNotFound() {
+        Long memberId = 1L;
+        ExpressionBook source = mockBook(1L, mockMember(memberId));
+
+        MoveExpressionsRequest request = new MoveExpressionsRequest();
+        request.setSourceExpressionBookId(1L);
+        request.setTargetExpressionBookId(2L);
+        request.setExpressionIds(List.of(100L));
+
+        when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(source));
+        when(expressionBookRepository.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(ServiceException.class,
+                () -> service.moveExpressions(request, memberId));
+    }
+
+    @Test
+    @DisplayName("moveExpressions(): source 표현함 소유자가 아니면 예외 발생")
+    void moveExpressions_shouldThrowWhenNotOwnerOfSource() {
+        Long memberId = 1L;
+        Member other = mockMember(2L);
+
+        ExpressionBook source = mockBook(1L, other);
+        ExpressionBook target = mockBook(2L, other);
+
+        MoveExpressionsRequest request = new MoveExpressionsRequest();
+        request.setSourceExpressionBookId(1L);
+        request.setTargetExpressionBookId(2L);
+        request.setExpressionIds(List.of(100L));
+
+        when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(source));
+        when(expressionBookRepository.findById(2L)).thenReturn(Optional.of(target));
+
+        assertThrows(ServiceException.class,
+                () -> service.moveExpressions(request, memberId));
+    }
+
+    // -------------------- 공통  --------------------
 
     private Member mockMember(Long idVal) {
         Member member = Member.builder()
@@ -108,52 +186,5 @@ class ExpressionBookItemServiceImplTest {
             id.set(book, idVal);
         } catch (Exception ignored) {}
         return book;
-    }
-
-    @Test
-    @DisplayName("표현 삭제 - 표현을 성공적으로 삭제")
-    void testDeleteExpressionsFromBookSuccess() throws Exception {
-        // given
-        Long memberId = 1L;
-        Long expressionBookId = 10L;
-        Long expressionId1 = 100L;
-        Long expressionId2 = 101L;
-
-        Member member = Member.builder()
-                .email("test@example.com")
-                .nickname("tester")
-                .language(Language.ENGLISH)
-                .loginPlatform(LoginPlatform.KAKAO)
-                .build();
-        Field memberIdField = Member.class.getDeclaredField("id");
-        memberIdField.setAccessible(true);
-        memberIdField.set(member, memberId);
-
-        ExpressionBook book = ExpressionBook.builder()
-                .name("Test Book")
-                .language(Language.ENGLISH)
-                .member(member)
-                .build();
-        Field bookIdField = ExpressionBook.class.getDeclaredField("id");
-        bookIdField.setAccessible(true);
-        bookIdField.set(book, expressionBookId);
-
-        List<Long> expressionIds = List.of(expressionId1, expressionId2);
-        DeleteExpressionsRequest request = new DeleteExpressionsRequest();
-        request.setExpressionBookId(expressionBookId);
-        request.setExpressionIds(expressionIds);
-
-        when(expressionBookRepository.findById(expressionBookId)).thenReturn(Optional.of(book));
-
-        // when
-        service.deleteExpressionsFromBook(request, memberId);
-
-        // then
-        List<ExpressionBookItemId> expectedIds = expressionIds.stream()
-                .map(id -> new ExpressionBookItemId(id, expressionBookId))
-                .toList();
-
-        verify(expressionBookRepository).findById(expressionBookId);
-        verify(expressionBookItemRepository).deleteAllById(expectedIds);
     }
 }
