@@ -1,10 +1,21 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 
-import com.mallang.mallang_backend.global.exception.ErrorCode;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.google.api.services.youtube.model.Video;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.stt.converter.Transcript;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptParser;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
@@ -21,6 +32,7 @@ import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
@@ -28,17 +40,6 @@ import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -53,6 +54,32 @@ public class VideoServiceImpl implements VideoService {
     private final GptService gptService;
     private final SubtitleRepository subtitleRepository;
     private final TranscriptParser transcriptParser;
+    private final MemberRepository memberRepository;
+
+    // 회원 기준 영상 검색 메서드
+    @Override
+    public List<VideoResponse> getVideosForMember(
+        String q,
+        String category,
+        long maxResults,
+        Long memberId
+    ) {
+        // 회원 조회해서 언어 정보 가져오기
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Language lang = member.getLanguage();
+        if (lang == Language.NONE) {
+            throw new ServiceException(ErrorCode.LANGUAGE_NOT_CONFIGURED);
+        }
+
+        // ISO 코드 추출
+        String language = lang.toCode();
+
+        // 검색 컨텍스트 준비
+        return getVideosByLanguage(q, category, language, maxResults);
+    }
+
 
     @Override
     public List<VideoResponse> getVideosByLanguage(
