@@ -237,7 +237,10 @@ public class WordbookServiceImpl implements WordbookService {
 	// 단어장 조회
 	@Override
 	public List<WordbookResponse> getWordbooks(Long memberId) {
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberId(memberId);
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
 
 		return wordbooks.stream()
 			.map(w -> new WordbookResponse(

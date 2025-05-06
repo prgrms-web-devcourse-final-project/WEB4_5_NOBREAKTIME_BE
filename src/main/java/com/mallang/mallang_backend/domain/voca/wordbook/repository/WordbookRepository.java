@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.global.common.Language;
 
 public interface WordbookRepository extends JpaRepository<Wordbook, Long> {
 	Optional<Wordbook> findByIdAndMember(Long wordbookId, Member member);
@@ -15,4 +16,6 @@ public interface WordbookRepository extends JpaRepository<Wordbook, Long> {
 	Optional<Wordbook> findByIdAndMemberId(Long wordbookId, Long memberId);
 
 	List<Wordbook> findByMember(Member member);
+
+	List<Wordbook> findAllByMemberIdAndLanguage(Long memberId, Language language);
 }

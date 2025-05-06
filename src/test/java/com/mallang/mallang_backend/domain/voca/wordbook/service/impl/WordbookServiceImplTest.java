@@ -638,7 +638,8 @@ class WordbookServiceImplTest {
 			.build();
 		setId(wb2, 2L);
 
-		given(wordbookRepository.findAllByMemberId(savedMember.getId())).willReturn(List.of(wb1, wb2));
+		given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+		given(wordbookRepository.findAllByMemberIdAndLanguage(savedMember.getId(), savedMember.getLanguage())).willReturn(List.of(wb1, wb2));
 
 		List<WordbookResponse> result = wordbookService.getWordbooks(savedMember.getId());
 
