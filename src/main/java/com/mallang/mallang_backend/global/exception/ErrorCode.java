@@ -12,6 +12,7 @@ public enum ErrorCode {
     // Member Errors
     MEMBER_NOT_FOUND("404-1", "member.not.found", HttpStatus.NOT_FOUND), //  사용자를 찾을 수 없음
     MEMBER_ALREADY_WITHDRAWN("410-1", "member.already.withdrawn", HttpStatus.GONE),
+    LANGUAGE_NOT_CONFIGURED("400-6", "language.not.configured", HttpStatus.BAD_REQUEST), // 언어 설정이 되어 있지 않음
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
