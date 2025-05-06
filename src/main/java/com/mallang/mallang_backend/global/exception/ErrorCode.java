@@ -9,8 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorCode {
 
-    // User Errors
-    USER_NOT_FOUND("404-1", "user.not.found", HttpStatus.NOT_FOUND), //  사용자를 찾을 수 없음
+    // Member Errors
+    MEMBER_NOT_FOUND("404-1", "member.not.found", HttpStatus.NOT_FOUND), //  사용자를 찾을 수 없음
     MEMBER_ALREADY_WITHDRAWN("410-1", "member.already.withdrawn", HttpStatus.GONE),
 
     // Token Errors
