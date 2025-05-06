@@ -4,8 +4,8 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.resilience4j.code.TestService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.core.registry.RegistryEventConsumer;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +30,10 @@ class CustomCircuitBreakerConfigTest {
     @Autowired
     private CircuitBreakerRegistry registry;
 
-    @Autowired
-    private RegistryEventConsumer<CircuitBreaker> consumer;
+    @BeforeEach
+    void resetCircuitBreaker() {
+        registry.remove("oauthUserLoginService");
+    }
 
     @Test
     @DisplayName("서킷 브레이커 테스트 - CLOSED -> OPEN")
