@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -94,6 +95,7 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 생성", description = "추가 단어장을 생성합니다.")
 	@ApiResponse(responseCode = "200", description = "추가 단어장이 생성되었습니다.")
+	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
 		@RequestBody WordbookCreateRequest request,

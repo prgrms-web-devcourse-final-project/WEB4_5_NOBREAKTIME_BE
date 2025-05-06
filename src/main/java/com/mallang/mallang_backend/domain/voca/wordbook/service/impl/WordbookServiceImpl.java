@@ -29,6 +29,7 @@ import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepos
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
 import lombok.RequiredArgsConstructor;
@@ -112,8 +113,9 @@ public class WordbookServiceImpl implements WordbookService {
 	public Long createWordbook(WordbookCreateRequest request, Long memberId) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-		if (!member.canCreateWordBook()) {
-			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
+
+		if (member.getLanguage() == Language.NONE) {
+			throw new ServiceException(LANGUAGE_IS_NONE);
 		}
 
 		if (request.getName().equals(DEFAULT_WORDBOOK_NAME)) {
