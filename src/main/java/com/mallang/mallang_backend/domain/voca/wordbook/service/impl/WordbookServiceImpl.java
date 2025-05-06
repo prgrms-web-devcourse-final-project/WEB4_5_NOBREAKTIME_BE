@@ -62,7 +62,7 @@ public class WordbookServiceImpl implements WordbookService {
 	public void addWords(Long wordbookId, AddWordToWordbookListRequest request, Long memberId) {
 		// 단어장 존재 + 권한 체크
 		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 단어장이 존재하지 않거나 권한이 없습니다."));
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		for (AddWordToWordbookRequest dto : request.getWords()) {
 			// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
