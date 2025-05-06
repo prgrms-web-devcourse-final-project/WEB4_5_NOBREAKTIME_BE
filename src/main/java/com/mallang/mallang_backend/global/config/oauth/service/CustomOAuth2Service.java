@@ -154,7 +154,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         return new CustomUserDetails(joinMember.getId(), joinMember.getSubscription().getRoleName());
     }
 
-    private void fallbackMethod(Exception e) {
+    private OAuth2User fallbackMethod(OAuth2UserRequest userRequest, Exception e) {
         if (e instanceof ResourceAccessException) {
             log.error("OAuth 서버 연결 실패: {}", e.getMessage());
             throw new ServiceException(OAUTH_NETWORK_ERROR, e);
@@ -166,12 +166,13 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
             log.warn("서킷 브레이커 활성화 - 30초간 호출 차단");
             throw new ServiceException(API_BLOCK, e);
         }
+        throw new ServiceException(API_ERROR, e);
     }
 
     private void handleTooManyRequests(HttpClientErrorException e) {
         HttpHeaders headers = e.getResponseHeaders();
         String retryAfter = headers != null ? headers.getFirst("Retry-After") : "60";
-        log.warn("🔒 API 호출 제한 - 재시도까지 {}초 남음", retryAfter);
+        log.warn("API 호출 제한 - 재시도까지 {}초 남음", retryAfter);
         throw new ServiceException(ErrorCode.OAUTH_RATE_LIMIT);
     }
 
