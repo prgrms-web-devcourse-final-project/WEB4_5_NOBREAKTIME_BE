@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
@@ -27,8 +28,8 @@ import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Wordbook", description = "단어장 관련 API")
@@ -242,6 +243,29 @@ public class WordbookController {
 			"200",
 			"단어장 목록 조회에 성공했습니다.",
 			wordbooks
+		));
+	}
+
+	/**
+	 * 단어 검색
+	 *
+	 * @param keyword 검색어
+	 * @return 단어 목록
+	 */
+	@Operation(summary = "단어 검색", description = "내 단어장에서 단어를 검색합니다.")
+	@ApiResponse(responseCode = "200", description = "단어 검색 결과입니다.")
+	@GetMapping("/search")
+	public ResponseEntity<RsData<List<WordResponse>>> searchWords(
+		@RequestParam String keyword,
+		@Login CustomUserDetails userDetail
+	) {
+		Long memberId = userDetail.getMemberId();
+
+		List<WordResponse> result = wordbookService.searchWordFromWordbook(memberId, keyword);
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"단어 검색 결과입니다.",
+			result
 		));
 	}
 }

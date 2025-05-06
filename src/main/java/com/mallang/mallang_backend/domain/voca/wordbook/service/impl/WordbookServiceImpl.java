@@ -242,6 +242,39 @@ public class WordbookServiceImpl implements WordbookService {
 		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
 
 		// 모든 단어명 추출
+		List<WordResponse> result = convertToWordResponses(items);
+		Collections.shuffle(result);
+		return result;
+	}
+
+	// 단어장 조회
+	@Override
+	public List<WordbookResponse> getWordbooks(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
+
+		return wordbooks.stream()
+			.map(w -> new WordbookResponse(
+				w.getId(),
+				w.getName(),
+				w.getLanguage()
+			)).toList();
+	}
+
+	@Override
+	public List<WordResponse> searchWordFromWordbook(Long memberId, String keyword) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordLike(member, keyword);
+
+		List<WordResponse> result = convertToWordResponses(items);
+		return result;
+	}
+
+	private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {
+		// 모든 단어명 추출
 		List<String> wordList = items.stream()
 			.map(WordbookItem::getWord)
 			.collect(Collectors.toList());
@@ -267,7 +300,7 @@ public class WordbookServiceImpl implements WordbookService {
 				.collect(Collectors.toMap(Subtitle::getId, Function.identity()));
 
 		// 응답 생성
-		List<WordResponse> result = items.stream()
+		return items.stream()
 			.map(item -> {
 				Word wordEntity = wordMap.get(item.getWord());
 				if (wordEntity == null) return null;
@@ -295,24 +328,5 @@ public class WordbookServiceImpl implements WordbookService {
 			})
 			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
-
-		Collections.shuffle(result);
-		return result;
-	}
-
-	// 단어장 조회
-	@Override
-	public List<WordbookResponse> getWordbooks(Long memberId) {
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
-
-		return wordbooks.stream()
-			.map(w -> new WordbookResponse(
-				w.getId(),
-				w.getName(),
-				w.getLanguage()
-			)).toList();
 	}
 }
