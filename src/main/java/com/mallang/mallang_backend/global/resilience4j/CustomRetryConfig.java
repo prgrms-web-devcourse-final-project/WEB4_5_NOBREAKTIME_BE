@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.config;
+package com.mallang.mallang_backend.global.resilience4j;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
-public class Resilience4jRetryLoggingConfig {
+public class CustomRetryConfig {
 
 	// 로거 정의
-	private static final Logger log = LoggerFactory.getLogger(Resilience4jRetryLoggingConfig.class);
+	private static final Logger log = LoggerFactory.getLogger(CustomRetryConfig.class);
 
 	// Retry 인스턴스들을 관리하는 Registry 주입
 	private final RetryRegistry retryRegistry;
@@ -27,7 +27,7 @@ public class Resilience4jRetryLoggingConfig {
 	// ThreadLocal을 사용해 재시도 중 발생한 예외들을 저장할 리스트
 	private final ThreadLocal<List<Throwable>> retryExceptions = ThreadLocal.withInitial(ArrayList::new);
 
-	public Resilience4jRetryLoggingConfig(RetryRegistry retryRegistry) {
+	public CustomRetryConfig(RetryRegistry retryRegistry) {
 		this.retryRegistry = retryRegistry;
 	}
 
