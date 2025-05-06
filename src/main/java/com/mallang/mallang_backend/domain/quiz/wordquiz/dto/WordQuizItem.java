@@ -14,5 +14,5 @@ public class WordQuizItem {
     private String word;
     private String question;
     private String original;
-    private String translated;
+    private String meaning;
 }

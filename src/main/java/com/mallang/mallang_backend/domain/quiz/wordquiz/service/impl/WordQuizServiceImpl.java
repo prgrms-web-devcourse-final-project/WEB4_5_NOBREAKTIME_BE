@@ -111,7 +111,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 		dto.setWordQuizItemId(id);
 		dto.setWord(word);
 		dto.setOriginal(original);
-		dto.setTranslated(translated);
+		dto.setMeaning(translated);
 		dto.setQuestion(createQuestion(word, original));
 		return dto;
 	}

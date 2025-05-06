@@ -19,9 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizItem;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResponse;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizItem;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.repository.ExpressionQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
@@ -74,7 +74,7 @@ class ExpressionQuizServiceImplTest {
 		setField(expressionBook, "id", expressionBookId);
 
 		Expression expression = Expression.builder()
-			.sentence("This is apple!")
+			.sentence("Let's, This is apple!")
 			.description("이것은 사과입니다.")
 			.build();
 		setField(expression, "id", expressionId);
@@ -108,8 +108,9 @@ class ExpressionQuizServiceImplTest {
 		assertThat(response.getQuizItems()).hasSize(1);
 		ExpressionQuizItem quizItem = response.getQuizItems().get(0);
 		assertThat(quizItem.getExpressionQuizItemId()).isEqualTo(100L);
-		assertThat(quizItem.getSentence()).isEqualTo("This is apple!");
-		assertThat(quizItem.getWords()).containsExactly("This", "is", "apple");
+		assertThat(quizItem.getOriginal()).isEqualTo("Let's, This is apple!");
+		assertThat(quizItem.getQuestion()).isEqualTo("{}, {} {} {}!");
+		assertThat(quizItem.getChoices()).containsExactlyInAnyOrder("This", "is", "apple", "Let's");
 		assertThat(quizItem.getMeaning()).isEqualTo("이것은 사과입니다.");
 	}
 
