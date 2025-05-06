@@ -72,7 +72,7 @@ class ExpressionBookServiceImplTest2 {
         assertThatThrownBy(() -> service.create(request, memberId))
                 .isInstanceOf(ServiceException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+                .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test

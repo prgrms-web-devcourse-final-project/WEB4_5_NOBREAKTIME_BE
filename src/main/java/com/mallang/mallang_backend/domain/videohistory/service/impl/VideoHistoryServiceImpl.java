@@ -41,7 +41,7 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 
         // Member / Video 로드
         Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
         Videos videos = videoRepository.findById(videoId)
             .orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
@@ -58,7 +58,7 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
     @Transactional(readOnly = true)
     public List<VideoHistoryResponse> getRecentHistories(Long memberId) {
         Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         return videoHistoryRepository
             .findTop5ByMemberOrderByCreatedAtDesc(member)
@@ -72,7 +72,7 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
     @Transactional(readOnly = true)
     public List<VideoHistoryResponse> getAllHistories(Long memberId) {
         Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         return videoHistoryRepository
             .findAllByMemberOrderByCreatedAtDesc(member)
