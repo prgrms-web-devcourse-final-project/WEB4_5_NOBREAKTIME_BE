@@ -84,10 +84,9 @@ public class VideoController {
 
     /**
      * Youtube API 를 통해 영상 목록을 가져오는 메서드(다건)
-     *
+     * 회원의 언어 설정에 맞춰 필터링된 영상 목록을 조회합니다.
      * @param q 검색어 쿼리
      * @param category 동영상 카테고리
-     * @param language 동영상 언어
      * @param maxResults 결과값 갯수
      * @return 검색 결과 리스트
      */
@@ -97,10 +96,16 @@ public class VideoController {
     public ResponseEntity<RsData<List<VideoResponse>>> getVideoList(
         @RequestParam(required = false) String q,
         @RequestParam(required = false) String category,
-        @RequestParam(defaultValue = "en") String language,
-        @RequestParam(defaultValue = "10") long maxResults
+        @RequestParam(defaultValue = "100") long maxResults,
+        @Login CustomUserDetails userDetail
     ) {
-        List<VideoResponse> list = videoService.getVideosByLanguage(q, category, language, maxResults);
+        List<VideoResponse> list = videoService.getVideosForMember(
+            q,
+            category,
+            maxResults,
+            userDetail.getMemberId()
+        );
+
         return ResponseEntity.ok(new RsData<>(
             "200",
             "영상 목록 조회 완료",

@@ -75,31 +75,72 @@
 
 # 🛠️ Tech
 ## 기술 스택
-### 언어
-- JAVA   23
 
-### 프레임워크 및 라이브러리
-- Spring   3.4.2
-- Spring  Security
-  
-### IED 및 개발 도구
-- IntelliJ IDEA
+### 프론트엔드
+<div> 
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white"/>
+</div>
 
-### 버전 관리 및 협업 도구
-- Git
-- GitHub
-- Slack
-- Notion
-- Discord
+### 백엔드
+<div> 
+  <img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"/>
+  <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black"/>
+</div>
+
+### Database
+<div> 
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"/>
+</div>
+
+### IDLE&Tool
+<div> 
+  <img src="https://img.shields.io/badge/IntelliJ%20IDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"/>
+</div>
+
+### OPEN API
+<div> 
+    <img src="https://img.shields.io/badge/ChatGPT%20API-412991?style=for-the-badge&logo=openai&logoColor=white"/> 
+    <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"/>
+</div>
+
+### Deployment&Infra
+<div> 
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/>
+  <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white"/>
+  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"/>
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white"/>
+</div>
+
+### Monitoring
+
+### Version management and collaboration tools
+<div> 
+  <img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)"/>
+  <img src="https://img.shields.io/badge/Zep-6001D2?style=for-the-badge&logo=Zep&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Google%20Meet-00897B?style=for-the-badge&logo=googlemeet&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"/>
+</div>
+
 
 ## UML
 ![image](https://github.com/user-attachments/assets/6cb60bd5-c59f-45b6-9f31-8db06a0f3575)
 
 ## ERD
+<-- 추가 예정 -->
 
 ## System Architecture
+<-- 추가 예정 -->
 
 ## Flow Chart
+<-- 추가 예정 -->
 [🗃️ Flow Chart]()
 
 ## 🏷️  브랜치 전략
