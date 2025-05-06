@@ -56,7 +56,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-
             // 액세스 토큰이 유효한 것인지 검증하고 토큰에서 사용자 정보 추출
             String accessToken = extractTokenFromHeader(request);
 
