@@ -8,4 +8,7 @@ import java.util.List;
 public interface WordRepository extends JpaRepository<Word, Long> {
 
     List<Word> findByWord(String word);
+
+    List<Word> findByWordIn(List<String> words);
+
 }

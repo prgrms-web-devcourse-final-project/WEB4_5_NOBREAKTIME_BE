@@ -4,7 +4,11 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
@@ -43,6 +49,7 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordRepository wordRepository;
 	private final WordbookItemRepository wordbookItemRepository;
 	private final MemberRepository memberRepository;
+	private final SubtitleRepository subtitleRepository;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -221,17 +228,63 @@ public class WordbookServiceImpl implements WordbookService {
 		// 단어장 아이템 조회
 		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
 
-		// 무작위 순서로 섞기
-		Collections.shuffle(items);
+		// 모든 단어명 추출
+		List<String> wordList = items.stream()
+			.map(WordbookItem::getWord)
+			.collect(Collectors.toList());
 
-		return items.stream()
-			.map(item -> new WordResponse(
+		// Word 테이블에서 일괄 조회 (단어명 중복 허용)
+		List<Word> wordEntities = wordRepository.findByWordIn(wordList);
+
+		// 먼저 등장한 단어만 Map에 저장 (중복 제거)
+		Map<String, Word> wordMap = new LinkedHashMap<>();
+		for (Word wordEntity : wordEntities) {
+			wordMap.putIfAbsent(wordEntity.getWord(), wordEntity);
+		}
+
+		// Subtitle 엔티티 조회 (subtitleId가 null이 아닌 경우만)
+		List<Long> subtitleIds = items.stream()
+			.map(WordbookItem::getSubtitleId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+
+		Map<Long, Subtitle> subtitleMap = subtitleIds.isEmpty() ?
+			Collections.emptyMap() :
+			subtitleRepository.findByIdIn(subtitleIds).stream()
+				.collect(Collectors.toMap(Subtitle::getId, Function.identity()));
+
+		// 응답 생성
+		List<WordResponse> result = items.stream()
+			.map(item -> {
+				Word wordEntity = wordMap.get(item.getWord());
+				if (wordEntity == null) return null;
+
+				String exampleSentence = wordEntity.getExampleSentence();
+				String translatedSentence = wordEntity.getTranslatedSentence();
+
+				if (item.getSubtitleId() != null && subtitleMap.containsKey(item.getSubtitleId())) {
+					Subtitle subtitle = subtitleMap.get(item.getSubtitleId());
+					exampleSentence = subtitle.getOriginalSentence();
+					translatedSentence = subtitle.getTranslatedSentence();
+				}
+
+				return new WordResponse(
 					item.getWord(),
+					wordEntity.getPos(),
+					wordEntity.getMeaning(),
+					wordEntity.getDifficulty().toString(),
+					exampleSentence,
+					translatedSentence,
 					item.getVideoId(),
 					item.getSubtitleId(),
 					item.getCreatedAt()
-				)
-			).collect(Collectors.toList());
+				);
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+
+		Collections.shuffle(result);
+		return result;
 	}
 
 	// 단어장 조회
