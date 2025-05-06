@@ -36,6 +36,10 @@ public class AppConstants {
 	 */
 	public static final String DEFAULT_WORDBOOK_NAME = "기본";
     /**
+     * 기본 표현함 이름
+     */
+    public static final String DEFAULT_EXPRESSION_BOOK_NAME = "기본 표현함";
+    /**
      *  필터링 제외 경로 패턴
      */
     public static final String[] EXCLUDE_PATH_PATTERNS = {

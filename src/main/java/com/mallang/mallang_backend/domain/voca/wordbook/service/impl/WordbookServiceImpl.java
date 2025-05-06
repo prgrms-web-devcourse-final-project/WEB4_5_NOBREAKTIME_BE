@@ -111,7 +111,7 @@ public class WordbookServiceImpl implements WordbookService {
 	@Override
 	public Long createWordbook(WordbookCreateRequest request, Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 		if (!member.canCreateWordBook()) {
 			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
 		}

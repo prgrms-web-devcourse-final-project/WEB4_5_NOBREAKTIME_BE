@@ -68,15 +68,15 @@ public class GptScriptProcessorTest {
 
         assertThat(first.getKeywords().get(0).getWord()).isEqualTo("see");
         assertThat(first.getKeywords().get(0).getMeaning()).isEqualTo("보다");
-        assertThat(first.getKeywords().get(0).getDifficulity()).isEqualTo(1);
+        assertThat(first.getKeywords().get(0).getDifficulty()).isEqualTo(1);
 
         assertThat(first.getKeywords().get(1).getWord()).isEqualTo("believe");
         assertThat(first.getKeywords().get(1).getMeaning()).isEqualTo("믿다");
-        assertThat(first.getKeywords().get(1).getDifficulity()).isEqualTo(2);
+        assertThat(first.getKeywords().get(1).getDifficulty()).isEqualTo(2);
 
         assertThat(first.getKeywords().get(2).getWord()).isEqualTo("make a year");
         assertThat(first.getKeywords().get(2).getMeaning()).isEqualTo("1년에 얼마를 벌다");
-        assertThat(first.getKeywords().get(2).getDifficulity()).isEqualTo(3);
+        assertThat(first.getKeywords().get(2).getDifficulty()).isEqualTo(3);
 
 
         GptSubtitleResponse second = result.get(1);
@@ -85,6 +85,7 @@ public class GptScriptProcessorTest {
         assertThat(second.getKeywords()).hasSize(1);
         assertThat(second.getKeywords().get(0).getWord()).isEqualTo("knock");
         assertThat(second.getKeywords().get(0).getMeaning()).isEqualTo("두드리다");
-        assertThat(second.getKeywords().get(0).getDifficulity()).isEqualTo(1);
+        assertThat(second.getKeywords().get(0).getDifficulty()).isEqualTo(1);
     }
+
 }

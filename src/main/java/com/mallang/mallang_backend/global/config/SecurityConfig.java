@@ -1,9 +1,12 @@
 package com.mallang.mallang_backend.global.config;
 
+import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
+import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import java.util.Arrays;
 import java.util.List;
 
-import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,11 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * oauth2Login
