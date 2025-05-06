@@ -161,23 +161,6 @@ class WordbookServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("실패 - 단어장 생성 권한이 없으면 예외가 발생한다")
-		void createWordbook_noPermission() {
-			WordbookCreateRequest request = new WordbookCreateRequest();
-			request.setName("My Vocab");
-
-			savedMember.updateSubscription(Subscription.BASIC);
-
-			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
-
-			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.createWordbook(request, savedMember.getId())
-			);
-
-			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_CREATE_PERMISSION.getMessageCode());
-		}
-
-		@Test
 		@DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
 		void createWordbook_failIfNameIsDefault() {
 			WordbookCreateRequest request = new WordbookCreateRequest();
@@ -192,6 +175,23 @@ class WordbookServiceImplTest {
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_CREATE_DEFAULT_FORBIDDEN.getMessageCode());
+		}
+
+		@Test
+		@DisplayName("실패 - 학습 단어를 선택하지 않으면 추가 단어장 생성에 실패한다")
+		void createWordbook_language_is_none() {
+			WordbookCreateRequest request = new WordbookCreateRequest();
+			request.setName("My Vocab");
+
+			savedMember.updateLearningLanguage(Language.NONE);
+
+			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.createWordbook(request, savedMember.getId())
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo(LANGUAGE_IS_NONE.getMessageCode());
 		}
 	}
 
