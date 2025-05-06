@@ -56,14 +56,14 @@ public class MemberServiceImpl implements MemberService {
     }
 
     /**
-     * email 로 memberId 조회
+     * email 로 Member 조회
      *
      * @param email (로그인 시 이용하는 ID 값)
-     * @return memberId (Long, PK)
+     * @return Member 객체
      */
-    public Long getMemberByEmail(String email) {
+    public Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() ->
-                new ServiceException(MEMBER_NOT_FOUND)).getId();
+                new ServiceException(MEMBER_NOT_FOUND));
     }
 
     // 소셜 로그인 회원 멤버 가입
@@ -103,7 +103,7 @@ public class MemberServiceImpl implements MemberService {
      * @param memberId
      * @return member 의 구독 타입에서 가져온 권한 정보
      */
-    public String getSubscription(Long memberId) {
+    public String getRoleName(Long memberId) {
         return findMemberOrThrow(memberId).getSubscription().getRoleName();
     }
 

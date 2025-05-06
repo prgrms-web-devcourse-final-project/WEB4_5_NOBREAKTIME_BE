@@ -1,8 +1,12 @@
 package com.mallang.mallang_backend.global.config;
 
 import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
 import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,9 +21,6 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * oauth2Login
  * /login/oauth2/code/{소셜 로그인 제공자} 경로로 콜백이 들어오면 인증 처리
@@ -32,30 +33,24 @@ public class SecurityConfig {
 
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
     private final CustomAuthenticationFilter customAuthenticationFilter;
+    private final CustomOAuth2Service customOAuth2Service;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authz -> authz
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
                                 "/login/**",
                                 "/oauth2/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/v1/video/**",
-                                "/api/v1/expressionbooks/**",
-                                "/api/v1/expressions/**",
-                                "/api/v1/expressionbookItems/**",
-                                "/api/v1/wordbooks/**",
-                                "/api/test",
-                                "/api/v1/wordbooks/quiz/**",
+                                "/api/**",
                                 "/health",
                                 "/env",
                                 "/v3/api-docs",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/v1/words/**"
+                                "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/**").hasAnyRole(
                                 "BASIC",
@@ -72,7 +67,10 @@ public class SecurityConfig {
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 ->
-                        oauth2.successHandler(customOAuth2SuccessHandler)
+                        oauth2.userInfoEndpoint(userInfo -> userInfo
+                                        .userService(customOAuth2Service)
+                                )
+                                .successHandler(customOAuth2SuccessHandler)
                 );
         return http.build();
     }
