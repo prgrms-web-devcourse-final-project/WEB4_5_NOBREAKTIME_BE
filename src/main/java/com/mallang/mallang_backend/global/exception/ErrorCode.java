@@ -17,6 +17,7 @@ public enum ErrorCode {
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
     TOKEN_NOT_FOUND("401-2", "token.not.found", HttpStatus.UNAUTHORIZED),
     IN_BLACKLIST("403-1", "in.blacklist", HttpStatus.FORBIDDEN),
+    INVALID_TOKEN("401-3", "invalid.token", HttpStatus.UNAUTHORIZED),
 
     // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -82,6 +83,8 @@ public enum ErrorCode {
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
+    OAUTH_NETWORK_ERROR("500-1", "oauth.network.error", HttpStatus.INTERNAL_SERVER_ERROR),
+    OAUTH_RATE_LIMIT("500-1", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // file upload Errors
     FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -94,6 +97,7 @@ public enum ErrorCode {
 
     // 공통 API 에러 (fallback 처리용)
     API_ERROR("500-1", "api.error", HttpStatus.INTERNAL_SERVER_ERROR),
+    API_BLOCK("500-2", "api.block", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
