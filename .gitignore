@@ -44,9 +44,12 @@ src/main/generated/
 src/test/generated_tests
 
 ## files
-uploads
+uploads/**
 .DS_Store
 
 ## properties
 application-secret.yml
 application.yml
+
+## log 파일
+logs/**
