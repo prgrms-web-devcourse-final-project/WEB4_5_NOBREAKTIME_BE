@@ -133,7 +133,7 @@ public class WordQuizServiceImplTest {
 			setId(subtitleItem, 102L);
 
 			Subtitle subtitle = Subtitle.builder()
-				.originalSentence("I like bananas.")
+				.originalSentence("I like banana.")
 				.translatedSentence("나는 바나나를 좋아해.")
 				.build();
 			setId(subtitle, 200L);
@@ -153,8 +153,9 @@ public class WordQuizServiceImplTest {
 			assertThat(response.getQuizId()).isEqualTo(999L);
 			assertThat(response.getQuizItems()).hasSize(2);
 			assertThat(response.getQuizItems()).extracting("word").containsExactlyInAnyOrder("apple", "banana");
-			assertThat(response.getQuizItems()).extracting("original").contains("This is an apple.", "I like bananas.");
+			assertThat(response.getQuizItems()).extracting("original").contains("This is an apple.", "I like banana.");
 			assertThat(response.getQuizItems()).extracting("translated").contains("이것은 사과입니다.", "나는 바나나를 좋아해.");
+			assertThat(response.getQuizItems()).extracting("question").contains("This is an {}.", "I like {}.");
 		}
 
 		@Test
