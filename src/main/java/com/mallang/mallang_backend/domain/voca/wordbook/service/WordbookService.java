@@ -30,4 +30,6 @@ public interface WordbookService {
 	List<WordbookResponse> getWordbooks(Long memberId);
 	
 	List<WordResponse> searchWordFromWordbook(Long memberId, String keyword);
+
+	List<WordResponse> getWordbookItems(Long wordbookId, Long memberId);
 }

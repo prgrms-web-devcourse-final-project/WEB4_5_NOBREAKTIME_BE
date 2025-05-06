@@ -268,4 +268,27 @@ public class WordbookController {
 			result
 		));
 	}
+
+	/**
+	 * 단어장 페이지에 접속했을 때, 선택한 단어장의 단어들을 조회합니다. 선택한 단어장이 없으면 "기본" 단어장의 단어를 조회합니다.
+	 * @param wordbookId 단어장 ID
+	 * @param userDetail 로그인한 회원
+	 * @return 단어 리스트
+	 */
+	@Operation(summary = "단어 목록 조회", description = "특정 단어장의 단어 목록을 조회합니다.")
+	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
+	@GetMapping("/view")
+	public ResponseEntity<RsData<List<WordResponse>>> getWordbookItems(
+		@RequestParam(required = false) Long wordbookId,
+		@Login CustomUserDetails userDetail
+	) {
+		Long memberId = userDetail.getMemberId();
+
+		List<WordResponse> words = wordbookService.getWordbookItems(wordbookId, memberId);
+		return ResponseEntity.ok(new RsData<>(
+			"200",
+			"단어 목록이 조회되었습니다.",
+			words
+		));
+	}
 }

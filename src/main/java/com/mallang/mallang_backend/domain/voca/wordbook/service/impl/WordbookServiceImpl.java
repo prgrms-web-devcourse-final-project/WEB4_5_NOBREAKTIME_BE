@@ -269,8 +269,25 @@ public class WordbookServiceImpl implements WordbookService {
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordLike(member, keyword);
 
-		List<WordResponse> result = convertToWordResponses(items);
-		return result;
+		return convertToWordResponses(items);
+	}
+
+	@Override
+	public List<WordResponse> getWordbookItems(Long wordbookId, Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		Wordbook wordbook;
+		if (wordbookId == null) {
+			wordbook = wordbookRepository.findByMemberAndName(member, DEFAULT_WORDBOOK_NAME)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+		} else {
+			wordbook = wordbookRepository.findById(wordbookId)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+		}
+
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+		return convertToWordResponses(items);
 	}
 
 	private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {
