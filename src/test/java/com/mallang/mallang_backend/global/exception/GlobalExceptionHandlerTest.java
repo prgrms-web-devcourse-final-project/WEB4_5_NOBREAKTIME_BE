@@ -16,7 +16,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("ServiceException 발생 시 ErrorResponse에 code, message, path가 올바르게 설정된다")
     void handleServiceException_returnsFormattedErrorResponse() {
         // given
-        ErrorCode errorCode = ErrorCode.USER_NOT_FOUND;
+        ErrorCode errorCode = ErrorCode.MEMBER_NOT_FOUND;
         ServiceException serviceException = new ServiceException(errorCode);
 
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
