@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.resilience4j;
 
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.exception.message.MessageService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
@@ -18,6 +20,7 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.*;
 @RequiredArgsConstructor
 public class CustomCircuitBreakerConfig {
 
+    private final MessageService messageService;
     /**
      * 서킷 브레이커 이벤트 소비자 빈 등록
      * - 새로 생성되는 모든 서킷 브레이커에 자동으로 이벤트 리스너 등록
@@ -96,7 +99,16 @@ public class CustomCircuitBreakerConfig {
         String name = circuitBreaker.getName();
 
         circuitBreaker.getEventPublisher().onError(event -> {
-            log.error("[{}] 에러: {}", name, event.getThrowable().getMessage());
+            Throwable throwable = event.getThrowable();
+            if (throwable instanceof ServiceException) {
+                ServiceException ex = (ServiceException) throwable;
+                log.error("[{}] 에러 - Code: {}, Message: {}",
+                        name,
+                        ex.getErrorCode(),
+                        messageService.getMessage(ex.getMessageCode())); // messageCode 직접 추출
+            } else {
+                log.error("[{}] 에러: {}", name, event.getThrowable().getMessage());
+            }
         });
     }
 
