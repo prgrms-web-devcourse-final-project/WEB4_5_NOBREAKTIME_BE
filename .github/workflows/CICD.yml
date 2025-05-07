@@ -66,17 +66,23 @@ jobs:
     steps:
       - name: Set target IP (default blue)
         run: |
-          STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}/env")
-          if [ $STATUS = 200 ]; then
-            CURRENT_UPSTREAM=$(curl -s "http://${{ secrets.MALLANG_SERVER_IP }}/env")
-            if [ "$CURRENT_UPSTREAM" = "blue" ]; then
-              TARGET_UPSTREAM="green"
-            else
-              TARGET_UPSTREAM="blue"
-            fi
+          BLUE_STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}:8080/env")
+          GREEN_STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}:8081/env")
+          if [ "$BLUE_STATUS" = 200 ]; then
+            CURRENT_UPSTREAM="blue"
+          elif [ "$GREEN_STATUS" = 200 ]; then
+            CURRENT_UPSTREAM="green"
           else
-            TARGET_UPSTREAM="green"
+            CURRENT_UPSTREAM=""
           fi
+
+          # 타겟 설정 로직
+          if [ "$CURRENT_UPSTREAM" = "blue" ]; then
+            TARGET_UPSTREAM="green"
+          elif [ "$CURRENT_UPSTREAM" = "green" ]; then
+            TARGET_UPSTREAM="blue"
+          else
+            TARGET_UPSTREAM="blue"  # 최초 배포 시 기본값
 
           echo "TARGET_UPSTREAM=$TARGET_UPSTREAM" >> $GITHUB_ENV
           
