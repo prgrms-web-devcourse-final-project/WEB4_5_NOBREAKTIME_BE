@@ -66,32 +66,30 @@ jobs:
     steps:
       - name: Set target IP (default blue)
         run: |
-          BLUE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8080/env" || echo "000")
-          if [ $BLUE_STATUS = 200 ]; then
-            CURRENT_UPSTREAM="blue"
-            TARGET_UPSTREAM="green"
+          STATUS=$(curl -o /dev/null -w "%{http_code}" "https://${{ secrets.MALLANG_SERVER_IP }}/env")
+          echo "$STATUS"
+          if [ $STATUS = 200 ]; then
+            CURRENT_UPSTREAM=$(curl -s "https://${{ secrets.MALLANG_SERVER_IP }}/env")
           else
-            GREEN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8081/env" || echo "000")
-            if [ "$GREEN_STATUS" = 200 ]; then
-              CURRENT_UPSTREAM="green"
-              TARGET_UPSTREAM="blue"
-            else
-              CURRENT_UPSTREAM=""
-              TARGET_UPSTREAM="blue"
-            fi
+            CURRENT_UPSTREAM=green
           fi
           
-          echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
-          echo "TARGET_UPSTREAM=$TARGET_UPSTREAM" >> $GITHUB_ENV
+          echo CURRENT_UPSTREAM=$CURRENT_UPSTREAM >> $GITHUB_ENV
           
-          if [ "$TARGET_UPSTREAM" = "blue" ]; then
-            echo "🔵 Blue 배포 → 8080 포트 시작 / 8081 포트 중지"
-            echo "TARGET_PORT=8080" >> $GITHUB_ENV
-            echo "STOPPED_PORT=8081" >> $GITHUB_ENV
-          elif [ "$TARGET_UPSTREAM" = "green" ]; then
-            echo "🟢 Green 배포 → 8081 포트 시작 / 8080 포트 중지"
-            echo "TARGET_PORT=8081" >> $GITHUB_ENV
+          if [ $CURRENT_UPSTREAM = blue ]; then
+            echo "🔵 현재: Blue 배포 → 8080 포트 실행 중 / 8081 포트 중지 상태"
+            # 이름 = 값
+            echo "CURRENT_PORT=8080" >> $GITHUB_ENV
+            echo "STOPPED_PORT=8081" >> $GITHUB_ENV 
+            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
+          elif [ $CURRENT_UPSTREAM = green ]; then
+            echo "🟢 현재: Green 배포 → 8081 포트 실행 중 / 8080 포트 중지 상태"
+            echo "CURRENT_PORT=8081" >> $GITHUB_ENV
             echo "STOPPED_PORT=8080" >> $GITHUB_ENV
+            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
+          else
+            echo "error"
+            exit 1
           fi
 
       - name: Docker compose
@@ -108,7 +106,7 @@ jobs:
       - name: Check deploy server
         uses: jtalk/url-health-check-action@v3
         with:
-          url: "http://${{ secrets.MALLANG_SERVER_IP }}:${{env.TARGET_PORT}}/env"
+          url: "http://${{ secrets.MALLANG_SERVER_IP }}:${{env.STOPPED_PORT}}/env"
           max-attempts: 5
           retry-delay: 10s
 
