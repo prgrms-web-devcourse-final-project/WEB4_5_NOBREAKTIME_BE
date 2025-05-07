@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.member.entity;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -29,8 +30,9 @@ public class Member {
     @Column(name = "member_id")
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+
+    @Column(unique = true)
+    private String email; // 카카오 로그인 회원은 추가 입력 필요
 
     @Column
     private String password;
@@ -47,6 +49,9 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginPlatform loginPlatform;
+
+    @Column(nullable = false, unique = true)
+    private String platformId; // 플랫폼 별 고유 식별자
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -78,6 +83,7 @@ public class Member {
 
     @Builder
     public Member(
+            String platformId,
             String email,
             String password,
             String nickname,
@@ -85,12 +91,43 @@ public class Member {
             LoginPlatform loginPlatform,
             Language language
     ) {
+        this.platformId = platformId;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.loginPlatform = loginPlatform;
         this.language = language;
+    }
+
+    /**
+     * 이메일을 업데이트합니다.
+     *
+     * 기존 이메일과 새 이메일이 다를 때만 업데이트합니다.
+     * 같은 닉네임일 경우 아무런 동작을 하지 않습니다.
+     * null 상태에서도 새로운 이메일 등록이 가능합니다.
+     * - 카카오 회원의 경우 최초 등록일 수 있습니다.
+     *
+     * @param email 새로 설정할 이메일 주소
+     */
+    public void updateEmail(String email) {
+        if (!Objects.equals(this.email, email)) {
+            this.email = email;
+        }
+    }
+
+    /**
+     * 닉네임을 업데이트합니다.
+     *
+     * 기존 닉네임과 새 닉네임이 다를 경우에만 업데이트합니다.
+     * 같은 닉네임일 경우 아무런 동작을 하지 않습니다.
+     *
+     * @param nickname 새로 설정할 닉네임
+     */
+    public void updateNickname(String nickname) {
+        if (!this.nickname.equals(nickname)) {
+            this.nickname = nickname;
+        }
     }
 
     // 언어 선택 업데이트 로직 -> 소셜 로그인 회원
