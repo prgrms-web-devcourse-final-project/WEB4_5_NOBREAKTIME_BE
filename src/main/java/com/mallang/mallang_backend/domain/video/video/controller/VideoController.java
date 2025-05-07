@@ -49,9 +49,15 @@ public class VideoController {
     @GetMapping("/{youtubeVideoId}/analysis")
     public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(
         @PathVariable String youtubeVideoId
-    ) throws IOException, InterruptedException {
-        AnalyzeVideoResponse response = videoService.analyzeVideo(youtubeVideoId);
-        return ResponseEntity.ok(new RsData<>(
+    ) {
+		AnalyzeVideoResponse response;
+		try {
+			response = videoService.analyzeVideo(youtubeVideoId);
+		} catch (IOException | InterruptedException e) {
+            throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
+		}
+
+		return ResponseEntity.ok(new RsData<>(
             "200",
             "영상 분석이 완료되었습니다.",
             response
