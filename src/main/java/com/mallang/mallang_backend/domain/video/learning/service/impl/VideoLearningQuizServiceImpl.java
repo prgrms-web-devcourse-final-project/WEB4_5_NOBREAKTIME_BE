@@ -13,13 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
-import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.service.VideoLearningQuizService;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
@@ -80,12 +80,18 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	@Override
 	@Transactional(readOnly = true)
 	public VideoLearningExpressionQuizListResponse makeExpressionQuizList(String videoId) {
-		List<Expression> pool = expressionRepository.findAllByVideosId(videoId);
+		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
 		if (pool.isEmpty()) throw new ServiceException(ErrorCode.EXPRESSION_NOT_FOUND);
 
-		// 각 Expression 엔티티를 QuizItem 객체로 변환
-		List<VideoLearningExpressionQuizItem> items = pool.stream()
-			.map(expr -> VideoLearningExpressionQuizItem.of(expr, random))
+		// Subtitle별 그룹
+		Map<Subtitle, List<Keyword>> bySubtitle = pool.stream()
+			.collect(Collectors.groupingBy(Keyword::getSubtitles));
+
+		// QuizItem 생성
+		List<VideoLearningExpressionQuizItem> items = bySubtitle.keySet().stream()
+			.map(subtitle ->
+				VideoLearningExpressionQuizItem.fromSubtitle(subtitle, random)
+			)
 			.collect(Collectors.toList());
 
 		return VideoLearningExpressionQuizListResponse.builder()
