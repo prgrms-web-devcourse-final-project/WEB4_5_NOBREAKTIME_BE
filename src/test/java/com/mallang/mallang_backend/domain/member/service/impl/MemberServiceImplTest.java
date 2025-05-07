@@ -58,6 +58,7 @@ class MemberServiceImplTest {
     // 공통 초기화 데이터
     private Member createMember1() {
         return Member.builder()
+                .platformId("123123A")
                 .email("test1@example.com")
                 .nickname("testUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
@@ -68,6 +69,7 @@ class MemberServiceImplTest {
 
     private Member createMember2() {
         return Member.builder()
+                .platformId("1231212B")
                 .email("test2@example.com")
                 .nickname("testUser2")
                 .loginPlatform(LoginPlatform.KAKAO)
@@ -82,6 +84,7 @@ class MemberServiceImplTest {
     void signupByOauth_Success() {
         // Given
         Long memberId = memberService.signupByOauth(
+                "23123412A",
                 "oauth@example.com",
                 "oauthUser",
                 "profileUrl",

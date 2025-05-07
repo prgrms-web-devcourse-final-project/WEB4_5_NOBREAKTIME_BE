@@ -60,8 +60,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             HttpServletResponse response,
             Authentication authentication) throws IOException {
 
-        String email = authentication.getName();
-        Member member = memberService.getMemberByEmail(email);
+        String platformId = authentication.getName();
+        Member member = memberService.getMemberByPlatformId(platformId);
 
         setJwtToken(response, member.getId(), member.getSubscription().getRoleName());
 

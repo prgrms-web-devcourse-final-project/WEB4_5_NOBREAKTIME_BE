@@ -50,33 +50,29 @@ public class DataInitializer implements CommandLineRunner {
         setSecurityContext(basicUser, basicUser.getSubscription().getRoleName());
     }
 
-    private Member createTestUser() {
+    private Member createTestUser() throws IOException {
         Member testUser = Member.builder()
-            .email("google123")
-            .nickname("GoogleTestUser123")
-            .loginPlatform(LoginPlatform.GOOGLE)
-            .language(Language.ENGLISH)
-            .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
-            .build();
+                .platformId("123123AK")
+                .email("google123@gmail.com")
+                .nickname("TestUser1")
+                .loginPlatform(LoginPlatform.GOOGLE)
+                .language(Language.NONE)
+                .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
+                .build();
+
+        /*
+        스탠다드 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
+        memberRepository.save(testUser);
         testUser.updateSubscription(Subscription.STANDARD);
-        testUser = memberRepository.save(testUser);
+        return testUser;*/
 
-        List<Wordbook> wordbooks = Wordbook.createDefault(testUser);
-        wordbookRepository.saveAll(wordbooks);
-
-        List<ExpressionBook> expressionBooks = ExpressionBook.createDefault(testUser);
-        expressionBookRepository.saveAll(expressionBooks);
-
-        // testUser.updateSubscription(Subscription.STANDARD);
-        // memberRepository.save(testUser);
-        // return testUser;
 
         /* 프리미엄 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
         memberRepository.save(testUser);
         testUser.updateSubscription(Subscription.PREMIUM);
         return testUser;*/
 
-        return testUser;
+        return memberRepository.save(testUser);
     }
 
     // 시큐리티 객체에 인증 정보 추가

@@ -44,7 +44,6 @@ public class AppConstants {
      */
     public static final String[] EXCLUDE_PATH_PATTERNS = {
             "/login/oauth2/code/**",
-            "/api/v1/member/**",
             "/oauth2/**",
             "/health",
             "/env",
@@ -52,7 +51,8 @@ public class AppConstants {
             "/swagger-ui.html",
             "/swagger-ui",
             "/test",
-            "/actuator/**"
+            "/actuator/**",
+            "/api/auth/test"
     };
     /**
      * 정적 리소스 확장자 패턴
@@ -61,7 +61,7 @@ public class AppConstants {
     /**
      * 소셜 로그인 사용자 정보 값
      */
-    public static final String ID_KEY = "id";
+    public static final String PLATFORM_ID_KEY = "platformId";
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 

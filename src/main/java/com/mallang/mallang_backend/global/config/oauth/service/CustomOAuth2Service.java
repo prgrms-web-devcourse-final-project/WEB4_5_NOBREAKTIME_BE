@@ -64,18 +64,17 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
                                                 OAuth2User user) {
 
         Map<String, Object> userAttributes = parseUserAttributes(platform, user);
-        String email = extractUniqueEmail(userAttributes);
-        userAttributes.put("idToEmail", email);
+        String platformId = user.getName();
 
         CustomUserDetails userDetails = null;
-        if (memberService.isExistEmail(email)) {
-            userDetails = handleExistingMember(email);
+        if (memberService.existsByPlatformId(platformId)) {
+            userDetails = handleExistingMember(platformId);
         } else {
             userDetails = registerNewMember(platform, userAttributes);
         }
 
         // @AuthenticationPrincipal OAuth2User principal 로 컨트롤러에서 이용 가능
-        return new DefaultOAuth2User(userDetails.getAuthorities(), userAttributes, "idToEmail");
+        return new DefaultOAuth2User(userDetails.getAuthorities(), userAttributes, "platformId");
     }
 
     // ======================회원 정보 추출=======================
@@ -102,27 +101,19 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
                 .orElseThrow(() -> new ServiceException(UNSUPPORTED_OAUTH_PROVIDER));
     }
 
-    /**
-     * 회원 고유 ID(이메일로 사용) 추출 메서드
-     *
-     * @param userAttributes OAuth2에서 추출한 사용자 속성 맵
-     * @return 회원 고유 ID
-     */
-    private String extractUniqueEmail(Map<String, Object> userAttributes) {
-        return String.valueOf(userAttributes.get("id"));
-    }
-
     // ======================회원 로그인 & 가입 처리=======================
 
     /**
-     * 기존 회원 처리: 토큰 생성 및 응답 설정 메서드
+     * 플랫폼 ID로 기존 회원을 조회하여 CustomUserDetails 객체를 생성합니다.
      *
-     * @param email 회원 이메일(고유 ID)
+     * <p>회원의 ID와 구독 정보(roleName)를 조합하여 반환합니다.
+     * 회원이 존재하지 않을 경우 예외는 상위 메서드에서 처리합니다.
+     *
+     * @param platformId 조회할 회원의 플랫폼 ID
+     * @return 회원의 ID와 구독 정보(roleName: ROLE_BASIC)를 포함한 CustomUserDetails 객체
      */
-    private CustomUserDetails handleExistingMember(String email) {
-        // 이메일로 기존 회원 ID 조회, 회원의 구독 정보 추출
-        Member member = memberService.getMemberByEmail(email);
-
+    private CustomUserDetails handleExistingMember(String platformId) {
+        Member member = memberService.getMemberByPlatformId(platformId);
         return new CustomUserDetails(member.getId(), member.getSubscription().getRoleName());
     }
 
@@ -130,23 +121,24 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      * 신규 회원 가입 처리 메서드
      *
      * @param platform   로그인 플랫폼 정보
-     * @param attributes OAuth2에서 추출한 사용자 속성 맵
      */
     private CustomUserDetails registerNewMember(LoginPlatform platform,
-                                   Map<String, Object> attributes) {
+                                   Map<String, Object> userAttributes) {
 
-        String email = (String) attributes.get(ID_KEY);
-        String nickname = (String) attributes.get(NICKNAME_KEY);
-        String profileImage = (String) attributes.get(PROFILE_IMAGE_KEY);
+        String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
+        String email = (String) userAttributes.get("email"); // null 가능
+        String nickname = (String) userAttributes.get(NICKNAME_KEY);
+        String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
 
-        log.info("사용자 email: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
+        log.debug("사용자 platformId: {}, email: {}, nickname: {}, profileImage: {}",
+                platformId, email, nickname, profileImage);
 
         // S3에 프로필 이미지 업로드
         ImageUploadRequest request = new ImageUploadRequest(profileImage);
         String s3ProfileImageUrl = imageUploader.uploadImageURL(request);
 
         Long memberId = memberService.signupByOauth(
-                email, nickname, s3ProfileImageUrl, platform
+                platformId, email, nickname, s3ProfileImageUrl, platform
         );
 
         Member joinMember = memberService.getMemberById(memberId);

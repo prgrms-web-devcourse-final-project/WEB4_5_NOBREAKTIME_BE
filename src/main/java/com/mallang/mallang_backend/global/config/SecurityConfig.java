@@ -49,7 +49,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/**",
+                                "/api/v1/**",
                                 "/health",
                                 "/env",
                                 "/v3/api-docs",
@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 "ADMIN")
                         .anyRequest().permitAll()
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(
                                 XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
@@ -91,6 +92,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://cdpn.io",
                 "https://www.mallang.site",
+                "https://api.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));
