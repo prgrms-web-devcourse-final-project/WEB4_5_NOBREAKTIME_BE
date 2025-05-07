@@ -267,7 +267,7 @@ public class WordbookServiceImpl implements WordbookService {
 	public List<WordResponse> searchWordFromWordbook(Long memberId, String keyword) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordLike(member, keyword);
+		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordContaining(member, keyword);
 
 		return convertToWordResponses(items);
 	}
