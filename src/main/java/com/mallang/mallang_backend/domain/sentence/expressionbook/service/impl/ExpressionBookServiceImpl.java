@@ -4,6 +4,7 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -19,14 +20,16 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpr
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionSaveRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.savedExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItem;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -46,6 +49,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     private final VideoRepository videoRepository;
     private final GptService gptService;
     private final ExpressionQuizResultRepository expressionQuizResultRepository;
+    private final SubtitleRepository subtitleRepository;
 
     @Override
     @Transactional
@@ -148,13 +152,19 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
     @Override
     @Transactional
-    public void save(savedExpressionsRequest request, Long expressionbookId) {
+    public void save(ExpressionSaveRequest request, Long expressionBookId) {
         String videoId = request.getVideoId();
-        String sentence = request.getSentence();
-        String description = request.getDescription();
-        LocalTime subtitleAt = request.getSubtitleAt();
+        Long subtitleId = request.getSubtitleId();
 
-        ExpressionBook expressionBook = expressionBookRepository.findById(expressionbookId)
+        Subtitle subtitle = subtitleRepository.findById(subtitleId)
+            .orElseThrow(() -> new ServiceException(SUBTITLE_NOT_FOUND));
+
+        String sentence = subtitle.getOriginalSentence();
+        String description = subtitle.getTranslatedSentence();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+        LocalTime subtitleAt = LocalTime.parse(subtitle.getStartTime(), formatter);
+
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
                 .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
