@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
-import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.*;
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.INDIVIDUAL;
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.TOTAL;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.Duration;
@@ -110,8 +111,14 @@ public class WordQuizServiceImpl implements WordQuizService {
 		dto.setWordQuizItemId(id);
 		dto.setWord(word);
 		dto.setOriginal(original);
-		dto.setTranslated(translated);
+		dto.setMeaning(translated);
+		dto.setQuestion(createQuestion(word, original));
 		return dto;
+	}
+
+	private String createQuestion(String word, String original) {
+		// 정답 단어를 {}로 대체
+		return original.replaceAll("\\b" + word + "\\b", "{}");
 	}
 
 	// 단어 결과 저장

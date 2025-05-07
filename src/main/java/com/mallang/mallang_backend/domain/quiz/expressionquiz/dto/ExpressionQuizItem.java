@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.quiz.expressionquiz.controller;
+package com.mallang.mallang_backend.domain.quiz.expressionquiz.dto;
 
 import java.util.List;
 
@@ -13,7 +13,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExpressionQuizItem {
 	private Long expressionQuizItemId;
-	private String sentence;
-	private List<String> words;
+	private String question;
+	private String original;
+	private List<String> choices;
 	private String meaning;
 }
