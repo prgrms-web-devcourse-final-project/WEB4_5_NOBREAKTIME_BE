@@ -1,15 +1,21 @@
 package com.mallang.mallang_backend.domain.voca.word.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchRequest;
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.global.dto.RsData;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/words")
@@ -48,8 +54,9 @@ public class WordController {
     @ApiResponse(responseCode = "200", description = "단어 검색 결과를 반환합니다.")
     @GetMapping("/search")
     public ResponseEntity<RsData<WordSearchResponse>> searchWord(
-            @RequestBody WordSearchRequest wordSearchRequest
+        WordSearchRequest wordSearchRequest
     ) {
+        String word = wordSearchRequest.getWord();
         WordSearchResponse response = wordService.searchWord(wordSearchRequest.getWord());
         return ResponseEntity.ok(new RsData<>(
             "200",
