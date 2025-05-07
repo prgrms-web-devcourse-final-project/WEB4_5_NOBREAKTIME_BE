@@ -66,24 +66,22 @@ jobs:
     steps:
       - name: Set target IP (default blue)
         run: |
-          BLUE_STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}:8080/env")
-          GREEN_STATUS=$(curl -o /dev/null -w "%{http_code}" "http://${{ secrets.MALLANG_SERVER_IP }}:8081/env")
-          if [ "$BLUE_STATUS" = 200 ]; then
+          BLUE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8080/env" || echo "000")
+          if [ $STATUS = 200 ]; then
             CURRENT_UPSTREAM="blue"
-          elif [ "$GREEN_STATUS" = 200 ]; then
-            CURRENT_UPSTREAM="green"
-          else
-            CURRENT_UPSTREAM=""
-          fi
-
-          # 타겟 설정 로직
-          if [ "$CURRENT_UPSTREAM" = "blue" ]; then
             TARGET_UPSTREAM="green"
-          elif [ "$CURRENT_UPSTREAM" = "green" ]; then
-            TARGET_UPSTREAM="blue"
           else
-            TARGET_UPSTREAM="blue"  # 최초 배포 시 기본값
-
+            GREEN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8081/env" || echo "000")
+            if [ "$GREEN_STATUS" = 200 ]; then
+              CURRENT_UPSTREAM="green"
+              TARGET_UPSTREAM="blue"\
+            else
+              CURRENT_UPSTREAM=""
+              TARGET_UPSTREAM="blue"
+            fi
+          fi
+          
+          echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
           echo "TARGET_UPSTREAM=$TARGET_UPSTREAM" >> $GITHUB_ENV
           
           if [ "$TARGET_UPSTREAM" = "blue" ]; then
@@ -94,9 +92,6 @@ jobs:
             echo "🟢 Green 배포 → 8081 포트 시작 / 8080 포트 중지"
             echo "TARGET_PORT=8081" >> $GITHUB_ENV
             echo "STOPPED_PORT=8080" >> $GITHUB_ENV
-          else
-            echo "❌ 잘못된 환경 값"
-            exit 1
           fi
 
       - name: Docker compose
