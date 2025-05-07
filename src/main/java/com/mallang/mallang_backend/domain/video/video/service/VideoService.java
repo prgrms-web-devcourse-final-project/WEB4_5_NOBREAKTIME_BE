@@ -7,7 +7,6 @@ import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 
-
 public interface VideoService {
     List<VideoResponse> getVideosByLanguage(
         String q,
@@ -28,6 +27,4 @@ public interface VideoService {
 	VideoDetailResponse getVideoDetail(String videoId);
 
 	AnalyzeVideoResponse analyzeVideo(String videoID) throws IOException, InterruptedException;
-
-	byte[] getAudioFile(String fileName) throws IOException;
 }

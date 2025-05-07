@@ -65,30 +65,6 @@ public class VideoController {
     }
 
     /**
-     * Clova Speech 에 음성 리소스를 제공하기 위한 메서드
-     *
-     * @param fileName 리소스 파일명
-     * @return 음성 리소스
-     */
-    @Operation(summary = "오디오 파일 제공", description = "Clova Speech용 음성 리소스를 제공합니다.")
-    @ApiResponse(responseCode = "200", description = "오디오 파일 제공 성공")
-    @GetMapping("/uploaded/{fileName}")
-    public ResponseEntity<RsData<byte[]>> getAudioFile(
-        @PathVariable String fileName
-    ) {
-        try {
-            byte[] audioData = videoService.getAudioFile(fileName);
-            return ResponseEntity.ok(new RsData<>(
-                "200",
-                "오디오 파일 제공",
-                audioData
-            ));
-        } catch (IOException e) {
-            throw new ServiceException(AUDIO_FILE_NOT_FOUND);
-        }
-    }
-
-    /**
      * Youtube API 를 통해 영상 목록을 가져오는 메서드(다건)
      * 회원의 언어 설정에 맞춰 필터링된 영상 목록을 조회합니다.
      * @param q 검색어 쿼리

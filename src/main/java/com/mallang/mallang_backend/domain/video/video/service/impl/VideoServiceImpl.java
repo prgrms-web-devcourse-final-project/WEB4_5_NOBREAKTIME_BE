@@ -311,10 +311,4 @@ public class VideoServiceImpl implements VideoService {
 
 		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
 	}
-
-	@Override
-	public byte[] getAudioFile(String fileName) throws IOException {
-		Path path = Paths.get(UPLOADS_DIR, fileName);
-		return java.nio.file.Files.readAllBytes(path);
-	}
 }
