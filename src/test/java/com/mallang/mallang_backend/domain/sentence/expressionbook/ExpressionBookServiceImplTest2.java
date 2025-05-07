@@ -68,9 +68,10 @@ class ExpressionBookServiceImplTest2 {
 		Field idField = Member.class.getDeclaredField("id");
 		idField.setAccessible(true);
 		idField.set(member, memberId);
+		member.updateLearningLanguage(Language.ENGLISH);
 		member.updateSubscription(Subscription.STANDARD);
 
-		ExpressionBookRequest request = new ExpressionBookRequest("My Book", Language.ENGLISH);
+		ExpressionBookRequest request = new ExpressionBookRequest("My Book");
 
 		ExpressionBook saved = ExpressionBook.builder()
 			.name("My Book")
@@ -99,7 +100,7 @@ class ExpressionBookServiceImplTest2 {
 	@DisplayName("create()는 존재하지 않는 회원이면 예외를 던진다")
 	void create_shouldThrowIfMemberNotFound() {
 		Long memberId = 999L;
-		ExpressionBookRequest request = new ExpressionBookRequest("Test", Language.JAPANESE);
+		ExpressionBookRequest request = new ExpressionBookRequest("Test");
 
 		given(memberRepository.findById(memberId)).willReturn(Optional.empty());
 
@@ -127,7 +128,7 @@ class ExpressionBookServiceImplTest2 {
 
 		basicMember.updateSubscription(Subscription.BASIC);
 
-		ExpressionBookRequest request = new ExpressionBookRequest("Basic Book", Language.ENGLISH);
+		ExpressionBookRequest request = new ExpressionBookRequest("Basic Book");
 
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(basicMember));
 
@@ -405,7 +406,7 @@ class ExpressionBookServiceImplTest2 {
 
 		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
-		ExpressionBookRequest request = new ExpressionBookRequest("기본 표현함", Language.ENGLISH);
+		ExpressionBookRequest request = new ExpressionBookRequest("기본 표현함");
 
 		// expect
 		ServiceException ex = assertThrows(ServiceException.class,
@@ -475,7 +476,7 @@ class ExpressionBookServiceImplTest2 {
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(mockMember));
 		when(expressionBookRepository.existsByMemberAndName(mockMember, duplicateName)).thenReturn(true);
 
-		ExpressionBookRequest request = new ExpressionBookRequest(duplicateName, Language.ENGLISH);
+		ExpressionBookRequest request = new ExpressionBookRequest(duplicateName);
 
 		// when & then
 		ServiceException exception = assertThrows(ServiceException.class, () -> {

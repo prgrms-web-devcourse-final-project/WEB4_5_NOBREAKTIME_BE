@@ -67,7 +67,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         ExpressionBook expressionBook = ExpressionBook.builder()
                 .name(request.getName())
-                .language(request.getLanguage())
+                .language(member.getLanguage())
                 .member(member)
                 .build();
 
