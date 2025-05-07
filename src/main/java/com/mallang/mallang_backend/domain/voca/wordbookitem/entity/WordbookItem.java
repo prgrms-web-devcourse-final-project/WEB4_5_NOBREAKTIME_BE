@@ -103,4 +103,12 @@ public class WordbookItem {
             case CORRECT -> this.wordStatus = WordStatus.MASTERED;
         }
     }
+
+    public void updateWordbook(Wordbook toWordbook) {
+        if (this.wordbook.equals(toWordbook)) {
+            return;
+        }
+
+        this.wordbook = toWordbook;
+    }
 }
