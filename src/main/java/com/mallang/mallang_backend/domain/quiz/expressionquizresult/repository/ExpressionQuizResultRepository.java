@@ -17,9 +17,9 @@ public interface ExpressionQuizResultRepository extends JpaRepository<Expression
 
 	List<ExpressionQuizResult> findByExpressionQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
 
-	void deleteAllByExpressionIdAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
+	void deleteAllByExpression_IdInAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
 
-	List<ExpressionQuizResult> findAllByExpressionBookIdAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
+	List<ExpressionQuizResult> findAllByExpression_IdInAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
 
 	void deleteAllByExpressionBook(ExpressionBook expressionBook);
 }

@@ -213,7 +213,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             .toList();
 
         // 표현에 대한 퀴즈 결과 삭제
-        expressionQuizResultRepository.deleteAllByExpressionIdAndExpressionBook(request.getExpressionIds(), book);
+        expressionQuizResultRepository.deleteAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), book);
         // 표현 삭제
         expressionBookItemRepository.deleteAllById(ids);
     }
@@ -254,7 +254,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         // 표현 퀴즈 결과의 표현 연결 변경
         List<ExpressionQuizResult> quizResults =
-            expressionQuizResultRepository.findAllByExpressionBookIdAndExpressionBook(request.getExpressionIds(), sourceBook);
+            expressionQuizResultRepository.findAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), sourceBook);
         for (ExpressionQuizResult quizResult : quizResults) {
             quizResult.updateExpressionBook(targetBook);
         }
