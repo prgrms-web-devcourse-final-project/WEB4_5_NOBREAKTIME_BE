@@ -9,8 +9,6 @@ import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.config.QueryDslConfig;
-import com.mallang.mallang_backend.global.config.S3Config;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import jakarta.persistence.EntityManager;
@@ -19,15 +17,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -124,14 +119,14 @@ class MemberServiceImplTest {
 
     @Test
     @DisplayName("유저의 구독 정보 업데이트")
-    void getSubscription_Success() {
+    void getRoleName_Success() {
         // Given: 구독 정보 포함한 멤버 저장
         Member member = createMember1();
         Member savedMember = memberRepository.save(member);
         savedMember.updateSubscription(Subscription.PREMIUM);
 
         // When
-        String role = memberService.getSubscription(savedMember.getId());
+        String role = memberService.getRoleName(savedMember.getId());
 
         // Then
         assertEquals("ROLE_PREMIUM", role);

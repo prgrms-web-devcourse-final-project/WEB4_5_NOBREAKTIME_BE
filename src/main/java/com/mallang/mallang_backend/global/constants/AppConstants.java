@@ -46,12 +46,13 @@ public class AppConstants {
             "/login/oauth2/code/**",
             "/api/v1/member/**",
             "/oauth2/**",
-            "/api/test/login",
             "/health",
             "/env",
             "/v3/api-docs",
             "/swagger-ui.html",
-            "/swagger-ui"
+            "/swagger-ui",
+            "/test",
+            "/actuator/**"
     };
     /**
      * 정적 리소스 확장자 패턴

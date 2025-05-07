@@ -35,4 +35,15 @@ public enum Language {
             .findFirst()
             .orElse(NONE);
     }
+
+    /**
+     * 이 enum의 언어코드를 ISO 코드로 변환
+     */
+    public String toCode() {
+        if (this == NONE) {
+            return "";
+        }
+        String[] parts = this.languageCode.split("-");
+        return parts[0].toLowerCase();
+    }
 }

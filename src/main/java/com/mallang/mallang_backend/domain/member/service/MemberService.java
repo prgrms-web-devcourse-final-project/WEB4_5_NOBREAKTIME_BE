@@ -10,8 +10,8 @@ public interface MemberService {
 
     Boolean isExistEmail(String email);
     Long signupByOauth(String id, String nickname, String profileImage, LoginPlatform loginPlatform);
-    Long getMemberByEmail (String email);
-    String getSubscription(Long memberId);
+    Member getMemberByEmail (String email);
+    String getRoleName(Long memberId);
     Member getMemberById(Long memberId);
     void updateLearningLanguage(Long id, Language language);
     void withdrawMember(Long memberId);

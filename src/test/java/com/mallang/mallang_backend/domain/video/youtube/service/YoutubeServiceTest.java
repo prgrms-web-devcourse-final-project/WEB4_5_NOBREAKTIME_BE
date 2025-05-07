@@ -29,7 +29,7 @@ import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
 	"resilience4j.retry.instances.youtubeService.max-attempts=3",
 	"resilience4j.retry.instances.youtubeService.wait-duration=0ms"
 })
-class YoutubeServiceResilience4jTest {
+class YoutubeServiceTest {
 
 	@Autowired
 	private YoutubeService youtubeService;
