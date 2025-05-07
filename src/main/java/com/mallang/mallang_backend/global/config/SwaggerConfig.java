@@ -36,8 +36,11 @@ public class SwaggerConfig {
                 .info(info)
                 .addSecurityItem(securityRequirement)
                 .addServersItem(new Server()
-                        .url("https://api.mallang.com")
+                        .url("https://api.mallang.site")
                         .description("Production server"))
+                .addServersItem(new Server()
+                        .url("http://localhost:8080")
+                        .description("Local server"))
                 .components(new Components().addSecuritySchemes("bearerAuth", securityScheme));
     }
 }
