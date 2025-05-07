@@ -129,6 +129,7 @@ public class MemberServiceImpl implements MemberService {
                 .email(member.getEmail())
                 .profileImage(member.getProfileImageUrl())
                 .subscription(member.getSubscription())
+                .language(member.getLanguage())
                 .build();
     }
 

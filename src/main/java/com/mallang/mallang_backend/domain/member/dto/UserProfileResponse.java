@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.dto;
 
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.global.common.Language;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,4 +26,7 @@ public class UserProfileResponse {
 
     @Schema(description = "구독 정보")
     private Subscription subscription;
+
+    @Schema(description = "언어 설정 정보", example = "ENGLISH")
+    private Language language;
 }
