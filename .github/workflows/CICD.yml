@@ -67,14 +67,14 @@ jobs:
       - name: Set target IP (default blue)
         run: |
           BLUE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8080/env" || echo "000")
-          if [ $STATUS = 200 ]; then
+          if [ $BLUE_STATUS = 200 ]; then
             CURRENT_UPSTREAM="blue"
             TARGET_UPSTREAM="green"
           else
             GREEN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://${{ secrets.MALLANG_SERVER_IP }}:8081/env" || echo "000")
             if [ "$GREEN_STATUS" = 200 ]; then
               CURRENT_UPSTREAM="green"
-              TARGET_UPSTREAM="blue"\
+              TARGET_UPSTREAM="blue"
             else
               CURRENT_UPSTREAM=""
               TARGET_UPSTREAM="blue"
