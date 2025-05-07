@@ -89,6 +89,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://cdpn.io",
                 "https://www.mallang.site",
+                "https://api.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));
