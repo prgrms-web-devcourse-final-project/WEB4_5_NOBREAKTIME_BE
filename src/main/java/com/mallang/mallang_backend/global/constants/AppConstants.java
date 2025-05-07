@@ -27,14 +27,14 @@ public class AppConstants {
      * Youtube Video ID 로 전체 URL 을 만들기 위한 Youtbe 영상 Base URL
      */
     public static final String YOUTUBE_VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
-	/**
-	 * Youtube 라이센스 타입
-	 */
-	public static final String CC_LICENSE = "creativeCommon";
-	/**
-	 * 기본 단어장 이름
-	 */
-	public static final String DEFAULT_WORDBOOK_NAME = "기본";
+    /**
+     * Youtube 라이센스 타입
+     */
+    public static final String CC_LICENSE = "creativeCommon";
+    /**
+     * 기본 단어장 이름
+     */
+    public static final String DEFAULT_WORDBOOK_NAME = "기본 단어장";
     /**
      * 기본 표현함 이름
      */
@@ -61,14 +61,14 @@ public class AppConstants {
     /**
      * 소셜 로그인 사용자 정보 값
      */
-    public static final String ID_KEY = "id";
+    public static final String PLATFORM_ID_KEY = "platformId";
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 
-	/**
-	 * 영상 학습 퀴즈 최대 개수
-	 */
-	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+    /**
+     * 영상 학습 퀴즈 최대 개수
+     */
+    public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
 
     /**
      * s3 에 업로드 할 프로필 사진의 prefix

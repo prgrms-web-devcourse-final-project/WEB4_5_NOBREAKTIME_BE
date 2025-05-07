@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.filter;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,12 +11,23 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+
+/**
+ * 인증된 회원의 상세 정보
+ *
+ * - memberId: 회원 고유 식별자
+ * - roleName: 회원 권한 (예: ROLE_BASIC, ROLE_STANDARD 등)
+ */
 @Getter
 @Setter
 @AllArgsConstructor
+@Schema(description = "인증된 회원의 상세 정보")
 public class CustomUserDetails implements UserDetails {
 
+    @Schema(description = "회원 고유 식별자", example = "12345")
     private Long memberId;
+
+    @Schema(description = "회원 권한", example = "ROLE_STANDARD")
     private String roleName; // ROLE_BASIC, ROLE_STANDARD 등...
 
     /**

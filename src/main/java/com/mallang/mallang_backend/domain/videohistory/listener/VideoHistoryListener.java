@@ -3,9 +3,9 @@ package com.mallang.mallang_backend.domain.videohistory.listener;
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * 비디오 조회 이벤트를 비동기로 처리
@@ -21,7 +21,7 @@ public class VideoHistoryListener {
 	private final VideoHistoryService historyService;
 
 	@Async("videoHistoryExecutor")
-	@EventListener
+	@TransactionalEventListener
 	public void handleVideoViewed(VideoViewedEvent event) {
 		// 실제 히스토리 저장 로직 호출
 		historyService.save(event.getMemberId(), event.getVideoId());

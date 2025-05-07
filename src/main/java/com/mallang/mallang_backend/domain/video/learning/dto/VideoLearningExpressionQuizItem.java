@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.video.learning.dto;
 
-import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,22 +19,22 @@ public class VideoLearningExpressionQuizItem {
 	private final String meaning; // 문장 해석
 
 	/**
-	 * Expression 엔티티와 Random을 받아 퀴즈 아이템으로 변환
+	 * 자막 엔티티와 Random을 받아 퀴즈 아이템으로 변환
 	 */
-	public static VideoLearningExpressionQuizItem of(
-		Expression expr,
+	public static VideoLearningExpressionQuizItem fromSubtitle(
+		Subtitle subtitle,
 		Random random
 	) {
-		String sentence = expr.getSentence();
-		String description = expr.getDescription();
+		String sentence = subtitle.getOriginalSentence();
+		String description = subtitle.getTranslatedSentence();
 
-		// 원문에서 단어만 추출 → 문장부호 제거 → 섞음
+		// 문장 부호 제거 단어 리스트
 		List<String> words = Arrays.stream(sentence.split("\\s+"))
-			.map(w -> w.replaceAll("\\p{Punct}", ""))
+			.map(w -> w.replaceAll("\\p{Punct}", ""))  // 문장부호 제거
 			.collect(Collectors.toList());
-		Collections.shuffle(words, random);
+		Collections.shuffle(words, random);            // 랜덤 순서
 
-		// 알파벳, 숫자(\w+)를 {}로 치환, 문장부호는 유지
+		// 단어를 {}로 치환, 문장 부호 그대로
 		String blanked = Arrays.stream(sentence.split("\\s+"))
 			.map(token -> token.replaceAll("[\\w'’]+", "{}"))
 			.collect(Collectors.joining(" "));
@@ -43,7 +43,7 @@ public class VideoLearningExpressionQuizItem {
 			.question(blanked)
 			.original(sentence)
 			.choices(words)
-			.meaning(description)
+			.meaning(subtitle.getTranslatedSentence())
 			.build();
 	}
 }

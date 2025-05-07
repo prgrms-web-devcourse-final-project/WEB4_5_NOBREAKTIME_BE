@@ -48,8 +48,9 @@ public class WordController {
     @ApiResponse(responseCode = "200", description = "단어 검색 결과를 반환합니다.")
     @GetMapping("/search")
     public ResponseEntity<RsData<WordSearchResponse>> searchWord(
-            @RequestBody WordSearchRequest wordSearchRequest
+        WordSearchRequest wordSearchRequest
     ) {
+        String word = wordSearchRequest.getWord();
         WordSearchResponse response = wordService.searchWord(wordSearchRequest.getWord());
         return ResponseEntity.ok(new RsData<>(
             "200",

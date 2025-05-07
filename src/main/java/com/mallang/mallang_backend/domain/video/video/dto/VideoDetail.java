@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class VideoDetailResponse {
+public class VideoDetail {
 	private String videoId;
 	private String title;
 	private String description;
@@ -19,7 +19,7 @@ public class VideoDetailResponse {
 	private String channelTitle;
 	private Language language;
 
-	public static Videos toEntity(VideoDetailResponse dto) {
+	public static Videos toEntity(VideoDetail dto) {
 		return Videos.builder()
 			.id(dto.getVideoId())
 			.videoTitle(dto.getTitle())

@@ -98,7 +98,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
      * @return 재발급 된 액세스 토큰
      */
     private String getNewAccessToken(HttpServletRequest request) {
-        String refreshToken = jwtService.getTokenByCookieName(request)
+        String refreshToken = jwtService.getTokenByCookie(request)
                 .orElseThrow(() -> new ServiceException(TOKEN_NOT_FOUND));
 
         // 블랙리스트 체크
@@ -172,11 +172,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // OPTIONS 메서드라면 필터 적용 안 함
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            return true;
-        }
-
         String requestURI = request.getRequestURI();
 
         if (isExcludedPath(request)) {

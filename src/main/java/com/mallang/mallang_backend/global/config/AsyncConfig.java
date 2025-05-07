@@ -28,4 +28,22 @@ public class AsyncConfig {
 		executor.initialize();
 		return executor;
 	}
+
+	/**
+	 * 비디오 히스토리 저장용 비동기 스레드풀 설정
+	 * aws t3.micro 기준
+	 * corePoolSize   : 1 (기본 스레드 수)
+	 * maxPoolSize    : 2 (최대 스레드 수)
+	 * queueCapacity  : 20 (대기 큐 크기)
+	 */
+	@Bean(name = "videoExecutor")
+	public Executor videoExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(5);
+		executor.setMaxPoolSize(10);
+		executor.setQueueCapacity(100);
+		executor.setThreadNamePrefix("video-");
+		executor.initialize();
+		return executor;
+	}
 }

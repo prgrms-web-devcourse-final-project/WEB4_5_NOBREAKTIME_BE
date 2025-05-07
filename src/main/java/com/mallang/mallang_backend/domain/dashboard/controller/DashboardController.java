@@ -12,10 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
@@ -60,7 +57,7 @@ public class DashboardController {
 	@ApiResponse(responseCode = "200", description = "학습 목표가 설정되었습니다.")
 	@PatchMapping("/goal")
 	public ResponseEntity<RsData<Void>> updateGoal(
-		UpdateGoalRequest request,
+		@RequestBody UpdateGoalRequest request,
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();

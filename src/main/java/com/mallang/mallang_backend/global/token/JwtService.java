@@ -81,7 +81,7 @@ public class JwtService {
     }
 
     // 쿠키에서 JWT 추출
-    public Optional<String> getTokenByCookieName(HttpServletRequest request) {
+    public Optional<String> getTokenByCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
 
         if (cookies == null || cookies.length == 0) { // 쿠키가 없을 경우
