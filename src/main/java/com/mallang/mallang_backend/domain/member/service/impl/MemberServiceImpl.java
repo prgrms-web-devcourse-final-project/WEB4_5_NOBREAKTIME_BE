@@ -32,8 +32,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.mallang.mallang_backend.global.common.Language.NONE;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.FILE_EMPTY;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.NOT_SUPPORTED_TYPE;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요

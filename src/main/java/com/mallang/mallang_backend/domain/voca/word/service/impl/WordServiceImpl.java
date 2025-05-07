@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

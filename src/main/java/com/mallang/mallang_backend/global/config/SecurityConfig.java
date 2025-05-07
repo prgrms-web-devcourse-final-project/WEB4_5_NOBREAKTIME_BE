@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/error",
                                 "/h2-console/**",
-                                "/api/**",
+                                "/api/v1/**",
                                 "/health",
                                 "/env",
                                 "/v3/api-docs",
