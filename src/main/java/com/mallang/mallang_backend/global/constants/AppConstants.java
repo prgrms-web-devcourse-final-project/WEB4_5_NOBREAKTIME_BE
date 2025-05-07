@@ -34,7 +34,7 @@ public class AppConstants {
 	/**
 	 * 기본 단어장 이름
 	 */
-	public static final String DEFAULT_WORDBOOK_NAME = "기본";
+	public static final String DEFAULT_WORDBOOK_NAME = "기본 단어장";
     /**
      * 기본 표현함 이름
      */
