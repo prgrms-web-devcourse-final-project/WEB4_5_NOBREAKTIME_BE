@@ -1,9 +1,5 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
-import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +18,12 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
+import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
+
 /**
  * oauth2Login
  * /login/oauth2/code/{소셜 로그인 제공자} 경로로 콜백이 들어오면 인증 처리
@@ -28,6 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
