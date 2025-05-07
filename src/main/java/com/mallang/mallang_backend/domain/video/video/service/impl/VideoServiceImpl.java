@@ -31,6 +31,7 @@ import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
+import com.mallang.mallang_backend.domain.video.video.event.VideoAnalyzedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
@@ -241,12 +242,12 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		// 2. 음성 추출
-		String fname = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+		String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
 
 		// 3. STT
 		NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
 		final String result =
-			clovaSpeechClient.upload(new File(UPLOADS_DIR + fname), requestEntity);
+			clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
 
 		// STT 결과 → 세그먼트 파싱
 		Transcript transcript = transcriptParser.parseTranscriptJson(result);
@@ -256,6 +257,9 @@ public class VideoServiceImpl implements VideoService {
 		List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
 
 		saveSubtitleAndKeyword(video, gptResult);
+
+		// 비동기로 오디오 파일 삭제
+		publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 
 		return AnalyzeVideoResponse.from(gptResult);
 	}
@@ -292,6 +296,7 @@ public class VideoServiceImpl implements VideoService {
 		// keyword 저장
 		keywordRepository.saveAll(keywordList);
 
+		// 비동기로 핵심단어들 gpt 사용하여 단어DB에 저장
 		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
 	}
 }
