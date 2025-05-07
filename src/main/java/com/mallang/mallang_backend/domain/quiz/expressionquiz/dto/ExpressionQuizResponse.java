@@ -1,8 +1,6 @@
-package com.mallang.mallang_backend.domain.quiz.expressionquiz.controller;
+package com.mallang.mallang_backend.domain.quiz.expressionquiz.dto;
 
 import java.util.List;
-
-import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItem;
 
 import lombok.Getter;
 import lombok.Setter;

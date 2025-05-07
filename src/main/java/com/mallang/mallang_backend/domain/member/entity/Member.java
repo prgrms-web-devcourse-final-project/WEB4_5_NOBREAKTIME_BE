@@ -98,11 +98,6 @@ public class Member {
         this.language = language;
     }
 
-    // 단어장 추가 위해 구독 플랜 확인
-    public boolean canCreateWordBook() {
-        return subscription != Subscription.BASIC;
-    }
-
     // 구독 플랜 업데이트
     public void updateSubscription(Subscription subscription) {
         this.subscription = subscription;

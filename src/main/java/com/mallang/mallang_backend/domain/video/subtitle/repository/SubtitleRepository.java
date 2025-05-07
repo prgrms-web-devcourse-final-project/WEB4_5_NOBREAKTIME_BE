@@ -12,4 +12,6 @@ public interface SubtitleRepository extends JpaRepository<Subtitle, Long> {
 
     @Query("SELECT s FROM Subtitle s JOIN FETCH s.keywords WHERE s.videos = :video")
     List<Subtitle> findAllByVideosFetchKeywords(@Param("video") Videos video);
+
+    List<Subtitle> findByIdIn(List<Long> ids);
 }

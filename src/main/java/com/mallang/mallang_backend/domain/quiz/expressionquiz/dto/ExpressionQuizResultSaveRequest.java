@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.quiz.expressionquiz.controller;
+package com.mallang.mallang_backend.domain.quiz.expressionquiz.dto;
 
 import lombok.Getter;
 import lombok.Setter;

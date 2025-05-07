@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +22,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
+import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
@@ -59,6 +61,9 @@ class WordbookServiceImplTest {
 
 	@Mock
 	private MemberRepository memberRepository;
+
+	@Mock
+	private SubtitleRepository subtitleRepository;
 
 	private Member savedMember;
 	private Wordbook savedDefaultWordBook;
@@ -161,23 +166,6 @@ class WordbookServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("실패 - 단어장 생성 권한이 없으면 예외가 발생한다")
-		void createWordbook_noPermission() {
-			WordbookCreateRequest request = new WordbookCreateRequest();
-			request.setName("My Vocab");
-
-			savedMember.updateSubscription(Subscription.BASIC);
-
-			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
-
-			ServiceException exception = assertThrows(ServiceException.class, () ->
-				wordbookService.createWordbook(request, savedMember.getId())
-			);
-
-			assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_CREATE_PERMISSION.getMessageCode());
-		}
-
-		@Test
 		@DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
 		void createWordbook_failIfNameIsDefault() {
 			WordbookCreateRequest request = new WordbookCreateRequest();
@@ -192,6 +180,23 @@ class WordbookServiceImplTest {
 			);
 
 			assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_CREATE_DEFAULT_FORBIDDEN.getMessageCode());
+		}
+
+		@Test
+		@DisplayName("실패 - 학습 단어를 선택하지 않으면 추가 단어장 생성에 실패한다")
+		void createWordbook_language_is_none() {
+			WordbookCreateRequest request = new WordbookCreateRequest();
+			request.setName("My Vocab");
+
+			savedMember.updateLearningLanguage(Language.NONE);
+
+			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+
+			ServiceException exception = assertThrows(ServiceException.class, () ->
+				wordbookService.createWordbook(request, savedMember.getId())
+			);
+
+			assertThat(exception.getMessageCode()).isEqualTo(LANGUAGE_IS_NONE.getMessageCode());
 		}
 	}
 
@@ -593,10 +598,51 @@ class WordbookServiceImplTest {
 				.wordbook(wordbook)
 				.build();
 
-			List<WordbookItem> items = new ArrayList<>(List.of(item1, item2));
+			List<WordbookItem> items = List.of(item1, item2);
 
-			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId())).willReturn(Optional.of(wordbook));
-			given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(items);
+			// Word 엔티티 (exampleSentence는 subtitle로 덮어씌워질 예정)
+			Word word1 = Word.builder()
+				.word("apple")
+				.pos("noun")
+				.meaning("사과")
+				.difficulty(Difficulty.EASY)
+				.exampleSentence("I like apple.")
+				.translatedSentence("나는 사과를 좋아해.")
+				.build();
+
+			Word word2 = Word.builder()
+				.word("banana")
+				.pos("noun")
+				.meaning("바나나")
+				.difficulty(Difficulty.NORMAL)
+				.exampleSentence("Bananas are yellow.")
+				.translatedSentence("바나나는 노랗다.")
+				.build();
+
+			// Subtitle 엔티티
+			Subtitle subtitle1 = Subtitle.builder()
+				.originalSentence("Apple is red.")
+				.translatedSentence("사과는 빨갛다.")
+				.build();
+			setId(subtitle1, 1L);
+
+			Subtitle subtitle2 = Subtitle.builder()
+				.originalSentence("Banana is yellow.")
+				.translatedSentence("바나나는 노랗다.")
+				.build();
+			setId(subtitle2, 2L);
+
+			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId()))
+				.willReturn(Optional.of(wordbook));
+
+			given(wordbookItemRepository.findAllByWordbook(wordbook))
+				.willReturn(items);
+
+			given(wordRepository.findByWordIn(List.of("apple", "banana")))
+				.willReturn(List.of(word1, word2));
+
+			given(subtitleRepository.findByIdIn(List.of(1L, 2L)))
+				.willReturn(List.of(subtitle1, subtitle2));
 
 			List<WordResponse> result = wordbookService.getWordsRandomly(wordbookId, savedMember.getId());
 
@@ -604,6 +650,22 @@ class WordbookServiceImplTest {
 			assertThat(result)
 				.extracting("word")
 				.containsExactlyInAnyOrder("apple", "banana");
+
+			// 각각 단어별 subtitle 덮어씌운 문장 검증
+			for (WordResponse res : result) {
+				if (res.getWord().equals("apple")) {
+					assertThat(res.getExampleSentence()).isEqualTo("Apple is red.");
+					assertThat(res.getTranslatedSentence()).isEqualTo("사과는 빨갛다.");
+					assertThat(res.getDifficulty()).isEqualTo(Difficulty.EASY.toString());
+					assertThat(res.getPos()).isEqualTo("noun");
+				}
+				if (res.getWord().equals("banana")) {
+					assertThat(res.getExampleSentence()).isEqualTo("Banana is yellow.");
+					assertThat(res.getTranslatedSentence()).isEqualTo("바나나는 노랗다.");
+					assertThat(res.getDifficulty()).isEqualTo(Difficulty.NORMAL.toString());
+					assertThat(res.getPos()).isEqualTo("noun");
+				}
+			}
 		}
 
 		@Test
@@ -638,7 +700,8 @@ class WordbookServiceImplTest {
 			.build();
 		setId(wb2, 2L);
 
-		given(wordbookRepository.findAllByMemberId(savedMember.getId())).willReturn(List.of(wb1, wb2));
+		given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+		given(wordbookRepository.findAllByMemberIdAndLanguage(savedMember.getId(), savedMember.getLanguage())).willReturn(List.of(wb1, wb2));
 
 		List<WordbookResponse> result = wordbookService.getWordbooks(savedMember.getId());
 

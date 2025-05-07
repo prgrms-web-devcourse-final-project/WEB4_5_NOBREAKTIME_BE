@@ -1,20 +1,22 @@
 package com.mallang.mallang_backend.domain.voca.word.service.impl;
 
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
-import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -63,50 +65,5 @@ public class WordServiceImpl implements WordService {
         return words.stream()
                 .map(WordSearchResponse.WordMeaning::fromEntity)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * GPT로부터 받은 문자열 결과를 파싱하여 Word 엔티티 리스트로 변환합니다.
-     *
-     * @param word      검색한 단어
-     * @param gptResult GPT 응답 결과 문자열 (품사 | 뜻 | 난이도 형식)
-     * @return 파싱된 Word 엔티티 리스트
-     */
-    private List<Word> parseGptResult(String word, String gptResult) {
-        List<Word> words = new ArrayList<>();
-        String[] lines = gptResult.split("\\R"); // 결과를 줄 단위로 분리
-
-        for (String line : lines) {
-            if (line.isBlank()) continue;   // 빈 줄은 무시
-
-            String[] parts = line.split("\\|"); // 한 줄을 '|' 기준으로 나누기
-            if (parts.length != 5) {
-                // 품사|뜻|난이도 형식이 아닌 경우
-                throw new ServiceException(ErrorCode.WORD_PARSE_FAILED);
-            }
-
-            try {
-                // 각 부분(품사, 뜻, 난이도)을 trim 처리
-                String pos = parts[0].trim();      // 품사
-                String meaning = parts[1].trim();  // 뜻
-                int difficultyValue = Integer.parseInt(parts[2].trim()); // 난이도
-                String exampleSentence = parts[3].trim();
-                String translatedSentence =  parts[4].trim();
-
-                Word newWord = Word.builder()
-                        .word(word)
-                        .pos(pos)
-                        .meaning(meaning)
-                        .difficulty(Difficulty.fromValue(difficultyValue))
-                        .exampleSentence(exampleSentence)
-                        .translatedSentence(translatedSentence)
-                        .build();
-                words.add(newWord);
-            } catch (NumberFormatException e) {
-                throw new ServiceException(ErrorCode.GPT_RESPONSE_PARSE_FAIL, e);
-            }
-        }
-
-        return words;
     }
 }

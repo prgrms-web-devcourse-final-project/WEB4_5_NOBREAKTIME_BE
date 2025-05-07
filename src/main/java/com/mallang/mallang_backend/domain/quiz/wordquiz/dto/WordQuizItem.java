@@ -12,6 +12,7 @@ import lombok.Setter;
 public class WordQuizItem {
     private Long wordQuizItemId;
     private String word;
+    private String question;
     private String original;
-    private String translated;
+    private String meaning;
 }
