@@ -82,6 +82,7 @@ class MemberServiceImplTest {
     void signupByOauth_Success() {
         // Given
         Long memberId = memberService.signupByOauth(
+                "23123412A",
                 "oauth@example.com",
                 "oauthUser",
                 "profileUrl",

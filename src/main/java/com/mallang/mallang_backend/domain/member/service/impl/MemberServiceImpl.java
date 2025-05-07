@@ -1,6 +1,9 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
+import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
+import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
+import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
@@ -50,11 +53,6 @@ public class MemberServiceImpl implements MemberService {
     private final SubscriptionService subscriptionService;
     private final MemberQueryRepository memberQueryRepository;
 
-    // 이메일로 멤버가 존재하는지 확인
-    public Boolean isExistEmail(String email) {
-        return memberRepository.findByEmail(email).isPresent();
-    }
-
     /**
      * email 로 Member 조회
      *
@@ -66,12 +64,30 @@ public class MemberServiceImpl implements MemberService {
                 new ServiceException(MEMBER_NOT_FOUND));
     }
 
+    /**
+     * 플랫폼 ID로 회원 정보를 조회합니다.
+     *
+     * @param platformId 조회할 회원의 플랫폼 ID
+     * @return 플랫폼 ID에 해당하는 회원 객체
+     * @throws ServiceException 회원을 찾을 수 없을 경우 {@code MEMBER_NOT_FOUND} 예외 발생
+     */
+    @Override
+    public Member getMemberByPlatformId(String platformId) {
+        return memberRepository.findByPlatformId(platformId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    }
+
     // 소셜 로그인 회원 멤버 가입
     @Transactional
-    public Long signupByOauth(String id, String nickname, String profileImage, LoginPlatform loginPlatform) {
+    public Long signupByOauth(String platformId,
+                              String email,
+                              String nickname,
+                              String profileImage,
+                              LoginPlatform loginPlatform) {
 
         Member member = Member.builder()
-                .email(id)
+                .platformId(platformId) // null 불가능
+                .email(email) // null 가능
                 .password(null)
                 .nickname(nickname)
                 .loginPlatform(loginPlatform)
@@ -95,6 +111,25 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public void updateLearningLanguage(Long memberId, Language language) {
         findMemberOrThrow(memberId).updateLearningLanguage(language);
+    }
+
+    /**
+     * 주어진 회원 ID로 사용자 프로필 정보를 조회합니다.
+     *
+     * @param memberId 조회할 회원의 ID
+     * @return UserProfileResponse 사용자 프로필 응답 DTO
+     * @throws ServiceException 회원이 존재하지 않을 경우 발생
+     */
+    @Override
+    public UserProfileResponse getUserProfile(Long memberId) {
+        Member member = findMemberOrThrow(memberId);
+
+        return UserProfileResponse.builder()
+                .nickname(member.getNickname())
+                .email(member.getEmail())
+                .profileImage(member.getProfileImageUrl())
+                .subscription(member.getSubscription())
+                .build();
     }
 
     /**
@@ -220,6 +255,62 @@ public class MemberServiceImpl implements MemberService {
     private String uploadNewProfileImage(MultipartFile file) {
         ImageUploadRequest request = new ImageUploadRequest(file);
         return imageUploader.uploadImageURL(request);
+    }
+
+
+    /**
+     * 이메일 중복 여부를 검사합니다.
+     * 이미 존재하는 이메일일 경우 ServiceException 을 발생시킵니다.
+     *
+     * @param email 검사할 이메일 주소
+     * @throws ServiceException 중복된 이메일인 경우 발생
+     */
+    public void validateEmailNotDuplicated(String email) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new ServiceException(DUPLICATE_FILED);
+        }
+    }
+
+    /**
+     * 닉네임 사용 가능 여부를 확인합니다.
+     *
+     * @param nickname 확인할 닉네임
+     * @return 닉네임이 존재하지 않을 경우 true, 존재할 경우 false
+     */
+    public boolean isNicknameAvailable(String nickname) {
+        return !memberRepository.existsByNickname(nickname);
+    }
+
+    /**
+     * 플랫폼 ID로 회원 존재 여부를 확인합니다.
+     *
+     * @param platformId 확인할 플랫폼 ID
+     * @return 회원이 존재할 경우 true, 존재하지 않을 경우 false
+     */
+    public boolean existsByPlatformId(String platformId) {
+        return memberRepository.findByPlatformId(platformId).isPresent();
+    }
+
+    /**
+     * 회원 정보를 변경합니다.
+     * 닉네임과 이메일의 중복 여부를 확인 후 업데이트를 수행합니다. (2차 검증)
+     *
+     * @param memberId 변경할 회원 ID
+     * @param request 변경할 닉네임 및 이메일 정보
+     * @return 변경 완료된 회원 정보 DTO
+     */
+    @Override
+    @Transactional
+    public ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request) {
+        Member member = findMemberOrThrow(memberId);
+        validateEmailNotDuplicated(request.getEmail());
+
+        if (isNicknameAvailable(request.getNickname())) {
+            member.updateNickname(request.getNickname());
+            member.updateEmail(request.getEmail());
+        }
+
+        return new ChangeInfoResponse(request.getNickname(), request.getEmail());
     }
 
     /**
