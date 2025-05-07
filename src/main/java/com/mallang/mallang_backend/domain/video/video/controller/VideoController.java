@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Video", description = "영상 분석 및 조회 관련 API")
 @RestController
-@RequestMapping("/api/v1/video")
+@RequestMapping("/api/v1/videos")
 @RequiredArgsConstructor
 public class VideoController {
 

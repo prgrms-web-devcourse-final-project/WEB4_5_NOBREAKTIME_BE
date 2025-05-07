@@ -2,9 +2,11 @@ package com.mallang.mallang_backend.domain.video.video.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.google.api.services.youtube.model.Video;
+import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
+import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.stt.converter.Transcript;
@@ -35,7 +39,10 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
+import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
+import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
+import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 
 import lombok.RequiredArgsConstructor;
@@ -55,6 +62,8 @@ public class VideoServiceImpl implements VideoService {
     private final SubtitleRepository subtitleRepository;
     private final TranscriptParser transcriptParser;
     private final MemberRepository memberRepository;
+    private final ClovaSpeechClient clovaSpeechClient;
+    private final KeywordRepository keywordRepository;
 
     // 회원 기준 영상 검색 메서드
     @Override
@@ -232,8 +241,9 @@ public class VideoServiceImpl implements VideoService {
         }
     }
 
+    @Transactional
     @Override
-    public AnalyzeVideoResponse analyzeVideo(String videoId) throws IOException, InterruptedException {
+    public AnalyzeVideoResponse analyzeVideo(String videoId) throws InterruptedException {
         // 영상 조회
         Videos video = videoRepository.findById(videoId)
                 .orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
@@ -247,49 +257,21 @@ public class VideoServiceImpl implements VideoService {
 
         try {
             // 3. STT 응답 JSON (예시 기반 테스트용. 실제로는 Clova 등에서 받아올 것)
-            String sttJson = """
-        {
-          "segments": [
-            {
-              "start": 1320,
-              "end": 11740,
-              "speaker": { "name": "A" },
-              "textEdited": "Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it"
-            },
-            {
-              "start": 11740,
-              "end": 21515,
-              "speaker": { "name": "A" },
-              "textEdited": "Do you know what would happen if I suddenly decided to stop going into work a business big enough that it could be listed on the NASDAQ goes belly up, disappears"
-            },
-            {
-              "start": 21515,
-              "end": 28515,
-              "speaker": { "name": "A" },
-              "textEdited": "It ceases to exist without me No, you clearly don't know who you're talking to So let me clue you in"
-            },
-            {
-              "start": 28515,
-              "end": 36725,
-              "speaker": { "name": "A" },
-              "textEdited": "I am not in danger Skyler I am the danger. A guy opens his door and gets shot and you think that of me No,"
-            },
-            {
-              "start": 36725,
-              "end": 39140,
-              "speaker": { "name": "A" },
-              "textEdited": "I am the one who knocks."
-            }
-          ]
-        }
-        """;
+            String youtubeUrl = "https://www.youtube.com/watch?v=" + videoId;
+            String fname = youtubeAudioExtractor.extractAudio(youtubeUrl);
+
+            NestRequestEntity requestEntity = new NestRequestEntity(Language.ENGLISH);
+            final String result =
+                clovaSpeechClient.upload(new File(UPLOADS_DIR + fname), requestEntity);
 
             // STT 결과 → 세그먼트 파싱
-            Transcript transcript = transcriptParser.parseTranscriptJson(sttJson);
+            Transcript transcript = transcriptParser.parseTranscriptJson(result);
             List<TranscriptSegment> segments = transcript.getSegments();
 
             // GPT 분석
             List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+
+            saveSubtitleAndKeyword(video, gptResult);
 
             return AnalyzeVideoResponse.from(gptResult);
 
@@ -297,6 +279,40 @@ public class VideoServiceImpl implements VideoService {
             throw new ServiceException(ErrorCode.AUDIO_DOWNLOAD_FAILED);
         }
     }
+
+    private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult) {
+        List<Subtitle> subtitleList = new ArrayList<>();
+        List<Keyword> keywordList = new ArrayList<>();
+
+        for (GptSubtitleResponse response : gptResult) {
+            // Subtitle 엔티티 생성
+            Subtitle subtitle = Subtitle.builder()
+                .videos(video)
+                .startTime(response.getStartTime())
+                .endTime(response.getEndTime())
+                .originalSentence(response.getOriginal())
+                .translatedSentence(response.getTranscript())
+                .speaker(response.getSpeaker())
+                .build();
+
+            subtitleList.add(subtitle);
+
+            // Keyword 리스트 생성
+            if (response.getKeywords() != null) {
+                for (KeywordInfo keywordInfo : response.getKeywords()) {
+                    Keyword keyword = keywordInfo.toEntity(video, subtitle);
+                    keywordList.add(keyword);
+                }
+            }
+        }
+
+        // subtitle 먼저 저장 (ID를 키로 사용하는 keyword 저장을 위해)
+        subtitleRepository.saveAll(subtitleList);
+
+        // keyword 저장
+        keywordRepository.saveAll(keywordList);
+    }
+
 
     @Override
     public byte[] getAudioFile(String fileName) throws IOException {
