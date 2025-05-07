@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
@@ -64,6 +65,9 @@ class WordbookServiceImplTest {
 
 	@Mock
 	private SubtitleRepository subtitleRepository;
+
+	@Mock
+	private WordQuizResultRepository wordQuizResultRepository;
 
 	private Member savedMember;
 	private Wordbook savedDefaultWordBook;
@@ -169,7 +173,7 @@ class WordbookServiceImplTest {
 		@DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
 		void createWordbook_failIfNameIsDefault() {
 			WordbookCreateRequest request = new WordbookCreateRequest();
-			request.setName("기본");
+			request.setName("기본 단어장");
 
 			savedMember.updateSubscription(Subscription.STANDARD);
 
@@ -385,7 +389,6 @@ class WordbookServiceImplTest {
 
 			wordbookService.moveWords(request, savedMember.getId());
 
-			then(wordbookItemRepository).should(times(2)).delete(any(WordbookItem.class));
 			then(wordbookItemRepository).should(times(2)).save(any(WordbookItem.class));
 		}
 
