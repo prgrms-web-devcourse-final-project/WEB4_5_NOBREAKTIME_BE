@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
@@ -55,6 +56,7 @@ public class WordbookServiceImpl implements WordbookService {
 	private final SubtitleRepository subtitleRepository;
 	private final WordService wordService;
 	private final GptService gptService;
+	private final WordQuizResultRepository wordQuizResultRepository;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -199,18 +201,8 @@ public class WordbookServiceImpl implements WordbookService {
 			WordbookItem existingItem = wordbookItemRepository.findByWordbookAndWord(fromWordbook, item.getWord())
 				.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
 
-			// 기존 데이터 삭제
-			wordbookItemRepository.delete(existingItem);
-
-			// 새 WordbookItem 생성 후 저장 (id 새로 생성됨)
-			WordbookItem movedItem = WordbookItem.builder()
-				.wordbook(toWordbook)
-				.word(existingItem.getWord())
-				.subtitleId(existingItem.getSubtitleId())
-				.videoId(existingItem.getVideoId())
-				.build();
-
-			wordbookItemRepository.save(movedItem);
+			existingItem.updateWordbook(toWordbook);
+			wordbookItemRepository.save(existingItem);
 		}
 	}
 
@@ -227,6 +219,10 @@ public class WordbookServiceImpl implements WordbookService {
 			WordbookItem itemToDelete = wordbookItemRepository.findByWordbookAndWord(wordbook, item.getWord())
 				.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
 
+			// 퀴즈 결과에서 단어와 관련된 퀴즈 결과 삭제
+			wordQuizResultRepository.deleteAllByWordbookItem(itemToDelete);
+
+			// 단어장 단어 삭제
 			wordbookItemRepository.delete(itemToDelete);
 		}
 	}
