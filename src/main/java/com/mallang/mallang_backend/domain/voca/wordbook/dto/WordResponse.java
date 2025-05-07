@@ -11,6 +11,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class WordResponse {
 	private String word;
+	private String pos;
+	private String meaning;
+	private String difficulty;
+	private String exampleSentence;
+	private String translatedSentence;
 	private String videoId;
 	private Long subtitleId;
 	private LocalDateTime createdAt;

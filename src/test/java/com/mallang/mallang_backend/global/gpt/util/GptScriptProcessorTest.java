@@ -1,13 +1,14 @@
 package com.mallang.mallang_backend.global.gpt.util;
 
-import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
-import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 
 public class GptScriptProcessorTest {
 
@@ -87,5 +88,4 @@ public class GptScriptProcessorTest {
         assertThat(second.getKeywords().get(0).getMeaning()).isEqualTo("두드리다");
         assertThat(second.getKeywords().get(0).getDifficulty()).isEqualTo(1);
     }
-
 }

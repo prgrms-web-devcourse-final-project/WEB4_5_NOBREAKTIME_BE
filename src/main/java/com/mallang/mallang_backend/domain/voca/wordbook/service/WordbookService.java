@@ -28,4 +28,8 @@ public interface WordbookService {
 	List<WordResponse> getWordsRandomly(Long wordbookId, Long memberId);
 
 	List<WordbookResponse> getWordbooks(Long memberId);
+	
+	List<WordResponse> searchWordFromWordbook(Long memberId, String keyword);
+
+	List<WordResponse> getWordbookItems(Long wordbookId, Long memberId);
 }
