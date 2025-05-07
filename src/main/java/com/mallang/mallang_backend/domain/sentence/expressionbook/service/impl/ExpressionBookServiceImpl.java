@@ -1,12 +1,25 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN;
+
+import java.time.LocalTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.savedExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
@@ -19,15 +32,8 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalTime;
-import java.util.List;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +46,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     private final ExpressionRepository expressionRepository;
     private final VideoRepository videoRepository;
     private final GptService gptService;
+    private final ExpressionQuizResultRepository expressionQuizResultRepository;
 
     @Override
     @Transactional
@@ -99,20 +106,26 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     @Transactional
     public void delete(Long expressionBookId, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
                 .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        if (DEFAULT_EXPRESSION_BOOK_NAME.equals(book.getName())) {
+        // 기본 표현함을 삭제 시도하면 실패
+        if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
             throw new ServiceException(EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN);
         }
 
+        // 삭제하려는 표현함의 표현에 대한 퀴즈 결과를 모두 삭제
+        expressionQuizResultRepository.deleteAllByExpressionBook(expressionBook);
+
+        // 삭제하려는 표현함의 표현들을 삭제
         expressionBookItemRepository.deleteAllById_ExpressionBookId(expressionBookId);
 
-        expressionBookRepository.delete(book);
+        // 추가 표현함 삭제
+        expressionBookRepository.delete(expressionBook);
     }
 
     @Override
@@ -173,5 +186,80 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                             .subtitleAt(subtitleAt)
                             .build());
                 });
+    }
+
+    // 표현함에서 표현 삭제
+    @Transactional
+    @Override
+    public void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId) {
+        ExpressionBook book = expressionBookRepository.findById(request.getExpressionBookId())
+            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+
+        if (!book.getMember().getId().equals(memberId)) {
+            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        List<ExpressionBookItemId> ids = request.getExpressionIds().stream()
+            .map(expressionId -> new ExpressionBookItemId(expressionId, request.getExpressionBookId()))
+            .toList();
+
+        // 표현에 대한 퀴즈 결과 삭제
+        expressionQuizResultRepository.deleteAllByExpressionIdAndExpressionBook(request.getExpressionIds(), book);
+        // 표현 삭제
+        expressionBookItemRepository.deleteAllById(ids);
+    }
+
+    // 표현의 표현함 이동
+    @Transactional
+    @Override
+    public void moveExpressions(MoveExpressionsRequest request, Long memberId) {
+        ExpressionBook sourceBook = expressionBookRepository.findById(request.getSourceExpressionBookId())
+            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+
+        ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
+            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+
+        if (!sourceBook.getMember().getId().equals(memberId) ||
+            !targetBook.getMember().getId().equals(memberId)) {
+            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        List<ExpressionBookItemId> deleteIds = request.getExpressionIds().stream()
+            .map(expressionId -> new ExpressionBookItemId(expressionId, sourceBook.getId()))
+            .toList();
+
+
+        // 새로운 표현을 생성하면서 목표 표현함에 저장
+        for (Long expressionId : request.getExpressionIds()) {
+            ExpressionBookItemId newId = new ExpressionBookItemId(expressionId, targetBook.getId());
+
+            if (expressionBookItemRepository.existsById(newId)) continue;
+
+            ExpressionBookItem newItem = ExpressionBookItem.builder()
+                .expressionId(expressionId)
+                .expressionBookId(targetBook.getId())
+                .build();
+
+            expressionBookItemRepository.save(newItem);
+        }
+
+        // 표현 퀴즈 결과의 표현 연결 변경
+        List<ExpressionQuizResult> quizResults =
+            expressionQuizResultRepository.findAllByExpressionBookIdAndExpressionBook(request.getExpressionIds(), sourceBook);
+        for (ExpressionQuizResult quizResult : quizResults) {
+            quizResult.updateExpressionBook(targetBook);
+        }
+        expressionQuizResultRepository.saveAll(quizResults);
+
+        // 원본 표현 표현함에서 삭제
+        expressionBookItemRepository.deleteAllById(deleteIds);
+    }
+
+    // 표현함에서 표현 검색
+    @Override
+    public List<ExpressionResponse> searchExpressions(Long memberId, String keyword) {
+        return expressionBookItemRepository.findExpressionsByMemberAndKeyword(memberId, keyword).stream()
+            .map(ExpressionResponse::from)
+            .toList();
     }
 }

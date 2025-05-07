@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 
 public interface ExpressionQuizResultRepository extends JpaRepository<ExpressionQuizResult, Long> {
 
@@ -15,4 +16,10 @@ public interface ExpressionQuizResultRepository extends JpaRepository<Expression
 	int countByExpressionQuiz_MemberAndCreatedAtAfter(Member expressionQuizMember, LocalDateTime localDateTime);
 
 	List<ExpressionQuizResult> findByExpressionQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
+
+	void deleteAllByExpressionIdAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
+
+	List<ExpressionQuizResult> findAllByExpressionBookIdAndExpressionBook(List<Long> expressionIds, ExpressionBook expressionBook);
+
+	void deleteAllByExpressionBook(ExpressionBook expressionBook);
 }

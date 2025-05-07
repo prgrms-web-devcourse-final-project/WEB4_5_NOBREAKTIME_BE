@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.UpdateExpressionBookNameRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.savedExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
@@ -179,6 +182,78 @@ public class ExpressionBookController {
         return ResponseEntity.ok(new RsData<>(
             "200",
             request.getSentence() + "이 저장되었습니다."
+        ));
+    }
+
+    /**
+     * 표현함에서 표현 삭제
+     *
+     * @param request     삭제할 표현 ID 리스트와 표현함 ID, 회원 ID를 포함한 요청 객체
+     * @param userDetails 로그인한 사용자 정보
+     * @return 성공 여부 및 메시지
+     */
+    @Operation(summary = "표현 삭제", description = "특정 표현함에서 표현을 삭제합니다.")
+    @ApiResponse(responseCode = "200", description = "표현이 표현함에서 삭제되었습니다.")
+    @PostMapping("/expressions/delete")
+    public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
+        @RequestBody DeleteExpressionsRequest request,
+        @Login CustomUserDetails userDetails
+    ) {
+        Long memberId = userDetails.getMemberId();
+        expressionBookService.deleteExpressionsFromExpressionBook(request, memberId);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(new RsData<>(
+                "200",
+                "표현이 표현함에서 삭제되었습니다."
+            ));
+    }
+
+    /**
+     * 표현함에서 표현 이동
+     *
+     * @param request     이동할 표현 ID 리스트와 이동할 표현함 ID, 회원 ID를 포함한 요청 객체
+     * @param userDetails 로그인한 사용자 정보
+     * @return 성공 여부 및 메시지
+     */
+    @Operation(summary = "표현 이동", description = "특정 표현함에서 다른 표현함으로 표현을 이동합니다.")
+    @ApiResponse(responseCode = "200", description = "표현이 다른 표현함으로 이동되었습니다.")
+    @PatchMapping("/expressions/move")
+    public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
+        @RequestBody MoveExpressionsRequest request,
+        @Login CustomUserDetails userDetails
+    ) {
+        Long memberId = userDetails.getMemberId();
+        expressionBookService.moveExpressions(request, memberId);
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(new RsData<>(
+                "200",
+                "표현이 다른 표현함으로 이동되었습니다."
+            ));
+    }
+
+    /**
+     * 표현 검색
+     *
+     * @param keyword 검색어
+     * @return 표현 목록
+     */
+    @Operation(summary = "표현 검색", description = "키워드로 표현을 검색합니다.")
+    @ApiResponse(responseCode = "200", description = "표현 검색 결과입니다.")
+    @GetMapping("/search")
+    public ResponseEntity<RsData<List<ExpressionResponse>>> searchExpressions(
+        @RequestParam String keyword,
+        @Login CustomUserDetails userDetails
+    ) {
+        Long memberId = userDetails.getMemberId();
+        List<ExpressionResponse> result = expressionBookService.searchExpressions(memberId, keyword);
+        return ResponseEntity.ok(new RsData<>(
+            "200",
+            "표현 검색 결과입니다.",
+            result
         ));
     }
 }
