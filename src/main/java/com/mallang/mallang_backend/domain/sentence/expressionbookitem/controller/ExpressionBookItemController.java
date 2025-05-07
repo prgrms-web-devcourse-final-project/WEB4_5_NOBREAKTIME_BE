@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,6 +16,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.Ex
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +39,7 @@ public class ExpressionBookItemController {
      */
     @Operation(summary = "표현 삭제", description = "특정 표현함에서 표현을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "표현이 표현함에서 삭제되었습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
     @PostMapping("/expressions/delete")
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
         @RequestBody DeleteExpressionsRequest request,
@@ -61,6 +65,7 @@ public class ExpressionBookItemController {
      */
     @Operation(summary = "표현 이동", description = "특정 표현함에서 다른 표현함으로 표현을 이동합니다.")
     @ApiResponse(responseCode = "200", description = "표현이 다른 표현함으로 이동되었습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
         @RequestBody MoveExpressionsRequest request,

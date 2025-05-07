@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,7 @@ import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.Expression
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -39,6 +42,7 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 조회", description = "표현함에 대한 퀴즈를 요청합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 문제를 조회했습니다.")
+	@PossibleErrors({NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN, EXPRESSIONBOOK_IS_EMPTY})
 	@GetMapping("/{expressionBookId}/quiz")
 	public ResponseEntity<RsData<ExpressionQuizResponse>> getExpressionBookQuiz(
 		@PathVariable Long expressionBookId,
@@ -64,6 +68,7 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 결과 저장", description = "표현함 아이템에 대한 퀴즈 결과를 저장합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 결과 저장 완료")
+	@PossibleErrors({EXPRESSIONBOOK_ITEM_NOT_FOUND, EXPRESSIONQUIZ_NOT_FOUND, EXPRESSION_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND})
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveExpressionQuizResult(
 		@RequestBody ExpressionQuizResultSaveRequest request,
