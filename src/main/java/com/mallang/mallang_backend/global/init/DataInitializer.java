@@ -44,8 +44,9 @@ public class DataInitializer implements CommandLineRunner {
 
     private Member createTestUser() throws IOException {
         Member testUser = Member.builder()
-                .email("google123")
-                .nickname("GoogleTestUser123")
+                .platformId("123123AK")
+                .email("google123@gmail.com")
+                .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
                 .language(Language.NONE)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")

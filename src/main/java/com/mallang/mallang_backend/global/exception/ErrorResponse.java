@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -13,8 +14,9 @@ public class ErrorResponse {
 
     private final LocalDateTime timestamp; // 발생 시간
     private final int status; // HTTP 상태 코드
-    private final String code; // 비즈니스 에러 코드
+    private final String code; // 커스텀 에러 코드
     private final String message; // 클라이언트 표시용 메시지
+    private final List<String> errors;
     private final String path; // 요청 경로
 
     /**
@@ -32,6 +34,19 @@ public class ErrorResponse {
                 .code(e.getErrorCode().getCode())
                 .message(clientMessage)
                 .path(request.getRequestURI())
+                .build();
+    }
+
+    public static ErrorResponse of(
+            int status,
+            List<String> errors,
+            String path
+    ) {
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .errors(errors)
+                .path(path)
                 .build();
     }
 }

@@ -67,24 +67,45 @@ public class TokenService {
         return true;
     }
 
-    // 로그아웃 시 쿠키에 있는 토큰 삭제 및 블랙 리스트에 저장
-    public void deleteTokens(HttpServletResponse response, String tokenName, String token) {
-        if (tokenName.equals(REFRESH_TOKEN)) {
-            addToBlacklist(token);
-            deleteTokenInCookie(response);
-        }
+    /**
+     * 로그아웃 시 해당 토큰을 쿠키에서 삭제하고, 블랙리스트에 추가합니다.
+     *
+     * @param response HttpServletResponse 객체
+     * @param token    블랙리스트에 추가할 토큰 값 (refreshToken)
+     */
+    public void invalidateTokenAndBlacklistIfRefreshToken(HttpServletResponse response, String token) {
+        if (response == null) return;
+
+        deleteTokenInCookie(response);
+        addToBlacklist(token);
     }
 
+    /**
+     * 쿠키에서 해당 토큰을 삭제합니다.
+     *
+     * @param response HttpServletResponse 객체
+     */
     private void deleteTokenInCookie(HttpServletResponse response) {
-        Cookie newToken = new Cookie(REFRESH_TOKEN, null); // 새 쿠키 생성
-        newToken.setMaxAge(0); // 쿠키 즉시 삭제
-        newToken.setPath("/");
-        response.addCookie(newToken); // 클라이언트에 새 쿠키 전송 (기존 "token" 쿠키 덮어씌움)
-        log.info("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}", newToken.getName(), newToken.getValue());
+        if (response == null) return;
+
+        Cookie expiredCookie = new Cookie(REFRESH_TOKEN, null);
+        expiredCookie.setMaxAge(0); // 쿠키 즉시 삭제
+        expiredCookie.setPath("/"); // 전체 경로에 적용
+
+        response.addCookie(expiredCookie);
+
+        log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}", expiredCookie.getName(), expiredCookie.getValue());
     }
 
-    // 블랙리스트에 토큰 추가
+    /**
+     * 블랙리스트에 토큰을 추가하는 메서드입니다.
+     * 토큰과 만료 시간을 저장하여 이후 검증 시 사용합니다.
+     *
+     * @param token 블랙리스트에 추가할 토큰 문자열
+     */
     public void addToBlacklist(String token) {
+        if (token == null || token.trim().isEmpty()) return;
+
         long expirationTime = System.currentTimeMillis() + refresh_expiration;
         blacklist.put(token, expirationTime);
         log.info("블랙리스트에 토큰 추가: {}, 만료 시간: {}", token, expirationTime);

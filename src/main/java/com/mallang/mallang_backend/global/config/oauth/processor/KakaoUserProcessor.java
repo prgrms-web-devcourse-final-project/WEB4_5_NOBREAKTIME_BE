@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.ID_KEY;
+import static com.mallang.mallang_backend.global.constants.AppConstants.PLATFORM_ID_KEY;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_ATTRIBUTE_MAP;
 
 /**
@@ -25,12 +25,9 @@ public class KakaoUserProcessor implements OAuth2UserProcessor {
 
     @Override
     public Map<String, Object> parseAttributes(Map<String, Object> attributes) {
-        String id = String.valueOf(attributes.get(ID_KEY));
-        Map<String, Object> properties = extractProperties(attributes);
-        properties.put(ID_KEY, id);
-
-        log.info("Kakao Properties : {}", properties);
-        return properties;
+        Map<String, Object> kakaoInfo = extractProperties(attributes);
+        kakaoInfo.put(PLATFORM_ID_KEY, String.valueOf(attributes.get("id")));
+        return kakaoInfo;
     }
 
     /**
