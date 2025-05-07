@@ -6,6 +6,7 @@ import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -54,6 +55,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/**").hasAnyRole(
                                 "BASIC",
                                 "STANDARD",
@@ -89,8 +91,7 @@ public class SecurityConfig {
         // 허용할 오리진 설정
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://cdpn.io",
-                "https://www.mallang.site",
-                "https://api.mallang.site",
+                "https://*.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));

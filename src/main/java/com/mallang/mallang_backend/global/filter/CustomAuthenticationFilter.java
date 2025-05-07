@@ -172,6 +172,11 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // OPTIONS 메서드라면 필터 적용 안 함
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         String requestURI = request.getRequestURI();
 
         if (isExcludedPath(request)) {
