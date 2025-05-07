@@ -22,7 +22,6 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
-import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
@@ -54,7 +53,6 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordbookItemRepository wordbookItemRepository;
 	private final MemberRepository memberRepository;
 	private final SubtitleRepository subtitleRepository;
-	private final WordService wordService;
 	private final GptService gptService;
 	private final WordQuizResultRepository wordQuizResultRepository;
 
@@ -172,6 +170,12 @@ public class WordbookServiceImpl implements WordbookService {
 
 		if (DEFAULT_WORDBOOK_NAME.equals(wordbook.getName())) {
 			throw new ServiceException(WORDBOOK_DELETE_DEFAULT_FORBIDDEN);
+		}
+
+		// 삭제되는 단어와 관련된 퀴즈 결과 삭제
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+		for (WordbookItem item : items) {
+			wordQuizResultRepository.deleteAllByWordbookItem(item);
 		}
 		// 추가 단어장 삭제 시 들어있는 단어 아이템들도 삭제
 		wordbookItemRepository.deleteAllByWordbookId(wordbookId);
