@@ -9,16 +9,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
@@ -48,16 +45,20 @@ public class VideoController {
     @ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
     @GetMapping("/{youtubeVideoId}/analysis")
     public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(
-        @PathVariable String youtubeVideoId
+        @PathVariable String youtubeVideoId,
+        @Login CustomUserDetails userDetail
     ) {
-		AnalyzeVideoResponse response;
-		try {
-			response = videoService.analyzeVideo(youtubeVideoId);
-		} catch (IOException | InterruptedException e) {
-            throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
-		}
+        Long memberId = userDetail.getMemberId();
 
-		return ResponseEntity.ok(new RsData<>(
+        AnalyzeVideoResponse response;
+
+        try {
+            response = videoService.analyzeVideo(memberId, youtubeVideoId);
+        } catch (IOException | InterruptedException e) {
+            throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
+        }
+
+        return ResponseEntity.ok(new RsData<>(
             "200",
             "영상 분석이 완료되었습니다.",
             response
@@ -92,32 +93,6 @@ public class VideoController {
             "200",
             "영상 목록 조회 완료",
             list
-        ));
-    }
-
-    /**
-     * 1) 비디오 조회 & upsert (동기)
-     * 2) 히스토리 저장 이벤트 발행 (비동기)
-     */
-    @Operation(summary = "영상 상세 조회", description = "특정 영상의 상세 정보를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "영상 상세정보 조회 완료")
-    @PostMapping("/{videoId}")
-    public ResponseEntity<RsData<VideoDetailResponse>> getVideo(
-        @PathVariable String videoId,
-        @Login CustomUserDetails userDetail
-    ) {
-        Long memberId = userDetail.getMemberId();
-
-        // 1) 동기 처리: 조회 + 엔티티 저장/업데이트
-        VideoDetailResponse dto = videoService.getVideoDetail(videoId);
-
-        // 2) 비동기로 히스토리 저장 트리거
-        publisher.publishEvent(new VideoViewedEvent(memberId, videoId));
-
-        return ResponseEntity.ok(new RsData<>(
-            "200",
-            "영상 상세정보 조회 완료",
-            dto
         ));
     }
 }

@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
@@ -76,7 +76,7 @@ class VideoHistoryServiceImplTest {
 	@DisplayName("save() 호출 시 VideoHistory 엔티티가 정상 저장된다")
 	void save_shouldPersistHistory() {
 		// given: video meta stub
-		VideoDetailResponse detail = new VideoDetailResponse(VIDEO_ID1, TITLE1, "desc", THUMB1, "chan", null);
+		VideoDetail detail = new VideoDetail(VIDEO_ID1, TITLE1, "desc", THUMB1, "chan", null);
 		given(videoService.getVideoDetail(VIDEO_ID1)).willReturn(detail);
 		given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
 		given(videoRepository.findById(VIDEO_ID1)).willReturn(Optional.of(videos1));

@@ -4,8 +4,6 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +27,7 @@ import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepo
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
@@ -37,6 +35,7 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
+import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -130,7 +129,7 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	@Override
-	public VideoDetailResponse fetchDetail(String videoId) {
+	public VideoDetail fetchDetail(String videoId) {
 		try {
 			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
 			var ytVideo = ytVideos.stream()
@@ -141,7 +140,7 @@ public class VideoServiceImpl implements VideoService {
 			Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
 
 			// 응답 DTO 생성
-			return new VideoDetailResponse(
+			return new VideoDetail(
 				ytVideo.getId(),
 				ytVideo.getSnippet().getTitle(),
 				ytVideo.getSnippet().getDescription(),
@@ -162,9 +161,9 @@ public class VideoServiceImpl implements VideoService {
 	 */
 	@Override
 	@Transactional
-	public VideoDetailResponse getVideoDetail(String videoId) {
+	public VideoDetail getVideoDetail(String videoId) {
 		// DTO 조회
-		VideoDetailResponse dto = fetchDetail(videoId);
+		VideoDetail dto = fetchDetail(videoId);
 
 		// 엔티티 보장
 		upsertVideoEntity(dto);
@@ -177,8 +176,7 @@ public class VideoServiceImpl implements VideoService {
 	 *
 	 * @param dto
 	 */
-	@Transactional
-	protected void upsertVideoEntity(VideoDetailResponse dto) {
+	private Videos upsertVideoEntity(VideoDetail dto) {
 		String id = dto.getVideoId();
 
 		// DB에 해당 ID가 이미 있으면 필드 업데이트
@@ -190,10 +188,11 @@ public class VideoServiceImpl implements VideoService {
 				dto.getChannelTitle(),
 				dto.getLanguage()
 			);
+			return existing;
 		} else {
 			// 없으면 새로 저장
-			Videos entity = VideoDetailResponse.toEntity(dto);
-			videoRepository.save(entity);
+			Videos entity = VideoDetail.toEntity(dto);
+			return videoRepository.save(entity);
 		}
 	}
 
@@ -245,10 +244,13 @@ public class VideoServiceImpl implements VideoService {
 
 	@Transactional
 	@Override
-	public AnalyzeVideoResponse analyzeVideo(String videoId) throws IOException, InterruptedException {
-		// 영상 조회
-		Videos video = videoRepository.findById(videoId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId) throws IOException, InterruptedException {
+		// 영상 정보 저장
+		VideoDetail dto = fetchDetail(videoId);
+		Videos video = upsertVideoEntity(dto);
+
+		// 비디오 히스토리 저장 이벤트
+		publisher.publishEvent(new VideoViewedEvent(memberId, videoId));
 
 		// 기존 분석 결과 확인
 		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(video);

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 
 public interface VideoService {
@@ -22,9 +22,9 @@ public interface VideoService {
 		Long memberId
 	);
 
-	VideoDetailResponse fetchDetail(String videoId);
+	VideoDetail fetchDetail(String videoId);
 
-	VideoDetailResponse getVideoDetail(String videoId);
+	VideoDetail getVideoDetail(String videoId);
 
-	AnalyzeVideoResponse analyzeVideo(String videoID) throws IOException, InterruptedException;
+	AnalyzeVideoResponse analyzeVideo(Long memberId, String videoID) throws IOException, InterruptedException;
 }
