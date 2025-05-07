@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -31,6 +32,7 @@ import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetailResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
@@ -64,6 +66,7 @@ public class VideoServiceImpl implements VideoService {
     private final MemberRepository memberRepository;
     private final ClovaSpeechClient clovaSpeechClient;
     private final KeywordRepository keywordRepository;
+    private final ApplicationEventPublisher publisher;
 
     // 회원 기준 영상 검색 메서드
     @Override
@@ -311,6 +314,8 @@ public class VideoServiceImpl implements VideoService {
 
         // keyword 저장
         keywordRepository.saveAll(keywordList);
+
+        keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
     }
 
 
