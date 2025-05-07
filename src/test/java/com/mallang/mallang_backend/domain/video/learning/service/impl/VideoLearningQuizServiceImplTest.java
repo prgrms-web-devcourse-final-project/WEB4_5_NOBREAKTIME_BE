@@ -17,8 +17,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
-import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
-import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
@@ -34,14 +32,11 @@ class VideoLearningQuizServiceImplTest {
 	@Mock
 	private KeywordRepository keywordRepository;
 
-	@Mock
-	private ExpressionRepository expressionRepository;
-
 	@InjectMocks
 	private VideoLearningQuizServiceImpl quizService;
 
 	@Test
-	@DisplayName("키워드가 없으면 ServiceException(KEYWORD_NOT_FOUND) 발생")
+	@DisplayName("단어 퀴즈: 키워드가 없으면 ServiceException(KEYWORD_NOT_FOUND) 발생")
 	void makeQuizList_noKeywords() {
 		String videoId = "vid-001";
 		when(keywordRepository.findAllByVideosId(videoId))
@@ -53,11 +48,10 @@ class VideoLearningQuizServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("키워드가 있으면 최대 개수만큼 퀴즈 항목 반환")
+	@DisplayName("단어 퀴즈: 키워드가 있으면 최대 개수만큼 퀴즈 항목 반환")
 	void makeQuizList_withKeywords() {
 		String videoId = "vid-001";
 
-		// Subtitle/Keyword 준비 (id 필드는 빌더로 세팅 후 reflection 사용 가능)
 		Subtitle sub1 = Subtitle.builder()
 			.videos(null)
 			.startTime("00:00:01")
@@ -106,8 +100,8 @@ class VideoLearningQuizServiceImplTest {
 	@Test
 	@DisplayName("표현 퀴즈 빈 리스트 예외(EXPRESSION_NOT_FOUND)")
 	void makeExpressionQuizList_emptyPool() {
-		String videoId = "vid-001";
-		when(expressionRepository.findAllByVideosId(videoId))
+		String videoId = "vid-002";
+		when(keywordRepository.findAllByVideosId(videoId))
 			.thenReturn(Collections.emptyList());
 
 		assertThatThrownBy(() -> quizService.makeExpressionQuizList(videoId))
@@ -117,52 +111,65 @@ class VideoLearningQuizServiceImplTest {
 
 	@Test
 	@DisplayName("표현 퀴즈 생성 - 정상 동작")
-	void makeExpressionQuizList_withExpressions() {
-		String videoId = "vid-001";
+	void makeExpressionQuizList_withKeywords() {
+		String videoId = "vid-003";
 
-		// mock 표현 엔티티 준비
-		Expression expr1 = mock(Expression.class);
-		when(expr1.getSentence()).thenReturn("Let's learn expressions.");
-		when(expr1.getDescription()).thenReturn("표현을 배워 봅시다.");
+		Subtitle sub1 = Subtitle.builder()
+			.videos(null)
+			.startTime("00:00:01")
+			.endTime("00:00:05")
+			.originalSentence("Let's learn expressions, shall we?")
+			.translatedSentence("표현을 배워봅시다, 그럴까요?")
+			.speaker("Narrator")
+			.build();
+		Subtitle sub2 = Subtitle.builder()
+			.videos(null)
+			.startTime("00:00:06")
+			.endTime("00:00:10")
+			.originalSentence("This is a test expression; it is important.")
+			.translatedSentence("이것은 테스트 표현입니다; 중요합니다.")
+			.speaker("Narrator")
+			.build();
+		ReflectionTestUtils.setField(sub1, "id", 1L);
+		ReflectionTestUtils.setField(sub2, "id", 2L);
 
-		Expression expr2 = mock(Expression.class);
-		when(expr2.getSentence()).thenReturn("This is a test expression.");
-		when(expr2.getDescription()).thenReturn("이것은 테스트 표현입니다.");
+		Keyword kw1 = Keyword.builder()
+			.videos(null)
+			.subtitle(sub1)
+			.word("expressions")
+			.meaning("표현")
+			.difficulty(Difficulty.EASY)
+			.build();
+		Keyword kw2 = Keyword.builder()
+			.videos(null)
+			.subtitle(sub2)
+			.word("important")
+			.meaning("중요한")
+			.difficulty(Difficulty.EASY)
+			.build();
 
-		when(expressionRepository.findAllByVideosId(videoId))
-			.thenReturn(Arrays.asList(expr1, expr2));
+		when(keywordRepository.findAllByVideosId(videoId))
+			.thenReturn(Arrays.asList(kw1, kw2));
 
-		// 실행
-		VideoLearningExpressionQuizListResponse response =
-			quizService.makeExpressionQuizList(videoId);
+		VideoLearningExpressionQuizListResponse response = quizService.makeExpressionQuizList(videoId);
 		List<VideoLearningExpressionQuizItem> items = response.getQuiz();
 
-		// 개수 검증
 		assertThat(items).hasSize(2);
 
-		// 각 아이템 검증
 		for (VideoLearningExpressionQuizItem item : items) {
 			String original = item.getOriginal();
-			if ("Let's learn expressions.".equals(original)) {
-				// 원문 필드
-				assertThat(item.getOriginal()).isEqualTo("Let's learn expressions.");
-				// 빈칸(question)은 "{} {} {}."
-				assertThat(item.getQuestion()).isEqualTo("{} {} {}.");
-				// 뜻
-				assertThat(item.getMeaning()).isEqualTo("표현을 배워 봅시다.");
-				// 선택지(choices)
+			if ("Let's learn expressions, shall we?".equals(original)) {
+				assertThat(item.getQuestion()).isEqualTo("{} {} {}, {} {}?");
 				assertThat(item.getChoices())
-					.containsExactlyInAnyOrder("Lets", "learn", "expressions");
-
-			} else if ("This is a test expression.".equals(original)) {
-				assertThat(item.getOriginal()).isEqualTo("This is a test expression.");
-				assertThat(item.getQuestion()).isEqualTo("{} {} {} {} {}.");
-				assertThat(item.getMeaning()).isEqualTo("이것은 테스트 표현입니다.");
+					.containsExactlyInAnyOrder("Lets", "learn", "expressions", "shall", "we");
+				assertThat(item.getMeaning()).isEqualTo("표현을 배워봅시다, 그럴까요?");
+			} else if ("This is a test expression; it is important.".equals(original)) {
+				assertThat(item.getQuestion()).isEqualTo("{} {} {} {} {}; {} {} {}.");
 				assertThat(item.getChoices())
-					.containsExactlyInAnyOrder("This", "is", "a", "test", "expression");
-
+					.containsExactlyInAnyOrder("This", "is", "a", "test", "expression", "it", "is", "important");
+				assertThat(item.getMeaning()).isEqualTo("이것은 테스트 표현입니다; 중요합니다.");
 			} else {
-				fail("예상치 못한 original 값: " + original);
+				fail("Unexpected original: " + original);
 			}
 		}
 	}
