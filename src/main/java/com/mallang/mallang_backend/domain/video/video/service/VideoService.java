@@ -16,6 +16,13 @@ public interface VideoService {
         long maxResults
     );
 
+	List<VideoResponse> getVideosForMember(
+		String q,
+		String category,
+		long maxResults,
+		Long memberId
+	);
+
 	VideoDetailResponse fetchDetail(String videoId);
 
 	VideoDetailResponse getVideoDetail(String videoId);

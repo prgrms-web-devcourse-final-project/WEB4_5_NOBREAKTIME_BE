@@ -36,18 +36,23 @@ public class AppConstants {
 	 */
 	public static final String DEFAULT_WORDBOOK_NAME = "기본";
     /**
+     * 기본 표현함 이름
+     */
+    public static final String DEFAULT_EXPRESSION_BOOK_NAME = "기본 표현함";
+    /**
      *  필터링 제외 경로 패턴
      */
     public static final String[] EXCLUDE_PATH_PATTERNS = {
             "/login/oauth2/code/**",
             "/api/v1/member/**",
             "/oauth2/**",
-            "/api/test/login",
             "/health",
             "/env",
             "/v3/api-docs",
             "/swagger-ui.html",
-            "/swagger-ui"
+            "/swagger-ui",
+            "/test",
+            "/actuator/**"
     };
     /**
      * 정적 리소스 확장자 패턴

@@ -1,37 +1,31 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import com.mallang.mallang_backend.domain.voca.word.service.WordService;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
+import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +36,9 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordRepository wordRepository;
 	private final WordbookItemRepository wordbookItemRepository;
 	private final MemberRepository memberRepository;
+	private final SubtitleRepository subtitleRepository;
+	private final WordService wordService;
+	private final GptService gptService;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -49,15 +46,12 @@ public class WordbookServiceImpl implements WordbookService {
 	public void addWords(Long wordbookId, AddWordToWordbookListRequest request, Long memberId) {
 		// 단어장 존재 + 권한 체크
 		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 단어장이 존재하지 않거나 권한이 없습니다."));
+			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		for (AddWordToWordbookRequest dto : request.getWords()) {
-			// 단어가 이미 있는지 확인하고 없으면 저장
-			List<Word> words = wordRepository.findByWord(dto.getWord());
-
-			if (words.isEmpty()) {
-				// TODO: 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-			}
+			// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
+			// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
+			saveWordIfNotExist(dto.getWord());
 
 			// 단어가 단어장에 저장되어 있지 않을 때만 저장
 			if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), dto.getWord()).isEmpty()) {
@@ -84,12 +78,10 @@ public class WordbookServiceImpl implements WordbookService {
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 		String word = request.getWord();
-		// 단어가 이미 있는지 확인하고 없으면 저장
-		List<Word> words = wordRepository.findByWord(word);
 
-		if (words.isEmpty()) {
-			// TODO: 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-		}
+		// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
+		// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
+		saveWordIfNotExist(word);
 
 		// 단어가 단어장에 저장되어 있지 않을 때만 저장
 		if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), word).isEmpty()) {
@@ -106,14 +98,28 @@ public class WordbookServiceImpl implements WordbookService {
 		}
 	}
 
+	/**
+	 * 단어가 WordRepository에 저장되어 있지 않으면 GPT 호출로 단어를 검색하고, WordRepository에 저장합니다.
+	 * @param word 저장되어야 하는 단어
+	 */
+	private void saveWordIfNotExist(String word) {
+		List<Word> words = wordRepository.findByWord(word); // DB 조회
+		if (words.isEmpty()) {
+			String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
+			List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
+			wordRepository.saveAll(generatedWords);
+		}
+	}
+
 	// 추가 단어장 생성
 	@Transactional
 	@Override
 	public Long createWordbook(WordbookCreateRequest request, Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(USER_NOT_FOUND));
-		if (!member.canCreateWordBook()) {
-			throw new ServiceException(NO_WORDBOOK_CREATE_PERMISSION);
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		if (member.getLanguage() == Language.NONE) {
+			throw new ServiceException(LANGUAGE_IS_NONE);
 		}
 
 		if (request.getName().equals(DEFAULT_WORDBOOK_NAME)) {
@@ -219,23 +225,19 @@ public class WordbookServiceImpl implements WordbookService {
 		// 단어장 아이템 조회
 		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
 
-		// 무작위 순서로 섞기
-		Collections.shuffle(items);
-
-		return items.stream()
-			.map(item -> new WordResponse(
-					item.getWord(),
-					item.getVideoId(),
-					item.getSubtitleId(),
-					item.getCreatedAt()
-				)
-			).collect(Collectors.toList());
+		// 모든 단어명 추출
+		List<WordResponse> result = convertToWordResponses(items);
+		Collections.shuffle(result);
+		return result;
 	}
 
 	// 단어장 조회
 	@Override
 	public List<WordbookResponse> getWordbooks(Long memberId) {
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberId(memberId);
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
 
 		return wordbooks.stream()
 			.map(w -> new WordbookResponse(
@@ -243,5 +245,89 @@ public class WordbookServiceImpl implements WordbookService {
 				w.getName(),
 				w.getLanguage()
 			)).toList();
+	}
+
+	@Override
+	public List<WordResponse> searchWordFromWordbook(Long memberId, String keyword) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordLike(member, keyword);
+
+		return convertToWordResponses(items);
+	}
+
+	@Override
+	public List<WordResponse> getWordbookItems(Long wordbookId, Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		Wordbook wordbook;
+		if (wordbookId == null) {
+			wordbook = wordbookRepository.findByMemberAndName(member, DEFAULT_WORDBOOK_NAME)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+		} else {
+			wordbook = wordbookRepository.findById(wordbookId)
+				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+		}
+
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+		return convertToWordResponses(items);
+	}
+
+	private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {
+		// 모든 단어명 추출
+		List<String> wordList = items.stream()
+			.map(WordbookItem::getWord)
+			.collect(Collectors.toList());
+
+		// Word 테이블에서 일괄 조회 (단어명 중복 허용)
+		List<Word> wordEntities = wordRepository.findByWordIn(wordList);
+
+		// 먼저 등장한 단어만 Map에 저장 (중복 제거)
+		Map<String, Word> wordMap = new LinkedHashMap<>();
+		for (Word wordEntity : wordEntities) {
+			wordMap.putIfAbsent(wordEntity.getWord(), wordEntity);
+		}
+
+		// Subtitle 엔티티 조회 (subtitleId가 null이 아닌 경우만)
+		List<Long> subtitleIds = items.stream()
+			.map(WordbookItem::getSubtitleId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+
+		Map<Long, Subtitle> subtitleMap = subtitleIds.isEmpty() ?
+			Collections.emptyMap() :
+			subtitleRepository.findByIdIn(subtitleIds).stream()
+				.collect(Collectors.toMap(Subtitle::getId, Function.identity()));
+
+		// 응답 생성
+		return items.stream()
+			.map(item -> {
+				Word wordEntity = wordMap.get(item.getWord());
+				if (wordEntity == null) return null;
+
+				String exampleSentence = wordEntity.getExampleSentence();
+				String translatedSentence = wordEntity.getTranslatedSentence();
+
+				if (item.getSubtitleId() != null && subtitleMap.containsKey(item.getSubtitleId())) {
+					Subtitle subtitle = subtitleMap.get(item.getSubtitleId());
+					exampleSentence = subtitle.getOriginalSentence();
+					translatedSentence = subtitle.getTranslatedSentence();
+				}
+
+				return new WordResponse(
+					item.getWord(),
+					wordEntity.getPos(),
+					wordEntity.getMeaning(),
+					wordEntity.getDifficulty().toString(),
+					exampleSentence,
+					translatedSentence,
+					item.getVideoId(),
+					item.getSubtitleId(),
+					item.getCreatedAt()
+				);
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
 	}
 }

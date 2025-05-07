@@ -1,21 +1,19 @@
 package com.mallang.mallang_backend.domain.sentence.expression.controller;
 
-import java.util.List;
-
+import com.mallang.mallang_backend.domain.sentence.expression.service.ExpressionService;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.global.dto.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mallang.mallang_backend.domain.sentence.expression.service.ExpressionService;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
-import com.mallang.mallang_backend.global.dto.RsData;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @Tag(name = "Expression", description = "표현 검색 관련 API")
 @RestController

@@ -1,6 +1,9 @@
 package com.mallang.mallang_backend.global.gpt.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 

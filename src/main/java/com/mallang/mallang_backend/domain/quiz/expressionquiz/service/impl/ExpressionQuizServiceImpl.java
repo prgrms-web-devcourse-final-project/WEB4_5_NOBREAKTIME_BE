@@ -1,21 +1,9 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizItem;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResponse;
-import com.mallang.mallang_backend.domain.quiz.expressionquiz.controller.ExpressionQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizItem;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
+import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.repository.ExpressionQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.ExpressionQuizService;
@@ -29,8 +17,14 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -82,18 +76,26 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 
 		return new ExpressionQuizItem(
 			expression.getId(),
+			createQuestion(expression.getSentence()),
 			expression.getSentence(),
 			parseWord(expression.getSentence()),
 			expression.getDescription()
 		);
 	}
 
-	private List<String> parseWord(String sentence) {
-		// 알파벳만 빼고 제거
-		String cleaned = sentence.replaceAll("[^a-zA-Z0-9\\s]", "");
+	private String createQuestion(String sentence) {
+		// 알파벳, 숫자(\w+)를 {}로 치환, 문장부호는 유지
+		return Arrays.stream(sentence.split("\\s+"))
+			.map(token -> token.replaceAll("[\\w'’]+", "{}"))
+			.collect(Collectors.joining(" "));
+	}
 
-		// 띄어쓰기 단위로 String 리스트화
-		return Arrays.asList(cleaned.trim().split("\\s+"));
+	private List<String> parseWord(String sentence) {
+		List<String> words = Arrays.stream(sentence.split("\\s+"))
+			.map(w -> w.replaceAll("[\\p{Punct}&&[^'’]]", "")) // ' 와 ’는 유지
+			.collect(Collectors.toList());
+		Collections.shuffle(words);
+		return words;
 	}
 
 	// 표현 퀴즈 결과 저장

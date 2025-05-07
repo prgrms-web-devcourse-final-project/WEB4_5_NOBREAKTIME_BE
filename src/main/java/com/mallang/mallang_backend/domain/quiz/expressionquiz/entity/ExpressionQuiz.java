@@ -2,23 +2,15 @@ package com.mallang.mallang_backend.domain.quiz.expressionquiz.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import java.time.LocalDateTime;
 
 /**
  * 표현 퀴즈
@@ -45,6 +37,9 @@ public class ExpressionQuiz {
     @Column(nullable = false)
     private Language language;
 
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     // 생성 메서드
     @Builder
     public ExpressionQuiz(
@@ -53,5 +48,15 @@ public class ExpressionQuiz {
     ) {
         this.member = member;
         this.language = language;
+    }
+
+    /**
+     * 퀴즈에서 학습한 시간을 추가합니다.
+     * @param learningTime 퀴즈를 푸는데 걸린 총 시간
+     */
+    public void addLearningTime(Long learningTime) {
+        if (learningTime != null && 0 < learningTime) {
+            this.learningTime += learningTime;
+        }
     }
 }

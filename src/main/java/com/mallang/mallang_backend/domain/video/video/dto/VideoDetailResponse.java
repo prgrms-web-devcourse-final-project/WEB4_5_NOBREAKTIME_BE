@@ -2,7 +2,6 @@ package com.mallang.mallang_backend.domain.video.video.dto;
 
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.global.common.Language;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

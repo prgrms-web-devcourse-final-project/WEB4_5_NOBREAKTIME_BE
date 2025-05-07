@@ -1,8 +1,7 @@
 package com.mallang.mallang_backend.domain.videohistory.entity;
 
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

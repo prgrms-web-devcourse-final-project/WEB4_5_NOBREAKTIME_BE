@@ -1,8 +1,9 @@
 package com.mallang.mallang_backend.domain.video.learning.dto;
 
-import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 @Builder

@@ -1,8 +1,6 @@
 package com.mallang.mallang_backend.global.util.clova;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-
+import com.google.gson.Gson;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -16,7 +14,8 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.Gson;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class ClovaSpeechClientImpl implements ClovaSpeechClient {

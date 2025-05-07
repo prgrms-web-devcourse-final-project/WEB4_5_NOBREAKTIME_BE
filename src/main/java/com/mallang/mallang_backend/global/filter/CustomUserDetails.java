@@ -1,20 +1,14 @@
 package com.mallang.mallang_backend.global.filter;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
-
-import static com.mallang.mallang_backend.global.exception.ErrorCode.USER_NOT_FOUND;
 
 @Getter
 @Setter

@@ -1,10 +1,9 @@
 package com.mallang.mallang_backend.domain.keyword.repository;
 
-import java.util.List;
-
+import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
+import java.util.List;
 
 public interface KeywordRepository extends JpaRepository<Keyword, Long> {
 	List<Keyword> findAllByVideosId(String videoId);

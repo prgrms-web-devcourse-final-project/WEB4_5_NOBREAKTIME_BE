@@ -1,31 +1,24 @@
 package com.mallang.mallang_backend.global.config.oauth;
 
-import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
-import com.mallang.mallang_backend.global.config.oauth.processor.OAuth2UserProcessor;
-import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;
 import com.mallang.mallang_backend.global.token.TokenService;
-import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
+import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
 
 /**
  * 로그인 / 회원가입 후
@@ -50,11 +43,9 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     @Value("${custom.site.frontUrl}")
     private String frontUrl;
 
-    private final List<OAuth2UserProcessor> processors;
     private final MemberService memberService;
     private final TokenService tokenService;
     private final JwtService jwtService;
-    private final S3ImageUploader imageUploader;
 
     /**
      * OAuth2 인증 성공시 호출되는 엔트리 포인트 메서드
@@ -62,6 +53,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
      * @param request        인증 요청 객체
      * @param response       인증 응답 객체
      * @param authentication 인증 정보 객체
+     *                       -> CustomOAuth2Service 에서 리턴한 DefaultOAuth2User 객체
      */
     @Override
     public void onAuthenticationSuccess(
@@ -69,121 +61,16 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             HttpServletResponse response,
             Authentication authentication) throws IOException {
 
-        LoginPlatform platform = extractLoginPlatform(authentication);
-        OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        String email = authentication.getName();
+        Member member = memberService.getMemberByEmail(email);
 
-        processOAuthLogin(response, platform, user);
-    }
+        setJwtToken(response, member.getId(), member.getSubscription().getRoleName());
 
-    /**
-     * OAuth2 로그인 처리 주요 흐름을 담당하는 메서드
-     *
-     * @param response 응답 객체
-     * @param platform 로그인 플랫폼 정보
-     * @param user     OAuth2 인증 사용자 정보
-     * @throws IOException 리다이렉트 시 예외
-     */
-    private void processOAuthLogin(HttpServletResponse response,
-                                   LoginPlatform platform,
-                                   OAuth2User user) {
-
-        Map<String, Object> userAttributes = parseUserAttributes(platform, user);
-        String email = extractUniqueEmail(userAttributes);
-
-        if (memberService.isExistEmail(email)) {
-            handleExistingMember(response, email);
-            try {
-                response.sendRedirect(frontUrl); // 메인 페이지 이동
-            } catch (IOException e) {
-                throw new ServiceException(REDIRECTION_FAILED, e);
-            }
-            return;
+        if (member.getLanguage() == Language.NONE) {
+            response.sendRedirect(frontUrl + "/additional_info");
+        } else {
+            response.sendRedirect(frontUrl + "/dashboard");
         }
-
-        registerNewMember(response, platform, userAttributes);
-        try {
-            response.sendRedirect(frontUrl + "/additional_info"); // 추가 정보 입력 페이지 이동
-        } catch (IOException e) {
-            throw new ServiceException(REDIRECTION_FAILED, e);
-        }
-    }
-
-    /**
-     * 플랫폼별 사용자 속성 파싱 메서드
-     *
-     * @param platform 로그인 플랫폼 정보
-     * @param user     OAuth2 인증 사용자 정보
-     * @return 사용자 속성 맵
-     */
-    private Map<String, Object> parseUserAttributes(LoginPlatform platform,
-                                                    OAuth2User user) {
-
-        OAuth2UserProcessor processor = findSupportedProcessor(platform);
-        return processor.parseAttributes(user.getAttributes());
-    }
-
-    private OAuth2UserProcessor findSupportedProcessor(LoginPlatform platform) {
-
-        return processors.stream()
-                .filter(p -> p.supports(platform))
-                .findFirst()
-                .orElseThrow(() -> new ServiceException(UNSUPPORTED_OAUTH_PROVIDER));
-    }
-
-    /**
-     * 회원 고유 ID(이메일로 사용) 추출 메서드
-     *
-     * @param userAttributes OAuth2에서 추출한 사용자 속성 맵
-     * @return 회원 고유 ID
-     */
-    private String extractUniqueEmail(Map<String, Object> userAttributes) {
-        return String.valueOf(userAttributes.get("id"));
-    }
-
-    /**
-     * 기존 회원 처리: 토큰 생성 및 응답 설정 메서드
-     *
-     * @param response 응답 객체
-     * @param email    회원 이메일(고유 ID)
-     */
-    private void handleExistingMember(HttpServletResponse response,
-                                      String email) {
-        // 1. 이메일로 기존 회원 ID 조회
-        Long existMemberId = memberService.getMemberByEmail(email);
-
-        // 2. 회원의 구독 정보 추출
-        String subscription = memberService.getSubscription(existMemberId);
-
-        // 3. JWT 토큰 생성 및 응답 설정
-        setJwtToken(response, existMemberId, subscription);
-    }
-
-    /**
-     * 신규 회원 가입 처리 메서드
-     *
-     * @param response   응답 객체
-     * @param platform   로그인 플랫폼 정보
-     * @param attributes OAuth2에서 추출한 사용자 속성 맵
-     */
-    private void registerNewMember(HttpServletResponse response,
-                                   LoginPlatform platform,
-                                   Map<String, Object> attributes) {
-
-        String email = String.valueOf(attributes.get(ID_KEY));
-        String nickname = (String) attributes.get(NICKNAME_KEY);
-        String profileImage = (String) attributes.get(PROFILE_IMAGE_KEY);
-
-        log.info("사용자 id: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
-
-        // S3에 프로필 이미지 업로드
-        ImageUploadRequest request = new ImageUploadRequest(profileImage);
-        String s3ProfileImageUrl = imageUploader.uploadImageURL(request);
-
-        Long memberId = memberService.signupByOauth(
-                email, nickname, s3ProfileImageUrl, platform
-        );
-
-        setJwtToken(response, memberId, memberService.getSubscription(memberId));
     }
 
     /**
@@ -207,23 +94,4 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         jwtService.setJwtSessionCookie(REFRESH_TOKEN, tokenPair.getRefreshToken(), response);
     }
 
-    /**
-     * 인증 객체에서 OAuth2 제공자 ID 추출 및 플랫폼 변환 메서드
-     *
-     * @param authentication Spring Security 인증 객체
-     * @return 로그인 플랫폼 정보
-     * @throws ServiceException 인증 타입이 잘못된 경우
-     */
-    private LoginPlatform extractLoginPlatform(
-            Authentication authentication) {
-
-        if (!(authentication instanceof OAuth2AuthenticationToken oauthToken)) {
-            throw new ServiceException(UNSUPPORTED_OAUTH_PROVIDER);
-        }
-
-        String providerId = oauthToken.getAuthorizedClientRegistrationId();
-        log.info("OAuth2 제공자 식별자: {}", providerId);
-
-        return LoginPlatform.from(providerId.toLowerCase());
-    }
 }

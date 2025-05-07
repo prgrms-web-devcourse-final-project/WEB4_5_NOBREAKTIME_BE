@@ -1,21 +1,5 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
-import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItem;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
@@ -34,8 +18,19 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.INDIVIDUAL;
+import static com.mallang.mallang_backend.domain.quiz.wordquiz.entity.QuizType.TOTAL;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -110,8 +105,14 @@ public class WordQuizServiceImpl implements WordQuizService {
 		dto.setWordQuizItemId(id);
 		dto.setWord(word);
 		dto.setOriginal(original);
-		dto.setTranslated(translated);
+		dto.setMeaning(translated);
+		dto.setQuestion(createQuestion(word, original));
 		return dto;
+	}
+
+	private String createQuestion(String word, String original) {
+		// 정답 단어를 {}로 대체
+		return original.replaceAll("\\b" + word + "\\b", "{}");
 	}
 
 	// 단어 결과 저장

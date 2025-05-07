@@ -1,15 +1,16 @@
 package com.mallang.mallang_backend.domain.video.util;
 
 import com.google.api.services.youtube.model.Video;
-import com.mallang.mallang_backend.domain.video.youtube.mapper.DurationMapper;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import static com.mallang.mallang_backend.global.constants.AppConstants.CC_LICENSE;
+import com.mallang.mallang_backend.domain.video.youtube.mapper.DurationMapper;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.CC_LICENSE;
 
 /**
  * Video 관련 공통 유틸리티 클래스

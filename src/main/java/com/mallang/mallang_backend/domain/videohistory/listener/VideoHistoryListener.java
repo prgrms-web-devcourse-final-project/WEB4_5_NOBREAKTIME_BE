@@ -2,7 +2,6 @@ package com.mallang.mallang_backend.domain.videohistory.listener;
 
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;

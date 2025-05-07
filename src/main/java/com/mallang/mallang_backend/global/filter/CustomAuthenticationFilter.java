@@ -23,8 +23,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.EXCLUDE_PATH_PATTERNS;
+import static com.mallang.mallang_backend.global.constants.AppConstants.STATIC_RESOURCES_REGEX;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.IN_BLACKLIST;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.TOKEN_NOT_FOUND;
 
 /**
@@ -55,7 +56,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-
 
             // 액세스 토큰이 유효한 것인지 검증하고 토큰에서 사용자 정보 추출
             String accessToken = extractTokenFromHeader(request);

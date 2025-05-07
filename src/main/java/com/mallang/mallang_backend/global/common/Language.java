@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.global.common;
 
-import java.util.Arrays;
-
 import lombok.Getter;
+
+import java.util.Arrays;
 
 @Getter
 public enum Language {
@@ -34,5 +34,16 @@ public enum Language {
             })
             .findFirst()
             .orElse(NONE);
+    }
+
+    /**
+     * 이 enum의 언어코드를 ISO 코드로 변환
+     */
+    public String toCode() {
+        if (this == NONE) {
+            return "";
+        }
+        String[] parts = this.languageCode.split("-");
+        return parts[0].toLowerCase();
     }
 }

@@ -1,12 +1,11 @@
 package com.mallang.mallang_backend.global.util.clova;
 
-import java.util.List;
-import java.util.Map;
-
 import com.mallang.mallang_backend.global.common.Language;
-
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
