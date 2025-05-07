@@ -1,43 +1,49 @@
-package com.mallang.mallang_backend.domain.sentence.expressionbookItem;
+package com.mallang.mallang_backend.domain.sentence.expressionbook;
 
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.service.impl.ExpressionBookItemServiceImpl;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-class ExpressionBookItemServiceImplTest {
+import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl.ExpressionBookServiceImpl;
+import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
+import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
-    private ExpressionBookItemServiceImpl service;
+@ExtendWith(MockitoExtension.class)
+class ExpressionBookServiceImplTest3 {
+    @InjectMocks
+    private ExpressionBookServiceImpl expressionBookService;
+
+    @Mock
     private ExpressionBookRepository expressionBookRepository;
+
+    @Mock
     private ExpressionBookItemRepository expressionBookItemRepository;
 
-    @BeforeEach
-    void setUp() {
-        expressionBookRepository = mock(ExpressionBookRepository.class);
-        expressionBookItemRepository = mock(ExpressionBookItemRepository.class);
-        service = new ExpressionBookItemServiceImpl(expressionBookRepository, expressionBookItemRepository);
-    }
+    @Mock
+    private ExpressionQuizResultRepository expressionQuizResultRepository;
 
     @Test
     @DisplayName("deleteExpressionsFromBook(): 표현 삭제 성공")
-    void deleteExpressionsFromBook_shouldDeleteSuccessfully() throws Exception {
+    void deleteExpressionsFromBook_shouldDeleteSuccessfully() {
         Long memberId = 1L;
         Long bookId = 10L;
         List<Long> expressionIds = List.of(100L, 101L);
@@ -51,7 +57,7 @@ class ExpressionBookItemServiceImplTest {
 
         when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(book));
 
-        service.deleteExpressionsFromBook(request, memberId);
+        expressionBookService.deleteExpressionsFromExpressionBook(request, memberId);
 
         List<ExpressionBookItemId> expectedIds = expressionIds.stream()
                 .map(id -> new ExpressionBookItemId(id, bookId))
@@ -74,12 +80,12 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         assertThrows(ServiceException.class,
-                () -> service.deleteExpressionsFromBook(request, memberId));
+                () -> expressionBookService.deleteExpressionsFromExpressionBook(request, memberId));
     }
 
     @Test
     @DisplayName("moveExpressions(): 표현 이동 성공")
-    void moveExpressions_shouldMoveSuccessfully() throws Exception {
+    void moveExpressions_shouldMoveSuccessfully() {
         Long memberId = 1L;
         Long sourceId = 10L;
         Long targetId = 20L;
@@ -98,7 +104,7 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(targetId)).thenReturn(Optional.of(target));
         when(expressionBookItemRepository.existsById(any())).thenReturn(false);
 
-        service.moveExpressions(req, memberId);
+        expressionBookService.moveExpressions(req, memberId);
 
         verify(expressionBookItemRepository).deleteAllById(any());
         verify(expressionBookItemRepository).save(any());
@@ -115,7 +121,7 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ServiceException.class,
-                () -> service.moveExpressions(request, 1L));
+                () -> expressionBookService.moveExpressions(request, 1L));
     }
 
     @Test
@@ -133,7 +139,7 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThrows(ServiceException.class,
-                () -> service.moveExpressions(request, memberId));
+                () -> expressionBookService.moveExpressions(request, memberId));
     }
 
     @Test
@@ -154,7 +160,7 @@ class ExpressionBookItemServiceImplTest {
         when(expressionBookRepository.findById(2L)).thenReturn(Optional.of(target));
 
         assertThrows(ServiceException.class,
-                () -> service.moveExpressions(request, memberId));
+                () -> expressionBookService.moveExpressions(request, memberId));
     }
 
     // -------------------- 공통  --------------------

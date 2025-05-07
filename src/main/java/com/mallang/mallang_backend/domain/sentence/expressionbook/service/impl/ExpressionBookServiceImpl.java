@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -29,7 +29,6 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 
@@ -52,18 +51,18 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public ExpressionBookResponse create(ExpressionBookRequest request, Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         if (!member.getSubscription().isStandardOrHigher()) {
-            throw new ServiceException(ErrorCode.NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
         if (request.getName().equals(DEFAULT_EXPRESSION_BOOK_NAME)) {
-            throw new ServiceException(ErrorCode.EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN);
+            throw new ServiceException(EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN);
         }
 
         if (expressionBookRepository.existsByMemberAndName(member, request.getName())) {
-            throw new ServiceException(ErrorCode.DUPLICATE_EXPRESSIONBOOK_NAME);
+            throw new ServiceException(DUPLICATE_EXPRESSIONBOOK_NAME);
         }
 
         ExpressionBook expressionBook = ExpressionBook.builder()
@@ -81,7 +80,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public List<ExpressionBookResponse> getByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         List<ExpressionBook> books = expressionBookRepository.findAllByMember(member);
 
@@ -94,10 +93,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public void updateName(Long expressionBookId, Long memberId, String newName) {
         ExpressionBook book = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         book.updateName(newName);
@@ -107,10 +106,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public void delete(Long expressionBookId, Long memberId) {
         ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         if (!expressionBook.getMember().getId().equals(memberId)) {
-            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         // 기본 표현함을 삭제 시도하면 실패
@@ -132,17 +131,17 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     public List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId) {
         ExpressionBook book = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
 
         return items.stream()
                 .map(item -> expressionRepository.findById(item.getId().getExpressionId())
-                        .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_NOT_FOUND)))
+                        .orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND)))
                 .map(ExpressionResponse::from)
                 .toList();
     }
@@ -156,7 +155,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         LocalTime subtitleAt = request.getSubtitleAt();
 
         ExpressionBook expressionBook = expressionBookRepository.findById(expressionbookId)
-                .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
 
@@ -172,11 +171,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .orElseGet(() -> {
                     String gptResult = gptService.analyzeSentence(sentence, description);
                     if (gptResult == null || gptResult.isBlank()) {
-                        throw new ServiceException(ErrorCode.GPT_RESPONSE_EMPTY);
+                        throw new ServiceException(GPT_RESPONSE_EMPTY);
                     }
 
                     Videos video = videoRepository.findById(videoId)
-                            .orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+                            .orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
                     return expressionRepository.save(Expression.builder()
                             .sentence(sentence)
@@ -193,10 +192,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     public void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId) {
         ExpressionBook book = expressionBookRepository.findById(request.getExpressionBookId())
-            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         List<ExpressionBookItemId> ids = request.getExpressionIds().stream()
@@ -214,14 +213,14 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     public void moveExpressions(MoveExpressionsRequest request, Long memberId) {
         ExpressionBook sourceBook = expressionBookRepository.findById(request.getSourceExpressionBookId())
-            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
-            .orElseThrow(() -> new ServiceException(ErrorCode.EXPRESSION_BOOK_NOT_FOUND));
+            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         if (!sourceBook.getMember().getId().equals(memberId) ||
             !targetBook.getMember().getId().equals(memberId)) {
-            throw new ServiceException(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         List<ExpressionBookItemId> deleteIds = request.getExpressionIds().stream()
