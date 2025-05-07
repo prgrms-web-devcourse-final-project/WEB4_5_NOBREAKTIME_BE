@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 "ADMIN")
                         .anyRequest().permitAll()
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .headers((headers) -> headers
                         .addHeaderWriter(new XFrameOptionsHeaderWriter(
                                 XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)))
@@ -101,7 +102,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("*"));
         // CORS 설정을 소스에 등록
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
