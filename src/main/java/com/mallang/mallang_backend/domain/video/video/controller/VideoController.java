@@ -5,7 +5,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 public class VideoController {
 
     private final VideoService videoService;
-    private final ApplicationEventPublisher publisher;
 
     /**
      * Youtube ID 로 영상을 분석해 원어 자막, 번역 자막, 핵심 단어를 응답하는 메서드

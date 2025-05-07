@@ -128,8 +128,7 @@ public class VideoServiceImpl implements VideoService {
 	 * @param videoId YouTube 비디오 ID
 	 * @return 조회된 비디오 정보 DTO
 	 */
-	@Override
-	public VideoDetail fetchDetail(String videoId) {
+	private VideoDetail fetchDetail(String videoId) {
 		try {
 			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
 			var ytVideo = ytVideos.stream()
@@ -151,24 +150,6 @@ public class VideoServiceImpl implements VideoService {
 		} catch (IOException e) {
 			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
 		}
-	}
-
-	/**
-	 * 비디오 상세 정보를 조회(fetchDetail 호출)하고, 해당 정보를 DB에 저장 또는 업데이트
-	 *
-	 * @param videoId YouTube 비디오 ID
-	 * @return 조회 및 저장 완료된 비디오 정보 DTO
-	 */
-	@Override
-	@Transactional
-	public VideoDetail getVideoDetail(String videoId) {
-		// DTO 조회
-		VideoDetail dto = fetchDetail(videoId);
-
-		// 엔티티 보장
-		upsertVideoEntity(dto);
-
-		return dto;
 	}
 
 	/**

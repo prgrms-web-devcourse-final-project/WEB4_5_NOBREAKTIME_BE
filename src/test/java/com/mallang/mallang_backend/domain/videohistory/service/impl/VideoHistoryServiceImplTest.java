@@ -1,28 +1,30 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
-import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
-import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
-import com.mallang.mallang_backend.domain.videohistory.mapper.VideoHistoryMapper;
-import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
+import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
+import com.mallang.mallang_backend.domain.videohistory.mapper.VideoHistoryMapper;
+import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class VideoHistoryServiceImplTest {
@@ -32,9 +34,6 @@ class VideoHistoryServiceImplTest {
 
 	@Mock
 	private VideoHistoryMapper mapper;
-
-	@Mock
-	private VideoService videoService;
 
 	@Mock
 	private MemberRepository memberRepository;
@@ -76,8 +75,6 @@ class VideoHistoryServiceImplTest {
 	@DisplayName("save() 호출 시 VideoHistory 엔티티가 정상 저장된다")
 	void save_shouldPersistHistory() {
 		// given: video meta stub
-		VideoDetail detail = new VideoDetail(VIDEO_ID1, TITLE1, "desc", THUMB1, "chan", null);
-		given(videoService.getVideoDetail(VIDEO_ID1)).willReturn(detail);
 		given(memberRepository.findById(MEMBER_ID)).willReturn(Optional.of(member));
 		given(videoRepository.findById(VIDEO_ID1)).willReturn(Optional.of(videos1));
 

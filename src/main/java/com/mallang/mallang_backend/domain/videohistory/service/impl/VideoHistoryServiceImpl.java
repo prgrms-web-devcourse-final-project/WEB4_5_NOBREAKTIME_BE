@@ -36,9 +36,6 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
     @Override
     @Transactional
     public void save(Long memberId, String videoId) {
-        // Video 엔티티 보장
-        videoService.getVideoDetail(videoId);
-
         // Member / Video 로드
         Member member = memberRepository.findById(memberId)
             .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
