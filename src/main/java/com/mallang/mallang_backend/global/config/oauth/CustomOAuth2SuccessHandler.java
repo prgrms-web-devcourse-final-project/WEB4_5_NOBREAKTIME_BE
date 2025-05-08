@@ -88,6 +88,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         // 2. 액세스 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(ACCESS_TOKEN, tokenPair.getAccessToken(), response);
+        log.info("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
 
         // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(REFRESH_TOKEN, tokenPair.getRefreshToken(), response);
