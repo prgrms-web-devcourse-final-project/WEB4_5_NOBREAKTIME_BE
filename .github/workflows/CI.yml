@@ -57,6 +57,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Check Redis Logs
+        run: docker logs $(docker ps -qf "ancestor=redis")
+  
       - name: create application.yml
         run: echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.yml
         
