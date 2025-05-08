@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +36,12 @@ public class DataInitializer implements CommandLineRunner {
     private final WordbookRepository wordbookRepository;
     private final ExpressionBookRepository expressionBookRepository;
 
+    @EventListener(ApplicationReadyEvent.class)
+    @Retryable(
+            value = { RedisConnectionFailureException.class },
+            maxAttempts = 5,
+            backoff = @Backoff(delay = 2000)
+    )
     @Override
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();

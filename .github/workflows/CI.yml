@@ -21,6 +21,7 @@ jobs:
         ports:
           - 6379:6379
         options: >-
+          --network=host
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
@@ -58,4 +59,4 @@ jobs:
         
       # Gradle 빌드 실행 + 테스트를 포함
       - name: Build with Gradle
-        run: ./gradlew clean build --no-daemon
+        run: ./gradlew clean build --no-daemon -Djava.net.preferIPv4Stack=true -Dspring.profiles.active=ci
