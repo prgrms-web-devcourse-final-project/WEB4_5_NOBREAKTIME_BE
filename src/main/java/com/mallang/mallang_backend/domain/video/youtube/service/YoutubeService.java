@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import io.github.resilience4j.retry.annotation.Retry;
-
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.Video;
@@ -17,6 +15,8 @@ import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +28,7 @@ public class YoutubeService {
 
 	// 검색: 키워드 기반으로 videoId만 가져오기
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchVideoIds")
+	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackSearchVideoIds")
 	public List<String> searchVideoIds(
 		String query,
 		String regionCode,
@@ -67,6 +68,7 @@ public class YoutubeService {
 
 	// 상세조회: videoId 리스트로 Video 정보 가져오기
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackFetchVideosByIds")
+	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackSearchVideoIds")
 	public List<Video> fetchVideosByIds(List<String> videoIds) throws IOException {
 		YouTube youtubeService = YouTubeClient.getClient();
 
