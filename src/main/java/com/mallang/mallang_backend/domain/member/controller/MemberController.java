@@ -4,11 +4,13 @@ import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenService;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -47,6 +49,32 @@ public class MemberController {
     private final MemberService memberService;
     private final TokenService tokenService;
     private final JwtService jwtService;
+
+    /**
+     * @param userDetails 로그인 사용자 정보
+     * @param language    변경할 언어
+     */
+    @Operation(
+            summary = "사용자 학습 언어 변경",
+            description = "로그인한 사용자의 학습 언어를 변경합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "언어 설정이 완료되었습니다.")
+    @PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_ALREADY_SET})
+    @PatchMapping("/update-language")
+    public ResponseEntity<RsData<?>> updateUserLanguage(
+            @Login CustomUserDetails userDetails,
+            @Parameter(description = "변경할 언어", required = true, example = "ENGLISH")
+            @RequestParam("language") Language language) {
+
+        memberService.updateLearningLanguage(userDetails.getMemberId(), language);
+
+        RsData<Object> response = new RsData<>(
+                "200",
+                "언어 설정이 완료되었습니다."
+        );
+
+        return ResponseEntity.ok(response);
+    }
 
     @Operation(
             summary = "내 정보 조회",
