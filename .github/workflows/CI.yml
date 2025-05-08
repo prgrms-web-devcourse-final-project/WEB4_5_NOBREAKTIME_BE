@@ -23,6 +23,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Fix /etc/hosts
+        run: 'echo "127.0.0.1 localhost" | sudo tee -a /etc/hosts'
+        
       - name: Start Redis
         uses: supercharge/redis-github-action@1.1.0
         with:
