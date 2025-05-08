@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
@@ -37,7 +36,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
-        // Member basicUser = memberRepository.findById(1L).get();
+
         TokenPair tokenPair1 = tokenService.createTokenPair(
             basicUser.getId(),
             basicUser.getSubscription().getRoleName()
@@ -61,7 +60,7 @@ public class DataInitializer implements CommandLineRunner {
                 .language(Language.ENGLISH)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
-        testUser.updateSubscription(Subscription.STANDARD);
+        // testUser.updateSubscription(Subscription.STANDARD);
         testUser = memberRepository.save(testUser);
 
         List<Wordbook> wordbooks = Wordbook.createDefault(testUser);

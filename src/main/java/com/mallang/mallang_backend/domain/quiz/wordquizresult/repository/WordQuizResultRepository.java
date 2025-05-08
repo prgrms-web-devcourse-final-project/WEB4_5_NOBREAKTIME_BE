@@ -13,13 +13,9 @@ public interface WordQuizResultRepository extends JpaRepository<WordQuizResult, 
 
 	int countByWordQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime dateTime);
 
-	int countByWordQuiz_Member(Member member);
-
 	List<WordQuizResult> findByWordQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
 
 	void deleteAllByWordbookItem(WordbookItem wordbookItem);
-
-	List<WordQuizResult> findByWordbookItem(WordbookItem wordbookItem);
 
 	List<WordQuizResult> findTop100ByWordQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(Member member, LocalDateTime measuredAt);
 }

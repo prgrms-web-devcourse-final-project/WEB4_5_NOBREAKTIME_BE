@@ -86,7 +86,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(member, member.getLanguage());
+        List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
         return books.stream()
                 .map(ExpressionBookResponse::from)
                 .toList();

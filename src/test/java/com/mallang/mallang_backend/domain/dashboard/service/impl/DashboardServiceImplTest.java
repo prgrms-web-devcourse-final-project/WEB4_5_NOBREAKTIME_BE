@@ -87,8 +87,6 @@ class DashBoardServiceImplTest {
 			.thenReturn(2);
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
 			.thenReturn(4);
-		when(expressionQuizResultRepository.countByExpressionQuiz_Member(eq(member)))
-			.thenReturn(200);
 
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
 
@@ -101,21 +99,17 @@ class DashBoardServiceImplTest {
 		assertThat(dailyGoal.getAchievementDetail().getCompletedVideos()).isEqualTo(2);
 		assertThat(dailyGoal.getAchievementDetail().getCompletedWords()).isEqualTo(4);
 		LevelStatus levelStatus = response.getLevelStatus();
-		assertThat(levelStatus.getRemeasurable()).isTrue();
+		assertThat(levelStatus.getRemeasurable()).isFalse();
 
 		// 성취도는 (2/3 * 100 + 4/5 * 100) / 2 = (66.66 + 80) / 2 = 73.33 -> 소수점 1자리까지 반올림 73.3
 		assertThat(dailyGoal.getAchievementRate()).isEqualTo(73.3);
 	}
 
 	@Test
-	@DisplayName("첫 레벨 측정 시 푼 퀴즈가 200개 미만이면 재측정 불가능하다")
+	@DisplayName("첫 레벨 측정 시 푼 퀴즈가 100개 미만이면 재측정 불가능하다")
 	void getStatistics_notMeasurable() {
 		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 		when(videoHistoryRepository.countByMember(member)).thenReturn(100);
-		when(wordQuizResultRepository.countByWordQuiz_Member(eq(member)))
-			.thenReturn(0);
-		when(expressionQuizResultRepository.countByExpressionQuiz_Member(eq(member)))
-			.thenReturn(199);
 
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
 

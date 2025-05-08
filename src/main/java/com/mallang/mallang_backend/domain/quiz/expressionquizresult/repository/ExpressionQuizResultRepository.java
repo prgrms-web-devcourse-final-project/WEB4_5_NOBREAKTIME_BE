@@ -11,8 +11,6 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.Express
 
 public interface ExpressionQuizResultRepository extends JpaRepository<ExpressionQuizResult, Long> {
 
-	int countByExpressionQuiz_Member(Member expressionQuizMember);
-
 	int countByExpressionQuiz_MemberAndCreatedAtAfter(Member expressionQuizMember, LocalDateTime localDateTime);
 
 	List<ExpressionQuizResult> findByExpressionQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
