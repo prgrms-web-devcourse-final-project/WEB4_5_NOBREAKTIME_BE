@@ -31,6 +31,7 @@ import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,7 @@ public class WordbookController {
 	public ResponseEntity<RsData<Void>> addWords(
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordToWordbookListRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -82,6 +84,7 @@ public class WordbookController {
 	public ResponseEntity<RsData<Void>> addWordCustom(
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -106,6 +109,7 @@ public class WordbookController {
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
 		@RequestBody WordbookCreateRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -132,6 +136,7 @@ public class WordbookController {
 	public ResponseEntity<RsData<Void>> renameWordbook(
 		@PathVariable Long wordbookId,
 		@RequestBody WordbookRenameRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -155,6 +160,7 @@ public class WordbookController {
 	@DeleteMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> deleteWordbook(
 		@PathVariable Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -178,6 +184,7 @@ public class WordbookController {
 	@PatchMapping("/words/move")
 	public ResponseEntity<RsData<Void>> moveWords(
 		@RequestBody WordMoveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -201,6 +208,7 @@ public class WordbookController {
 	@PostMapping("/words/delete")
 	public ResponseEntity<RsData<Void>> deleteWords(
 		@RequestBody WordDeleteRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -224,6 +232,7 @@ public class WordbookController {
 	@GetMapping("/{wordbookId}/words")
 	public ResponseEntity<RsData<List<WordResponse>>> getWords(
 		@PathVariable Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -246,6 +255,7 @@ public class WordbookController {
 	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping
 	public ResponseEntity<RsData<List<WordbookResponse>>> getWordbooks(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -270,6 +280,7 @@ public class WordbookController {
 	@GetMapping("/search")
 	public ResponseEntity<RsData<List<WordResponse>>> searchWords(
 		@RequestParam String keyword,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -294,6 +305,7 @@ public class WordbookController {
 	@GetMapping("/view")
 	public ResponseEntity<RsData<List<WordResponse>>> getWordbookItems(
 		@RequestParam(required = false) Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();

@@ -21,6 +21,7 @@ import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class ExpressionQuizController {
 	@GetMapping("/{expressionBookId}/quiz")
 	public ResponseEntity<RsData<ExpressionQuizResponse>> getExpressionBookQuiz(
 		@PathVariable Long expressionBookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -72,6 +74,7 @@ public class ExpressionQuizController {
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveExpressionQuizResult(
 		@RequestBody ExpressionQuizResultSaveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
