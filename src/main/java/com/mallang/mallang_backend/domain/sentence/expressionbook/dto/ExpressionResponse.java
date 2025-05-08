@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpressionResponse {
-    private Long id;
+    private Long expressionId;
     private String sentence;
     private String description;
     private String sentenceAnalysis;

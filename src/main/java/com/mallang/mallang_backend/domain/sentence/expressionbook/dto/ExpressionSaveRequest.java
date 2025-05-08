@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpressionBookRequest {
-    private String name;
+public class ExpressionSaveRequest {
+    private String videoId;  // 영상 아이디
+    private Long subtitleId; // 자막 아이디
 }

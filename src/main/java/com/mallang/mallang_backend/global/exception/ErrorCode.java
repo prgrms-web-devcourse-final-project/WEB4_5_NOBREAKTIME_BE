@@ -46,6 +46,7 @@ public enum ErrorCode {
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
     FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+    SUBTITLE_NOT_FOUND("404-1", "subtitle.not.found", HttpStatus.NOT_FOUND),
 
     // Expression Errors
     EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
@@ -95,7 +96,6 @@ public enum ErrorCode {
     EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "expressionbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
     // 표현함 이름이 중복됨
     DUPLICATE_EXPRESSIONBOOK_NAME("400-2", "expressionbook.name.duplicate", HttpStatus.BAD_REQUEST),
-
 
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
