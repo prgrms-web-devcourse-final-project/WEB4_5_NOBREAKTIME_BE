@@ -61,6 +61,7 @@ public class AppConstants {
     /**
      * 소셜 로그인 사용자 정보 값
      */
+    public static final String EMAIL_KEY = "email";
     public static final String PLATFORM_ID_KEY = "platformId";
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
@@ -75,4 +76,9 @@ public class AppConstants {
      */
     public static final String IMAGE_PREFIX_KEY = "profile-images";
     public static final String IMAGE_TYPE_KEY = "image/jpeg";
+
+    /**
+     * 자동 가입 시 닉네임 중복 처리 용도
+     */
+    public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 }
