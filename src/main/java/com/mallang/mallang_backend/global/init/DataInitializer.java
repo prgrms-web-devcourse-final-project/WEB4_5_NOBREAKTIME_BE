@@ -11,11 +11,16 @@ import org.springframework.stereotype.Component;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+<<<<<<< HEAD
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+=======
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+>>>>>>> develop
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.token.TokenPair;
@@ -31,7 +36,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private final MemberRepository memberRepository;
     private final TokenService tokenService;
-
     private final WordbookRepository wordbookRepository;
     private final ExpressionBookRepository expressionBookRepository;
 
@@ -40,8 +44,8 @@ public class DataInitializer implements CommandLineRunner {
         Member basicUser = createTestUser();
         // Member basicUser = memberRepository.findById(1L).get();
         TokenPair tokenPair1 = tokenService.createTokenPair(
-                basicUser.getId(),
-                basicUser.getSubscription().getRoleName()
+            basicUser.getId(),
+            basicUser.getSubscription().getRoleName()
         );
 
         // 생성된 토큰 로깅
@@ -88,11 +92,11 @@ public class DataInitializer implements CommandLineRunner {
     // 시큐리티 객체에 인증 정보 추가
     private void setSecurityContext(Member member, String roleName) {
         UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        member.getId(),
-                        null,
-                        List.of(new SimpleGrantedAuthority(roleName))
-                );
+            new UsernamePasswordAuthenticationToken(
+                member.getId(),
+                null,
+                List.of(new SimpleGrantedAuthority(roleName))
+            );
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

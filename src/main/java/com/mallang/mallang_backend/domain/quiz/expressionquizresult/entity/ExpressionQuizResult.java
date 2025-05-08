@@ -63,4 +63,12 @@ public class ExpressionQuizResult {
         this.expressionQuiz = expressionQuiz;
         this.isCorrect = isCorrect;
     }
+
+    /**
+     * 퀴즈 결과의 표현의 표현함을 이동할 때 결과를 함께 변경하기 위해, 퀴즈 결과의 표현함도 변경한다.
+     * @param targetBook 변경할 대상 표현함
+     */
+    public void updateExpressionBook(ExpressionBook targetBook) {
+        this.expressionBook = targetBook;
+    }
 }
