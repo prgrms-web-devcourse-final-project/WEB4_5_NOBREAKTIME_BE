@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.videohistory.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryServi
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +36,7 @@ public class VideoHistoryController {
      */
     @Operation(summary = "최근 시청 기록 조회", description = "최근에 시청한 영상 5개의 기록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "최근 시청 기록 조회 완료")
+    @PossibleErrors({MEMBER_NOT_FOUND, API_ERROR})
     @GetMapping("/videos/summary")
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getRecentVideos(
         @Login CustomUserDetails userDetail
@@ -54,6 +58,7 @@ public class VideoHistoryController {
      */
     @Operation(summary = "전체 시청 기록 조회", description = "사용자가 지금까지 시청한 모든 영상 기록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "전체 시청 영상 조회 완료")
+    @PossibleErrors({MEMBER_NOT_FOUND, API_ERROR})
     @GetMapping("/videos/history")
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(
         @Login CustomUserDetails userDetail

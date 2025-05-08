@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,7 @@ import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +42,7 @@ public class WordQuizController {
 	 */
 	@Operation(summary = "단어장 퀴즈 조회", description = "단어장에 대한 퀴즈를 요청합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 문제를 조회했습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_IS_EMPTY})
 	@GetMapping("/{wordbookId}/quiz")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
@@ -64,6 +68,7 @@ public class WordQuizController {
 	 */
 	@Operation(summary = "단어장 퀴즈 결과 저장", description = "단어장 아이템에 대한 퀴즈 결과를 저장합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 결과 저장 완료")
+	@PossibleErrors({WORDBOOK_ITEM_NOT_FOUND, WORDQUIZ_NOT_FOUND})
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
@@ -86,6 +91,7 @@ public class WordQuizController {
 	 */
 	@Operation(summary = "통합 퀴즈 조회", description = "통합(오늘의 학습) 퀴즈를 요청합니다.")
 	@ApiResponse(responseCode = "200", description = "통합 퀴즈 문제를 조회했습니다.")
+	@PossibleErrors({NOT_ENOUGH_WORDS_FOR_QUIZ})
 	@GetMapping("/quiz/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
 		@Login CustomUserDetails userDetail
@@ -110,6 +116,7 @@ public class WordQuizController {
 	 */
 	@Operation(summary = "통합 퀴즈 결과 저장", description = "통합(오늘의 학습) 퀴즈 결과를 저장합니다.")
 	@ApiResponse(responseCode = "200", description = "통합 퀴즈 결과 저장 완료")
+	@PossibleErrors({WORDBOOK_ITEM_NOT_FOUND, WORDQUIZ_NOT_FOUND})
 	@PostMapping("/quiz/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,

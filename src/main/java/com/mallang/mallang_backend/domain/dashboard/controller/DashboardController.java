@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.dashboard.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.time.LocalDate;
 
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,6 +41,7 @@ public class DashboardController {
 	 */
 	@Operation(summary = "대시보드 조회", description = "대시보드 정보를 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "대시보드 조회에 성공했습니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/statistics")
 	public ResponseEntity<RsData<StatisticResponse>> statistics(
 		@Login CustomUserDetails userDetail
@@ -61,6 +65,7 @@ public class DashboardController {
 	 */
 	@Operation(summary = "학습 목표 설정", description = "영상 학습 목표, 단어 학습 목표를 설정합니다.")
 	@ApiResponse(responseCode = "200", description = "학습 목표가 설정되었습니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@PatchMapping("/goal")
 	public ResponseEntity<RsData<Void>> updateGoal(
 		@RequestBody UpdateGoalRequest request,
@@ -78,6 +83,7 @@ public class DashboardController {
 
 	@Operation(summary = "기간별 학습 통계", description = "특정 기간에 대한 학습 통계 정보를 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "학습 통계 정보가 조회되었습니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/calendar")
 	public ResponseEntity<RsData<LearningHistoryResponse>> getCalendarsData(
 		@Login CustomUserDetails userDetail
