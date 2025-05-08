@@ -68,7 +68,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         if (member.getLanguage() == Language.NONE) {
             response.sendRedirect(frontUrl + "/additional_info");
         } else {
-            response.sendRedirect(frontUrl + "/dashboard");
+            response.sendRedirect(frontUrl);
         }
     }
 
