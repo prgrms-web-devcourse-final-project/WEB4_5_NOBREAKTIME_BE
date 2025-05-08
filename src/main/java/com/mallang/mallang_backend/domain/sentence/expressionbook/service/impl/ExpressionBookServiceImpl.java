@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.LocalTime;
@@ -86,8 +86,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        List<ExpressionBook> books = expressionBookRepository.findAllByMember(member);
-
+        List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(member, member.getLanguage());
         return books.stream()
                 .map(ExpressionBookResponse::from)
                 .toList();
