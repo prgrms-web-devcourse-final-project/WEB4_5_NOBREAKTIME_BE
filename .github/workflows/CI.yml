@@ -44,8 +44,10 @@ jobs:
       - name: create application.yml
         run: echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.yml
 
-      - name: Start Docker Compose
-        run: docker compose up -d --wait
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.1.0
+        with:
+          redis-version: 6
 
       - name: Wait for Redis
         run: |
