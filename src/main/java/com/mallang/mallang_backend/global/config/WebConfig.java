@@ -1,6 +1,6 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.global.filter.LoginUserArgumentResolver;
+import com.mallang.mallang_backend.global.filter.login.LoginUserArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;

@@ -81,4 +81,6 @@ public class AppConstants {
      * 자동 가입 시 닉네임 중복 처리 용도
      */
     public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
 }

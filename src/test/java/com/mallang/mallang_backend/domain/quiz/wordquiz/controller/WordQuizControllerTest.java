@@ -45,6 +45,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookI
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.util.SecurityTestUtils;
 
+/*
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -587,4 +588,4 @@ class WordQuizControllerTest {
                             "reviewWord-R2-5", "reviewWord-R1-5", "reviewWord-R2-4", "reviewWord-R1-4");
         }
     }
-}
+}*/

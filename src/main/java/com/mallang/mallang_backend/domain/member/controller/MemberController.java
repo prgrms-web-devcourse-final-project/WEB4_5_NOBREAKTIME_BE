@@ -1,7 +1,10 @@
 package com.mallang.mallang_backend.domain.member.controller;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -24,8 +27,6 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenService;
@@ -42,8 +43,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Member", description = "회원 정보 관련 API")
@@ -52,9 +54,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberController {
 
-	private final MemberService memberService;
-	private final TokenService tokenService;
-	private final JwtService jwtService;
+    private final MemberService memberService;
+    private final TokenService tokenService;
+    private final JwtService jwtService;
 
 	/**
 	 * @param userDetails 로그인 사용자 정보
@@ -255,7 +257,7 @@ public class MemberController {
 	}
 
 	private String extractRefreshToken(HttpServletRequest request) {
-		return jwtService.getTokenByCookie(request)
+		return jwtService.getTokenByCookie(request, REFRESH_TOKEN)
 			.orElseThrow(() -> new ServiceException(ErrorCode.TOKEN_NOT_FOUND));
 	}
 

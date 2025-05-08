@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.*;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
 import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.TOKEN_EXPIRED;
 
@@ -22,6 +23,9 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String secretKey;
+
+    @Value("${jwt.refresh_expiration}")
+    private Long refreshExpiration;
 
     // JWT 생성
     public String createToken(Map<String, Object> claims, Long expiration) {
@@ -70,8 +74,10 @@ public class JwtService {
     }
 
     //JWT -> 쿠키에 저장 (세션 쿠키)
-    public void setJwtSessionCookie(String tokenName, String token, HttpServletResponse response) {
-        Cookie cookie = new Cookie(tokenName, token);
+    public void setJwtSessionCookie(String token,
+                                    HttpServletResponse response) {
+
+        Cookie cookie = new Cookie(ACCESS_TOKEN, token);
         cookie.setHttpOnly(true);      // 자바스크립트 접근 차단 (XSS 방지)
         cookie.setPath("/");           // 전체 사이트에서 접근 가능
         cookie.setSecure(true);        // HTTPS 통신 시에만 전송
@@ -80,8 +86,27 @@ public class JwtService {
         response.addCookie(cookie);
     }
 
+    // JWT -> 쿠키에 저장 (지속 쿠키)
+    public void setJwtPersistentCookie(String token,
+                                       HttpServletResponse response) {
+
+        Cookie cookie = new Cookie(REFRESH_TOKEN, token);
+        cookie.setPath("/");                // 전체 사이트에서 접근 가능
+        cookie.setSecure(true);             // HTTPS 통신 시에만 전송
+        cookie.setHttpOnly(true);           // 자바스크립트 접근 불가 (XSS 방지)
+
+        // 밀리초(Long) → 초(int) 변환
+        int maxAgeSeconds = (int) (refreshExpiration / 1000);
+        cookie.setMaxAge(maxAgeSeconds);    // 쿠키 만료 시간(초 단위)
+
+        // SameSite=Lax 속성 추가
+        cookie.setAttribute("SameSite", "Lax");
+
+        response.addCookie(cookie);
+    }
+
     // 쿠키에서 JWT 추출
-    public Optional<String> getTokenByCookie(HttpServletRequest request) {
+    public Optional<String> getTokenByCookie(HttpServletRequest request, String cookieName) {
         Cookie[] cookies = request.getCookies();
 
         if (cookies == null || cookies.length == 0) { // 쿠키가 없을 경우
@@ -92,7 +117,7 @@ public class JwtService {
                 .forEach(cookie -> log.info("Cookie Name: {}, Value: {}", cookie.getName(), cookie.getValue()));
 
         return Arrays.stream(cookies)
-                .filter(cookie -> REFRESH_TOKEN.equals(cookie.getName()))
+                .filter(cookie -> cookieName.equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst();
     }
