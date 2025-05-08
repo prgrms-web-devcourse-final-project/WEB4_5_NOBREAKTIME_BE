@@ -21,8 +21,9 @@ import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "WordQuiz", description = "단어 퀴즈 관련 API")
@@ -46,6 +47,7 @@ public class WordQuizController {
 	@GetMapping("/{wordbookId}/quiz")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -72,6 +74,7 @@ public class WordQuizController {
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveWordbookQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -94,6 +97,7 @@ public class WordQuizController {
 	@PossibleErrors({NOT_ENOUGH_WORDS_FOR_QUIZ})
 	@GetMapping("/quiz/total")
 	public ResponseEntity<RsData<WordQuizResponse>> getWordbookTotalQuiz(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -120,6 +124,7 @@ public class WordQuizController {
 	@PostMapping("/quiz/total/result")
 	public ResponseEntity<RsData<Void>> saveWordbookTotalQuizResult(
 		@RequestBody WordQuizResultSaveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();

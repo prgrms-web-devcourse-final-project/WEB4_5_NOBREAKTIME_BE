@@ -17,6 +17,7 @@ import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class VideoHistoryController {
     @PossibleErrors({MEMBER_NOT_FOUND, API_ERROR})
     @GetMapping("/videos/summary")
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getRecentVideos(
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
@@ -61,6 +63,7 @@ public class VideoHistoryController {
     @PossibleErrors({MEMBER_NOT_FOUND, API_ERROR})
     @GetMapping("/videos/history")
     public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
