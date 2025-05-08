@@ -3,6 +3,8 @@ package com.mallang.mallang_backend.global.config;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mallang.mallang_backend.global.filter.userfilter.AccessTokenFilter;
+import com.mallang.mallang_backend.global.filter.userfilter.RefreshTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,7 +22,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
 import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
-import com.mallang.mallang_backend.global.filter.CustomAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,8 +37,9 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
-    private final CustomAuthenticationFilter customAuthenticationFilter;
     private final CustomOAuth2Service customOAuth2Service;
+    private final AccessTokenFilter accessTokenFilter;
+    private final RefreshTokenFilter refreshTokenFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -70,7 +72,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(accessTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(refreshTokenFilter, AccessTokenFilter.class)
                 .oauth2Login(oauth2 ->
                         oauth2.userInfoEndpoint(userInfo -> userInfo
                                         .userService(customOAuth2Service)
