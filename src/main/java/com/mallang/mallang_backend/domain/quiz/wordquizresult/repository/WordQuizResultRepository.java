@@ -20,4 +20,6 @@ public interface WordQuizResultRepository extends JpaRepository<WordQuizResult, 
 	void deleteAllByWordbookItem(WordbookItem wordbookItem);
 
 	List<WordQuizResult> findByWordbookItem(WordbookItem wordbookItem);
+
+	List<WordQuizResult> findTop100ByWordQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(Member member, LocalDateTime measuredAt);
 }

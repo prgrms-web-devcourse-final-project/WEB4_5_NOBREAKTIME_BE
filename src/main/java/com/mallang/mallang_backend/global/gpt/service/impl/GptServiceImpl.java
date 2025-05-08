@@ -1,5 +1,12 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -9,14 +16,10 @@ import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
+
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.List;
 
 
 @Slf4j
@@ -88,6 +91,29 @@ public class GptServiceImpl implements GptService {
 
         // 응답 파싱
         return GptScriptProcessor.parseAnalysisResult(content, segments);
+    }
+
+    @Override
+    public LevelCheckResponse checkLevel(String wordLevel, String expressionLevel, String wordQuizResultString, String expressionResultString) {
+        String prompt = buildPromptForLevelTestScript(wordLevel, expressionLevel, wordQuizResultString, expressionResultString);
+
+        // GPT 호출
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
+
+        String content = response.getChoices().get(0).getMessage().getContent();
+
+        for (OpenAiResponse.Choice choice : response.getChoices()) {
+            System.out.println("==================================================================================");
+            System.out.println(choice.getMessage().getContent());
+            System.out.println("==================================================================================");
+        }
+
+        // return GptScriptProcessor.parseLevelCheckResult(content);
+
+        // TODO: 실제 응답 확인 후 적절히 응답
+
+        return null;
     }
 
     /**
@@ -186,6 +212,62 @@ public class GptServiceImpl implements GptService {
                 """, script);
     }
 
+    private String buildPromptForLevelTestScript(String wordLevel, String expressionLevel, String wordQuizResult, String expressionQuizResult) {
+        return String.format("""
+            당신은 학습자의 어휘(단어)와 표현(문장) 능력을 평가하는 영어 학습 도우미입니다.
+            아래는 학습자가 최근 풀었던 단어 및 표현 퀴즈의 결과입니다.
+            각 단어는 난이도 (EASY(1), NORMAL(2), HARD(3), VERYHARD(4), EXTREME(5))와 정답 여부가 함께 제공되며, 표현은 문장 단위로 정답 여부가 포함되어 있습니다.
+            이번 평가는 기존의 어휘/표현 수준을 고려해 변동된 수준을 반영하는 방식으로 이루어집니다.
+            처음 측정인 경우, 기존 수준이 NONE이므로 퀴즈 결과만을 바탕으로 판단합니다.
+            기존 수준이 존재하는 경우, 이번 퀴즈 결과를 기반으로 기존 수준이 유지, 향상, 또는 하향될 수 있습니다.
+            최종 평가 결과만 보여줍니다.
+            
+            기존 레벨 (처음 측정이라면 NONE)
+            어휘(Vocabulary): {기존_레벨_어휘}
+            표현(Expression): {기존_레벨_표현}
+            
+            단어 퀴즈 결과 (단어 | 난이도 | 정답여부)
+            {단어_퀴즈_결과}
+            
+            표현 퀴즈 결과 (표현 | 정답여부)
+            {표현_퀴즈_결과}
+            
+            평가 기준
+            어휘 수준 (Vocabulary Level)
+            표현 수준 (Expression Level)
+            
+            언어 수준 등급
+            S: 거의 완벽한 이해와 사용 능력 (모든 난이도에서 높은 정확도)
+            A: 대부분의 상황에서 정확한 이해와 사용 (어려운 난이도에서 약간의 실수 가능)
+            B: 일반적인 상황에서 무난한 이해와 사용 (보통 난이도까지 안정적)
+            C: 기초적인 이해와 사용 (쉬운 난이도 위주, 중간 난이도에서 실수)
+            NONE: 측정할 수 없을 정도로 학습 데이터 부족
+            
+            평가 요청
+            단어(어휘) 수준과 표현(문장) 수준을 각각 S, A, B, C, NONE 중 하나로 평가해주세요.
+            기존 수준이 있다면, 이번 결과에 따라 어떻게 변동되었는지 설명해주세요.
+            평가가 불가능할 경우, "NONE"으로 표시해주세요.
+            단어와 표현의 평가 결과는 별도로 작성해주세요.
+            
+            예시)
+            기존 어휘 레벨: B
+            결과: 이번 퀴즈에서 HARD 이상 난이도의 정답률이 높고, 전반적으로 정답 비율이 높았음 → B → A로 향상
+            
+            기존 표현 레벨: NONE
+            결과: 정답률이 50%를 초과하나, 실수가 일부 있음 → 초기 평가: B
+            ---
+            
+            기존 레벨:
+            어휘(Vocabulary): %s
+            표현(Expression): %s
+            
+            단어 퀴즈 결과:
+            %s
+            
+            표현 퀴즈 결과:
+            %s
+            """, wordLevel, expressionLevel, wordQuizResult, expressionQuizResult);
+    }
 
     /**
      * GPT API 호출

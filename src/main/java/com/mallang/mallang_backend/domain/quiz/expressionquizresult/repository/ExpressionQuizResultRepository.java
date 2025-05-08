@@ -15,4 +15,6 @@ public interface ExpressionQuizResultRepository extends JpaRepository<Expression
 	int countByExpressionQuiz_MemberAndCreatedAtAfter(Member expressionQuizMember, LocalDateTime localDateTime);
 
 	List<ExpressionQuizResult> findByExpressionQuiz_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
+
+	List<ExpressionQuizResult> findTop100ByExpressionQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(Member member, LocalDateTime measuredAt);
 }

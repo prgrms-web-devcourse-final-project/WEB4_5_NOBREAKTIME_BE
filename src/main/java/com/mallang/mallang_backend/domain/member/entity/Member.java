@@ -185,7 +185,4 @@ public class Member {
         this.profileImageUrl = profileImageUrl;
     }
 
-    public boolean isFirstLevelMeasure() {
-        return getWordLevel().equals(Level.NONE) || getExpressionLevel().equals(Level.NONE);
-    }
 }
