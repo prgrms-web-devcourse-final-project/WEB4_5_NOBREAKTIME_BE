@@ -2,12 +2,11 @@ package com.mallang.mallang_backend.global.config.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.global.config.oauth.processor.OAuth2UserProcessor;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -15,6 +14,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -25,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +42,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class CustomOAuth2Service extends DefaultOAuth2UserService {
 
     private final MemberService memberService;
+    private final MemberRepository memberRepository;
     private final List<OAuth2UserProcessor> processors;
     private final S3ImageUploader imageUploader;
 
@@ -66,15 +69,13 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         Map<String, Object> userAttributes = parseUserAttributes(platform, user);
         String platformId = user.getName();
 
-        CustomUserDetails userDetails = null;
         if (memberService.existsByPlatformId(platformId)) {
-            userDetails = handleExistingMember(platformId);
+            handleExistingMember(platformId);
         } else {
-            userDetails = registerNewMember(platform, userAttributes);
+            registerNewMember(platform, userAttributes);
         }
 
-        // @AuthenticationPrincipal OAuth2User principal 로 컨트롤러에서 이용 가능
-        return new DefaultOAuth2User(userDetails.getAuthorities(), userAttributes, "platformId");
+        return new DefaultOAuth2User(Collections.emptyList(), userAttributes, "platformId");
     }
 
     // ======================회원 정보 추출=======================
@@ -88,7 +89,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      */
     private Map<String, Object> parseUserAttributes(LoginPlatform platform,
                                                     OAuth2User user) {
-
+        log.debug("user attributes {}", user.getAttributes());
         OAuth2UserProcessor processor = findSupportedProcessor(platform);
         return processor.parseAttributes(user.getAttributes());
     }
@@ -104,31 +105,36 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     // ======================회원 로그인 & 가입 처리=======================
 
     /**
-     * 플랫폼 ID로 기존 회원을 조회하여 CustomUserDetails 객체를 생성합니다.
+     * 플랫폼 ID로 기존 회원의 존재 여부를 비동기적으로 확인합니다.
+     * 추후 필요에 따라 후속 작업(예: 로그, 알림 등)을 수행할 수 있습니다.
      *
-     * <p>회원의 ID와 구독 정보(roleName)를 조합하여 반환합니다.
-     * 회원이 존재하지 않을 경우 예외는 상위 메서드에서 처리합니다.
-     *
-     * @param platformId 조회할 회원의 플랫폼 ID
-     * @return 회원의 ID와 구독 정보(roleName: ROLE_BASIC)를 포함한 CustomUserDetails 객체
+     * @param platformId 확인할 회원의 플랫폼 ID
      */
-    private CustomUserDetails handleExistingMember(String platformId) {
-        Member member = memberService.getMemberByPlatformId(platformId);
-        return new CustomUserDetails(member.getId(), member.getSubscription().getRoleName());
+    @Async("securityTaskExecutor")
+    public void handleExistingMember(String platformId) {
+        boolean exists = memberRepository.existsByPlatformId(platformId);
+
+        if (exists) {
+            log.info("이미 존재하는 회원: {}", platformId);
+        }
     }
 
     /**
      * 신규 회원 가입 처리 메서드
      *
-     * @param platform   로그인 플랫폼 정보
+     * @param platform 로그인 플랫폼 정보
      */
-    private CustomUserDetails registerNewMember(LoginPlatform platform,
-                                   Map<String, Object> userAttributes) {
+    @Async("securityTaskExecutor")
+    public void registerNewMember(LoginPlatform platform,
+                                     Map<String, Object> userAttributes) {
 
         String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
         String email = (String) userAttributes.get("email"); // null 가능
-        String nickname = (String) userAttributes.get(NICKNAME_KEY);
+        String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
+        String nickname = originalNickname;
         String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
+
+        nickname = generateUniqueNickname(nickname, originalNickname);
 
         log.debug("사용자 platformId: {}, email: {}, nickname: {}, profileImage: {}",
                 platformId, email, nickname, profileImage);
@@ -137,13 +143,31 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         ImageUploadRequest request = new ImageUploadRequest(profileImage);
         String s3ProfileImageUrl = imageUploader.uploadImageURL(request);
 
-        Long memberId = memberService.signupByOauth(
-                platformId, email, nickname, s3ProfileImageUrl, platform
+        memberService.signupByOauth(
+                platformId,
+                email,
+                originalNickname,
+                s3ProfileImageUrl,
+                platform
         );
+    }
 
-        Member joinMember = memberService.getMemberById(memberId);
-
-        return new CustomUserDetails(joinMember.getId(), joinMember.getSubscription().getRoleName());
+    /**
+     * 닉네임이 중복될 경우, 원본 닉네임 뒤에 2~3자리 랜덤 문자열을 붙여
+     * 고유한 닉네임을 생성합니다.
+     *
+     * @param nickname         중복 여부를 확인할 닉네임
+     * @param originalNickname 원본 닉네임(랜덤 문자열을 붙이기 위한 기준)
+     * @return 사용 가능한 고유 닉네임
+     */
+    private String generateUniqueNickname(String nickname, String originalNickname) {
+        while (!memberService.isNicknameAvailable(nickname)) {
+            // 2~3자리 랜덤 문자열 생성
+            String randomSuffix = RandomStringGenerator.generate(2 +
+                    new SecureRandom().nextInt(2)); // 2 또는 3자리
+            nickname = originalNickname + randomSuffix;
+        }
+        return nickname;
     }
 
     private OAuth2User fallbackMethod(OAuth2UserRequest userRequest, Exception e) {

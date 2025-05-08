@@ -15,6 +15,7 @@ public enum ErrorCode {
     LANGUAGE_NOT_CONFIGURED("400-6", "language.not.configured", HttpStatus.BAD_REQUEST), // 언어 설정이 되어 있지 않음
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     NOT_CHANGED("400-9", "not.changed", HttpStatus.BAD_REQUEST),
+    LANGUAGE_ALREADY_SET("410-9", "language.already.set", HttpStatus.CONFLICT),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -101,6 +102,7 @@ public enum ErrorCode {
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
     OAUTH_NETWORK_ERROR("500-1", "oauth.network.error", HttpStatus.INTERNAL_SERVER_ERROR),
     OAUTH_RATE_LIMIT("500-1", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
+    PROFILE_NOT_FOUND("404-2", "profile.not.found", HttpStatus.NOT_FOUND),
 
     // file upload Errors
     FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
