@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.service.Expres
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -49,6 +52,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "추가 표현함 생성", description = "추가 표현함 생성 요청을 처리합니다.")
     @ApiResponse(responseCode = "200", description = "추가 표현함이 생성되었습니다.")
+    @PossibleErrors({MEMBER_NOT_FOUND, NO_EXPRESSIONBOOK_CREATE_PERMISSION, EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN, DUPLICATE_EXPRESSIONBOOK_NAME})
     @PostMapping
     public ResponseEntity<RsData<ExpressionBookResponse>> create(
         @RequestBody @Valid ExpressionBookRequest request,
@@ -74,6 +78,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 전체 조회", description = "로그인한 사용자의 모든 추가 표현함을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 목록 조회에 성공했습니다.")
+    @PossibleErrors({MEMBER_NOT_FOUND})
     @GetMapping
     public ResponseEntity<RsData<List<ExpressionBookResponse>>> getAllByMember(
         @Login CustomUserDetails userDetails
@@ -99,6 +104,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 이름 수정", description = "특정 추가 표현함의 이름을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 이름이 수정되었습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
     @PatchMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> updateName(
         @PathVariable Long expressionBookId,
@@ -124,6 +130,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 삭제", description = "특정 추가 표현함을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "표현함이 삭제되었습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN})
     @DeleteMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> delete(
         @PathVariable Long expressionBookId,
@@ -148,6 +155,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현 목록 조회", description = "특정 표현함의 표현 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함의 표현 목록 조회에 성공했습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSION_NOT_FOUND})
     @GetMapping("/{expressionBookId}/words")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
         @PathVariable Long expressionBookId,
@@ -174,6 +182,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함에 표현 저장", description = "새 표현을 분석하고 저장합니다.")
     @ApiResponse(responseCode = "200", description = "표현이 저장되었습니다.")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, VIDEO_ID_SEARCH_FAILED, GPT_RESPONSE_EMPTY})
     @PostMapping("/{expressionBookId}/expressions")
     public ResponseEntity<RsData<?>> saveExpression(
         @PathVariable("expressionBookId") Long expressionBookId,
