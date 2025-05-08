@@ -36,12 +36,6 @@ public class DataInitializer implements CommandLineRunner {
     private final WordbookRepository wordbookRepository;
     private final ExpressionBookRepository expressionBookRepository;
 
-    @EventListener(ApplicationReadyEvent.class)
-    @Retryable(
-            value = { RedisConnectionFailureException.class },
-            maxAttempts = 5,
-            backoff = @Backoff(delay = 2000)
-    )
     @Override
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
