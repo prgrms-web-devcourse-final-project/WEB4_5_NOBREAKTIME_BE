@@ -20,9 +20,9 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpr
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionSaveRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.UpdateExpressionBookNameRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionSaveRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.CustomUserDetails;
@@ -30,6 +30,7 @@ import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -56,6 +57,7 @@ public class ExpressionBookController {
     @PostMapping
     public ResponseEntity<RsData<ExpressionBookResponse>> create(
         @RequestBody @Valid ExpressionBookRequest request,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -81,6 +83,7 @@ public class ExpressionBookController {
     @PossibleErrors({MEMBER_NOT_FOUND})
     @GetMapping
     public ResponseEntity<RsData<List<ExpressionBookResponse>>> getAllByMember(
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -108,6 +111,7 @@ public class ExpressionBookController {
     @PatchMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> updateName(
         @PathVariable Long expressionBookId,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails,
         @RequestBody @Valid UpdateExpressionBookNameRequest request
     ) {
@@ -134,6 +138,7 @@ public class ExpressionBookController {
     @DeleteMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> delete(
         @PathVariable Long expressionBookId,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -159,6 +164,7 @@ public class ExpressionBookController {
     @GetMapping("/{expressionBookId}/words")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
         @PathVariable Long expressionBookId,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -208,6 +214,7 @@ public class ExpressionBookController {
     @PostMapping("/expressions/delete")
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
         @RequestBody DeleteExpressionsRequest request,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -234,6 +241,7 @@ public class ExpressionBookController {
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
         @RequestBody MoveExpressionsRequest request,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -258,6 +266,7 @@ public class ExpressionBookController {
     @GetMapping("/search")
     public ResponseEntity<RsData<List<ExpressionResponse>>> searchExpressions(
         @RequestParam String keyword,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();

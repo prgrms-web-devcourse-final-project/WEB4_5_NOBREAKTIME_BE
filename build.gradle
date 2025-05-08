@@ -45,7 +45,7 @@ dependencies {
 	// JPA & DB
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	// implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-	// implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	//	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	// implementation 'org.springframework.boot:spring-boot-starter-cache' // 캐시 이용
 	// implementation 'org.springframework.session:spring-session-data-redis' // 세션 클러스터링
 	runtimeOnly 'com.h2database:h2'
