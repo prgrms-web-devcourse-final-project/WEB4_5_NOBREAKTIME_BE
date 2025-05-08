@@ -16,6 +16,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.Exp
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import lombok.RequiredArgsConstructor;
@@ -107,10 +108,24 @@ public class MemberServiceImpl implements MemberService {
         return savedMember.getId();
     }
 
-    // 소셜 로그인 회원 언어 정보 추가
+    /**
+     * 회원의 학습 언어를 설정합니다.
+     * 이미 언어가 설정된 경우 예외를 발생시킵니다.
+     * - 최초 설정 시에만 설정이 가능하도록
+     *
+     * @param memberId 언어를 설정할 회원의 ID
+     * @param language 설정할 언어
+     * @throws ServiceException 이미 언어가 설정된 경우 발생
+     */
     @Transactional
     public void updateLearningLanguage(Long memberId, Language language) {
-        findMemberOrThrow(memberId).updateLearningLanguage(language);
+        Member member = findMemberOrThrow(memberId);
+
+        if (member.getLanguage() != Language.NONE) {
+            throw new ServiceException(ErrorCode.LANGUAGE_ALREADY_SET);
+        }
+
+        member.updateLearningLanguage(language);
     }
 
     /**
@@ -129,6 +144,7 @@ public class MemberServiceImpl implements MemberService {
                 .email(member.getEmail())
                 .profileImage(member.getProfileImageUrl())
                 .subscription(member.getSubscription())
+                .language(member.getLanguage())
                 .build();
     }
 
