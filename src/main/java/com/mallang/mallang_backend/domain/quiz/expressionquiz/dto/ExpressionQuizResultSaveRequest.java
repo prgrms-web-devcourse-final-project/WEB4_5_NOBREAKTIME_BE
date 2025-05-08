@@ -9,5 +9,5 @@ public class ExpressionQuizResultSaveRequest {
 	Long quizId;
 	Long expressionBookId;
 	Long expressionId;
-	boolean isCorrect;
+	boolean correct;
 }

@@ -1,21 +1,25 @@
 package com.mallang.mallang_backend.global.init;
 
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.token.TokenPair;
-import com.mallang.mallang_backend.global.token.TokenService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
-import java.util.List;
+import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.token.TokenPair;
+import com.mallang.mallang_backend.global.token.TokenService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -24,13 +28,15 @@ public class DataInitializer implements CommandLineRunner {
 
     private final MemberRepository memberRepository;
     private final TokenService tokenService;
+    private final WordbookRepository wordbookRepository;
+    private final ExpressionBookRepository expressionBookRepository;
 
     @Override
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
         TokenPair tokenPair1 = tokenService.createTokenPair(
-                basicUser.getId(),
-                basicUser.getSubscription().getRoleName()
+            basicUser.getId(),
+            basicUser.getSubscription().getRoleName()
         );
 
         // 생성된 토큰 로깅
@@ -70,11 +76,11 @@ public class DataInitializer implements CommandLineRunner {
     // 시큐리티 객체에 인증 정보 추가
     private void setSecurityContext(Member member, String roleName) {
         UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        member.getId(),
-                        null,
-                        List.of(new SimpleGrantedAuthority(roleName))
-                );
+            new UsernamePasswordAuthenticationToken(
+                member.getId(),
+                null,
+                List.of(new SimpleGrantedAuthority(roleName))
+            );
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

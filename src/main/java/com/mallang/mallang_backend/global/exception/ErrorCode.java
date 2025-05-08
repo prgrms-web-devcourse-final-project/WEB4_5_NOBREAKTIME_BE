@@ -47,6 +47,7 @@ public enum ErrorCode {
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
     FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+    SUBTITLE_NOT_FOUND("404-1", "subtitle.not.found", HttpStatus.NOT_FOUND),
 
     // Expression Errors
     EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
