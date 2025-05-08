@@ -22,6 +22,7 @@ import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class VideoController {
     @GetMapping("/{youtubeVideoId}/analysis")
     public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(
         @PathVariable String youtubeVideoId,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
@@ -81,6 +83,7 @@ public class VideoController {
         @RequestParam(required = false) String q,
         @RequestParam(required = false) String category,
         @RequestParam(defaultValue = "100") long maxResults,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         List<VideoResponse> list = videoService.getVideosForMember(

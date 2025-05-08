@@ -23,6 +23,7 @@ import com.mallang.mallang_backend.global.filter.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class DashboardController {
 	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/statistics")
 	public ResponseEntity<RsData<StatisticResponse>> statistics(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -71,6 +73,7 @@ public class DashboardController {
 	@PatchMapping("/goal")
 	public ResponseEntity<RsData<Void>> updateGoal(
 		@RequestBody UpdateGoalRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -88,6 +91,7 @@ public class DashboardController {
 	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/calendar")
 	public ResponseEntity<RsData<LearningHistoryResponse>> getCalendarsData(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
