@@ -115,6 +115,7 @@ public class DashboardController {
 	@PossibleErrors({MEMBER_NOT_FOUND, LEVEL_NOT_MEASURABLE, API_ERROR})
 	@PostMapping("/level")
 	public ResponseEntity<RsData<LevelCheckResponse>> levelCheck(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
