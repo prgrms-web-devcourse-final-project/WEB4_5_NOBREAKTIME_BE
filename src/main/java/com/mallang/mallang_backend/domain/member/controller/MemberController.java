@@ -27,8 +27,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -37,6 +37,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 
@@ -240,7 +241,7 @@ public class MemberController {
     }
 
     private String extractRefreshToken(HttpServletRequest request) {
-        return jwtService.getTokenByCookie(request)
+        return jwtService.getTokenByCookie(request, REFRESH_TOKEN)
                 .orElseThrow(() -> new ServiceException(ErrorCode.TOKEN_NOT_FOUND));
     }
 

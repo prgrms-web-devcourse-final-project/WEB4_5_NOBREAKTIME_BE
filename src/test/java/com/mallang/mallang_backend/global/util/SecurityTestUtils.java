@@ -4,7 +4,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 
 public class SecurityTestUtils {
 

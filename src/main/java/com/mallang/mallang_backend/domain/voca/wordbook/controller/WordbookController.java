@@ -26,8 +26,8 @@ import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameReques
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 
 import io.swagger.v3.oas.annotations.Operation;
