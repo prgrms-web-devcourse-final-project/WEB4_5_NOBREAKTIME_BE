@@ -48,12 +48,6 @@ jobs:
         uses: supercharge/redis-github-action@1.1.0
         with:
           redis-version: 6
-
-      - name: Wait for Redis
-        run: |
-          until docker exec my-redis redis-cli ping | grep PONG; do
-            sleep 1
-          done
         
       # Gradle 빌드 실행 + 테스트를 포함
       - name: Build with Gradle
