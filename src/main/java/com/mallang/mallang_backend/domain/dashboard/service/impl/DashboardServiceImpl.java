@@ -21,6 +21,7 @@ import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
 import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
+import com.mallang.mallang_backend.domain.member.entity.Level;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
@@ -210,6 +211,7 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	// 레벨 측정
+	@Transactional
 	@Override
 	public LevelCheckResponse checkLevel(Long memberId) {
 		Member member = memberRepository.findById(memberId)
@@ -235,7 +237,13 @@ public class DashboardServiceImpl implements DashboardService {
 		// OpenAI 결과 파싱
 		String wordLevel = member.getWordLevel().toString();
 		String expressionLevel = member.getExpressionLevel().toString();
+
 		LevelCheckResponse levelCheckResponse = gptService.checkLevel(wordLevel, expressionLevel, wordQuizResultString, expressionResultString);
+
+		member.updateWordLevel(Level.fromString(levelCheckResponse.getWordLevel()));
+		member.updateExpressionLevel(Level.fromString(levelCheckResponse.getExpressionLevel()));
+		member.updateMeasuredAt(LocalDateTime.now());
+		memberRepository.save(member);
 
 		return levelCheckResponse;
 	}

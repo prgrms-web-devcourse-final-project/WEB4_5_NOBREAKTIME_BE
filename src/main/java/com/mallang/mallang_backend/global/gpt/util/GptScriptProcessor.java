@@ -2,6 +2,8 @@ package com.mallang.mallang_backend.global.gpt.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
@@ -136,5 +138,29 @@ public class GptScriptProcessor {
         }
 
         return words;
+    }
+
+    public static String extractWordLevel(String input) {
+        String regex = "어휘 레벨 결과: \\[(.*?)\\]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1); // 대괄호 안의 값
+        }
+
+        return null;
+    }
+
+    public static String extractExpressionLevel(String input) {
+        String regex = "표현 레벨 결과: \\[(.*?)\\]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            return matcher.group(1); // 대괄호 안의 값
+        }
+
+        return null;
     }
 }

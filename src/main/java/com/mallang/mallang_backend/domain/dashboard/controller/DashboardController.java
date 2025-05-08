@@ -108,7 +108,8 @@ public class DashboardController {
 	 */
 	@Operation(summary = "학습 레벨 측정", description = "최근 퀴즈 결과에 대한 학습 레벨을 측정합니다.")
 	@ApiResponse(responseCode = "200", description = "학습 레벨이 측정되었습니다.")
-	@PostMapping("/level-check")
+	@PossibleErrors({MEMBER_NOT_FOUND, LEVEL_NOT_MEASURABLE, API_ERROR})
+	@PostMapping("/level")
 	public ResponseEntity<RsData<LevelCheckResponse>> levelCheck(
 		@Login CustomUserDetails userDetail
 	) {

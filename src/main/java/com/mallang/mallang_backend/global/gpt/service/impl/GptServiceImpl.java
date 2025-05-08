@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -8,7 +10,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
@@ -49,7 +50,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackSearchWord(String word, Throwable t) {
         log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -69,7 +70,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackAnalyzeSentence(String sentence, String translatedSentence, Throwable t) {
         log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -103,17 +104,14 @@ public class GptServiceImpl implements GptService {
 
         String content = response.getChoices().get(0).getMessage().getContent();
 
-        for (OpenAiResponse.Choice choice : response.getChoices()) {
-            System.out.println("==================================================================================");
-            System.out.println(choice.getMessage().getContent());
-            System.out.println("==================================================================================");
+        String newWordLevel = GptScriptProcessor.extractWordLevel(content);
+        String newExpressionLevel = GptScriptProcessor.extractExpressionLevel(content);
+
+        if (newWordLevel == null || newExpressionLevel == null) {
+            throw new ServiceException(API_ERROR);
         }
 
-        // return GptScriptProcessor.parseLevelCheckResult(content);
-
-        // TODO: 실제 응답 확인 후 적절히 응답
-
-        return null;
+        return new LevelCheckResponse(newWordLevel, newExpressionLevel);
     }
 
     /**
@@ -121,7 +119,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackAnalyzeScript(List<TranscriptSegment> segments, Throwable t) {
         log.error("[GptService] analyzeScript fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -245,16 +243,13 @@ public class GptServiceImpl implements GptService {
             
             평가 요청
             단어(어휘) 수준과 표현(문장) 수준을 각각 S, A, B, C, NONE 중 하나로 평가해주세요.
-            기존 수준이 있다면, 이번 결과에 따라 어떻게 변동되었는지 설명해주세요.
-            평가가 불가능할 경우, "NONE"으로 표시해주세요.
+            평가가 불가능할 경우, NONE으로 표시해주세요.
             단어와 표현의 평가 결과는 별도로 작성해주세요.
+            예시의 형식대로 결과만 작성해주세요.
             
             예시)
-            기존 어휘 레벨: B
-            결과: 이번 퀴즈에서 HARD 이상 난이도의 정답률이 높고, 전반적으로 정답 비율이 높았음 → B → A로 향상
-            
-            기존 표현 레벨: NONE
-            결과: 정답률이 50%를 초과하나, 실수가 일부 있음 → 초기 평가: B
+            어휘 레벨 결과: [A]
+            표현 레벨 결과: [B]
             ---
             
             기존 레벨:
@@ -284,7 +279,7 @@ public class GptServiceImpl implements GptService {
                 clientResponse -> clientResponse.bodyToMono(String.class)
                     .map(body -> {
                         log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
-                        return new ServiceException(ErrorCode.GPT_API_CALL_FAILED);
+                        return new ServiceException(GPT_API_CALL_FAILED);
                     })
             )
             .bodyToMono(OpenAiResponse.class)
@@ -297,7 +292,7 @@ public class GptServiceImpl implements GptService {
     private void validateResponse(OpenAiResponse response) {
         if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
             log.error("[GptService] GPT 응답이 비어있습니다.");
-            throw new ServiceException(ErrorCode.GPT_RESPONSE_EMPTY);
+            throw new ServiceException(GPT_RESPONSE_EMPTY);
         }
     }
 
