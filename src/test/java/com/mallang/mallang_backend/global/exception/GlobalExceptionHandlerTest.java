@@ -6,9 +6,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class GlobalExceptionHandlerTest {
 
@@ -63,6 +65,28 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getErrors()).isNotEmpty();
         assertThat(response.getErrors().get(0)).contains("NullPointerException");
         assertThat(response.getPath()).isEqualTo("/api/test/crash");
+    }
+
+    @Test
+    @DisplayName("AuthorizationDeniedException 발생 시 403 응답과 메시지를 반환한다")
+    void handleAuthorizationDenied_returnsForbiddenErrorResponse() {
+        // given
+        AuthorizationDeniedException e = new AuthorizationDeniedException("Access Denied");
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        when(mockRequest.getRequestURI()).thenReturn("/api/protected/resource");
+
+        GlobalExceptionHandler handler = new GlobalExceptionHandler(null); // messageService 사용 안함
+
+        // when
+        ErrorResponse response = handler.handleAuthorizationDenied(e, mockRequest);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(response.getCode()).isEqualTo("403-1");
+        assertThat(response.getMessage()).isEqualTo("접근이 거부되었습니다.");
+        assertThat(response.getErrors()).contains("AuthorizationDeniedException: Access Denied");
+        assertThat(response.getPath()).isEqualTo("/api/protected/resource");
     }
 
 }
