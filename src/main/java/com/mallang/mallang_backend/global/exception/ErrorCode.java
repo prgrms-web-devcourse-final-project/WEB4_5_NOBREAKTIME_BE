@@ -118,7 +118,11 @@ public enum ErrorCode {
     API_BLOCK("500-2", "api.block", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 영상 학습 퀴즈용 에러
-    KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
+    KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND),
+
+    // 학습 레벨 측정 에러
+    LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
+    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

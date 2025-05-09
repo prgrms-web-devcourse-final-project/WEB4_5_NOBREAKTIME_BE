@@ -259,7 +259,7 @@ class ExpressionBookServiceImplTest2 {
 		ReflectionTestUtils.setField(book2, "id", 102L);
 
 		given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-		given(expressionBookRepository.findAllByMember(member)).willReturn(List.of(book1, book2));
+		given(expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage())).willReturn(List.of(book1, book2));
 
 		List<ExpressionBookResponse> result = expressionBookService.getByMember(memberId);
 

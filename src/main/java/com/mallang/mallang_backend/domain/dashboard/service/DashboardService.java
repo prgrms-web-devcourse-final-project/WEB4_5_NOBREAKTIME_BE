@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.dashboard.service;
 import java.time.LocalDate;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistoryResponse;
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
 
@@ -12,4 +13,6 @@ public interface DashboardService {
 	void updateGoal(UpdateGoalRequest request, Long memberId);
 
 	LearningHistoryResponse getLearningStatisticsByPeriod(Long memberId, LocalDate now);
+
+	LevelCheckResponse checkLevel(Long memberId);
 }

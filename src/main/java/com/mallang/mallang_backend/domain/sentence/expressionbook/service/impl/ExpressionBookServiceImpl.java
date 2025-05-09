@@ -1,5 +1,16 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
@@ -85,8 +96,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        List<ExpressionBook> books = expressionBookRepository.findAllByMember(member);
-
+        List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
         return books.stream()
                 .map(ExpressionBookResponse::from)
                 .toList();
