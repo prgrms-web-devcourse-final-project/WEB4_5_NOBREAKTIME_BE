@@ -36,19 +36,11 @@ public class Plan {
     @Enumerated(EnumType.STRING)
     private PlanPeriod period; // // MONTHLY, SIX_MONTHS, YEAR
 
+    @Column(nullable = false)
+    private String description;
+
     @Column(columnDefinition = "TEXT")
     private String benefits; // 제공 혜택에 관한 정보, JSON 문자열 형태
-
-    @Builder
-    public Plan(SubscriptionType type,
-                PlanPeriod period,
-                String benefits
-    ) {
-        this.type = type;
-        this.period = period;
-        this.amount = updateTotalAmount();
-        this.benefits = benefits;
-    }
 
     // 플랜 + 구독 기간별 계산
 

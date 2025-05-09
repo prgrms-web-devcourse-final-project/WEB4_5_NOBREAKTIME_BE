@@ -7,10 +7,8 @@ VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '�
        ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.');
 
 
-INSERT INTO plan (type, period, price, description, benefits)
-
 -- BASIC 플랜 (기간 상관없이 동일한 혜택)
-
+INSERT INTO plan (type, period, amount, description, benefits)
 VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "BASIC 플랜",

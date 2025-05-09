@@ -1,12 +1,13 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import com.mallang.mallang_backend.global.common.Language;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +54,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (member.getSubscription() == BASIC) {
+        if (member.getSubscriptionType() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
@@ -102,7 +103,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        if (expressionBook.getMember().getSubscription() == BASIC) {
+        if (expressionBook.getMember().getSubscriptionType() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
@@ -123,7 +124,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        if (expressionBook.getMember().getSubscription() == BASIC) {
+        if (expressionBook.getMember().getSubscriptionType() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
@@ -239,8 +240,8 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
             .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
-        if (sourceBook.getMember().getSubscription() == BASIC ||
-            targetBook.getMember().getSubscription() == BASIC) {
+        if (sourceBook.getMember().getSubscriptionType() == BASIC ||
+            targetBook.getMember().getSubscriptionType() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
