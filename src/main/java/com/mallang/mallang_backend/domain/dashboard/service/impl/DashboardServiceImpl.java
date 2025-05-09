@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.LEVEL_NOT_MEASURABLE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Service

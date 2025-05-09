@@ -19,8 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.API_ERROR;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Dashboard", description = "대시보드 관련 API")
 @RestController
