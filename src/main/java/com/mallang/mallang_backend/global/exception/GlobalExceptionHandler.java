@@ -70,6 +70,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * 예기치 않은 예외를 처리하는 메서드입니다.
+     * 서버에서 발생한 모든 예외를 처리하여, 클라이언트에게 기본적인 에러 메시지를 반환합니다.
+     *
+     * @param e       Exception 예외 객체
+     * @param request HttpServletRequest 객체
+     * @return ErrorResponse 기본 에러 메시지
+     */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
