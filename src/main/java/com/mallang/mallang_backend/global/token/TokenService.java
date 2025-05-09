@@ -104,13 +104,13 @@ public class TokenService {
      * 로그아웃 시 해당 토큰을 쿠키에서 삭제하고, 블랙리스트에 추가합니다.
      *
      * @param response HttpServletResponse 객체
-     * @param token    블랙리스트에 추가할 토큰 값 (refreshToken)
+     * @param memberId redis 삭제 객체
      */
-    public void invalidateTokenAndBlacklistIfRefreshToken(HttpServletResponse response, String token) {
+    public void invalidateTokenAndDeleteRedisRefreshToken (HttpServletResponse response, Long memberId) {
         if (response == null) return;
 
-        deleteTokenInCookie(response);
-        addToBlacklist(token);
+        deleteTokenInCookie(response, REFRESH_TOKEN);
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + memberId);
     }
 
     /**
@@ -118,16 +118,17 @@ public class TokenService {
      *
      * @param response HttpServletResponse 객체
      */
-    private void deleteTokenInCookie(HttpServletResponse response) {
+    public void deleteTokenInCookie(HttpServletResponse response, String cookieName) {
         if (response == null) return;
 
-        Cookie expiredCookie = new Cookie(REFRESH_TOKEN, null);
+        Cookie expiredCookie = new Cookie(cookieName, null);
         expiredCookie.setMaxAge(0); // 쿠키 즉시 삭제
         expiredCookie.setPath("/"); // 전체 경로에 적용
 
         response.addCookie(expiredCookie);
 
-        log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}", expiredCookie.getName(), expiredCookie.getValue());
+        log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}",
+                expiredCookie.getName(), expiredCookie.getValue());
     }
 
     /**
