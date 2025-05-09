@@ -17,11 +17,11 @@ public class GptScriptProcessorTest {
         // Todo 메서드명 변경
     void prepareScriptInputTextTest() {
         List<TranscriptSegment> segments = List.of(
-                new TranscriptSegment("00:00:01.320","00:00:11.740","A", "Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it"),
-                new TranscriptSegment("00:00:11.740","00:00:21.515","A", "Do you know what would happen if I suddenly decided to stop going into work a business big enough that it could be listed on the NASDAQ goes belly up, disappears"),
-                new TranscriptSegment("00:00:21.515","00:00:28.515","A", "It ceases to exist without me No, you clearly don't know who you're talking to So let me clue you in"),
-                new TranscriptSegment("00:00:28.515","00:00:36.725","A", "I am not in danger Skyler I am the danger. A guy opens his door and gets shot and you think that of me No,"),
-                new TranscriptSegment("00:00:36.725","00:00:39.140","A", "I am the one who knocks.")
+                new TranscriptSegment(1L, "00:00:01.320","00:00:11.740","A", "Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it"),
+                new TranscriptSegment(2L, "00:00:11.740","00:00:21.515","A", "Do you know what would happen if I suddenly decided to stop going into work a business big enough that it could be listed on the NASDAQ goes belly up, disappears"),
+                new TranscriptSegment(3L, "00:00:21.515","00:00:28.515","A", "It ceases to exist without me No, you clearly don't know who you're talking to So let me clue you in"),
+                new TranscriptSegment(4L, "00:00:28.515","00:00:36.725","A", "I am not in danger Skyler I am the danger. A guy opens his door and gets shot and you think that of me No,"),
+                new TranscriptSegment(5L, "00:00:36.725","00:00:39.140","A", "I am the one who knocks.")
         );
 
         String result = GptScriptProcessor.prepareScriptInputText(segments);
@@ -54,8 +54,8 @@ public class GptScriptProcessorTest {
                 """;
 
         List<TranscriptSegment> segments = List.of(
-                new TranscriptSegment("00:00:01.000", "00:00:05.000", "A", "Who is it you think you see?"),
-                new TranscriptSegment("00:00:06.000", "00:00:08.000", "A", "I am the one who knocks.")
+                new TranscriptSegment(1L, "00:00:01.000", "00:00:05.000", "A", "Who is it you think you see?"),
+                new TranscriptSegment(5L, "00:00:06.000", "00:00:08.000", "A", "I am the one who knocks.")
         );
 
         List<GptSubtitleResponse> result = GptScriptProcessor.parseAnalysisResult(gptResponse, segments);
