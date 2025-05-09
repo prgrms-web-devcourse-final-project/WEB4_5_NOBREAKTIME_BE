@@ -19,8 +19,10 @@ import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,6 +40,7 @@ public class YoutubeService {
 	// 검색: 키워드 기반으로 videoId만 가져오기
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchVideoIds")
 	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackSearchVideoIds")
+	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackSearchVideoIds")
 	public List<String> searchVideoIds(
 		String query,
 		String regionCode,
@@ -89,43 +92,48 @@ public class YoutubeService {
 			.collect(Collectors.toList());
 	}
 
-	// 상세조회: videoId 리스트로 Video 정보 가져오기
+	/**
+	 * 상세조회: videoId 리스트로 Video 정보 가져오기 (비동기)
+	 * - 50개씩 chunk로 분할하고, CompletableFuture로 병렬 호출
+	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackFetchVideosByIds")
 	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackFetchVideosByIds")
+	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackFetchVideosByIds")
+	@TimeLimiter(name = "youtubeService", fallbackMethod = "fallbackFetchVideosByIds")
+	public CompletableFuture<List<Video>> fetchVideosByIdsAsync(List<String> videoIds) {
+		return CompletableFuture.supplyAsync(() -> fetchVideosByIds(videoIds), youtubeApiExecutor);
+	}
+
+	/**
+	 * 실제 동기 fetch 로직
+	 */
 	public List<Video> fetchVideosByIds(List<String> videoIds) {
 		YouTube youtube = youtubeClient.getClient();
-
-		// 50개씩 분할
 		List<List<String>> chunks = new ArrayList<>();
 		for (int i = 0; i < videoIds.size(); i += 50) {
 			int end = Math.min(i + 50, videoIds.size());
 			chunks.add(videoIds.subList(i, end));
 		}
 
-		// 비동기 호출 Futures 생성
-		List<CompletableFuture<List<Video>>> futures = chunks.stream()
-			.map(chunk -> CompletableFuture.supplyAsync(() -> {
-				try {
-					VideoListResponse resp = youtube.videos()
-						.list(List.of("id", "snippet", "contentDetails", "status"))
-						.setId(chunk)
-						.setKey(apiKey)
-						.execute();
-					return resp.getItems();
-				} catch (IOException ex) {
-					throw new ServiceException(ErrorCode.API_ERROR);
-				}
-			}, youtubeApiExecutor))
-			.toList();
-
-		// 모든 Future가 끝날 때까지 대기 후 합치기
-		return futures.stream()
-			.map(CompletableFuture::join)
-			.flatMap(List::stream)
-			.collect(Collectors.toList());
+		List<Video> results = new ArrayList<>();
+		for (List<String> chunk : chunks) {
+			try {
+				VideoListResponse resp = youtube.videos()
+					.list(List.of("id", "snippet", "contentDetails", "status"))
+					.setId(chunk)
+					.setKey(apiKey)
+					.execute();
+				results.addAll(resp.getItems());
+			} catch (IOException ex) {
+				throw new ServiceException(ErrorCode.API_ERROR);
+			}
+		}
+		return results;
 	}
 
-	/** searchVideoIds() 최대 재시도 후에도 IOException을 던지면 호출 */
+	/**
+	 * searchVideoIds() 최대 재시도 후에도 실패 시 호출
+	 */
 	public List<String> fallbackSearchVideoIds(
 		String query,
 		String regionCode,
@@ -137,11 +145,15 @@ public class YoutubeService {
 		throw new ServiceException(ErrorCode.API_ERROR);
 	}
 
-	/** fetchVideosByIds() 최대 재시도 후에도 IOException을 던지면 호출 */
-	public List<Video> fallbackFetchVideosByIds(
+	/**
+	 * fetchVideosByIdsAsync() 최대 재시도 후에도 실패 시 호출
+	 */
+	public CompletableFuture<List<Video>> fallbackFetchVideosByIds(
 		List<String> videoIds,
 		Throwable t
 	) {
-		throw new ServiceException(ErrorCode.API_ERROR);
+		CompletableFuture<List<Video>> failed = new CompletableFuture<>();
+		failed.completeExceptionally(new ServiceException(ErrorCode.API_ERROR));
+		return failed;
 	}
 }
