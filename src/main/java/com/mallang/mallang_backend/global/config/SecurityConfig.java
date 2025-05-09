@@ -35,8 +35,9 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
-    private final CustomAuthenticationFilter customAuthenticationFilter;
     private final CustomOAuth2Service customOAuth2Service;
+    private final AccessTokenFilter accessTokenFilter;
+    private final RefreshTokenFilter refreshTokenFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -70,7 +71,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(accessTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(refreshTokenFilter, AccessTokenFilter.class)
                 .oauth2Login(oauth2 ->
                         oauth2.userInfoEndpoint(userInfo -> userInfo
                                         .userService(customOAuth2Service)

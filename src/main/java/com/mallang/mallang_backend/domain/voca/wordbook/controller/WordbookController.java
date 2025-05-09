@@ -3,9 +3,11 @@ package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Wordbook", description = "단어장 관련 API")
 @RestController
@@ -32,10 +36,12 @@ public class WordbookController {
 	 */
 	@Operation(summary = "영상 학습 중 단어 추가", description = "영상 학습 중 1개 이상의 단어를 추가합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장에 단어가 추가되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@PostMapping("/{wordbookId}/words")
 	public ResponseEntity<RsData<Void>> addWords(
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordToWordbookListRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -56,10 +62,12 @@ public class WordbookController {
 	 */
 	@Operation(summary = "사용자 정의 단어 추가", description = "회원이 직접 입력한 단어를 추가합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장에 단어가 추가되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@PostMapping("/{wordbookId}/words/custom")
 	public ResponseEntity<RsData<Void>> addWordCustom(
 		@PathVariable Long wordbookId,
 		@RequestBody AddWordRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -80,9 +88,11 @@ public class WordbookController {
 	@Operation(summary = "단어장 생성", description = "추가 단어장을 생성합니다.")
 	@ApiResponse(responseCode = "200", description = "추가 단어장이 생성되었습니다.")
 	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
+	@PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_IS_NONE, WORDBOOK_CREATE_DEFAULT_FORBIDDEN})
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
 		@RequestBody WordbookCreateRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -104,10 +114,12 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 이름 변경", description = "단어장의 이름을 변경합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장의 이름이 변경되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@PatchMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> renameWordbook(
 		@PathVariable Long wordbookId,
 		@RequestBody WordbookRenameRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -127,9 +139,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 삭제", description = "특정 단어장을 삭제합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장이 삭제되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_DELETE_DEFAULT_FORBIDDEN})
 	@DeleteMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> deleteWordbook(
 		@PathVariable Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -149,9 +163,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 이동", description = "단어를 다른 단어장으로 이동합니다.")
 	@ApiResponse(responseCode = "200", description = "단어들이 이동되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PatchMapping("/words/move")
 	public ResponseEntity<RsData<Void>> moveWords(
 		@RequestBody WordMoveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -171,9 +187,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 일괄 삭제", description = "단어장을 선택하여 단어들을 일괄 삭제합니다.")
 	@ApiResponse(responseCode = "200", description = "단어들이 삭제되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PostMapping("/words/delete")
 	public ResponseEntity<RsData<Void>> deleteWords(
 		@RequestBody WordDeleteRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -193,9 +211,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 목록 조회", description = "특정 단어장의 단어 목록을 무작위로 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
+	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@GetMapping("/{wordbookId}/words")
 	public ResponseEntity<RsData<List<WordResponse>>> getWords(
 		@PathVariable Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -215,8 +235,10 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 목록 조회", description = "로그인한 사용자의 모든 단어장을 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장 목록 조회에 성공했습니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping
 	public ResponseEntity<RsData<List<WordbookResponse>>> getWordbooks(
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -237,9 +259,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 검색", description = "내 단어장에서 단어를 검색합니다.")
 	@ApiResponse(responseCode = "200", description = "단어 검색 결과입니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/search")
 	public ResponseEntity<RsData<List<WordResponse>>> searchWords(
 		@RequestParam String keyword,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -260,9 +284,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 목록 조회", description = "특정 단어장의 단어 목록을 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
+	@PossibleErrors({MEMBER_NOT_FOUND, NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@GetMapping("/view")
 	public ResponseEntity<RsData<List<WordResponse>>> getWordbookItems(
 		@RequestParam(required = false) Long wordbookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();

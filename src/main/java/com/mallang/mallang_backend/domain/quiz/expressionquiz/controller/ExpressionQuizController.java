@@ -6,14 +6,18 @@ import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuiz
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.ExpressionQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "ExpressionQuiz", description = "표현함 퀴즈 관련 API")
 @RestController
@@ -32,9 +36,11 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 조회", description = "표현함에 대한 퀴즈를 요청합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 문제를 조회했습니다.")
+	@PossibleErrors({NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN, EXPRESSIONBOOK_IS_EMPTY})
 	@GetMapping("/{expressionBookId}/quiz")
 	public ResponseEntity<RsData<ExpressionQuizResponse>> getExpressionBookQuiz(
 		@PathVariable Long expressionBookId,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
@@ -57,9 +63,11 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 결과 저장", description = "표현함 아이템에 대한 퀴즈 결과를 저장합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 결과 저장 완료")
+	@PossibleErrors({EXPRESSIONBOOK_ITEM_NOT_FOUND, EXPRESSIONQUIZ_NOT_FOUND, EXPRESSION_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND})
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveExpressionQuizResult(
 		@RequestBody ExpressionQuizResultSaveRequest request,
+		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();

@@ -5,9 +5,11 @@ import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.AUDIO_DOWNLOAD_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Video", description = "영상 분석 및 조회 관련 API")
 @RestController
@@ -35,9 +37,11 @@ public class VideoController {
      */
     @Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
     @ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
+    @PossibleErrors({VIDEO_ID_SEARCH_FAILED, AUDIO_DOWNLOAD_FAILED, API_ERROR})
     @GetMapping("/{youtubeVideoId}/analysis")
     public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(
         @PathVariable String youtubeVideoId,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
@@ -67,11 +71,13 @@ public class VideoController {
      */
     @Operation(summary = "영상 목록 조회", description = "조건에 맞는 영상 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "영상 목록 조회 완료")
+    @PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_NOT_CONFIGURED, VIDEO_ID_SEARCH_FAILED, VIDEO_DETAIL_FETCH_FAILED, API_ERROR})
     @GetMapping("/list")
     public ResponseEntity<RsData<List<VideoResponse>>> getVideoList(
         @RequestParam(required = false) String q,
         @RequestParam(required = false) String category,
         @RequestParam(defaultValue = "100") long maxResults,
+        @Parameter(hidden = true)
         @Login CustomUserDetails userDetail
     ) {
         List<VideoResponse> list = videoService.getVideosForMember(

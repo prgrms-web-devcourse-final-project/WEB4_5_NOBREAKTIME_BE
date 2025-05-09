@@ -14,6 +14,7 @@ public enum ErrorCode {
     LANGUAGE_NOT_CONFIGURED("400-6", "language.not.configured", HttpStatus.BAD_REQUEST), // 언어 설정이 되어 있지 않음
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     NOT_CHANGED("400-9", "not.changed", HttpStatus.BAD_REQUEST),
+    LANGUAGE_ALREADY_SET("410-9", "language.already.set", HttpStatus.CONFLICT),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -45,6 +46,7 @@ public enum ErrorCode {
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
     FORBIDDEN_EXPRESSION_BOOK("403-1", "expression.book.forbidden", HttpStatus.FORBIDDEN),
+    SUBTITLE_NOT_FOUND("404-1", "subtitle.not.found", HttpStatus.NOT_FOUND),
 
     // Expression Errors
     EXPRESSION_NOT_FOUND("404-2", "expression.not.found", HttpStatus.NOT_FOUND),
@@ -95,11 +97,11 @@ public enum ErrorCode {
     // 표현함 이름이 중복됨
     DUPLICATE_EXPRESSIONBOOK_NAME("400-2", "expressionbook.name.duplicate", HttpStatus.BAD_REQUEST),
 
-
     // login Errors
     UNSUPPORTED_OAUTH_PROVIDER("404-2", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
     OAUTH_NETWORK_ERROR("500-1", "oauth.network.error", HttpStatus.INTERNAL_SERVER_ERROR),
     OAUTH_RATE_LIMIT("500-1", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
+    PROFILE_NOT_FOUND("404-2", "profile.not.found", HttpStatus.NOT_FOUND),
 
     // file upload Errors
     FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -115,7 +117,11 @@ public enum ErrorCode {
     API_BLOCK("500-2", "api.block", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 영상 학습 퀴즈용 에러
-    KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND);
+    KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND),
+
+    // 학습 레벨 측정 에러
+    LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
+    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

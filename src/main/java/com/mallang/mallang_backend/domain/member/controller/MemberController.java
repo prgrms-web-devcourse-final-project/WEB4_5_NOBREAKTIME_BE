@@ -3,14 +3,11 @@ package com.mallang.mallang_backend.domain.member.controller;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.filter.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.Login;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenService;
@@ -21,7 +18,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -30,13 +26,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
 
 @Tag(name = "Member", description = "회원 정보 관련 API")
 @RestController
@@ -57,9 +51,10 @@ public class MemberController {
             description = "로그인한 사용자의 학습 언어를 변경합니다."
     )
     @ApiResponse(responseCode = "200", description = "언어 설정이 완료되었습니다.")
-    @PossibleErrors(MEMBER_NOT_FOUND)
+    @PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_ALREADY_SET})
     @PatchMapping("/update-language")
     public ResponseEntity<RsData<?>> updateUserLanguage(
+            @Parameter(hidden = true)
             @Login CustomUserDetails userDetails,
             @Parameter(description = "변경할 언어", required = true, example = "ENGLISH")
             @RequestParam("language") Language language) {
@@ -86,7 +81,9 @@ public class MemberController {
             ))
     @PossibleErrors(MEMBER_NOT_FOUND)
     @GetMapping("/me")
-    public ResponseEntity<RsData<?>> getMyProfile(@Login CustomUserDetails userDetails) {
+    public ResponseEntity<RsData<?>> getMyProfile(
+            @Parameter(hidden = true)
+            @Login CustomUserDetails userDetails) {
 
         Long memberId = userDetails.getMemberId();
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
@@ -109,9 +106,10 @@ public class MemberController {
     })
     @PossibleErrors({DUPLICATE_FILED, MEMBER_NOT_FOUND})
     @PostMapping("/check-email")
-    public ResponseEntity<RsData<?>> checkEmail(
-            @RequestParam("email") @NotBlank @Email(message = "유효한 이메일 형식이 아닙니다.")
-            String email) {
+    public ResponseEntity<RsData<?>> checkEmail(@RequestParam("email")
+                                                @NotBlank
+                                                @Email(message = "유효한 이메일 형식이 아닙니다.")
+                                                String email) {
 
         memberService.validateEmailNotDuplicated(email);
 
@@ -132,11 +130,10 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "파라미터 검증 오류 메시지")
     })
     @PostMapping("/check-nickname")
-    public ResponseEntity<RsData<Boolean>> checkNickname(
-            @RequestParam("nickname")
-            @NotBlank(message = "닉네임을 입력해 주세요.")
-            @Size(min = 1, max = 10, message = "닉네임은 1자 이상 10자 이하로 입력해 주세요.")
-            String nickname) {
+    public ResponseEntity<RsData<Boolean>> checkNickname(@RequestParam("nickname")
+                                                         @NotBlank(message = "닉네임을 입력해 주세요.")
+                                                         @Size(min = 1, max = 10, message = "닉네임은 1자 이상 10자 이하로 입력해 주세요.")
+                                                         String nickname) {
 
         boolean isAvailable = memberService.isNicknameAvailable(nickname);
 
@@ -166,9 +163,11 @@ public class MemberController {
                     schema = @Schema(implementation = ChangeInfoResponse.class)
             ))
     @PossibleErrors({DUPLICATE_FILED, MEMBER_NOT_FOUND})
-    @PutMapping("/me")
+    @PatchMapping("/me")
     public ResponseEntity<RsData<?>> changeMemberInformation(ChangeInfoRequest request,
+                                                             @Parameter(hidden = true)
                                                              @Login CustomUserDetails userDetails) {
+
         Long memberId = userDetails.getMemberId();
         ChangeInfoResponse changeResponse =
                 memberService.changeInformation(memberId, request);
@@ -191,7 +190,6 @@ public class MemberController {
             summary = "프로필 이미지 변경",
             description = "인증된 회원의 프로필 이미지를 변경합니다."
     )
-
     @ApiResponse(
             responseCode = "200",
             description = "프로필 이미지가 수정되었습니다.",
@@ -200,9 +198,11 @@ public class MemberController {
             ))
     @PossibleErrors({MEMBER_NOT_FOUND, FILE_EMPTY, NOT_SUPPORTED_TYPE, NOT_EXIST_BUCKET})
     @PatchMapping("/me/profile")
-    public ResponseEntity<RsData<String>> changeProfileImage(
-            @RequestParam("file") @Valid @NotNull MultipartFile file,
-            @Login CustomUserDetails userDetails) {
+    public ResponseEntity<RsData<String>> changeProfileImage(@RequestParam("file")
+                                                             @Valid
+                                                             @NotNull MultipartFile file,
+                                                             @Parameter(hidden = true)
+                                                             @Login CustomUserDetails userDetails) {
 
         Long memberId = userDetails.getMemberId();
         String s3Url = memberService.changeProfile(memberId, file);
@@ -222,24 +222,18 @@ public class MemberController {
     @ApiResponse(responseCode = "200", description = "로그아웃 성공")
     @PossibleErrors(TOKEN_NOT_FOUND)
     @GetMapping("/logout")
-    public ResponseEntity<RsData<?>> logout(
-            HttpServletRequest request,
-            HttpServletResponse response) {
+    public ResponseEntity<RsData<?>> logout(HttpServletResponse response,
+                                            @Parameter(hidden = true)
+                                            @Login CustomUserDetails userDetails) {
 
-        String refreshToken = extractRefreshToken(request);
-
-        tokenService.invalidateTokenAndBlacklistIfRefreshToken(response, refreshToken);
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
 
         RsData<Object> rsp = new RsData<>(
                 "200",
                 "로그아웃에 성공하셨습니다.");
 
         return ResponseEntity.ok(rsp);
-    }
-
-    private String extractRefreshToken(HttpServletRequest request) {
-        return jwtService.getTokenByCookie(request)
-                .orElseThrow(() -> new ServiceException(ErrorCode.TOKEN_NOT_FOUND));
     }
 
     /**
@@ -252,8 +246,8 @@ public class MemberController {
     @ApiResponse(responseCode = "200", description = "회원 탈퇴가 완료되었습니다.")
     @PossibleErrors({MEMBER_ALREADY_WITHDRAWN, MEMBER_NOT_FOUND, NOT_EXIST_BUCKET})
     @DeleteMapping("/me")
-    public ResponseEntity<RsData<Void>> delete(
-            @Login CustomUserDetails userDetails) {
+    public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
+                                               @Login CustomUserDetails userDetails) {
 
         memberService.withdrawMember(userDetails.getMemberId());
 
@@ -263,20 +257,5 @@ public class MemberController {
         );
 
         return ResponseEntity.ok(response);
-    }
-
-    // 소셜 로그인 실행 후 대시보드 페이지 리다이렉트 시 보여지는 정보
-    // 리다이렉트로 갈지 메인으로 갈지 확정 필요
-    @GetMapping("/dashboard")
-    public ResponseEntity<RsData<?>> inDashboard(@AuthenticationPrincipal OAuth2User principal) {
-
-        String email = principal.getName();
-        Member member = memberService.getMemberByEmail(email);
-
-        return ResponseEntity.ok().body(
-                new RsData<>("200",
-                        "환영합니다, " + member.getNickname() + "님!",
-                        member
-                ));
     }
 }

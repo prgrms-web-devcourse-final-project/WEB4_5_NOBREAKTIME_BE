@@ -7,8 +7,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.PLATFORM_ID_KEY;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_ATTRIBUTE_MAP;
 
 /**
@@ -25,35 +27,41 @@ public class KakaoUserProcessor implements OAuth2UserProcessor {
 
     @Override
     public Map<String, Object> parseAttributes(Map<String, Object> attributes) {
-        Map<String, Object> kakaoInfo = extractProperties(attributes);
+        log.debug("KakaoUserProcessor.attributes {}", attributes);
+
+        Map<String, Object> kakaoAccount = extractNestedMap(attributes, "kakao_account");
+        Map<String, Object> properties = extractNestedMap(attributes, "properties");
+
+        Map<String, Object> kakaoInfo = new HashMap<>();
+        kakaoInfo.put(EMAIL_KEY, kakaoAccount.get("email"));
+        kakaoInfo.put(NICKNAME_KEY, properties.get("nickname"));
+        kakaoInfo.put(PROFILE_IMAGE_KEY, properties.get("profile_image"));
         kakaoInfo.put(PLATFORM_ID_KEY, String.valueOf(attributes.get("id")));
+
+        log.debug("kakaoInfo {}", kakaoInfo);
         return kakaoInfo;
     }
 
     /**
-     * 카카오 OAuth2 응답에서 properties 맵을 추출
-     * @param attributes 전체 속성 맵
-     * @return nickname, profile_image_url 등이 포함된 맵
+     * 중첩 맵 추출 및 타입 변환 메서드 통합
      */
-    private Map<String, Object> extractProperties(Map<String, Object> attributes) {
-        Object propObj = attributes.get("properties");
-
-        if (propObj instanceof Map<?, ?> rawMap) {
-            return convertToStringObjectMap(rawMap);
-        }
-        throw new ServiceException(INVALID_ATTRIBUTE_MAP);
+    private Map<String, Object> extractNestedMap(Map<String, Object> attributes, String key) {
+        return Optional.ofNullable(attributes.get(key))
+                .filter(obj -> obj instanceof Map<?, ?>)
+                .map(obj -> (Map<?, ?>) obj)
+                .map(this::convertToStringObjectMap)
+                .orElseThrow(() -> new ServiceException(INVALID_ATTRIBUTE_MAP));
     }
 
     /**
-     * Map<?, ?>를 Map<String, Object>로 안전하게 변환
+     * 스트림을 이용한 간결한 맵 변환
      */
     private Map<String, Object> convertToStringObjectMap(Map<?, ?> rawMap) {
-        Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-            if (entry.getKey() instanceof String key) {
-                result.put(key, entry.getValue());
-            }
-        }
-        return result;
+        return rawMap.entrySet().stream()
+                .filter(entry -> entry.getKey() instanceof String)
+                .collect(Collectors.toMap(
+                        entry -> (String) entry.getKey(),
+                        Map.Entry::getValue
+                ));
     }
 }

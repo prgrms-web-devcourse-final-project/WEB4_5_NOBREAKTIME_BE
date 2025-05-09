@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,18 +61,19 @@ public class ErrorResponseCustomizer implements OperationCustomizer {
     private Map<String, Object> createExampleValue(ErrorCode code, HttpServletRequest request) {
         ServiceException simulatedException = new ServiceException(code);
         ErrorResponse response = ErrorResponse.of(
-                simulatedException,
-                request,
-                messageService // MessageService 주입 필요
+            simulatedException,
+            request,
+            messageService // MessageService 주입 필요
         );
 
-        return Map.of(
-                "timestamp", response.getTimestamp().toString(),
-                "status", response.getStatus(),
-                "code", response.getCode(),
-                "message", response.getMessage(),
-                "path", "실제 메서드 경로"
-        );
+        Map<String, Object> errorResponseExample = new LinkedHashMap<>();
+        errorResponseExample.put("timestamp", response.getTimestamp().toString());
+        errorResponseExample.put("status", response.getStatus());
+        errorResponseExample.put("code", response.getCode());
+        errorResponseExample.put("message", response.getMessage());
+        errorResponseExample.put("errors", response.getErrors());
+        errorResponseExample.put("path", "실제 메서드 경로");
+
+        return errorResponseExample ;
     }
-
 }

@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.filter;
+package com.mallang.mallang_backend.global.filter.transactionfilter;
 
 import jakarta.servlet.*;
 import org.slf4j.MDC;

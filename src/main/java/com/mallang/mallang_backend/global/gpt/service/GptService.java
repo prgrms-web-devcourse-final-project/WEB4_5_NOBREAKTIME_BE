@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.gpt.service;
 
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 
@@ -32,5 +33,5 @@ public interface GptService {
      */
     List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments);
 
-
+    LevelCheckResponse checkLevel(String wordLevel, String expressionLevel, String wordQuizResultString, String expressionResultString);
 }

@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook.repository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
+import com.mallang.mallang_backend.global.common.Language;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface ExpressionBookRepository extends JpaRepository<ExpressionBook, 
 	Optional<ExpressionBook> findByIdAndMember(Long expressionBookId, Member member);
 
     boolean existsByMemberAndName(Member member, String name);
+
+	List<ExpressionBook> findAllByMemberIdAndLanguage(Long memberId, Language language);
 }

@@ -17,9 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
-import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
-
 /**
  * 로그인 / 회원가입 후
  * 로그인 -> 메인 페이지 / 회원가입 -> 언어 선택 페이지로 리다이렉트 할 것
@@ -69,7 +66,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         if (member.getLanguage() == Language.NONE) {
             response.sendRedirect(frontUrl + "/additional_info");
         } else {
-            response.sendRedirect(frontUrl + "/");
+            response.sendRedirect(frontUrl);
         }
     }
 
@@ -88,10 +85,11 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
 
         // 2. 액세스 토큰 쿠키에 설정
-        jwtService.setJwtSessionCookie(ACCESS_TOKEN, tokenPair.getAccessToken(), response);
+        jwtService.setJwtSessionCookie(tokenPair.getAccessToken(), response);
+        log.info("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
 
         // 3. 리프레시 토큰 쿠키에 설정
-        jwtService.setJwtSessionCookie(REFRESH_TOKEN, tokenPair.getRefreshToken(), response);
+        jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);
     }
 
 }

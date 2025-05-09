@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 
 @Slf4j
@@ -46,7 +48,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackSearchWord(String word, Throwable t) {
         log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -66,7 +68,7 @@ public class GptServiceImpl implements GptService {
      */
     public String fallbackAnalyzeSentence(String sentence, String translatedSentence, Throwable t) {
         log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -90,12 +92,32 @@ public class GptServiceImpl implements GptService {
         return GptScriptProcessor.parseAnalysisResult(content, segments);
     }
 
+    @Override
+    public LevelCheckResponse checkLevel(String wordLevel, String expressionLevel, String wordQuizResultString, String expressionResultString) {
+        String prompt = buildPromptForLevelTestScript(wordLevel, expressionLevel, wordQuizResultString, expressionResultString);
+
+        // GPT 호출
+        OpenAiResponse response = callGptApi(prompt);
+        validateResponse(response);
+
+        String content = response.getChoices().get(0).getMessage().getContent();
+
+        String newWordLevel = GptScriptProcessor.extractWordLevel(content);
+        String newExpressionLevel = GptScriptProcessor.extractExpressionLevel(content);
+
+        if (newWordLevel == null || newExpressionLevel == null) {
+            throw new ServiceException(API_ERROR);
+        }
+
+        return new LevelCheckResponse(newWordLevel, newExpressionLevel);
+    }
+
     /**
      * 재시도 소진 후 스크립트(대본) 분석 fallback 처리
      */
     public String fallbackAnalyzeScript(List<TranscriptSegment> segments, Throwable t) {
         log.error("[GptService] analyzeScript fallback 처리, 예외: {}", t.getMessage());
-        throw new ServiceException(ErrorCode.API_ERROR);
+        throw new ServiceException(API_ERROR);
     }
 
     /**
@@ -186,6 +208,59 @@ public class GptServiceImpl implements GptService {
                 """, script);
     }
 
+    private String buildPromptForLevelTestScript(String wordLevel, String expressionLevel, String wordQuizResult, String expressionQuizResult) {
+        return String.format("""
+            당신은 학습자의 어휘(단어)와 표현(문장) 능력을 평가하는 영어 학습 도우미입니다.
+            아래는 학습자가 최근 풀었던 단어 및 표현 퀴즈의 결과입니다.
+            각 단어는 난이도 (EASY(1), NORMAL(2), HARD(3), VERYHARD(4), EXTREME(5))와 정답 여부가 함께 제공되며, 표현은 문장 단위로 정답 여부가 포함되어 있습니다.
+            이번 평가는 기존의 어휘/표현 수준을 고려해 변동된 수준을 반영하는 방식으로 이루어집니다.
+            처음 측정인 경우, 기존 수준이 NONE이므로 퀴즈 결과만을 바탕으로 판단합니다.
+            기존 수준이 존재하는 경우, 이번 퀴즈 결과를 기반으로 기존 수준이 유지, 향상, 또는 하향될 수 있습니다.
+            최종 평가 결과만 보여줍니다.
+            
+            기존 레벨 (처음 측정이라면 NONE)
+            어휘(Vocabulary): {기존_레벨_어휘}
+            표현(Expression): {기존_레벨_표현}
+            
+            단어 퀴즈 결과 (단어 | 난이도 | 정답여부)
+            {단어_퀴즈_결과}
+            
+            표현 퀴즈 결과 (표현 | 정답여부)
+            {표현_퀴즈_결과}
+            
+            평가 기준
+            어휘 수준 (Vocabulary Level)
+            표현 수준 (Expression Level)
+            
+            언어 수준 등급
+            S: 거의 완벽한 이해와 사용 능력 (모든 난이도에서 높은 정확도)
+            A: 대부분의 상황에서 정확한 이해와 사용 (어려운 난이도에서 약간의 실수 가능)
+            B: 일반적인 상황에서 무난한 이해와 사용 (보통 난이도까지 안정적)
+            C: 기초적인 이해와 사용 (쉬운 난이도 위주, 중간 난이도에서 실수)
+            NONE: 측정할 수 없을 정도로 학습 데이터 부족
+            
+            평가 요청
+            단어(어휘) 수준과 표현(문장) 수준을 각각 S, A, B, C, NONE 중 하나로 평가해주세요.
+            평가가 불가능할 경우, NONE으로 표시해주세요.
+            단어와 표현의 평가 결과는 별도로 작성해주세요.
+            예시의 형식대로 결과만 작성해주세요.
+            
+            예시)
+            어휘 레벨 결과: [A]
+            표현 레벨 결과: [B]
+            ---
+            
+            기존 레벨:
+            어휘(Vocabulary): %s
+            표현(Expression): %s
+            
+            단어 퀴즈 결과:
+            %s
+            
+            표현 퀴즈 결과:
+            %s
+            """, wordLevel, expressionLevel, wordQuizResult, expressionQuizResult);
+    }
 
     /**
      * GPT API 호출
@@ -202,7 +277,7 @@ public class GptServiceImpl implements GptService {
                 clientResponse -> clientResponse.bodyToMono(String.class)
                     .map(body -> {
                         log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
-                        return new ServiceException(ErrorCode.GPT_API_CALL_FAILED);
+                        return new ServiceException(GPT_API_CALL_FAILED);
                     })
             )
             .bodyToMono(OpenAiResponse.class)
@@ -215,7 +290,7 @@ public class GptServiceImpl implements GptService {
     private void validateResponse(OpenAiResponse response) {
         if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
             log.error("[GptService] GPT 응답이 비어있습니다.");
-            throw new ServiceException(ErrorCode.GPT_RESPONSE_EMPTY);
+            throw new ServiceException(GPT_RESPONSE_EMPTY);
         }
     }
 

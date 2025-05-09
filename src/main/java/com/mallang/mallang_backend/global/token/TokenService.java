@@ -5,52 +5,85 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN;
+import static com.mallang.mallang_backend.global.constants.AppConstants.REFRESH_TOKEN_PREFIX;
+
+/**
+ * JWT 토큰 생성 및 Redis 저장을 담당하는 서비스입니다.
+ */
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TokenService {
 
+    // 만료 시간은 설정 파일에서 주입받거나 상수로 관리
     @Value("${jwt.access_expiration}")
-    private Long access_expiration;
+    private Long accessExpiration;
 
     @Value("${jwt.refresh_expiration}")
-    private Long refresh_expiration;
+    private Long refreshExpiration;
 
     public static final Map<String, Long> blacklist = new ConcurrentHashMap<>();
     private final JwtService jwtService;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    // id, 권한 정보를 담은 토큰 생성 (액세스 토큰, 리프레시 토큰)
+    /**
+     * 회원 ID와 권한 정보를 기반으로 액세스 토큰과 리프레시 토큰을 생성합니다.
+     * 리프레시 토큰은 해시 처리 후 Redis 에 저장합니다.
+     *
+     * @param memberId 회원 식별자
+     * @param roleName 권한 이름
+     * @return 생성된 토큰 쌍(TokenPair)
+     */
     public TokenPair createTokenPair(Long memberId, String roleName) {
+        Map<String, Object> claims = createClaims(memberId, roleName);
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("memberId", memberId);
-        claims.put("role", roleName);
+        String accessToken = jwtService.createToken(claims, accessExpiration);
+        String refreshToken = jwtService.createToken(claims, refreshExpiration);
 
-        // 액세스 토큰 생성 (짧은 만료시간)
-        String accessToken = jwtService.createToken(claims, access_expiration);
-
-        // 리프레시 토큰 생성 (긴 만료시간)
-        String refreshToken = jwtService.createToken(claims, refresh_expiration);
+        storeRefreshTokenInRedis(refreshToken, memberId);
 
         return new TokenPair(accessToken, refreshToken);
     }
 
-    // 리프레시 토큰으로 액세스 토큰 재발급
-    public String createAccessToken(Long memberId, String roleName) {
+    /**
+     * JWT 클레임 정보를 생성합니다.
+     *
+     * @param memberId 회원 식별자
+     * @param roleName 권한 이름
+     * @return JWT 클레임 맵
+     */
+    private Map<String, Object> createClaims(Long memberId,
+                                             String roleName) {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("memberId", memberId);
         claims.put("role", roleName);
+        return claims;
+    }
 
-        return jwtService.createToken(claims, access_expiration);
+    /**
+     * 리프레시 토큰을 해시 처리하여 Redis에 저장합니다.
+     * 예시: key - refreshtoken:1 value - 실제 토큰 값
+     *
+     * @param refreshToken 리프레시 토큰
+     * @param memberId     회원 식별자
+     */
+    private void storeRefreshTokenInRedis(String refreshToken,
+                                          Long memberId) {
+
+        String key = REFRESH_TOKEN_PREFIX + memberId;
+
+        redisTemplate.opsForValue().set(key, refreshToken, refreshExpiration, TimeUnit.MILLISECONDS);
     }
 
     // 블랙리스트에서 토큰 확인
@@ -71,13 +104,13 @@ public class TokenService {
      * 로그아웃 시 해당 토큰을 쿠키에서 삭제하고, 블랙리스트에 추가합니다.
      *
      * @param response HttpServletResponse 객체
-     * @param token    블랙리스트에 추가할 토큰 값 (refreshToken)
+     * @param memberId redis 삭제 객체
      */
-    public void invalidateTokenAndBlacklistIfRefreshToken(HttpServletResponse response, String token) {
+    public void invalidateTokenAndDeleteRedisRefreshToken (HttpServletResponse response, Long memberId) {
         if (response == null) return;
 
-        deleteTokenInCookie(response);
-        addToBlacklist(token);
+        deleteTokenInCookie(response, REFRESH_TOKEN);
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + memberId);
     }
 
     /**
@@ -85,16 +118,17 @@ public class TokenService {
      *
      * @param response HttpServletResponse 객체
      */
-    private void deleteTokenInCookie(HttpServletResponse response) {
+    public void deleteTokenInCookie(HttpServletResponse response, String cookieName) {
         if (response == null) return;
 
-        Cookie expiredCookie = new Cookie(REFRESH_TOKEN, null);
+        Cookie expiredCookie = new Cookie(cookieName, null);
         expiredCookie.setMaxAge(0); // 쿠키 즉시 삭제
         expiredCookie.setPath("/"); // 전체 경로에 적용
 
         response.addCookie(expiredCookie);
 
-        log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}", expiredCookie.getName(), expiredCookie.getValue());
+        log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}",
+                expiredCookie.getName(), expiredCookie.getValue());
     }
 
     /**
@@ -106,7 +140,7 @@ public class TokenService {
     public void addToBlacklist(String token) {
         if (token == null || token.trim().isEmpty()) return;
 
-        long expirationTime = System.currentTimeMillis() + refresh_expiration;
+        long expirationTime = System.currentTimeMillis() + refreshExpiration;
         blacklist.put(token, expirationTime);
         log.info("블랙리스트에 토큰 추가: {}, 만료 시간: {}", token, expirationTime);
     }
