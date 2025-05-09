@@ -59,10 +59,7 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Subscription subscription = Subscription.BASIC;
-
-    @Column(nullable = false)
-    private LocalDateTime subscribedAt = createdAt;
+    private SubscriptionType subscriptionType = SubscriptionType.BASIC;
 
     @Column(nullable = false)
     private int wordGoal = 20;
@@ -130,14 +127,14 @@ public class Member {
         }
     }
 
-    // 언어 선택 업데이트 로직 -> 소셜 로그인 회원
+    // 언어 선택 업데이트
     public void updateLearningLanguage(Language language) {
         this.language = language;
     }
 
     // 구독 플랜 업데이트
-    public void updateSubscription(Subscription subscription) {
-        this.subscription = subscription;
+    public void updateSubscription(SubscriptionType subscriptionType) {
+        this.subscriptionType = subscriptionType;
     }
 
     public void updateWordGoal(int wordGoal) {
@@ -178,7 +175,7 @@ public class Member {
         this.email = "withdrawn_" + this.id;
         this.profileImageUrl = "delete";
         this.loginPlatform = LoginPlatform.NONE;
-        this.subscription = Subscription.NONE;
+        this.subscriptionType = SubscriptionType.NONE;
     }
 
     public void updateProfileImageUrl(String profileImageUrl) {

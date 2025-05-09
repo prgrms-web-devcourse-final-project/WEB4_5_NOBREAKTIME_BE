@@ -4,11 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
 
         TokenPair tokenPair1 = tokenService.createTokenPair(
             basicUser.getId(),
-            basicUser.getSubscription().getRoleName()
+            basicUser.getSubscriptionType().getRoleName()
         );
 
         // 생성된 토큰 로깅
@@ -53,7 +48,7 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Refresh Token: {}", tokenPair1.getRefreshToken());
         log.info("===================================");
 
-        setSecurityContext(basicUser, basicUser.getSubscription().getRoleName());
+        setSecurityContext(basicUser, basicUser.getSubscriptionType().getRoleName());
     }
 
     private Member createTestUser() throws IOException {

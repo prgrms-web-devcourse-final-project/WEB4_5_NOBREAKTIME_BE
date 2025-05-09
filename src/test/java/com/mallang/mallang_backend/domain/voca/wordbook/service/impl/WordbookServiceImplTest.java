@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
@@ -129,7 +129,7 @@ class WordbookServiceImplTest {
 		AddWordRequest dto = new AddWordRequest();
 		dto.setWord("apple");
 
-		savedMember.updateSubscription(Subscription.STANDARD);
+		savedMember.updateSubscription(SubscriptionType.STANDARD);
 
 		given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId())).willReturn(
 			Optional.of(savedWordbook));
@@ -151,7 +151,7 @@ class WordbookServiceImplTest {
 			WordbookCreateRequest request = new WordbookCreateRequest();
 			request.setName("My Vocab");
 
-			savedMember.updateSubscription(Subscription.STANDARD);
+			savedMember.updateSubscription(SubscriptionType.STANDARD);
 
 			Wordbook wordbook = Wordbook.builder()
 				.member(savedMember)
@@ -175,7 +175,7 @@ class WordbookServiceImplTest {
 			WordbookCreateRequest request = new WordbookCreateRequest();
 			request.setName("기본 단어장");
 
-			savedMember.updateSubscription(Subscription.STANDARD);
+			savedMember.updateSubscription(SubscriptionType.STANDARD);
 
 			given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
 

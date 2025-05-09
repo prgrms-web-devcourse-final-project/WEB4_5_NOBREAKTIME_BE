@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
@@ -69,7 +69,7 @@ class ExpressionBookServiceImplTest2 {
 		idField.setAccessible(true);
 		idField.set(member, memberId);
 		member.updateLearningLanguage(Language.ENGLISH);
-		member.updateSubscription(Subscription.STANDARD);
+		member.updateSubscription(SubscriptionType.STANDARD);
 
 		ExpressionBookRequest request = new ExpressionBookRequest("My Book");
 
@@ -126,7 +126,7 @@ class ExpressionBookServiceImplTest2 {
 			.build();
 		setId(basicMember, memberId);
 
-		basicMember.updateSubscription(Subscription.BASIC);
+		basicMember.updateSubscription(SubscriptionType.BASIC);
 
 		ExpressionBookRequest request = new ExpressionBookRequest("Basic Book");
 
@@ -398,7 +398,7 @@ class ExpressionBookServiceImplTest2 {
 			.loginPlatform(LoginPlatform.KAKAO)
 			.language(Language.ENGLISH)
 			.build();
-		member.updateSubscription(Subscription.STANDARD);
+		member.updateSubscription(SubscriptionType.STANDARD);
 
 		Field idField = Member.class.getDeclaredField("id");
 		idField.setAccessible(true);
@@ -467,7 +467,7 @@ class ExpressionBookServiceImplTest2 {
 			.loginPlatform(LoginPlatform.KAKAO)
 			.language(Language.ENGLISH)
 			.build();
-		mockMember.updateSubscription(Subscription.STANDARD);
+		mockMember.updateSubscription(SubscriptionType.STANDARD);
 
 		Field idField = Member.class.getDeclaredField("id");
 		idField.setAccessible(true);
