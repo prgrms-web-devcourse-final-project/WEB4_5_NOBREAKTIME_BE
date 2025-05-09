@@ -102,6 +102,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
+        if (expressionBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
         if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
             throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
         }
@@ -117,6 +121,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        if (expressionBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
         // 기본 표현함을 삭제 시도하면 실패
@@ -230,6 +238,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
             .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        if (sourceBook.getMember().getSubscription() == BASIC ||
+            targetBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
 
         if (!sourceBook.getMember().getId().equals(memberId) ||
             !targetBook.getMember().getId().equals(memberId)) {
