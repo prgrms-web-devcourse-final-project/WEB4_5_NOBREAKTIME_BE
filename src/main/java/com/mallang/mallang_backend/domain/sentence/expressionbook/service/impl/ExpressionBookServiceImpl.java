@@ -1,27 +1,12 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionSaveRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.*;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
@@ -32,10 +17,20 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import static com.mallang.mallang_backend.domain.member.entity.Subscription.BASIC;
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -57,8 +52,12 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!member.getSubscription().isStandardOrHigher()) {
+        if (member.getSubscription() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
+        if (member.getLanguage() == Language.NONE) {
+            throw new ServiceException(LANGUAGE_IS_NONE);
         }
 
         if (request.getName().equals(DEFAULT_EXPRESSION_BOOK_NAME)) {
