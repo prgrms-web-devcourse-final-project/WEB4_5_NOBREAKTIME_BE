@@ -130,27 +130,23 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	private VideoDetail fetchDetail(String videoId) {
-		try {
-			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
-			var ytVideo = ytVideos.stream()
-				.findFirst()
-				.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+		List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
+		var ytVideo = ytVideos.stream()
+			.findFirst()
+			.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
 
-			// 언어 정보 파싱
-			Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
+		// 언어 정보 파싱
+		Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
 
-			// 응답 DTO 생성
-			return new VideoDetail(
-				ytVideo.getId(),
-				ytVideo.getSnippet().getTitle(),
-				ytVideo.getSnippet().getDescription(),
-				ytVideo.getSnippet().getThumbnails().getMedium().getUrl(),
-				ytVideo.getSnippet().getChannelTitle(),
-				lang
-			);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
-		}
+		// 응답 DTO 생성
+		return new VideoDetail(
+			ytVideo.getId(),
+			ytVideo.getSnippet().getTitle(),
+			ytVideo.getSnippet().getDescription(),
+			ytVideo.getSnippet().getThumbnails().getMedium().getUrl(),
+			ytVideo.getSnippet().getChannelTitle(),
+			lang
+		);
 	}
 
 	/**
@@ -200,11 +196,7 @@ public class VideoServiceImpl implements VideoService {
 	 * YouTube ID 목록으로 Video 모델 조회
 	 */
 	private List<Video> fetchVideoDetails(List<String> ids) {
-		try {
-			return youtubeService.fetchVideosByIds(ids);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
-		}
+		return youtubeService.fetchVideosByIds(ids);
 	}
 
 	/**

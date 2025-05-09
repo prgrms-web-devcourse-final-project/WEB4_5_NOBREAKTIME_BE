@@ -69,4 +69,21 @@ public class AsyncConfig {
 		 */
 		return new DelegatingSecurityContextAsyncTaskExecutor(executor);
 	}
+
+	/**
+	 * YouTube API 호출 전용 스레드풀
+	 * corePoolSize : 5
+	 * maxPoolSize  : 10
+	 * queueCapacity: 100
+	 */
+	@Bean(name = "youtubeApiExecutor")
+	public Executor youtubeApiExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(5);
+		executor.setMaxPoolSize(10);
+		executor.setQueueCapacity(100);
+		executor.setThreadNamePrefix("youtube-api-");
+		executor.initialize();
+		return executor;
+	}
 }
