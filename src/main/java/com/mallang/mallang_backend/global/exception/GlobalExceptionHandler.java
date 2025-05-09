@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.global.exception;
 import com.mallang.mallang_backend.global.exception.message.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,11 +11,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
+@Slf4j
 public class GlobalExceptionHandler {
 
     private final MessageService messageService;
@@ -64,5 +68,20 @@ public class GlobalExceptionHandler {
                 errorMessages,
                 request.getRequestURI()
         );
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
+        log.error(" 예외 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
+
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .code("500-0")
+                .message("알 수 없는 서버 오류가 발생했습니다.")
+                .errors(List.of(e.getClass().getSimpleName() + ": " + e.getMessage()))
+                .path(request.getRequestURI())
+                .build();
     }
 }
