@@ -6,7 +6,7 @@ import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
@@ -143,7 +143,7 @@ public class MemberServiceImpl implements MemberService {
                 .nickname(member.getNickname())
                 .email(member.getEmail())
                 .profileImage(member.getProfileImageUrl())
-                .subscription(member.getSubscription())
+                .subscriptionType(member.getSubscriptionType())
                 .language(member.getLanguage())
                 .build();
     }
@@ -155,7 +155,7 @@ public class MemberServiceImpl implements MemberService {
      * @return member 의 구독 타입에서 가져온 권한 정보
      */
     public String getRoleName(Long memberId) {
-        return findMemberOrThrow(memberId).getSubscription().getRoleName();
+        return findMemberOrThrow(memberId).getSubscriptionType().getRoleName();
     }
 
     public Member getMemberById(Long memberId) {
@@ -182,7 +182,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     private void downgradeSubscriptionToBasic(Long memberId) {
-        subscriptionService.updateSubscription(memberId, Subscription.BASIC);
+        subscriptionService.updateSubscription(memberId, SubscriptionType.BASIC);
     }
 
     /**

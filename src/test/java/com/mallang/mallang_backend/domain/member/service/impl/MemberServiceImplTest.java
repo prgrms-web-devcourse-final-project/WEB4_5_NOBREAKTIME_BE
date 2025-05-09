@@ -2,7 +2,7 @@ package com.mallang.mallang_backend.domain.member.service.impl;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.MemberService;
@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 
@@ -125,7 +124,7 @@ class MemberServiceImplTest {
         // Given: 구독 정보 포함한 멤버 저장
         Member member = createMember1();
         Member savedMember = memberRepository.save(member);
-        savedMember.updateSubscription(Subscription.PREMIUM);
+        savedMember.updateSubscription(SubscriptionType.PREMIUM);
 
         // When
         String role = memberService.getRoleName(savedMember.getId());
