@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@AllArgsConstructor
 public enum ErrorCode {
 
     // Member Errors
@@ -126,4 +125,11 @@ public enum ErrorCode {
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
     private final HttpStatus status;
+
+    ErrorCode(String code, String messageCode, HttpStatus status) {
+        this.code = code;
+        this.messageCode = messageCode;
+        this.status = status;
+    }
+
 }
