@@ -93,6 +93,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 이름 수정", description = "특정 추가 표현함의 이름을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 이름이 수정되었습니다.")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> updateName(
@@ -120,6 +121,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 삭제", description = "특정 추가 표현함을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "표현함이 삭제되었습니다.")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION, EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN})
     @DeleteMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> delete(
@@ -223,6 +225,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현 이동", description = "특정 표현함에서 다른 표현함으로 표현을 이동합니다.")
     @ApiResponse(responseCode = "200", description = "표현이 다른 표현함으로 이동되었습니다.")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
