@@ -95,14 +95,18 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     @Transactional
     public void updateName(Long expressionBookId, Long memberId, String newName) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
                 .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        book.updateName(newName);
+        if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
+            throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
+        }
+
+        expressionBook.updateName(newName);
     }
 
     @Override
