@@ -1,8 +1,13 @@
 package com.mallang.mallang_backend.domain.dashboard.service.impl;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +16,12 @@ import com.mallang.mallang_backend.domain.dashboard.dto.AchievementDetail;
 import com.mallang.mallang_backend.domain.dashboard.dto.DailyGoal;
 import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistory;
 import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistoryResponse;
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
 import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
 import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
 import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
+import com.mallang.mallang_backend.domain.member.entity.Level;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
@@ -25,12 +32,16 @@ import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizResult;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
+import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
+import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.service.GptService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,11 +57,13 @@ public class DashboardServiceImpl implements DashboardService {
 	private final WordQuizRepository wordQuizRepository;
 	private final ExpressionQuizRepository expressionQuizRepository;
 	private final WordbookItemRepository wordbookItemRepository;
+	private final WordRepository wordRepository;
+	private final GptService gptService;
 
 	@Override
 	public StatisticResponse getStatistics(Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
 		int watchedVideoCount = videoHistoryRepository.countByMember(member);
 
@@ -93,15 +106,9 @@ public class DashboardServiceImpl implements DashboardService {
 		);
 	}
 
+	// 레벨 측정 가능한지 확인
 	private boolean checkMeasurable(Member member) {
-		// 최소 측정인 경우 200개 이상의 문제를 풀었을 때 측정이 가능할 수 있다
-		if (member.isFirstLevelMeasure()) {
-			int wordQuizResultCount = wordQuizResultRepository.countByWordQuiz_Member(member);
-			int expressionQuizResultCount = expressionQuizResultRepository.countByExpressionQuiz_Member(member);
-
-			return 200 <= wordQuizResultCount + expressionQuizResultCount;
-		}
-		// 최초 측정이 아닌 경우 100개 이상의 문제를 풀었을 때 지금 측정 가능 버튼 활성화
+		// 마지막 측정 이후 100개 이상의 문제를 풀었을 때 측정 가능
 		int wordQuizResultCount = wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(
 			member, member.getMeasuredAt());
 		int expressionQuizResultCount = expressionQuizResultRepository.countByExpressionQuiz_MemberAndCreatedAtAfter(
@@ -113,7 +120,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Transactional
 	public void updateGoal(UpdateGoalRequest request, Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 		member.updateVideoGoal(request.getVideoGoal());
 		member.updateWordGoal(request.getWordGoal());
 		memberRepository.save(member);
@@ -122,7 +129,7 @@ public class DashboardServiceImpl implements DashboardService {
 	@Override
 	public LearningHistoryResponse getLearningStatisticsByPeriod(Long memberId, LocalDate now) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
 		LocalDateTime todayStart = now.atStartOfDay();
 		LocalDateTime yesterdayStart = todayStart.minusDays(1);
@@ -201,5 +208,80 @@ public class DashboardServiceImpl implements DashboardService {
 		long minutes = (totalSeconds % 3600) / 60;
 		long seconds = totalSeconds % 60;
 		return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+	}
+
+	// 레벨 측정
+	@Transactional
+	@Override
+	public LevelCheckResponse checkLevel(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		// 회원이 지금 측정 가능한 상태인지 체크
+		if (!checkMeasurable(member)) {
+			throw new ServiceException(LEVEL_NOT_MEASURABLE);
+		}
+
+		// 단어 퀴즈, 표현 퀴즈 결과에서 측정되지 않은 최대 100개의 결과 가져오기
+		List<WordQuizResult> wordQuizResults = wordQuizResultRepository.findTop100ByWordQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(
+			member, member.getMeasuredAt());
+		List<ExpressionQuizResult> expressionQuizResults = expressionQuizResultRepository.findTop100ByExpressionQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(
+			member, member.getMeasuredAt());
+
+		// 단어 퀴즈 결과 데이터
+		String wordQuizResultString = getWordsFromResults(wordQuizResults);
+
+		// 표현 퀴즈 결과 데이터
+		String expressionResultString = getExpresionsFromResults(expressionQuizResults);
+
+		// OpenAI 결과 파싱
+		String wordLevel = member.getWordLevel().toString();
+		String expressionLevel = member.getExpressionLevel().toString();
+
+		LevelCheckResponse levelCheckResponse = gptService.checkLevel(wordLevel, expressionLevel, wordQuizResultString, expressionResultString);
+
+		member.updateWordLevel(Level.fromString(levelCheckResponse.getWordLevel()));
+		member.updateExpressionLevel(Level.fromString(levelCheckResponse.getExpressionLevel()));
+		member.updateMeasuredAt(LocalDateTime.now());
+		memberRepository.save(member);
+
+		return levelCheckResponse;
+	}
+
+	// 단어 퀴즈 결과에서 단어, 난이도 가져오는 메서드
+	private String getWordsFromResults(List<WordQuizResult> wordQuizResults) {
+		return wordQuizResults.stream()
+			.map(result -> {
+				String wordText = result.getWordbookItem().getWord();
+				boolean correct = result.getIsCorrect();
+
+				// 퀴즈 결과에 해당하는 단어가 WordRepository에서 찾을 수 없는 경우 스킵
+				Optional<Word> opWord = wordRepository.findFirstByWordOrderByIdAsc(wordText);
+				if (opWord.isEmpty()) {
+					return null;
+				}
+
+				Difficulty difficulty = opWord.get().getDifficulty();
+				return wordText + " | " + difficulty + " | " + (correct ? "CORRECT" : "WRONG");
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.joining("\n"));
+	}
+
+	// 표현 퀴즈 결과에서 표현 가져오는 메서드
+	private String getExpresionsFromResults(List<ExpressionQuizResult> expressionQuizResults) {
+		return expressionQuizResults.stream()
+			.map(result -> {
+				Expression expression = result.getExpression();
+				if (expression == null) {
+					return null;
+				}
+				String expressionText = expression.getSentence();
+				boolean correct = result.getIsCorrect();
+
+				return expressionText + " | " + (correct ? "CORRECT" : "WRONG");
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.joining("\n"));
 	}
 }

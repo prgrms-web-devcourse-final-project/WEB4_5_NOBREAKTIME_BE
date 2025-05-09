@@ -1,0 +1,2 @@
+INSERT INTO PUBLIC.VIDEOS (VIDEO_ID,CHANNEL_TITLE,"LANGUAGE",THUMBNAIL_IMAGE_URL,VIDEO_TITLE) VALUES
+    ('OGz4EJIUPiA','Van AI Tech Dream','ENGLISH','https://i.ytimg.com/vi/OGz4EJIUPiA/mqdefault.jpg','How to Convert Text to Video with AI in 1 Minute | AI Video Generator');

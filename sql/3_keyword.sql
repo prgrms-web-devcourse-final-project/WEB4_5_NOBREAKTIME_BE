@@ -1,0 +1,96 @@
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (1,'열정적인','passionate',1,'OGz4EJIUPiA'),
+                                                                              (1,'창의력','creativity',1,'OGz4EJIUPiA'),
+                                                                              (2,'돌아오신 것을 환영합니다','welcome back',1,'OGz4EJIUPiA'),
+                                                                              (2,'매혹적인','fascinating',2,'OGz4EJIUPiA'),
+                                                                              (2,'깊이 탐구하다','dive into',2,'OGz4EJIUPiA'),
+                                                                              (0,'놓치다','miss',2,'OGz4EJIUPiA'),
+                                                                              (1,'변환하다','transform',3,'OGz4EJIUPiA'),
+                                                                              (2,'매력적인','engaging',3,'OGz4EJIUPiA'),
+                                                                              (0,'도구','tool',3,'OGz4EJIUPiA'),
+                                                                              (1,'제공하다','provide',4,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (2,'통합하다','incorporate',4,'OGz4EJIUPiA'),
+                                                                              (1,'애니메이션','animation',4,'OGz4EJIUPiA'),
+                                                                              (1,'상상하다','imagine',5,'OGz4EJIUPiA'),
+                                                                              (1,'탐구하다','explore',5,'OGz4EJIUPiA'),
+                                                                              (0,'놀라운','amazing',5,'OGz4EJIUPiA'),
+                                                                              (3,'자연어 처리','natural language processing',6,'OGz4EJIUPiA'),
+                                                                              (3,'기계 학습','machine learning',6,'OGz4EJIUPiA'),
+                                                                              (2,'알고리즘','algorithm',6,'OGz4EJIUPiA'),
+                                                                              (2,'관련 있는','relevant',7,'OGz4EJIUPiA'),
+                                                                              (2,'효과적으로','effectively',7,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (0,'사용하다','use',7,'OGz4EJIUPiA'),
+                                                                              (1,'유료 도구','paid tool',8,'OGz4EJIUPiA'),
+                                                                              (1,'서비스 패키지','service package',8,'OGz4EJIUPiA'),
+                                                                              (0,'유념하다','note',8,'OGz4EJIUPiA'),
+                                                                              (2,'활용하다','leverage',9,'OGz4EJIUPiA'),
+                                                                              (1,'기능','feature',9,'OGz4EJIUPiA'),
+                                                                              (1,'평균 비용','average cost',9,'OGz4EJIUPiA'),
+                                                                              (2,'동등한','equivalent',10,'OGz4EJIUPiA'),
+                                                                              (0,'받다','receive',10,'OGz4EJIUPiA'),
+                                                                              (1,'크레딧','credit',10,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (1,'제작하다','produce',11,'OGz4EJIUPiA'),
+                                                                              (1,'비디오 편집자','video editor',11,'OGz4EJIUPiA'),
+                                                                              (1,'비교','comparison',11,'OGz4EJIUPiA'),
+                                                                              (1,'가입하다','sign up',13,'OGz4EJIUPiA'),
+                                                                              (0,'사용이 쉬운','easy to use',13,'OGz4EJIUPiA'),
+                                                                              (0,'지원하다','support',13,'OGz4EJIUPiA'),
+                                                                              (0,'입력하다','fill in',14,'OGz4EJIUPiA'),
+                                                                              (1,'등록 링크','registration link',14,'OGz4EJIUPiA'),
+                                                                              (1,'업그레이드하다','upgrade',14,'OGz4EJIUPiA'),
+                                                                              (1,'인터페이스','interface',15,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (1,'완료된','completed',15,'OGz4EJIUPiA'),
+                                                                              (0,'나타나다','appear',15,'OGz4EJIUPiA'),
+                                                                              (0,'비어 있는','empty',16,'OGz4EJIUPiA'),
+                                                                              (1,'안내하다','guide',16,'OGz4EJIUPiA'),
+                                                                              (0,'섹션','section',16,'OGz4EJIUPiA'),
+                                                                              (1,'기능','feature',17,'OGz4EJIUPiA'),
+                                                                              (0,'만들다','create',17,'OGz4EJIUPiA'),
+                                                                              (1,'플랫폼','platform',17,'OGz4EJIUPiA'),
+                                                                              (1,'생성하다','generate',18,'OGz4EJIUPiA'),
+                                                                              (1,'템플릿','template',18,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (0,'선택','selection',18,'OGz4EJIUPiA'),
+                                                                              (1,'개요','outline',19,'OGz4EJIUPiA'),
+                                                                              (1,'레이블','label',19,'OGz4EJIUPiA'),
+                                                                              (2,'구독 플랜','subscription plan',19,'OGz4EJIUPiA'),
+                                                                              (1,'홍보','promotion',20,'OGz4EJIUPiA'),
+                                                                              (0,'섹션','section',20,'OGz4EJIUPiA'),
+                                                                              (0,'입력하다','enter',20,'OGz4EJIUPiA'),
+                                                                              (1,'세부 사항','detail',21,'OGz4EJIUPiA'),
+                                                                              (0,'길이','length',21,'OGz4EJIUPiA'),
+                                                                              (1,'중간 길이','medium-length',21,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (1,'생성하다','generate',22,'OGz4EJIUPiA'),
+                                                                              (0,'스크립트','script',22,'OGz4EJIUPiA'),
+                                                                              (0,'초','second',22,'OGz4EJIUPiA'),
+                                                                              (1,'특별한','special',23,'OGz4EJIUPiA'),
+                                                                              (0,'자연스러운','natural',23,'OGz4EJIUPiA'),
+                                                                              (2,'매력적인','engaging',23,'OGz4EJIUPiA'),
+                                                                              (1,'만족한','satisfied',24,'OGz4EJIUPiA'),
+                                                                              (1,'적절한','appropriate',24,'OGz4EJIUPiA'),
+                                                                              (0,'선택하다','select',24,'OGz4EJIUPiA'),
+                                                                              (1,'세로 형식','vertical format',25,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (1,'전환','transition',25,'OGz4EJIUPiA'),
+                                                                              (1,'역동적인','dynamic',25,'OGz4EJIUPiA'),
+                                                                              (1,'적절한','suitable',26,'OGz4EJIUPiA'),
+                                                                              (2,'설명적인','illustrative',26,'OGz4EJIUPiA'),
+                                                                              (2,'자동으로','automatically',26,'OGz4EJIUPiA'),
+                                                                              (2,'개인화하다','personalize',27,'OGz4EJIUPiA'),
+                                                                              (0,'업로드하다','upload',27,'OGz4EJIUPiA'),
+                                                                              (1,'교체하다','replace',27,'OGz4EJIUPiA'),
+                                                                              (1,'독특한','unique',28,'OGz4EJIUPiA'),
+                                                                              (0,'다운로드하다','download',28,'OGz4EJIUPiA');
+INSERT INTO PUBLIC.KEYWORD (DIFFICULTY,MEANING,WORD,SUBTITLE_ID,VIDEO_ID) VALUES
+                                                                              (0,'편집하다','edit',28,'OGz4EJIUPiA'),
+                                                                              (0,'들뜬','excited',29,'OGz4EJIUPiA'),
+                                                                              (1,'자료','resource',29,'OGz4EJIUPiA'),
+                                                                              (0,'확인하다','check out',29,'OGz4EJIUPiA'),
+                                                                              (0,'구독하다','subscribe',30,'OGz4EJIUPiA'),
+                                                                              (1,'알림','notification bell',30,'OGz4EJIUPiA'),
+                                                                              (0,'다음 시간까지','until next time',30,'OGz4EJIUPiA');

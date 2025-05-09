@@ -17,7 +17,9 @@ import org.springframework.stereotype.Component;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.token.TokenPair;
@@ -39,6 +41,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
+
         TokenPair tokenPair1 = tokenService.createTokenPair(
             basicUser.getId(),
             basicUser.getSubscription().getRoleName()
@@ -59,10 +62,17 @@ public class DataInitializer implements CommandLineRunner {
                 .email("google123@gmail.com")
                 .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
-                .language(Language.NONE)
+                .language(Language.ENGLISH)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
+        // testUser.updateSubscription(Subscription.STANDARD);
+        testUser = memberRepository.save(testUser);
 
+        List<Wordbook> wordbooks = Wordbook.createDefault(testUser);
+        wordbookRepository.saveAll(wordbooks);
+
+        List<ExpressionBook> expressionBooks = ExpressionBook.createDefault(testUser);
+        expressionBookRepository.saveAll(expressionBooks);
         /*
         스탠다드 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
         memberRepository.save(testUser);
@@ -75,7 +85,7 @@ public class DataInitializer implements CommandLineRunner {
         testUser.updateSubscription(Subscription.PREMIUM);
         return testUser;*/
 
-        return memberRepository.save(testUser);
+        return testUser;
     }
 
     // 시큐리티 객체에 인증 정보 추가
