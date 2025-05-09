@@ -21,7 +21,4 @@ public enum Subscription {
 
     private final String roleName;
 
-    public boolean isStandardOrHigher() {
-        return this == STANDARD || this == PREMIUM || this == ADMIN;
-    }
 }

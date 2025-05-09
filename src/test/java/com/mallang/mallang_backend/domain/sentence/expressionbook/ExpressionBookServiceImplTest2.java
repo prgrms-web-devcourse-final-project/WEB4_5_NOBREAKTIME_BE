@@ -1,24 +1,5 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook;
 
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.lang.reflect.Field;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.Subscription;
@@ -37,6 +18,24 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Field;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExpressionBookServiceImplTest2 {
@@ -150,6 +149,7 @@ class ExpressionBookServiceImplTest2 {
 		String newName = "Updated Name";
 
 		Member member = Member.builder().language(Language.ENGLISH).build();
+		member.updateSubscription(Subscription.STANDARD);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		ExpressionBook book = ExpressionBook.builder().name("Old Name").language(Language.ENGLISH).member(member).build();
@@ -201,6 +201,7 @@ class ExpressionBookServiceImplTest2 {
 		Long memberId = 1L, bookId = 10L;
 
 		Member member = Member.builder().language(Language.ENGLISH).build();
+		member.updateSubscription(Subscription.STANDARD);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		ExpressionBook book = ExpressionBook.builder().name("My Book").language(Language.ENGLISH).member(member).build();
@@ -338,6 +339,7 @@ class ExpressionBookServiceImplTest2 {
 			.loginPlatform(LoginPlatform.KAKAO)
 			.language(Language.ENGLISH)
 			.build();
+		member.updateSubscription(Subscription.STANDARD);
 		Field memberIdField = Member.class.getDeclaredField("id");
 		memberIdField.setAccessible(true);
 		memberIdField.set(member, memberId);
@@ -428,6 +430,7 @@ class ExpressionBookServiceImplTest2 {
 			.loginPlatform(LoginPlatform.KAKAO)
 			.language(Language.ENGLISH)
 			.build();
+		member.updateSubscription(Subscription.STANDARD);
 
 		Field idField = Member.class.getDeclaredField("id");
 		idField.setAccessible(true);

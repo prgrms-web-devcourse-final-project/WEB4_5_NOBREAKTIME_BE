@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
+
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
@@ -16,12 +17,7 @@ import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.Expre
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionBookResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionResponse;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.ExpressionSaveRequest;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.*;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.service.ExpressionBookService;
@@ -32,10 +28,20 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import static com.mallang.mallang_backend.domain.member.entity.Subscription.BASIC;
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -57,8 +63,12 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!member.getSubscription().isStandardOrHigher()) {
+        if (member.getSubscription() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
+        if (member.getLanguage() == Language.NONE) {
+            throw new ServiceException(LANGUAGE_IS_NONE);
         }
 
         if (request.getName().equals(DEFAULT_EXPRESSION_BOOK_NAME)) {
@@ -95,14 +105,22 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     @Transactional
     public void updateName(Long expressionBookId, Long memberId, String newName) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
                 .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        book.updateName(newName);
+        if (expressionBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
+        if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
+            throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
+        }
+
+        expressionBook.updateName(newName);
     }
 
     @Override
@@ -113,6 +131,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        if (expressionBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
         // 기본 표현함을 삭제 시도하면 실패
@@ -226,6 +248,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
             .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        if (sourceBook.getMember().getSubscription() == BASIC ||
+            targetBook.getMember().getSubscription() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
 
         if (!sourceBook.getMember().getId().equals(memberId) ||
             !targetBook.getMember().getId().equals(memberId)) {
