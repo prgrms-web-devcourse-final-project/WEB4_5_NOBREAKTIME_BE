@@ -1,8 +1,14 @@
 package com.mallang.mallang_backend.global.init;
 
 import java.io.IOException;
-import java.util.List;
+import java.time.Instant;
+import java.util.*;
 
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,19 +23,21 @@ import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.Exp
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.token.TokenPair;
-import com.mallang.mallang_backend.global.token.TokenService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.crypto.SecretKey;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
+    @Value("${jwt.secret}")
+    private String secretKey;
+
     private final MemberRepository memberRepository;
-    private final TokenService tokenService;
     private final WordbookRepository wordbookRepository;
     private final ExpressionBookRepository expressionBookRepository;
 
@@ -37,18 +45,27 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
 
-        TokenPair tokenPair1 = tokenService.createTokenPair(
-            basicUser.getId(),
-            basicUser.getSubscriptionType().getRoleName()
-        );
-
-        // 생성된 토큰 로깅
-        log.info("======= 테스트 사용자 인증 정보 =======");
-        log.info("Access Token: {}", tokenPair1.getAccessToken());
-        log.info("Refresh Token: {}", tokenPair1.getRefreshToken());
-        log.info("===================================");
+        createToken();
 
         setSecurityContext(basicUser, basicUser.getSubscriptionType().getRoleName());
+    }
+
+    // JWT 생성
+    public String createToken() {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("memberId", 1L);
+        claims.put("role", "ROLE_STANDARD");
+
+        Date start = Date.from(Instant.parse("2025-01-01T00:00:00Z"));
+        Date end = Date.from(Instant.parse("2025-10-01T00:00:00Z"));
+        SecretKey key = Keys.hmacShaKeyFor(HexFormat.of().parseHex(secretKey));
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(start)
+                .setExpiration(end)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private Member createTestUser() throws IOException {
@@ -60,20 +77,14 @@ public class DataInitializer implements CommandLineRunner {
                 .language(Language.ENGLISH)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
-        // testUser.updateSubscription(Subscription.STANDARD);
         testUser = memberRepository.save(testUser);
+        testUser.updateSubscription(SubscriptionType.STANDARD);
 
         List<Wordbook> wordbooks = Wordbook.createDefault(testUser);
         wordbookRepository.saveAll(wordbooks);
 
         List<ExpressionBook> expressionBooks = ExpressionBook.createDefault(testUser);
         expressionBookRepository.saveAll(expressionBooks);
-        /*
-        스탠다드 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
-        memberRepository.save(testUser);
-        testUser.updateSubscription(Subscription.STANDARD);
-        return testUser;*/
-
 
         /* 프리미엄 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
         memberRepository.save(testUser);
