@@ -11,8 +11,8 @@ import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 
 public interface SubtitleRepository extends JpaRepository<Subtitle, Long> {
 
-    @Query("SELECT DISTINCT s FROM Subtitle s LEFT JOIN FETCH s.keywords WHERE s.videos = :video")
-    List<Subtitle> findAllByVideosFetchKeywords(@Param("video") Videos video);
+    @Query("SELECT DISTINCT s FROM Subtitle s LEFT JOIN FETCH s.keywords WHERE s.videos.id = :videoId")
+    List<Subtitle> findAllByVideosFetchKeywords(@Param("videoId") String videoId);
 
     List<Subtitle> findByIdIn(List<Long> ids);
 }
