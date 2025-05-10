@@ -82,6 +82,7 @@ public class GptScriptProcessor {
             TranscriptSegment seg = segments.get(i);
 
             GptSubtitleResponse dto = new GptSubtitleResponse(
+                    seg.getId(),
                     seg.getStartTime(),
                     seg.getEndTime(),
                     seg.getSpeaker(),

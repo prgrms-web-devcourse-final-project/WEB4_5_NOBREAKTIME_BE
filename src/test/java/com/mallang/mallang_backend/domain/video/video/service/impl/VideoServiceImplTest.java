@@ -187,6 +187,7 @@ class VideoServiceImplTest {
 		when(gptService.analyzeScript(anyList()))
 			.thenReturn(List.of(
 				new GptSubtitleResponse(
+					1L,
 					"00:00:01",
 					"00:00:03",
 					"Speaker 1",

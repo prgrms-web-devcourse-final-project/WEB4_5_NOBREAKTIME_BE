@@ -283,7 +283,12 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		// subtitle 먼저 저장 (ID를 키로 사용하는 keyword 저장을 위해)
-		subtitleRepository.saveAll(subtitleList);
+		List<Subtitle> savedSubtitles = subtitleRepository.saveAll(subtitleList);
+
+		// ★ 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
+		for (int i = 0; i < savedSubtitles.size(); i++) {
+			gptResult.get(i).setSubtitleId(savedSubtitles.get(i).getId());
+		}
 
 		// keyword 저장
 		keywordRepository.saveAll(keywordList);

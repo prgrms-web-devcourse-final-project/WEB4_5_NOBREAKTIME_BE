@@ -39,7 +39,7 @@ public class TranscriptParserImpl implements TranscriptParser {
 			String startTime = formatMillis(startMs);
 			String endTime = formatMillis(endMs);
 
-			result.add(new TranscriptSegment(startTime, endTime, speaker, text));
+			result.add(new TranscriptSegment(null, startTime, endTime, speaker, text));
 		}
 
 		return new Transcript(result);
