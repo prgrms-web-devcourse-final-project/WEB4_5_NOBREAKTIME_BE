@@ -1,7 +1,5 @@
 package com.mallang.mallang_backend.domain.video.learning.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +61,6 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 		Collections.shuffle(picked, random);
 
 		List<VideoLearningWordQuizItem> items = picked.stream()
-			.limit(MAX_VIDEO_LEARNING_QUIZ_ITEMS)
 			.map(VideoLearningWordQuizItem::from)
 			.collect(Collectors.toList());
 
