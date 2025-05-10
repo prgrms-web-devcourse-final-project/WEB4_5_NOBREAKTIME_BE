@@ -33,6 +33,8 @@ public enum ErrorCode {
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_CONCURRENCY_TIME_OUT("500-4", "analyze.video.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_FAILED("500-5", "analyze.video.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
