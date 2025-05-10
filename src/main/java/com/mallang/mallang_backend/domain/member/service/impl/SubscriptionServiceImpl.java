@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.domain.member.service.impl;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -26,19 +26,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     public boolean hasActiveSubscription(Long memberId) {
         final Member member = findMemberOrThrow(memberId);
-        return member.getSubscription() != Subscription.BASIC;
+        return member.getSubscriptionType() != SubscriptionType.BASIC;
     }
 
     /**
      * 회원의 구독 상태를 변경
      *
      * @param memberId     회원 ID
-     * @param subscription 변경할 구독 상태
+     * @param subscriptionType 변경할 구독 상태
      */
     @Transactional
-    public void updateSubscription(Long memberId, Subscription subscription) {
+    public void updateSubscription(Long memberId, SubscriptionType subscriptionType) {
         Member member = findMemberOrThrow(memberId);
-        member.updateSubscription(subscription);
+        member.updateSubscription(subscriptionType);
     }
 
     /**

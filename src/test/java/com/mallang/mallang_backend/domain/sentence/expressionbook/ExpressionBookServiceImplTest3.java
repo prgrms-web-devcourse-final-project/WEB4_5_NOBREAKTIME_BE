@@ -2,7 +2,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
@@ -92,7 +92,7 @@ class ExpressionBookServiceImplTest3 {
         List<Long> expressionIds = List.of(100L);
 
         Member member = mockMember(memberId);
-        member.updateSubscription(Subscription.STANDARD);
+        member.updateSubscription(SubscriptionType.STANDARD);
 
         ExpressionBook source = mockBook(sourceId, member);
         ExpressionBook target = mockBook(targetId, member);

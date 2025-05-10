@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum Language {
     ENGLISH("en-US"),
     JAPANESE("ja"),
-    NONE("none");
+    NONE("none"),
+    ALL("-"); // 프리미엄 회원의 경우
 
     private final String languageCode;
 

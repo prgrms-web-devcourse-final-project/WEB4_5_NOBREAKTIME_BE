@@ -92,6 +92,7 @@ public class JwtService {
 
         Cookie cookie = new Cookie(REFRESH_TOKEN, token);
         cookie.setPath("/");                // 전체 사이트에서 접근 가능
+        cookie.setHttpOnly(true);
         cookie.setSecure(true);             // HTTPS 통신 시에만 전송
         cookie.setHttpOnly(true);           // 자바스크립트 접근 불가 (XSS 방지)
 
@@ -100,7 +101,7 @@ public class JwtService {
         cookie.setMaxAge(maxAgeSeconds);    // 쿠키 만료 시간(초 단위)
 
         // SameSite=Lax 속성 추가
-        cookie.setAttribute("SameSite", "Lax");
+        cookie.setAttribute("SameSite", "None");
 
         response.addCookie(cookie);
     }

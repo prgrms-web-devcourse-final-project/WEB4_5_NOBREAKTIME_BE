@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-
 /**
  * 로그인 / 회원가입 후
  * 로그인 -> 메인 페이지 / 회원가입 -> 언어 선택 페이지로 리다이렉트 할 것
@@ -63,7 +61,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         String platformId = authentication.getName();
         Member member = memberService.getMemberByPlatformId(platformId);
 
-        setJwtToken(response, member.getId(), member.getSubscription().getRoleName());
+        setJwtToken(response, member.getId(), member.getSubscriptionType().getRoleName());
 
         if (member.getLanguage() == Language.NONE) {
             response.sendRedirect(frontUrl + "/additional_info");

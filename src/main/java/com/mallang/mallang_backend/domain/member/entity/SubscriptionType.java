@@ -12,13 +12,13 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum Subscription {
-    NONE("DELETE_USER"),
-    BASIC("ROLE_BASIC"),
-    STANDARD("ROLE_STANDARD"),
-    PREMIUM("ROLE_PREMIUM"),
-    ADMIN("ROLE_ADMIN"); // 추후 관리자 권한 사용 가능성으로 추가
+public enum SubscriptionType {
+    NONE("DELETE_USER", 0),
+    BASIC("ROLE_BASIC", 0),
+    STANDARD("ROLE_STANDARD", 4500),
+    PREMIUM("ROLE_PREMIUM", 8500),
+    ADMIN("ROLE_ADMIN", 0); // 추후 관리자 권한 사용 가능성으로 추가
 
     private final String roleName;
-
+    private final int basePrice; // 1개월 기준 금액
 }
