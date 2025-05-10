@@ -9,7 +9,7 @@ public enum Language {
     ENGLISH("en-US"),
     JAPANESE("ja"),
     NONE("none"),
-    ALL("-"); // 프리미엄 회원의 경우
+    ALL("all"); // 프리미엄 회원의 경우
 
     private final String languageCode;
 
@@ -25,6 +25,11 @@ public enum Language {
         if (code == null || code.isBlank()) {
             return NONE;
         }
+
+        if (code.equals("all")) {
+            return ALL; // 임시 변경
+        }
+
         String normalized = code.toLowerCase();
         return Arrays.stream(values())
             .filter(lang -> {
