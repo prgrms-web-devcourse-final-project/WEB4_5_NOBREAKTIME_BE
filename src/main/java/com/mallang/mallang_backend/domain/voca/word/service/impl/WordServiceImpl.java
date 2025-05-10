@@ -27,6 +27,7 @@ public class WordServiceImpl implements WordService {
     private final GptService gptService;
 
     @Override
+    @Transactional
     public WordSearchResponse savedWord(String word) {
         List<Word> words = wordRepository.findByWord(word); // DB 조회
         if (!words.isEmpty()) {
