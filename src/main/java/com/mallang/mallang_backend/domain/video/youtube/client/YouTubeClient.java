@@ -1,9 +1,12 @@
 package com.mallang.mallang_backend.domain.video.youtube.client;
 
+import org.springframework.stereotype.Component;
+
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 
+@Component
 public class YouTubeClient {
 
 	// Youtube API 클라이언트 생성
