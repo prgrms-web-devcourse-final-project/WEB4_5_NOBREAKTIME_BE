@@ -3,18 +3,23 @@ package com.mallang.mallang_backend.global.exception;
 import com.mallang.mallang_backend.global.exception.message.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
+@Slf4j
 public class GlobalExceptionHandler {
 
     private final MessageService messageService;
@@ -64,5 +69,42 @@ public class GlobalExceptionHandler {
                 errorMessages,
                 request.getRequestURI()
         );
+    }
+
+    /**
+     * 예기치 않은 예외를 처리하는 메서드입니다.
+     * 서버에서 발생한 모든 예외를 처리하여, 클라이언트에게 기본적인 에러 메시지를 반환합니다.
+     *
+     * @param e       Exception 예외 객체
+     * @param request HttpServletRequest 객체
+     * @return ErrorResponse 기본 에러 메시지
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
+        log.error(" 예외 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
+
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .code("500-0")
+                .message("알 수 없는 서버 오류가 발생했습니다.")
+                .errors(List.of(e.getClass().getSimpleName() + ": " + e.getMessage()))
+                .path(request.getRequestURI())
+                .build();
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAuthorizationDenied(AuthorizationDeniedException e, HttpServletRequest request) {
+        log.warn("접근 거부 - URI: {} | message: {}", request.getRequestURI(), e.getMessage());
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .code("403-1")
+                .message("접근이 거부되었습니다.")
+                .errors(List.of(e.getClass().getSimpleName() + ": " + e.getMessage()))
+                .path(request.getRequestURI())
+                .build();
     }
 }
