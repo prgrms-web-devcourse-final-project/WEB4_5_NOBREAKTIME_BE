@@ -6,7 +6,6 @@ import com.mallang.mallang_backend.domain.bookmark.service.BookmarkService;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.impl.VideoServiceImpl;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +22,10 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class BookmarkServiceImpl implements BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final MemberRepository memberRepository;
-    private final VideoRepository videoRepository;
     private final VideoServiceImpl videoService;
 
     @Override
+    @Transactional
     public void addBookmark(Long memberId, String videoId) {
         if (bookmarkRepository.existsByMemberIdAndVideosId(memberId, videoId)) {
             throw new ServiceException(BOOKMARK_ALREADY_EXISTS);
@@ -41,6 +40,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     @Override
+    @Transactional
     public void removeBookmark(Long memberId, String videoId) {
         if (!bookmarkRepository.existsByMemberIdAndVideosId(memberId, videoId)) {
             throw new ServiceException(BOOKMARK_NOT_FOUND);
