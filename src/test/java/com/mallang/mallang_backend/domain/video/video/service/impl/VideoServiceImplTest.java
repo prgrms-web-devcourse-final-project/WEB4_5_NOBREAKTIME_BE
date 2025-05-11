@@ -101,7 +101,7 @@ class VideoServiceImplTest {
 			.language(Language.ENGLISH)
 			.build();
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
-		when(bookmarkRepository.findByMemberIdOrderByCreatedAtDesc(memberId)).thenReturn(List.of());
+		when(bookmarkRepository.findAllWithVideoByMemberId(memberId)).thenReturn(List.of());
 
 		List<VideoResponse> mockList = List.of(new VideoResponse());
 		doReturn(mockList)

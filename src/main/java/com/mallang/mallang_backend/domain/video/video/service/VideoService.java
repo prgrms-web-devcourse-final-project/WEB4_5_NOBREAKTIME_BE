@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.video.video.service;
 
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,4 +34,6 @@ public interface VideoService {
 	 * @throws InterruptedException 영상 음성 추출 실패
 	 */
 	AnalyzeVideoResponse analyzeVideo(Long memberId, String videoID) throws IOException, InterruptedException;
+
+	Videos saveVideoIfAbsent(String videoId);
 }

@@ -120,6 +120,10 @@ public enum ErrorCode {
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND),
 
+    // 북마크 에러
+    BOOKMARK_ALREADY_EXISTS("409-2", "bookmark.already.exists", HttpStatus.CONFLICT),
+    BOOKMARK_NOT_FOUND("404-3", "bookmark.not.found", HttpStatus.NOT_FOUND),
+
     // 학습 레벨 측정 에러
     LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
     LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);

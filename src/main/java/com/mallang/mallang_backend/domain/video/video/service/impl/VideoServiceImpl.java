@@ -85,7 +85,7 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		// 북마크된 videoId 목록 조회
-		Set<String> bookmarkedIds = bookmarkRepository.findByMemberIdOrderByCreatedAtDesc(memberId).stream()
+		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
 				.map(bookmark -> bookmark.getVideos().getId())
 				.collect(Collectors.toSet());
 
@@ -300,5 +300,15 @@ public class VideoServiceImpl implements VideoService {
 
 		// 비동기로 핵심단어들 gpt 사용하여 단어DB에 저장
 		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
+	}
+
+	@Override
+	@Transactional
+	public Videos saveVideoIfAbsent(String videoId) {
+		return videoRepository.findById(videoId)
+				.orElseGet(() -> {
+					VideoDetail dto = fetchDetail(videoId);
+					return upsertVideoEntity(dto);
+				});
 	}
 }

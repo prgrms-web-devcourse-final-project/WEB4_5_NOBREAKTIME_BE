@@ -7,6 +7,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.video.video.service.impl.VideoServiceImpl;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.VIDEO_ID_SEARCH_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,28 +24,34 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final MemberRepository memberRepository;
     private final VideoRepository videoRepository;
+    private final VideoServiceImpl videoService;
 
     @Override
     public void addBookmark(Long memberId, String videoId) {
-        if (bookmarkRepository.existsByMemberIdAndVideosId(memberId, videoId)) return;
+        if (bookmarkRepository.existsByMemberIdAndVideosId(memberId, videoId)) {
+            throw new ServiceException(BOOKMARK_ALREADY_EXISTS);
+        }
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        Videos video = videoRepository.findById(videoId)
-                .orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
+        Videos video = videoService.saveVideoIfAbsent(videoId);
 
         bookmarkRepository.save(new Bookmark(member, video));
     }
 
     @Override
     public void removeBookmark(Long memberId, String videoId) {
-        bookmarkRepository.deleteByMemberIdAndVideosId(memberId, videoId);
+        if (!bookmarkRepository.existsByMemberIdAndVideosId(memberId, videoId)) {
+            throw new ServiceException(BOOKMARK_NOT_FOUND);
+        }
+
+        bookmarkRepository.deleteByMemberIdAndVideoId(memberId, videoId);
     }
 
     @Override
     public List<Videos> getBookmarks(Long memberId) {
-        return bookmarkRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
+        return bookmarkRepository.findAllWithVideoByMemberId(memberId)
                 .stream()
                 .map(Bookmark::getVideos)
                 .toList();
