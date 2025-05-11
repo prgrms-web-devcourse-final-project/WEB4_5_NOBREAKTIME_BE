@@ -72,8 +72,8 @@ public class TokenService {
     }
 
     /**
-     * 리프레시 토큰을 해시 처리하여 Redis에 저장합니다.
-     * 예시: key - refreshtoken:1 value - 실제 토큰 값
+     * 리프레시 토큰을 Redis 에 저장합니다.
+     * 예시: key - refreshtoken:1(memberId) value - 실제 토큰 값
      *
      * @param refreshToken 리프레시 토큰
      * @param memberId     회원 식별자
@@ -84,6 +84,8 @@ public class TokenService {
         String key = REFRESH_TOKEN_PREFIX + memberId;
 
         redisTemplate.opsForValue().set(key, refreshToken, refreshExpiration, TimeUnit.MILLISECONDS);
+
+        // TODO 토큰값을 DB 에 저장하는 로직 추가, redis 에서 삭제 -> 이후 DB 반영
     }
 
     // 블랙리스트에서 토큰 확인

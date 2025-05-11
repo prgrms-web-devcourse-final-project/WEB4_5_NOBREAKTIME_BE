@@ -43,21 +43,6 @@ public class JwtService {
                 .compact();
     }
 
-    // JWT 유효성 검사
-    public boolean isValidToken(String token) {
-        SecretKey key = getSecretKey(secretKey);
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (JwtException e) {
-            handleAuthException(e);
-            return false;
-        }
-    }
-
     // JWT 검증 및 Claims 객체 추출
     public Claims parseAndValidateToken(String token) {
         SecretKey key = getSecretKey(secretKey);

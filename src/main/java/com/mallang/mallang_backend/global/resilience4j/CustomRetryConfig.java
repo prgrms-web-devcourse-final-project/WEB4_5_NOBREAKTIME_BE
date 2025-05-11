@@ -1,6 +1,5 @@
 package com.mallang.mallang_backend.global.resilience4j;
 
-import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.github.resilience4j.retry.event.RetryOnErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnRetryEvent;
@@ -37,15 +36,13 @@ public class CustomRetryConfig {
 	 */
 	@PostConstruct
 	public void registerRetryEventListeners() {
-		Retry retry = retryRegistry.retry("apiRetry");
-
-		retry.getEventPublisher()
-			// 재시도 시마다 호출
-			.onRetry(event -> onRetry(event))
-			// 최대 재시도 후 실패 시 호출
-			.onError(event -> onError(event))
-			// 재시도 성공 시 호출
-			.onSuccess(event -> onSuccess(event));
+		retryRegistry.getAllRetries().forEach(retry -> {
+			log.info("Retry 인스턴스 등록: {}", retry.getName());
+			retry.getEventPublisher()
+					.onRetry(this::onRetry)
+					.onError(this::onError)
+					.onSuccess(this::onSuccess);
+		});
 	}
 
 	/**

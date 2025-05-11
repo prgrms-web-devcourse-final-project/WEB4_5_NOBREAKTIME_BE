@@ -1,15 +1,14 @@
 package com.mallang.mallang_backend.global.filter.login;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+
 
 
 /**
@@ -21,6 +20,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
+@ToString
 @Schema(description = "인증된 회원의 상세 정보")
 public class CustomUserDetails implements UserDetails {
 

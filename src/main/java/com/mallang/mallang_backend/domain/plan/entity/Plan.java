@@ -3,7 +3,6 @@ package com.mallang.mallang_backend.domain.plan.entity;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,6 +28,10 @@ public class Plan {
     @Enumerated(EnumType.STRING)
     private SubscriptionType type; // STANDARD, PREMIUM / 금액
 
+    /**
+     * 실제 결제 금액은 Plan 의 price × 기간 × (1 - 할인율)
+     * 플랜 + 구독 기간별 계산
+     */
     @Column(nullable = false)
     private int amount;
 
@@ -41,16 +44,4 @@ public class Plan {
 
     @Column(columnDefinition = "TEXT")
     private String benefits; // 제공 혜택에 관한 정보, JSON 문자열 형태
-
-    // 플랜 + 구독 기간별 계산
-
-    /**
-     * 실제 결제 금액은 Plan 의 price × 기간 × (1 - 할인율)
-     * 플랜 + 구독 기간별 계산
-     * @return 총 금액
-     */
-    public int updateTotalAmount() {
-        double total = type.getBasePrice() * period.getMonths() * (1 - period.getDiscountRate());
-        return (int) Math.round(total);
-    }
 }

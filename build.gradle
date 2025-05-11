@@ -40,7 +40,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
 	// JPA & DB
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -115,6 +114,10 @@ dependencies {
 
 	// aws s3
 	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+
+	// swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+	implementation 'com.danielfrak.code:springdoc-openapi-externalized-documentation:1.0.0'
 }
 
 tasks.named('test') {
