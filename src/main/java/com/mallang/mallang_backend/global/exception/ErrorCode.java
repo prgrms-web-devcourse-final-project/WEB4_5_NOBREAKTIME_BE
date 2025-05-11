@@ -124,6 +124,12 @@ public enum ErrorCode {
     BOOKMARK_ALREADY_EXISTS("409-2", "bookmark.already.exists", HttpStatus.CONFLICT),
     BOOKMARK_NOT_FOUND("404-3", "bookmark.not.found", HttpStatus.NOT_FOUND),
 
+    // 결제 상황 오류
+    PLAN_NOT_FOUND("404-2", "plan.not.found", HttpStatus.NOT_FOUND),
+    CONNECTION_FAIL("500-3", "connection.fail", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_NOT_FOUND("404-4", "payment.not.found", HttpStatus.NOT_FOUND),
+    ORDER_ID_CONFLICT("409-5", "order.id.conflict", HttpStatus.CONFLICT),
+
     // 학습 레벨 측정 에러
     LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
     LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);

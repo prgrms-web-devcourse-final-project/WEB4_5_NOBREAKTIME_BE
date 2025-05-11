@@ -43,9 +43,9 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         }'),
 
 -- STANDARD 플랜
-       ('STANDARD', 'MONTHLY', 4500, '스탠다드 월간 구독',
+       ('STANDARD', 'MONTHLY', 4500, '스탠다드 정기 구독',
         '{
-          "title": "스탠다드 월간 구독",
+          "title": "스탠다드 정기 구독",
           "features": [
             "무제한 단어장 생성 가능",
             "무제한 단어 저장 가능",
@@ -98,9 +98,9 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         }'),
 
 -- PREMIUM 플랜
-       ('PREMIUM', 'MONTHLY', 8500, '프리미엄 월간 구독',
+       ('PREMIUM', 'MONTHLY', 8500, '프리미엄 정기 구독',
         '{
-          "title": "프리미엄 월간 구독",
+          "title": "프리미엄 정기 구독",
           "features": [
             "모든 언어를 자유롭게 이용할 수 있어요",
             "다양한 언어를 통합적으로 학습할 수 있습니다",
