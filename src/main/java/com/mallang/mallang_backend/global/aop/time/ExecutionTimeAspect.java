@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.aop;
+package com.mallang.mallang_backend.global.aop.time;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -12,7 +12,7 @@ import org.springframework.util.StopWatch;
 @Component
 public class ExecutionTimeAspect {
 
-    @Around("@annotation(com.mallang.mallang_backend.global.aop.TimeTrace)")
+    @Around("@annotation(com.mallang.mallang_backend.global.aop.time.TimeTrace)")
     public Object traceTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
         StopWatch stopWatch = new StopWatch();
