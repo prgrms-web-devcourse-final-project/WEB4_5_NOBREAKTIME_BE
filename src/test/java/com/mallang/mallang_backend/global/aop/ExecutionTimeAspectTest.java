@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.aop;
 
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

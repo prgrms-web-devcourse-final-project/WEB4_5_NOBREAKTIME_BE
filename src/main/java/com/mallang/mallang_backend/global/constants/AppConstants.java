@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.constants;
 
+import java.time.format.DateTimeFormatter;
+
 public class AppConstants {
 
     /**
@@ -79,7 +81,17 @@ public class AppConstants {
     /**
      * 자동 가입 시 닉네임 중복 처리 용도
      */
-    public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
+    /**
+     * redis 저장용 key prefix
+     */
     public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
+    public static final String ORDER_ID_PREFIX = "order:";
+    public static final String IDEM_KEY_PREFIX = "idempotencyKey:";
+
+    /**
+     * 주문 ID 생성 용도
+     */
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 }

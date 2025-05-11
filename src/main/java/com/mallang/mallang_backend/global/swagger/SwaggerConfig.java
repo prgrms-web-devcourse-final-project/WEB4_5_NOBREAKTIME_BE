@@ -1,10 +1,13 @@
 package com.mallang.mallang_backend.global.swagger;
 
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -46,22 +49,30 @@ public class SwaggerConfig {
     }
 
     @Bean
-    public OpenApiCustomizer globalOperationDescriptionCustomizer() {
-        return openApi -> openApi.getPaths().values().forEach(pathItem ->
-                pathItem.readOperations().forEach(operation -> {
-                    String originDesc = operation.getDescription() == null ? "" : operation.getDescription();
-                    String commonDesc = "\n\n모든 응답은 공통 래퍼 객체(RsData)에 감싸져 반환됩니다.\n" +
-                            "응답 예시:\n" +
-                            "{\n" +
-                            "  \"code\": \"200\",\n" +
-                            "  \"message\": \"회원 정보가 수정되었습니다.\",\n" +
-                            "  \"data\": {\n" +
-                            "    \"email\": \"user@example.com\",\n" +
-                            "    \"nickname\": \"cool_user\"\n" +
-                            "  }\n" +
-                            "}";
-                    operation.setDescription(originDesc + commonDesc);
-                })
-        );
+    public OpenApiCustomizer idempotencyKeyHeaderCustomizer() {
+        return openApi -> {
+            openApi.getPaths().forEach((path, pathItem) -> {
+                if ("/api/v1/payment/request".equals(path)) {
+                    pathItem.readOperations().forEach(operation -> {
+                        // 헤더 파라미터 생성
+                        Parameter idempotencyKeyParam = new Parameter()
+                                .name("Idempotency-pay-key")
+                                .in(ParameterIn.HEADER.toString())
+                                .description(
+                                        "멱등성 토큰 (클라이언트에서 생성한 UUID)\n" +
+                                                "- 생성 규칙:\n" +
+                                                "  1. 결제 시작 시 1회 생성합니다. (예: `crypto.randomUUID()`)\n" +
+                                                "  2. 재시도 시 동일한 키 사용합니다. (로컬 스토리지 보관)\n" +
+                                                "  3. 새 결제 시 새 키를 생성합니다."
+                                )
+                                .required(true)
+                                .schema(new StringSchema().example("550e8400-e29b-41d4-a716-446655440000"));
+
+                        // 기존 파라미터에 추가 (기존 파라미터 유지)
+                        operation.addParametersItem(idempotencyKeyParam);
+                    });
+                }
+            });
+        };
     }
 }
