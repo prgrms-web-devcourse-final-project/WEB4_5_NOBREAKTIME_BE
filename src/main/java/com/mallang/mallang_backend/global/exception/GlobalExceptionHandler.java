@@ -39,6 +39,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ServiceException.class)
     public ResponseEntity<ErrorResponse> handleServiceException(ServiceException e,
                                                                 HttpServletRequest request) {
+        String message = messageService.getMessage(e.getErrorCode().getMessageCode());
+        log.warn("ServiceException 발생 - URI: {} | code: {} | message: {}",
+                request.getRequestURI(),
+                e.getErrorCode().getCode(),
+                message);
+
         ErrorResponse errorResponse = ErrorResponse.of(e, request, messageService);
         return ResponseEntity.status(e.getErrorCode().getStatus()).body(errorResponse);
     }
@@ -87,6 +93,11 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
+
+        log.warn("유효성 검사 실패 - URI: {} | 에러 메시지 개수: {} | 메시지 목록: {}",
+                request.getRequestURI(),
+                errorMessages.size(),
+                errorMessages);
 
         // ErrorResponse에 여러 메시지가 담길 수 있도록 생성자/팩토리 메서드 수정 필요
         return ErrorResponse.of(
