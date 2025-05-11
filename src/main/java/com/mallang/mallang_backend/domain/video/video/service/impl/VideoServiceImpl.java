@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
+import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
-import static com.mallang.mallang_backend.global.util.redis.RedisDistributedLock.REDIS_DISTRIBUTED_LOCK_MAX_WAIT_MILLIS;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,11 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -110,7 +108,7 @@ public class VideoServiceImpl implements VideoService {
 	) {
 		// 검색 컨텍스트 준비
 		SearchContext ctx = buildSearchContext(q, category, language);
-		log.info("context: {}", ctx);
+		log.debug("context: {}", ctx);
 
 		// ID 목록 조회
 		List<String> videoIds = fetchVideoIds(ctx, maxResults);
@@ -229,28 +227,22 @@ public class VideoServiceImpl implements VideoService {
 	@Override
 	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId) throws IOException, InterruptedException {
 		long startTotal = System.nanoTime(); // 전체 시작 시간
-		log.info("[AnalyzeVideo] 시작 - videoId: {}", videoId);
+		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
 		// 1. 비디오 히스토리 저장 (비동기 요청)
 		long start = System.nanoTime();
 		publisher.publishEvent(new VideoViewedEvent(memberId, videoId));
-		log.info("[AnalyzeVideo] 시청 히스토리 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+		log.debug("[AnalyzeVideo] 시청 히스토리 이벤트 발행 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 		// 2. 기존 분석 결과 확인
 
 		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(videoId);
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
-			log.info("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.debug("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
-
-//		Optional<AnalyzeVideoResponse> analyzeVideoResponse =
-//			analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId);
-//		if (analyzeVideoResponse.isPresent()) {
-//			return analyzeVideoResponse.get();
-//		}
 
 		// 여기서부턴 현재 분석된 정보를 찾을 수 없는 경우
 
@@ -270,8 +262,7 @@ public class VideoServiceImpl implements VideoService {
 			}
 
 			// 락이 사라졌으면 다른 작업으로 처리된 결과를 DB에서 찾아서 응답
-			return analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId)
-				.orElseThrow(() -> new ServiceException(ErrorCode.ANALYZE_VIDEO_FAILED));
+			return analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId);
 		}
 
 		try {
@@ -279,41 +270,41 @@ public class VideoServiceImpl implements VideoService {
 			start = System.nanoTime();
 			VideoDetail dto = fetchDetail(videoId);
 			Videos video = upsertVideoEntity(dto);
-			log.info("[AnalyzeVideo] 영상 정보 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 영상 정보 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 4. 음성 추출
 			start = System.nanoTime();
 			String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
-			log.info("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 5. STT 요청
 			start = System.nanoTime();
 			NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
 			final String result = clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
-			log.info("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 6. STT 결과 파싱
 			start = System.nanoTime();
 			Transcript transcript = transcriptParser.parseTranscriptJson(result);
 			List<TranscriptSegment> segments = transcript.getSegments();
-			log.info("[AnalyzeVideo] STT 결과 파싱 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] STT 결과 파싱 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
-			log.info("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
 			start = System.nanoTime();
 			saveSubtitleAndKeyword(video, gptResult);
-			log.info("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 9. 파일 삭제 이벤트
 			start = System.nanoTime();
 			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
-			log.info("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
 
