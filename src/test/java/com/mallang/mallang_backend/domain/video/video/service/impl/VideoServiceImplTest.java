@@ -46,6 +46,7 @@ import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 
 class VideoServiceImplTest {
@@ -81,6 +82,9 @@ class VideoServiceImplTest {
 
 	@Mock
 	private TranscriptParser transcriptParser;
+
+	@Mock
+	private RedisDistributedLock redisDistributedLock;
 
 	@BeforeEach
 	void setUp() {
@@ -196,6 +200,7 @@ class VideoServiceImplTest {
 					List.of(new KeywordInfo("Hello", "인사", 1))
 				)
 			));
+		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 
 		// when
 		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId);
