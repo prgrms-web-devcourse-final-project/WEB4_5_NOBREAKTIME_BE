@@ -2,8 +2,9 @@ package com.mallang.mallang_backend.global.exception;
 
 import com.mallang.mallang_backend.global.exception.message.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -17,9 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
-@Slf4j
 public class GlobalExceptionHandler {
 
     private final MessageService messageService;
@@ -40,6 +41,30 @@ public class GlobalExceptionHandler {
                                                                 HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.of(e, request, messageService);
         return ResponseEntity.status(e.getErrorCode().getStatus()).body(errorResponse);
+    }
+
+    /**
+     * 데이터베이스 접근 예외를 처리합니다.
+     *
+     * @param e       DataAccessException 인스턴스
+     * @param request HttpServletRequest 인스턴스
+     * @return DBErrorResponse 를 포함한 ResponseEntity
+     */
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException e,
+                                                                     HttpServletRequest request) {
+
+        log.error("DB 접근 오류 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .code("500-1")
+                .message("DB 접근 중 오류가 발생했습니다.")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     /**
