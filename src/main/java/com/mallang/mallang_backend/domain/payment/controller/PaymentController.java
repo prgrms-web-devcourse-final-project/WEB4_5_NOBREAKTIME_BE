@@ -8,6 +8,7 @@ import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @RestController
@@ -28,11 +31,12 @@ public class PaymentController {
 
 
     @ApiResponse(content = @Content(schema = @Schema(implementation = PaymentRequestDocs.class)))
+    @PossibleErrors({PLAN_NOT_FOUND, ORDER_ID_CONFLICT, PAYMENT_NOT_FOUND, MEMBER_NOT_FOUND})
     @PostMapping("/request")
     @TimeTrace // 59 ms
     public ResponseEntity<RsData<PaymentRequest>> createPaymentRequest(
             // 테스트 값 123e4567-e89b-12d3-a456-426614174000 고정
-            @RequestHeader("Idempotency-pay-key") String idempotencyKey,
+            @Parameter(hidden = true) @RequestHeader("Idempotency-pay-key") String idempotencyKey,
             @Parameter(hidden = true) @Login CustomUserDetails userDetails,
             @Valid @RequestBody PaymentSimpleRequest simpleRequest) {
 

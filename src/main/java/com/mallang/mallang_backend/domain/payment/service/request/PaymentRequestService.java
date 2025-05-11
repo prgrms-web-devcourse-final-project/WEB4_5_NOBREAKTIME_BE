@@ -86,6 +86,13 @@ public class PaymentRequestService {
         return PaymentRequest.from(payment, successURL, failURL);
     }
 
+    /**
+     * 결제 요청에 맞는 플랜을 조회합니다.
+     *
+     * @param simpleRequest 결제 요청 객체
+     * @return 조회된 플랜
+     * @throws ServiceException 해당 조건에 맞는 플랜이 없을 경우 발생
+     */
     private Plan getSelectedPlan(PaymentSimpleRequest simpleRequest) {
         PlanPeriod period = simpleRequest.getPeriod();
         SubscriptionType type = simpleRequest.getType();
