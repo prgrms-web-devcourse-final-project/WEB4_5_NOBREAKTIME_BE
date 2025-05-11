@@ -1,17 +1,19 @@
 package com.mallang.mallang_backend.domain.video.video.service;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 public interface VideoService {
     List<VideoResponse> getVideosByLanguage(
         String q,
         String category,
         String language,
-        long maxResults
+        long maxResults,
+		Set<String> bookmarkedIds
     );
 
 	List<VideoResponse> getVideosForMember(
