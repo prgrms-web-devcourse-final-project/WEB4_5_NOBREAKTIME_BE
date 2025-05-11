@@ -52,6 +52,8 @@ public class PaymentRequestService {
      * @param simpleRequest 결제 요청 객체를 만들 간단한 정보
      * @return 결제 요청 응답
      */
+    // 조회와 저장을 하나의 트랜잭션으로 -> 동시성 보장 / AOP 미적용 문제 해결
+    @Transactional
     public PaymentRequest createPaymentRequest(String idempotencyKey,
                                                Long memberId,
                                                PaymentSimpleRequest simpleRequest) {
@@ -137,7 +139,6 @@ public class PaymentRequestService {
      * @param orderId      주문 ID (고유해야 함)
      * @throws ServiceException 이미 동일한 주문 ID가 존재할 경우
      */
-    @Transactional
     public Long createPaymentIfNotExists(Long memberId,
                                          Plan selectedPlan,
                                          String orderId) {
@@ -145,7 +146,7 @@ public class PaymentRequestService {
         // TODO LOCK 적용 필수
         if (paymentRepository.existsByOrderId(orderId)) {
             throw new ServiceException(ORDER_ID_CONFLICT);
-        } // 조회와 저장을 하나의 트랜잭션으로 -> 동시성 보장 / AOP 미적용 문제 해결
+        }
 
         return createNewPayment(memberId, selectedPlan, orderId);
     }
