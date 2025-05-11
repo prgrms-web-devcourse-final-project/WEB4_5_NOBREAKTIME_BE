@@ -14,15 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class RedisDistributedLock {
-	/**
-	 * waitForUnlockThenFetch() 에서 Lock 확인을 재시도할 최대 시간
-	 */
-	public static final long REDIS_DISTRIBUTED_LOCK_MAX_WAIT_MILLIS = 10 * 60 * 1000L;
-
-	/**
-	 * waitForUnlockThenFetch() 에서 Lock 확인 재시도 간격
-	 */
-	public static final long REDIS_DISTRIBUTED_LOCK_SLEEP_MILLIS = 2000L;
 
 	private final RedisTemplate<String, String> redisTemplate;
 
@@ -73,14 +64,13 @@ public class RedisDistributedLock {
 	/**
 	 * 락 해제 여부를 주기적으로 체크하다가, 락이 풀리면 true 반환.
 	 * 최대 대기 시간은 10분입니다.
-	 * @param lockKey
+	 * @param lockKey Lock 의 key 이름 문자열
+	 * @param maxWaitMillis Lock 확인을 재시도할 최대 시간
+	 * @param sleepMillis Lock 확인 재시도 간격
 	 * @return 락이 풀렸는지 여부
 	 * @throws InterruptedException
 	 */
-	public boolean waitForUnlockThenFetch(String lockKey) throws InterruptedException {
-		final long maxWaitMillis = REDIS_DISTRIBUTED_LOCK_MAX_WAIT_MILLIS;
-		final long sleepMillis = REDIS_DISTRIBUTED_LOCK_SLEEP_MILLIS;
-
+	public boolean waitForUnlockThenFetch(String lockKey, long maxWaitMillis, long sleepMillis) {
 		long startTime = System.currentTimeMillis();
 
 		while (System.currentTimeMillis() - startTime < maxWaitMillis) {
@@ -90,7 +80,13 @@ public class RedisDistributedLock {
 				// 락이 사라진 경우
 				return true;
 			}
-			Thread.sleep(sleepMillis);
+			try {
+				Thread.sleep(sleepMillis);
+			} catch (InterruptedException e) {
+				// 인터럽트 여부를 상위 로직이나 다른 코드가 알 수 있게
+				Thread.currentThread().interrupt();
+				return false;
+			}
 		}
 		// 최대 대기 시간 초과
 		return false;

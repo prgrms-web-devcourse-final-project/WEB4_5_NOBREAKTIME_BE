@@ -235,7 +235,6 @@ public class VideoServiceImpl implements VideoService {
 		log.debug("[AnalyzeVideo] 시청 히스토리 이벤트 발행 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 		// 2. 기존 분석 결과 확인
-
 		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(videoId);
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
@@ -243,8 +242,6 @@ public class VideoServiceImpl implements VideoService {
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
-
-		// 여기서부턴 현재 분석된 정보를 찾을 수 없는 경우
 
 		// 락 획득 시도
 		String lockKey = "lock:video:analysis:" + videoId;
@@ -254,7 +251,7 @@ public class VideoServiceImpl implements VideoService {
 		boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
 		if (!locked) {
 			// 락이 사라졌는지 10분간 계속 확인
-			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey);
+			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 2000L);
 
 			// 최대 재시도 시간까지 확인했으나 실패함
 			if (!lockAvailable) {
@@ -343,7 +340,7 @@ public class VideoServiceImpl implements VideoService {
 		// subtitle 먼저 저장 (ID를 키로 사용하는 keyword 저장을 위해)
 		List<Subtitle> savedSubtitles = subtitleRepository.saveAll(subtitleList);
 
-		// ★ 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
+		// 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
 		for (int i = 0; i < savedSubtitles.size(); i++) {
 			gptResult.get(i).setSubtitleId(savedSubtitles.get(i).getId());
 		}
