@@ -120,6 +120,10 @@ public enum ErrorCode {
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND),
 
+    // 북마크 에러
+    BOOKMARK_ALREADY_EXISTS("409-2", "bookmark.already.exists", HttpStatus.CONFLICT),
+    BOOKMARK_NOT_FOUND("404-3", "bookmark.not.found", HttpStatus.NOT_FOUND),
+
     // 결제 상황 오류
     PLAN_NOT_FOUND("404-2", "plan.not.found", HttpStatus.NOT_FOUND),
     CONNECTION_FAIL("500-3", "connection.fail", HttpStatus.INTERNAL_SERVER_ERROR),

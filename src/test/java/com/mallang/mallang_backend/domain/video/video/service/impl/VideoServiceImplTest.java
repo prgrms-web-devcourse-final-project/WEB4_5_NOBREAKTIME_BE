@@ -1,28 +1,10 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.context.ApplicationEventPublisher;
-
 import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoSnippet;
+import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
@@ -47,6 +29,21 @@ import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 class VideoServiceImplTest {
 	@Mock
@@ -82,6 +79,9 @@ class VideoServiceImplTest {
 	@Mock
 	private TranscriptParser transcriptParser;
 
+	@Mock
+	private BookmarkRepository bookmarkRepository;
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
@@ -101,15 +101,19 @@ class VideoServiceImplTest {
 			.language(Language.ENGLISH)
 			.build();
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+		when(bookmarkRepository.findAllWithVideoByMemberId(memberId)).thenReturn(List.of());
+
 		List<VideoResponse> mockList = List.of(new VideoResponse());
-		doReturn(mockList).when(videoService).getVideosByLanguage("q", "cat", "en", 5L);
+		doReturn(mockList)
+				.when(videoService)
+				.getVideosByLanguage(eq("q"), eq("cat"), eq("en"), eq(5L), anySet());
 
 		// when
 		List<VideoResponse> result = videoService.getVideosForMember("q", "cat", 5L, memberId);
 
 		// then
 		assertEquals(mockList, result);
-		verify(videoService).getVideosByLanguage("q", "cat", "en", 5L);
+		verify(videoService).getVideosByLanguage(eq("q"), eq("cat"), eq("en"), eq(5L), anySet());
 	}
 
 	@DisplayName("언어 설정 없을 시 예외 발생")
