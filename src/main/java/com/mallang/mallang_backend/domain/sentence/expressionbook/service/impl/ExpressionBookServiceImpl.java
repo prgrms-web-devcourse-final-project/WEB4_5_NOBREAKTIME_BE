@@ -28,6 +28,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
@@ -174,11 +177,25 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             items = expressionBookItemRepository.findAllById_ExpressionBookIdIn(expressionBookIds);
         }
 
-        // createdAt 내림차순 정렬
+        // 표현 ID 한 번에 조회
+        List<Long> expressionIds = items.stream()
+                .map(i -> i.getId().getExpressionId())
+                .toList();
+
+        // 표현 엔티티 한 번에 조회
+        Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
+                .collect(Collectors.toMap(Expression::getId, Function.identity()));
+
+        // 표현함 아이템 추가순 기준으로 최신 정렬
         return items.stream()
-                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
-                .map(item -> expressionRepository.findById(item.getId().getExpressionId())
-                        .orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND)))
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())  // createdAt 기준으로 내림차순
+                .map(item -> {
+                    Expression expression = expressionMap.get(item.getId().getExpressionId());
+                    if (expression == null) {
+                        throw new ServiceException(EXPRESSION_NOT_FOUND);
+                    }
+                    return expression;
+                })
                 .map(ExpressionResponse::from)
                 .toList();
     }
