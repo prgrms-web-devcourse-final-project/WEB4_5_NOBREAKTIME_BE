@@ -51,6 +51,9 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Override
     public List<Videos> getBookmarks(Long memberId) {
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
         return bookmarkRepository.findAllWithVideoByMemberId(memberId)
                 .stream()
                 .map(Bookmark::getVideos)
