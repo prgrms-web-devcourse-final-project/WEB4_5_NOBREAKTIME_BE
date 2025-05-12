@@ -169,9 +169,10 @@ public class Member {
     }
 
     private void maskSensitiveData() {
+        this.platformId=null;
         this.nickname = "탈퇴회원-" + this.id;
         this.email = "withdrawn_" + this.id;
-        this.profileImageUrl = "delete";
+        this.profileImageUrl = null;
         this.loginPlatform = LoginPlatform.NONE;
         this.subscriptionType = SubscriptionType.NONE;
     }
