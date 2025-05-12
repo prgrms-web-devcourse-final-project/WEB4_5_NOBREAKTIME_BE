@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.video.video.dto;
 
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,4 +15,15 @@ public class VideoResponse {
     private String title;
     private String description;
     private String thumbnailUrl;
+    private boolean isBookmarked;
+
+    public static VideoResponse from(Videos video, boolean isBookmarked) {
+        return new VideoResponse(
+                video.getId(),
+                video.getVideoTitle(),
+                "", // 필요 시 채널 설명
+                video.getThumbnailImageUrl(),
+                isBookmarked
+        );
+    }
 }

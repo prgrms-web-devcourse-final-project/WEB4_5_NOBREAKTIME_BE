@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.google.api.services.youtube.model.Video;
+import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -51,9 +52,11 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -74,6 +77,7 @@ public class VideoServiceImpl implements VideoService {
 	private final ApplicationEventPublisher publisher;
 	private final RedisDistributedLock redisDistributedLock;
 	private final AnalyzeVideoResultFetcher analyzeVideoResultFetcher;
+	private final BookmarkRepository bookmarkRepository;
 
 	// 회원 기준 영상 검색 메서드
 	@Override
@@ -92,11 +96,16 @@ public class VideoServiceImpl implements VideoService {
 			throw new ServiceException(ErrorCode.LANGUAGE_NOT_CONFIGURED);
 		}
 
+		// 북마크된 videoId 목록 조회
+		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
+				.map(bookmark -> bookmark.getVideos().getId())
+				.collect(Collectors.toSet());
+
 		// ISO 코드 추출
 		String language = lang.toCode();
 
 		// 검색 컨텍스트 준비
-		return getVideosByLanguage(q, category, language, maxResults);
+		return getVideosByLanguage(q, category, language, maxResults, bookmarkedIds);
 	}
 
 	@Override
@@ -104,7 +113,8 @@ public class VideoServiceImpl implements VideoService {
 		String q,
 		String category,
 		String language,
-		long maxResults
+		long maxResults,
+		Set<String> bookmarkedIds
 	) {
 		// 검색 컨텍스트 준비
 		SearchContext ctx = buildSearchContext(q, category, language);
@@ -350,5 +360,15 @@ public class VideoServiceImpl implements VideoService {
 
 		// 비동기로 핵심단어들 gpt 사용하여 단어DB에 저장
 		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
+	}
+
+	@Override
+	@Transactional
+	public Videos saveVideoIfAbsent(String videoId) {
+		return videoRepository.findById(videoId)
+				.orElseGet(() -> {
+					VideoDetail dto = fetchDetail(videoId);
+					return upsertVideoEntity(dto);
+				});
 	}
 }

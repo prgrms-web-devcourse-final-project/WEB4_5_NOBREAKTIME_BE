@@ -23,6 +23,7 @@ import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoSnippet;
+import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
@@ -48,6 +49,7 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 
 class VideoServiceImplTest {
 	@Mock
@@ -86,6 +88,9 @@ class VideoServiceImplTest {
 	@Mock
 	private RedisDistributedLock redisDistributedLock;
 
+	@Mock
+	private BookmarkRepository bookmarkRepository;
+
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
@@ -105,15 +110,19 @@ class VideoServiceImplTest {
 			.language(Language.ENGLISH)
 			.build();
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+		when(bookmarkRepository.findAllWithVideoByMemberId(memberId)).thenReturn(List.of());
+
 		List<VideoResponse> mockList = List.of(new VideoResponse());
-		doReturn(mockList).when(videoService).getVideosByLanguage("q", "cat", "en", 5L);
+		doReturn(mockList)
+				.when(videoService)
+				.getVideosByLanguage(eq("q"), eq("cat"), eq("en"), eq(5L), anySet());
 
 		// when
 		List<VideoResponse> result = videoService.getVideosForMember("q", "cat", 5L, memberId);
 
 		// then
 		assertEquals(mockList, result);
-		verify(videoService).getVideosByLanguage("q", "cat", "en", 5L);
+		verify(videoService).getVideosByLanguage(eq("q"), eq("cat"), eq("en"), eq(5L), anySet());
 	}
 
 	@DisplayName("언어 설정 없을 시 예외 발생")
