@@ -148,7 +148,7 @@ public class ExpressionBookController {
      */
     @Operation(summary = "여러 표현함의 표현 목록 조회", description = "체크된 여러 표현함의 표현들을 등록 날짜 기준으로 정렬하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함의 표현 목록 조회에 성공했습니다.")
-    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSION_NOT_FOUND})
+    @PossibleErrors({MEMBER_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSION_NOT_FOUND})
     @GetMapping("/view")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
         @RequestParam(required = false) List<Long> expressionBookIds,
