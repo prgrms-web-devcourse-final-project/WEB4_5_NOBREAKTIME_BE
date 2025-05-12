@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Entity
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
