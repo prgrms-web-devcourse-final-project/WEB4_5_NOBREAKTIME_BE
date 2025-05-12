@@ -164,7 +164,7 @@ public class MemberController {
             ))
     @PossibleErrors({DUPLICATE_FILED, MEMBER_NOT_FOUND})
     @PatchMapping("/me")
-    public ResponseEntity<RsData<?>> changeMemberInformation(ChangeInfoRequest request,
+    public ResponseEntity<RsData<?>> changeMemberInformation(@RequestBody ChangeInfoRequest request,
                                                              @Parameter(hidden = true)
                                                              @Login CustomUserDetails userDetails) {
 
