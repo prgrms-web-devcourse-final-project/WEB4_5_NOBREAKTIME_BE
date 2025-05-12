@@ -1,15 +1,14 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
+import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItem;
+import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItem;
-import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
+import java.util.List;
+import java.util.Optional;
 
 public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBookItem, ExpressionBookItemId> {
     List<ExpressionBookItem> findAllById_ExpressionBookId(Long expressionBookId);
@@ -26,4 +25,6 @@ public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBo
 		"WHERE eb.member.id = :memberId " +
 		"AND e.sentence LIKE %:keyword%")
 	List<Expression> findExpressionsByMemberAndKeyword(@Param("memberId") Long memberId, @Param("keyword") String keyword);
+
+	List<ExpressionBookItem> findAllById_ExpressionBookIdIn(List<Long> expressionBookIds);
 }

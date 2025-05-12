@@ -1,16 +1,5 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
-import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import com.mallang.mallang_backend.global.common.Language;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
@@ -28,11 +17,21 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -144,18 +143,40 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
-    public List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+    public List<ExpressionResponse> getExpressionsByBook(List<Long> expressionBookIds, Long memberId) {
+        // 사용자 인증
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        ExpressionBook expressionBook;
+        List<ExpressionBookItem> items;
+
+        // 표현함 Id가 비어있다면 기본 표현함 - 표현 아이템 조회
+        if (expressionBookIds == null || expressionBookIds.isEmpty()) {
+            expressionBook = expressionBookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_EXPRESSION_BOOK_NAME, member.getLanguage())
+                    .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+            items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBook.getId());
+
+        // 단일 표현함만 선택했다면 해당 표현함 - 표현 아이템 조회
+        } else if(expressionBookIds.size() == 1) {
+            expressionBook = expressionBookRepository.findById(expressionBookIds.get(0))
+                    .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+            if (!expressionBook.getMember().getId().equals(memberId)) {
+                throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+            }
+            items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBook.getId());
         }
 
-        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
+        // 여러 표현함 선택했다면 여러 표현함 - 표현 아이템들 조회
+        else {
+            items = expressionBookItemRepository.findAllById_ExpressionBookIdIn(expressionBookIds);
+        }
 
+        // createdAt 내림차순 정렬
         return items.stream()
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
                 .map(item -> expressionRepository.findById(item.getId().getExpressionId())
                         .orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND)))
                 .map(ExpressionResponse::from)
