@@ -39,7 +39,7 @@ public class AsyncConfig {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(1);
 		executor.setMaxPoolSize(3);
-		executor.setQueueCapacity(30);
+		executor.setQueueCapacity(60);
 		executor.setThreadNamePrefix("audioDelete-");
 		executor.initialize();
 		return executor;
@@ -51,8 +51,8 @@ public class AsyncConfig {
 	@Bean(name = "addWordExecutor")
 	public Executor addWordExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(3);
-		executor.setMaxPoolSize(5);
+		executor.setCorePoolSize(5);
+		executor.setMaxPoolSize(200);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("addWord-");
 		executor.initialize();
