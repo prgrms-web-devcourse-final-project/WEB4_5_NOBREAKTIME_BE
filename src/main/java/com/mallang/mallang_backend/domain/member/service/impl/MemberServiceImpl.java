@@ -319,11 +319,19 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request) {
         Member member = findMemberOrThrow(memberId);
-        validateEmailNotDuplicated(request.getEmail());
 
-        if (isNicknameAvailable(request.getNickname())) {
-            member.updateNickname(request.getNickname());
+        // 이메일이 변경된 경우에만 중복 체크
+        if (!member.getEmail().equals(request.getEmail())) {
+            validateEmailNotDuplicated(request.getEmail());
             member.updateEmail(request.getEmail());
+        }
+
+        // 닉네임이 변경된 경우에만 중복 체크
+        if (!member.getNickname().equals(request.getNickname())) {
+            if (!isNicknameAvailable(request.getNickname())) {
+                throw new ServiceException(DUPLICATE_FILED);
+            }
+            member.updateNickname(request.getNickname());
         }
 
         return new ChangeInfoResponse(request.getNickname(), request.getEmail());
