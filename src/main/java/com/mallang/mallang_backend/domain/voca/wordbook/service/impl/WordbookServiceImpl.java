@@ -299,7 +299,7 @@ public class WordbookServiceImpl implements WordbookService {
 
 		// 단어장 Id가 비어있다면 기본 단어장 - 단어 아이템 조회
 		if (wordbookIds == null || wordbookIds.isEmpty()) {
-			wordbook = wordbookRepository.findByMemberAndName(member, DEFAULT_WORDBOOK_NAME)
+			wordbook = wordbookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_WORDBOOK_NAME, member.getLanguage())
 				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
 			items = wordbookItemRepository.findAllByWordbook(wordbook);
