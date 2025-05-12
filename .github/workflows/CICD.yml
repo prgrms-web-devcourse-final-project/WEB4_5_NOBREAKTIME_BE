@@ -15,17 +15,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      redis:
-        image: redis:6
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       # 코드 체크아웃
       - uses: actions/checkout@v3
@@ -112,6 +101,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
+            docker rmi $(docker images -q)
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
             docker compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
 
