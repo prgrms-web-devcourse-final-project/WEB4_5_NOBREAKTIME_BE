@@ -59,25 +59,15 @@ public class VideoController {
         // 0L을 주면 타임아웃 없이 무제한 대기
         SseEmitter emitter = new SseEmitter(0L);
 
-        // 별도 스레드에서 분석 로직 + SSE 전송
-        CompletableFuture.runAsync(() -> {
-            try {
-                // 단계별 진행 알림을 보내고, 마지막에 AnalyzeVideoResponse 객체를 리턴
-                AnalyzeVideoResponse result =
-                    videoService.analyzeVideo(memberId, youtubeVideoId, emitter);
+        // 초기 연결 알림
+        try {
+            emitter.send(SseEmitter.event().name("INIT").data("스트림 연결 성공"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+            return emitter;
+        }
 
-                // (선택) 분석 완료 시 최종 페이로드 전송
-                emitter.send(SseEmitter.event()
-                    .name("analysisComplete")
-                    .data(result)
-                );
-
-                emitter.complete();
-            } catch (IOException | InterruptedException ex) {
-                emitter.completeWithError(ex);
-            }
-        });
-
+        videoService.analyzeWithSseAsync(memberId, youtubeVideoId, emitter);
         return emitter;
     }
 

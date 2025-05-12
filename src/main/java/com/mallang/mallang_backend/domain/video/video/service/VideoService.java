@@ -37,7 +37,7 @@ public interface VideoService {
 	 * @throws IOException          영상 음성 추출 실패
 	 * @throws InterruptedException 영상 음성 추출 실패
 	 */
-	AnalyzeVideoResponse analyzeVideo(Long memberId, String videoID, SseEmitter emitter) throws IOException, InterruptedException;
+	void analyzeWithSseAsync(Long memberId, String videoID, SseEmitter emitter);
 
 	Videos saveVideoIfAbsent(String videoId);
 }

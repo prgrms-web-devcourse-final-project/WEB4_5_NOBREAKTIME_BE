@@ -14,6 +14,20 @@ import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecu
 public class AsyncConfig {
 
 	/**
+	 * 영상 분석 기능 비동기 스레드풀 설정
+	 */
+	@Bean("analysisExecutor")
+	public ThreadPoolTaskExecutor analysisExecutor() {
+		ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+		ex.setCorePoolSize(10);
+		ex.setMaxPoolSize(200);
+		ex.setQueueCapacity(50);
+		ex.setThreadNamePrefix("video-analysis-");
+		ex.initialize();
+		return ex;
+	}
+
+	/**
 	 * 비디오 히스토리 저장용 비동기 스레드풀 설정
 	 * aws t3.micro 기준
 	 * corePoolSize   : 1 (기본 스레드 수)

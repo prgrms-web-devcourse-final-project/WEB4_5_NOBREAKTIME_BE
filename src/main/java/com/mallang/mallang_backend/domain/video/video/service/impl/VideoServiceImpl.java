@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,10 +54,12 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -99,8 +102,8 @@ public class VideoServiceImpl implements VideoService {
 
 		// 북마크된 videoId 목록 조회
 		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
-				.map(bookmark -> bookmark.getVideos().getId())
-				.collect(Collectors.toSet());
+			.map(bookmark -> bookmark.getVideos().getId())
+			.collect(Collectors.toSet());
 
 		// ISO 코드 추출
 		String language = lang.toCode();
@@ -234,9 +237,20 @@ public class VideoServiceImpl implements VideoService {
 		}
 	}
 
+	@Async("analysisExecutor")
 	@Transactional
 	@Override
-	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, SseEmitter emitter) throws IOException, InterruptedException {
+	public void analyzeWithSseAsync(Long memberId, String videoId, SseEmitter emitter) {
+		try {
+			AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitter);
+			emitter.send(SseEmitter.event().name("analysisComplete").data(result));
+			emitter.complete();
+		} catch (Exception ex) {
+			emitter.completeWithError(ex);
+		}
+	}
+
+	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, SseEmitter emitter) throws IOException, InterruptedException {
 		long startTotal = System.nanoTime(); // 전체 시작 시간
 		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
@@ -334,7 +348,6 @@ public class VideoServiceImpl implements VideoService {
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
-
 		} finally {
 			// 락 해제
 			redisDistributedLock.unlock(lockKey, lockValue);
@@ -386,9 +399,9 @@ public class VideoServiceImpl implements VideoService {
 	@Transactional
 	public Videos saveVideoIfAbsent(String videoId) {
 		return videoRepository.findById(videoId)
-				.orElseGet(() -> {
-					VideoDetail dto = fetchDetail(videoId);
-					return upsertVideoEntity(dto);
-				});
+			.orElseGet(() -> {
+				VideoDetail dto = fetchDetail(videoId);
+				return upsertVideoEntity(dto);
+			});
 	}
 }
