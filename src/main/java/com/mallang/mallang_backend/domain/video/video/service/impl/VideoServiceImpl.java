@@ -1,17 +1,17 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
-import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,6 @@ import com.mallang.mallang_backend.domain.stt.converter.TranscriptParser;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
-import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
@@ -38,6 +37,7 @@ import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
 import com.mallang.mallang_backend.domain.video.video.event.VideoAnalyzedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.video.video.service.VideoQueryService;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
@@ -52,11 +52,9 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -78,6 +76,7 @@ public class VideoServiceImpl implements VideoService {
 	private final RedisDistributedLock redisDistributedLock;
 	private final AnalyzeVideoResultFetcher analyzeVideoResultFetcher;
 	private final BookmarkRepository bookmarkRepository;
+	private final VideoQueryService videoQueryService;
 
 	// 회원 기준 영상 검색 메서드
 	@Override
@@ -116,28 +115,20 @@ public class VideoServiceImpl implements VideoService {
 		long maxResults,
 		Set<String> bookmarkedIds
 	) {
-		// 검색 컨텍스트 준비
-		SearchContext ctx = buildSearchContext(q, category, language);
-		log.debug("context: {}", ctx);
+		try {
+			// 1) 캐시가 적용된 queryVideos() 호출
+			List<VideoResponse> responses =
+				videoQueryService.queryVideos(q, category, language, maxResults);
 
-		// ID 목록 조회
-		List<String> videoIds = fetchVideoIds(ctx, maxResults);
-		if (videoIds.isEmpty()) {
-			return Collections.emptyList();
+			// 2) 북마크 여부 세팅
+			responses.forEach(r ->
+				r.setBookmarked(bookmarkedIds.contains(r.getVideoId()))
+			);
+
+			return responses;
+		} catch (IOException e) {
+			throw new ServiceException(VIDEO_ID_SEARCH_FAILED);
 		}
-
-		// 상세 비디오(YouTube 모델) 조회
-		List<Video> videos = fetchVideoDetails(videoIds);
-
-		// 필터링, 매핑, 셔플 (VideoUtils 이용)
-		List<VideoResponse> responses = videos.stream()
-			.filter(VideoUtils::isCreativeCommons)
-			.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
-			.filter(VideoUtils::isDurationLessThanOrEqualTo20Minutes)
-			.map(VideoUtils::toVideoResponse)
-			.toList();
-
-		return VideoUtils.shuffleIfDefault(responses, ctx.isDefaultSearch());
 	}
 
 	/**
