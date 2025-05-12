@@ -64,6 +64,6 @@ public class PaymentRedisService {
             log.error("결제 임시 정보 저장 오류: {}", e.getMessage(), e);
             throw new ServiceException(CONNECTION_FAIL, e);
         }
-        throw new ServiceException(ORDER_ID_CONFLICT);
+        throw new ServiceException(ORDER_ID_CONFLICT, e);
     }
 }

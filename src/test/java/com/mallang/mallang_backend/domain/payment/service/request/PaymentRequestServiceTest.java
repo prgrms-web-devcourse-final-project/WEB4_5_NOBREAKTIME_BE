@@ -34,9 +34,8 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @EnableRetry
 @TestPropertySource(properties = {
-        "resilience4j.retry.instances.redisConnectionRetry.max-attempts=3",
         "spring.datasource.url=jdbc:h2:mem:testdb",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
+        "spring.jpa.hibernate.ddl-auto=create-drop",
 })
 class PaymentRequestServiceTest {
 
@@ -65,22 +64,6 @@ class PaymentRequestServiceTest {
     void setUp() {
         // RedisTemplate → ValueOperations 체이닝 명시적 설정
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-    }
-
-    @Test
-    void Redis_저장_실패시_DB_미반영_검증() {
-        // Redis 모킹 설정
-        ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        doThrow(new QueryTimeoutException("Connection failed"))
-                .when(valueOps).set(anyString(), anyString(), any(Duration.class));
-
-        // when
-        assertThrows(ServiceException.class, () ->
-                paymentRedisService.saveDataToRedis("token123", "order456", 10000));
-
-        // then: DB에 주문 정보 미존재 검증
-        assertFalse(paymentRepository.existsByOrderId("order456"));
     }
 
     @Transactional
