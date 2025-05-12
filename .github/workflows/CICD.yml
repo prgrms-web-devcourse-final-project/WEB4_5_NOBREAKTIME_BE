@@ -101,7 +101,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-            docker rmi $(docker images -q)
+            docker image prune -a -f
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
             docker compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
 
