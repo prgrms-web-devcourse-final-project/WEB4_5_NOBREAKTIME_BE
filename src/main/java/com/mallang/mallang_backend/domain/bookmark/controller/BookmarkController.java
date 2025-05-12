@@ -28,6 +28,13 @@ public class BookmarkController {
 
     private final BookmarkService bookmarkService;
 
+    /**
+     * 영상 북마크 추가
+     *
+     * @param user    로그인한 사용자
+     * @param videoId 북마크할 영상 ID
+     * @return 북마크 추가 결과
+     */
     @Operation(summary = "영상 북마크 추가", description = "특정 영상을 북마크에 추가합니다.")
     @ApiResponse(responseCode = "201", description = "북마크 추가 완료")
     @PossibleErrors({MEMBER_NOT_FOUND, BOOKMARK_ALREADY_EXISTS})
@@ -48,6 +55,13 @@ public class BookmarkController {
                 ));
     }
 
+    /**
+     * 영상 북마크 제거
+     *
+     * @param user    로그인한 사용자
+     * @param videoId 북마크에서 제거할 영상 ID
+     * @return 북마크 제거 결과
+     */
     @Operation(summary = "영상 북마크 제거", description = "특정 영상을 북마크에서 제거합니다.")
     @ApiResponse(responseCode = "200", description = "북마크 제거 완료")
     @PossibleErrors({BOOKMARK_NOT_FOUND})
@@ -68,6 +82,12 @@ public class BookmarkController {
                 ));
     }
 
+    /**
+     * 사용자가 북마크한 영상 전체 조회
+     *
+     * @param user 로그인한 사용자
+     * @return 북마크한 영상 목록
+     */
     @Operation(summary = "북마크 영상 전체 조회", description = "사용자가 북마크한 모든 영상을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "북마크 목록 조회 성공")
     @PossibleErrors({MEMBER_NOT_FOUND})
