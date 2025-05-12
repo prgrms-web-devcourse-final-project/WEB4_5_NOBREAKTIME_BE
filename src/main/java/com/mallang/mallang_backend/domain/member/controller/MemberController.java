@@ -6,13 +6,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
@@ -170,7 +164,7 @@ public class MemberController {
             ))
     @PossibleErrors({DUPLICATE_FILED, MEMBER_NOT_FOUND})
     @PatchMapping("/me")
-    public ResponseEntity<RsData<?>> changeMemberInformation(ChangeInfoRequest request,
+    public ResponseEntity<RsData<?>> changeMemberInformation(@RequestBody ChangeInfoRequest request,
                                                              @Parameter(hidden = true)
                                                              @Login CustomUserDetails userDetails) {
 
