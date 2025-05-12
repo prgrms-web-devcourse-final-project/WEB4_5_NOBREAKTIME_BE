@@ -13,6 +13,7 @@ import java.time.Duration;
 import static com.mallang.mallang_backend.global.constants.AppConstants.IDEM_KEY_PREFIX;
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.CONNECTION_FAIL;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.ORDER_ID_CONFLICT;
 
 @Slf4j
 @Service
@@ -34,6 +35,12 @@ public class PaymentRedisService {
     public void saveDataToRedis(String idempotencyKey,
                                 String orderId,
                                 int amount) {
+
+        String redisKey = IDEM_KEY_PREFIX + idempotencyKey;
+        if (redisTemplate.hasKey(redisKey)) {
+            log.warn("동일 주문에 대한 중복 요청 전송 - Key: {}", redisKey);
+            throw new ServiceException(ORDER_ID_CONFLICT);
+        }
 
         String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;
         redisTemplate.opsForValue().set(
@@ -57,5 +64,6 @@ public class PaymentRedisService {
             log.error("결제 임시 정보 저장 오류: {}", e.getMessage(), e);
             throw new ServiceException(CONNECTION_FAIL, e);
         }
+        throw new ServiceException(ORDER_ID_CONFLICT, e);
     }
 }
