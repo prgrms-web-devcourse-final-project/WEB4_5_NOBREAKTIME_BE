@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
@@ -212,7 +213,8 @@ class VideoServiceImplTest {
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 
 		// when
-		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId);
+		SseEmitter emitter = new SseEmitter(0L);
+		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId, emitter);
 
 		// then
 		assertThat(response).isNotNull();
