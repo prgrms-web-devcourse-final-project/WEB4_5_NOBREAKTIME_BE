@@ -13,7 +13,6 @@ public interface MemberService {
 
     boolean existsByPlatformId(String platformId);
     Long signupByOauth(String platformId, String email, String nickname, String profileImage, LoginPlatform loginPlatform);
-    Member getMemberByEmail (String email);
     Member getMemberByPlatformId (String platformId);
     String getRoleName(Long memberId);
     Member getMemberById(Long memberId);

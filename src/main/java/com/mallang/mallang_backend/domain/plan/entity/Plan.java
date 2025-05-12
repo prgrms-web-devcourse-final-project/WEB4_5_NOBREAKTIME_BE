@@ -2,9 +2,7 @@ package com.mallang.mallang_backend.domain.plan.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * 상품 정보를 저장하는 조회용 테이블
@@ -17,6 +15,7 @@ import lombok.NoArgsConstructor;
                 @UniqueConstraint(columnNames = {"type", "period"})
         }
 )
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Plan {
 
@@ -44,4 +43,18 @@ public class Plan {
 
     @Column(columnDefinition = "TEXT")
     private String benefits; // 제공 혜택에 관한 정보, JSON 문자열 형태
+
+    @Builder
+    public Plan(SubscriptionType type,
+                int amount,
+                PlanPeriod period,
+                String description,
+                String benefits
+    ) {
+        this.type = type;
+        this.amount = amount;
+        this.period = period;
+        this.description = description;
+        this.benefits = benefits;
+    }
 }
