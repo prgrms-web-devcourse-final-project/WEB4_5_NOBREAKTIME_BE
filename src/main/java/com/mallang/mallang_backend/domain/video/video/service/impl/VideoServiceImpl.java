@@ -1,5 +1,23 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
+import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
@@ -32,21 +50,13 @@ import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
-import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
 
 @Slf4j
 @Service
@@ -65,6 +75,8 @@ public class VideoServiceImpl implements VideoService {
 	private final ClovaSpeechClient clovaSpeechClient;
 	private final KeywordRepository keywordRepository;
 	private final ApplicationEventPublisher publisher;
+	private final RedisDistributedLock redisDistributedLock;
+	private final AnalyzeVideoResultFetcher analyzeVideoResultFetcher;
 	private final BookmarkRepository bookmarkRepository;
 
 	// 회원 기준 영상 검색 메서드
@@ -106,7 +118,7 @@ public class VideoServiceImpl implements VideoService {
 	) {
 		// 검색 컨텍스트 준비
 		SearchContext ctx = buildSearchContext(q, category, language);
-		log.info("context: {}", ctx);
+		log.debug("context: {}", ctx);
 
 		// ID 목록 조회
 		List<String> videoIds = fetchVideoIds(ctx, maxResults);
@@ -224,41 +236,89 @@ public class VideoServiceImpl implements VideoService {
 	@Transactional
 	@Override
 	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId) throws IOException, InterruptedException {
-		// 영상 정보 저장
-		VideoDetail dto = fetchDetail(videoId);
-		Videos video = upsertVideoEntity(dto);
+		long startTotal = System.nanoTime(); // 전체 시작 시간
+		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
-		// 비디오 히스토리 저장 이벤트
+		// 1. 비디오 히스토리 저장 (비동기 요청)
+		long start = System.nanoTime();
 		publisher.publishEvent(new VideoViewedEvent(memberId, videoId));
+		log.debug("[AnalyzeVideo] 시청 히스토리 이벤트 발행 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-		// 기존 분석 결과 확인
-		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(video);
+		// 2. 기존 분석 결과 확인
+		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(videoId);
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
+			log.debug("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
 
-		// 2. 음성 추출
-		String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+		// 락 획득 시도
+		String lockKey = "lock:video:analysis:" + videoId;
+		String lockValue = UUID.randomUUID().toString();
+		long ttlMillis = Duration.ofMinutes(10).toMillis();
 
-		// 3. STT
-		NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
-		final String result =
-			clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
+		boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
+		if (!locked) {
+			// 락이 사라졌는지 10분간 계속 확인
+			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 2000L);
 
-		// STT 결과 → 세그먼트 파싱
-		Transcript transcript = transcriptParser.parseTranscriptJson(result);
-		List<TranscriptSegment> segments = transcript.getSegments();
+			// 최대 재시도 시간까지 확인했으나 실패함
+			if (!lockAvailable) {
+				throw new ServiceException(ANALYZE_VIDEO_CONCURRENCY_TIME_OUT);
+			}
 
-		// GPT 분석
-		List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+			// 락이 사라졌으면 다른 작업으로 처리된 결과를 DB에서 찾아서 응답
+			return analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId);
+		}
 
-		saveSubtitleAndKeyword(video, gptResult);
+		try {
+			// 3. 영상 정보 저장
+			start = System.nanoTime();
+			VideoDetail dto = fetchDetail(videoId);
+			Videos video = upsertVideoEntity(dto);
+			log.debug("[AnalyzeVideo] 영상 정보 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-		// 비동기로 오디오 파일 삭제
-		publisher.publishEvent(new VideoAnalyzedEvent(fileName));
+			// 4. 음성 추출
+			start = System.nanoTime();
+			String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+			log.debug("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-		return AnalyzeVideoResponse.from(gptResult);
+			// 5. STT 요청
+			start = System.nanoTime();
+			NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
+			final String result = clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
+			log.debug("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 6. STT 결과 파싱
+			start = System.nanoTime();
+			Transcript transcript = transcriptParser.parseTranscriptJson(result);
+			List<TranscriptSegment> segments = transcript.getSegments();
+			log.debug("[AnalyzeVideo] STT 결과 파싱 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 7. GPT 분석
+			start = System.nanoTime();
+			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 8. 저장
+			start = System.nanoTime();
+			saveSubtitleAndKeyword(video, gptResult);
+			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 9. 파일 삭제 이벤트
+			start = System.nanoTime();
+			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
+			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+
+			return AnalyzeVideoResponse.from(gptResult);
+
+		} finally {
+			// 락 해제
+			redisDistributedLock.unlock(lockKey, lockValue);
+		}
 	}
 
 	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult) {
@@ -290,7 +350,7 @@ public class VideoServiceImpl implements VideoService {
 		// subtitle 먼저 저장 (ID를 키로 사용하는 keyword 저장을 위해)
 		List<Subtitle> savedSubtitles = subtitleRepository.saveAll(subtitleList);
 
-		// ★ 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
+		// 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
 		for (int i = 0; i < savedSubtitles.size(); i++) {
 			gptResult.get(i).setSubtitleId(savedSubtitles.get(i).getId());
 		}

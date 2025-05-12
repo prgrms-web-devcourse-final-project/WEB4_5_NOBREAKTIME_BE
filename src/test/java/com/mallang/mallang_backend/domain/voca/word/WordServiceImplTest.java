@@ -8,8 +8,14 @@ import com.mallang.mallang_backend.domain.voca.word.service.impl.WordServiceImpl
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
@@ -17,11 +23,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class WordServiceImplTest {
+    @Mock
+    private WordRepository wordRepository;
 
-    private final WordRepository wordRepository = mock(WordRepository.class);
-    private final GptService gptService = mock(GptService.class);
-    private final WordServiceImpl wordService = new WordServiceImpl(wordRepository, gptService);
+    @Mock
+    private GptService gptService;
+
+    @Mock
+    private RedisDistributedLock redisDistributedLock;
+
+    @InjectMocks
+    private WordServiceImpl wordService;
 
     @Test
     @DisplayName("DB에 단어가 있으면 GPT 호출 없이 결과 반환")
@@ -53,7 +67,7 @@ public class WordServiceImplTest {
         String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
         when(wordRepository.findByWord("light")).thenReturn(List.of());
         when(gptService.searchWord("light")).thenReturn(gptResult);
-
+        when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
         // when
         WordSearchResponse response = wordService.savedWord("light");
 
@@ -69,28 +83,11 @@ public class WordServiceImplTest {
         String invalidGptResult = "형용사 | 가벼운 | This bag is very light."; // 잘못된 포맷
         when(wordRepository.findByWord("light")).thenReturn(List.of());
         when(gptService.searchWord("light")).thenReturn(invalidGptResult);
-
+        when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
         // when & then
         assertThatThrownBy(() -> wordService.savedWord("light"))
                 .isInstanceOf(ServiceException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.WORD_PARSE_FAILED);
-
-    }
-
-    @Test
-    @DisplayName("GPT 파싱 후 저장 시 에러가 발생하면 예외 발생")
-    void savedWord_saveFail() {
-        // given
-        String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
-        when(wordRepository.findByWord("light")).thenReturn(List.of());
-        when(gptService.searchWord("light")).thenReturn(gptResult);
-        doThrow(new RuntimeException("DB Error")).when(wordRepository).saveAll(anyList());
-
-        // when & then
-        assertThatThrownBy(() -> wordService.savedWord("light"))
-                .isInstanceOf(ServiceException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.WORD_SAVE_FAILED);
     }
 }

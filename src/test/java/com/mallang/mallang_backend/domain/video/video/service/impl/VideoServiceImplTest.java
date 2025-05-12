@@ -1,5 +1,24 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
@@ -28,22 +47,9 @@ import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.context.ApplicationEventPublisher;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
 
 class VideoServiceImplTest {
 	@Mock
@@ -78,6 +84,9 @@ class VideoServiceImplTest {
 
 	@Mock
 	private TranscriptParser transcriptParser;
+
+	@Mock
+	private RedisDistributedLock redisDistributedLock;
 
 	@Mock
 	private BookmarkRepository bookmarkRepository;
@@ -200,6 +209,7 @@ class VideoServiceImplTest {
 					List.of(new KeywordInfo("Hello", "인사", 1))
 				)
 			));
+		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 
 		// when
 		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId);

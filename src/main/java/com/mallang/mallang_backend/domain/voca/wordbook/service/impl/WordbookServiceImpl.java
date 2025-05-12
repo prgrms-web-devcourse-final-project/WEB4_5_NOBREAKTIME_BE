@@ -4,11 +4,13 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.word.service.impl.SavedWordResultFetcher;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
 import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
@@ -40,6 +43,7 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookI
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +59,8 @@ public class WordbookServiceImpl implements WordbookService {
 	private final SubtitleRepository subtitleRepository;
 	private final GptService gptService;
 	private final WordQuizResultRepository wordQuizResultRepository;
+	private final RedisDistributedLock redisDistributedLock;
+	private final SavedWordResultFetcher savedWordResultFetcher;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -121,9 +127,35 @@ public class WordbookServiceImpl implements WordbookService {
 	private void saveWordIfNotExist(String word) {
 		List<Word> words = wordRepository.findByWord(word); // DB 조회
 		if (words.isEmpty()) {
-			String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
-			List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
-			wordRepository.saveAll(generatedWords);
+			// 락 획득 시도
+			String lockKey = "lock:word:saved:" + word;
+			String lockValue = UUID.randomUUID().toString();
+			long ttlMillis = Duration.ofMinutes(1).toMillis();
+
+			boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
+			if (!locked) {
+				// 락이 사라졌는지 1분간 계속 확인
+				boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 1000L);
+				// 최대 재시도 시간까지 확인했으나 실패함
+				if (!lockAvailable) {
+					throw new ServiceException(SAVED_WORD_CONCURRENCY_TIME_OUT);
+				}
+				// 락이 사라졌으면 다른 작업으로 처리된 결과를 DB에서 찾아서 응답
+				words = savedWordResultFetcher.fetchSavedWordResultAfterWait(word);
+				if (words.isEmpty()) {
+					throw new ServiceException(WORD_PARSE_FAILED);
+				}
+				return;
+			}
+
+			try {
+				String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
+				List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
+				wordRepository.saveAll(generatedWords);
+
+			} finally {
+				redisDistributedLock.unlock(lockKey, lockValue);
+			}
 		}
 	}
 

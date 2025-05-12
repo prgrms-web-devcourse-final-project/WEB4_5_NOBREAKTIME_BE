@@ -41,8 +41,8 @@ public class AsyncConfig {
 	@Bean(name = "videoExecutor")
 	public Executor videoExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(5);
-		executor.setMaxPoolSize(10);
+		executor.setCorePoolSize(1);
+		executor.setMaxPoolSize(3);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("video-");
 		executor.initialize();

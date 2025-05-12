@@ -33,6 +33,8 @@ public enum ErrorCode {
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_CONCURRENCY_TIME_OUT("500-4", "analyze.video.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_FAILED("500-5", "analyze.video.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -43,6 +45,7 @@ public enum ErrorCode {
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_NOT_FOUND("404-1", "word.not.found", HttpStatus.NOT_FOUND),
+    SAVED_WORD_CONCURRENCY_TIME_OUT("500-4", "saved.word.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
