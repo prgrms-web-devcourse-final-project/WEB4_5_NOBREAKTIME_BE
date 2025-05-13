@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
@@ -247,15 +247,22 @@ public class MemberController {
     @PossibleErrors({MEMBER_ALREADY_WITHDRAWN, MEMBER_NOT_FOUND, NOT_EXIST_BUCKET})
     @DeleteMapping("/me")
     public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
-                                               @Login CustomUserDetails userDetails) {
+                                               @Login CustomUserDetails userDetails,
+                                               HttpServletResponse response) {
 
-        memberService.withdrawMember(userDetails.getMemberId());
+        Long memerId = userDetails.getMemberId();
 
-        RsData<Void> response = new RsData<>(
+        memberService.withdrawMember(memerId);
+        memberService.deleteOldProfileImage(memerId);
+
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+
+        RsData<Void> rsp = new RsData<>(
                 "200",
                 "회원 탈퇴가 완료되었습니다."
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rsp);
     }
 }

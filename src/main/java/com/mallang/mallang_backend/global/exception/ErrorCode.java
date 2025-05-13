@@ -16,6 +16,8 @@ public enum ErrorCode {
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     NOT_CHANGED("400-9", "not.changed", HttpStatus.BAD_REQUEST),
     LANGUAGE_ALREADY_SET("410-9", "language.already.set", HttpStatus.CONFLICT),
+    CANNOT_SIGNUP_WITH_THIS_ID("409-2", "cannot.signup.with.this.id", HttpStatus.UNAUTHORIZED),
+    NICKNAME_GENERATION_FAILED("500-1", "nickname.generation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
