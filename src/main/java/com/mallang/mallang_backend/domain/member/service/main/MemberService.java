@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.member.service;
+package com.mallang.mallang_backend.domain.member.service.main;
 
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
@@ -13,7 +13,6 @@ public interface MemberService {
 
     boolean existsByPlatformId(String platformId);
     Long signupByOauth(String platformId, String email, String nickname, String profileImage, LoginPlatform loginPlatform);
-    Member getMemberByEmail (String email);
     Member getMemberByPlatformId (String platformId);
     String getRoleName(Long memberId);
     Member getMemberById(Long memberId);
@@ -22,6 +21,9 @@ public interface MemberService {
     void scheduleAccountDeletion();
     String changeProfile(Long memberId, MultipartFile file);
     ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request);
+
+    void deleteOldProfileImage(Long memberId);
+
     boolean isNicknameAvailable(String nickname);
     void validateEmailNotDuplicated(String email);
     UserProfileResponse getUserProfile(Long memberId);
