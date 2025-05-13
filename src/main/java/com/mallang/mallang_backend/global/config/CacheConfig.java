@@ -21,9 +21,9 @@ public class CacheConfig {
 		GenericJackson2JsonRedisSerializer jsonSerializer =
 			new GenericJackson2JsonRedisSerializer();
 
-		// 2) 캐시 기본 설정: TTL 10분, null 금지, JSON 직렬화
+		// 2) 캐시 기본 설정: TTL 30분, null 금지, JSON 직렬화
 		RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-			.entryTtl(Duration.ofMinutes(10))
+			.entryTtl(Duration.ofMinutes(30))
 			.disableCachingNullValues()
 			.serializeKeysWith(
 				RedisSerializationContext.SerializationPair
