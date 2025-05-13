@@ -4,6 +4,9 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,17 +68,21 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 			.toList();
 	}
 
-	/** 전체 조회 */
+
+	/**
+	 * 페이징 조회
+	 */
 	@Override
 	@Transactional(readOnly = true)
-	public List<VideoHistoryResponse> getAllHistories(Long memberId) {
+	public List<VideoHistoryResponse> getHistoriesByPage(Long memberId, int page, int size) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
+		Pageable pageable = PageRequest.of(page, size, Sort.by("lastViewedAt").descending());
 		return videoHistoryRepository
-			.findAllByMemberOrderByLastViewedAtDesc(member)
+			.findAllByMemberOrderByLastViewedAtDesc(member, pageable)
 			.stream()
-            .map(VideoHistoryResponse::from)
+			.map(VideoHistoryResponse::from)
 			.toList();
 	}
 }

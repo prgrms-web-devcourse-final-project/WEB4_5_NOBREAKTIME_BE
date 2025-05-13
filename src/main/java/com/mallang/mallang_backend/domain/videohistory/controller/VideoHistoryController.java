@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
@@ -52,26 +53,27 @@ public class VideoHistoryController {
         ));
     }
 
-    /**
-     * 전체 시청 영상 조회
-     *
-     * @param userDetail 로그인한 사용자의 정보
-     * @return 전체 시청 기록
-     */
-    @Operation(summary = "전체 시청 기록 조회", description = "사용자가 지금까지 시청한 모든 영상 기록을 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "전체 시청 영상 조회 완료")
-    @PossibleErrors({MEMBER_NOT_FOUND, API_ERROR})
+    @Operation(
+        summary = "페이징된 시청 기록 조회",
+        description = "page, size 파라미터로 페이지 단위 시청 기록을 조회합니다."
+    )
+    @ApiResponse(responseCode = "200", description = "페이징 시청 기록 조회 완료")
+    @PossibleErrors({ MEMBER_NOT_FOUND, API_ERROR })
     @GetMapping("/videos/history")
-    public ResponseEntity<RsData<List<VideoHistoryResponse>>> getFullHistory(
+    public ResponseEntity<RsData<List<VideoHistoryResponse>>> getHistoriesByPage(
         @Parameter(hidden = true)
-        @Login CustomUserDetails userDetail
+        @Login CustomUserDetails userDetail,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
     ) {
         Long memberId = userDetail.getMemberId();
-        List<VideoHistoryResponse> allHistories = videoHistoryService.getAllHistories(memberId);
+        // 마지막에 본 것부터 차례로 정렬
+        List<VideoHistoryResponse> pageData =
+            videoHistoryService.getHistoriesByPage(memberId, page, size);
         return ResponseEntity.ok(new RsData<>(
             "200",
-            "전체 시청 영상 조회 완료",
-            allHistories
+            String.format("시청 기록 조회 완료 (page=%d, size=%d)", page, size),
+            pageData
         ));
     }
 }
