@@ -253,18 +253,22 @@ public class MemberController {
     @PossibleErrors({MEMBER_ALREADY_WITHDRAWN, MEMBER_NOT_FOUND, NOT_EXIST_BUCKET})
     @DeleteMapping("/me")
     public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
-                                               @Login CustomUserDetails userDetails) {
+                                               @Login CustomUserDetails userDetails,
+                                               HttpServletResponse response) {
 
         Long memerId = userDetails.getMemberId();
 
         memberService.withdrawMember(memerId);
         memberService.deleteOldProfileImage(memerId);
 
-        RsData<Void> response = new RsData<>(
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+
+        RsData<Void> rsp = new RsData<>(
                 "200",
                 "회원 탈퇴가 완료되었습니다."
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rsp);
     }
 }
