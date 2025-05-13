@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ public class VideoQueryService {
 	 * @param maxResults 반환할 최대 동영상 수
 	 * @return 요청한 개수만큼 셔플된 VideoResponse 리스트
 	 */
+	@TimeTrace
 	public List<VideoResponse> queryVideos(
 		String q,
 		String category,
