@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.video.video.service.impl;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.invokeMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
@@ -212,8 +214,16 @@ class VideoServiceImplTest {
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 
 		// when
-		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId);
+		SseEmitter emitter = new SseEmitter(0L);
 
+		// when: private analyzeVideo() 직접 호출
+		AnalyzeVideoResponse response = invokeMethod(
+			videoService,
+			"analyzeVideo",    // 메서드 이름
+			memberId,
+			videoId,
+			emitter
+		);
 		// then
 		assertThat(response).isNotNull();
 		assertThat(response.getSubtitleResults()).hasSize(1);
