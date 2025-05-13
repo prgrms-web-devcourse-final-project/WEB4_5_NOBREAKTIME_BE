@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoEventListener {
 	private final WordService wordService;
 
-	@Async("videoExecutor")
+	@Async("addWordExecutor")
 	@TransactionalEventListener
 	public void handleVideoViewed(KeywordSavedEvent event) {
 		Keyword keyword = event.getKeyword();
@@ -32,7 +32,7 @@ public class VideoEventListener {
 		log.debug("[KeywordSavedEvent] 단어 저장 완료 {}", keyword.getWord());
 	}
 
-	@Async("videoExecutor")
+	@Async("audioDeleteExecutor")
 	@TransactionalEventListener
 	public void handleVideoAnalyzed(VideoAnalyzedEvent event) {
 		String fileName = event.getFileName();

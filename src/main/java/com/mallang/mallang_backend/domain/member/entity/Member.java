@@ -15,13 +15,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
@@ -171,9 +169,10 @@ public class Member {
     }
 
     private void maskSensitiveData() {
+        this.platformId=null;
         this.nickname = "탈퇴회원-" + this.id;
         this.email = "withdrawn_" + this.id;
-        this.profileImageUrl = "delete";
+        this.profileImageUrl = null;
         this.loginPlatform = LoginPlatform.NONE;
         this.subscriptionType = SubscriptionType.NONE;
     }
