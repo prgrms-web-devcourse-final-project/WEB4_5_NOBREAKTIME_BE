@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -118,7 +119,9 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	private String createQuestion(String word, String original) {
 		// 정답 단어를 {}로 대체
-		return original.replaceAll("\\b" + word + "\\b", "{}");
+		// (?i) 플래그로 대소문자 무시, \b로 단어 경계 매칭
+		String regex = "(?i)\\b" + Pattern.quote(word) + "\\b";
+		return original.replaceAll(regex, "{}");
 	}
 
 	// 단어 결과 저장
