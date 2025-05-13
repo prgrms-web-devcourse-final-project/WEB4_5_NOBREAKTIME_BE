@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.member.service;
+package com.mallang.mallang_backend.domain.member.service.main;
 
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
@@ -21,6 +21,9 @@ public interface MemberService {
     void scheduleAccountDeletion();
     String changeProfile(Long memberId, MultipartFile file);
     ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request);
+
+    void deleteOldProfileImage(Long memberId);
+
     boolean isNicknameAvailable(String nickname);
     void validateEmailNotDuplicated(String email);
     UserProfileResponse getUserProfile(Long memberId);
