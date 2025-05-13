@@ -1,27 +1,8 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook;
 
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.lang.reflect.Field;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-
-import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
@@ -46,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -288,61 +270,65 @@ class ExpressionBookServiceImplTest2 {
 	}
 
 	@Test
-	@DisplayName("getExpressionsByBook()은 표현 리스트를 반환한다")
-	void getExpressionsByBook_shouldReturnExpressions() {
-		Long memberId = 1L, bookId = 10L, expressionId = 100L;
+	@DisplayName("getExpressionsByBook()은 전체 표현함의 표현 리스트를 반환한다 - 최신순 정렬")
+	void getExpressionsByBook_shouldReturnAllExpressionsSortedByCreatedAt() {
+		// given
+		Long memberId = 1L;
 
 		Member member = Member.builder().language(Language.ENGLISH).build();
 		ReflectionTestUtils.setField(member, "id", memberId);
 
-		ExpressionBook book = ExpressionBook.builder().name("My Book").language(Language.ENGLISH).member(member).build();
-		ReflectionTestUtils.setField(book, "id", bookId);
+		ExpressionBook book1 = ExpressionBook.builder().name("A").language(Language.ENGLISH).member(member).build();
+		ExpressionBook book2 = ExpressionBook.builder().name("B").language(Language.ENGLISH).member(member).build();
+		ReflectionTestUtils.setField(book1, "id", 10L);
+		ReflectionTestUtils.setField(book2, "id", 11L);
 
-		ExpressionBookItem item = ExpressionBookItem.builder().expressionBookId(bookId).expressionId(expressionId).build();
-		Expression expression = Expression.builder().sentence("Hello").description("desc").sentenceAnalysis("anl").subtitleAt(LocalTime.of(0, 1, 5)).videos(null).build();
-		ReflectionTestUtils.setField(expression, "id", expressionId);
+		ExpressionBookItem item1 = ExpressionBookItem.builder()
+				.expressionBookId(10L)
+				.expressionId(100L)
+				.build();
+		ExpressionBookItem item2 = ExpressionBookItem.builder()
+				.expressionBookId(11L)
+				.expressionId(200L)
+				.build();
+		ReflectionTestUtils.setField(item1, "createdAt", LocalDateTime.of(2025, 5, 13, 12, 0));
+		ReflectionTestUtils.setField(item2, "createdAt", LocalDateTime.of(2025, 5, 13, 13, 0));
 
-		given(expressionBookRepository.findById(bookId)).willReturn(Optional.of(book));
-		given(expressionBookItemRepository.findAllById_ExpressionBookId(bookId)).willReturn(List.of(item));
-		given(expressionRepository.findById(expressionId)).willReturn(Optional.of(expression));
+		Expression expression1 = Expression.builder()
+				.sentence("Good morning")
+				.description("인사말")
+				.sentenceAnalysis("분석1")
+				.subtitleAt(LocalTime.of(0, 0, 5))
+				.videos(null)
+				.build();
+		Expression expression2 = Expression.builder()
+				.sentence("See you")
+				.description("작별인사")
+				.sentenceAnalysis("분석2")
+				.subtitleAt(LocalTime.of(0, 0, 10))
+				.videos(null)
+				.build();
+		ReflectionTestUtils.setField(expression1, "id", 100L);
+		ReflectionTestUtils.setField(expression2, "id", 200L);
 
-		List<ExpressionResponse> result = expressionBookService.getExpressionsByBook(bookId, memberId);
+		// mocking
+		given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
+		given(expressionBookRepository.findAllByMemberIdAndLanguage(memberId, Language.ENGLISH))
+				.willReturn(List.of(book1, book2));
+		given(expressionBookItemRepository.findAllById_ExpressionBookIdIn(List.of(10L, 11L)))
+				.willReturn(List.of(item1, item2));
+		given(expressionRepository.findAllById(List.of(100L, 200L)))
+				.willReturn(List.of(expression1, expression2));
 
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0).getSentence()).isEqualTo("Hello");
+		// when
+		List<ExpressionResponse> result = expressionBookService.getExpressionsByBook(memberId);
+
+		// then
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).getExpressionId()).isEqualTo(200L); // 최신순
+		assertThat(result.get(1).getExpressionId()).isEqualTo(100L);
 	}
 
-	@Test
-	@DisplayName("getExpressionsByBook()은 표현함이 없으면 예외")
-	void getExpressionsByBook_shouldThrowIfBookNotFound() {
-		Long memberId = 1L, bookId = 999L;
-
-		given(expressionBookRepository.findById(bookId)).willReturn(Optional.empty());
-
-		assertThatThrownBy(() -> expressionBookService.getExpressionsByBook(bookId, memberId))
-			.isInstanceOf(ServiceException.class)
-			.extracting("errorCode")
-			.isEqualTo(ErrorCode.EXPRESSION_BOOK_NOT_FOUND);
-	}
-
-	@Test
-	@DisplayName("getExpressionsByBook()은 본인 소유가 아니면 예외")
-	void getExpressionsByBook_shouldThrowIfNotOwner() {
-		Long ownerId = 1L, attackerId = 2L, bookId = 10L;
-
-		Member owner = Member.builder().language(Language.ENGLISH).build();
-		ReflectionTestUtils.setField(owner, "id", ownerId);
-
-		ExpressionBook book = ExpressionBook.builder().name("Private").language(Language.ENGLISH).member(owner).build();
-		ReflectionTestUtils.setField(book, "id", bookId);
-
-		given(expressionBookRepository.findById(bookId)).willReturn(Optional.of(book));
-
-		assertThatThrownBy(() -> expressionBookService.getExpressionsByBook(bookId, attackerId))
-			.isInstanceOf(ServiceException.class)
-			.extracting("errorCode")
-			.isEqualTo(ErrorCode.FORBIDDEN_EXPRESSION_BOOK);
-	}
 
 	@Test
 	@DisplayName("delete()는 표현함과 그 안의 표현 아이템들을 모두 삭제한다")
@@ -510,34 +496,54 @@ class ExpressionBookServiceImplTest2 {
 	}
 
 	@Test
-	@DisplayName("성공 - 특정 회원의 표현책에서 키워드가 포함된 표현 검색")
-	void searchExpressions_success() {
+	@DisplayName("searchExpressions()은 키워드가 포함된 표현을 최신순으로 반환한다")
+	void searchExpressions_shouldReturnMatchedExpressionsSortedByCreatedAt() {
 		// given
 		Long memberId = 1L;
 		String keyword = "hello";
 
 		Expression expression1 = Expression.builder()
-			.sentence("hello world")
-			.subtitleAt(LocalTime.of(0,0, 8))
-			.build();
+				.sentence("hello world")
+				.description("인사")
+				.sentenceAnalysis("분석1")
+				.subtitleAt(LocalTime.of(0, 0, 8))
+				.videos(null)
+				.build();
 		setId(expression1, 1L);
 
 		Expression expression2 = Expression.builder()
-			.sentence("say hello to my little friend")
-			.subtitleAt(LocalTime.of(0, 0, 10))
-			.build();
+				.sentence("say hello to my little friend")
+				.description("인사2")
+				.sentenceAnalysis("분석2")
+				.subtitleAt(LocalTime.of(0, 0, 10))
+				.videos(null)
+				.build();
 		setId(expression2, 2L);
 
-		given(expressionBookItemRepository.findExpressionsByMemberAndKeyword(memberId, keyword))
-			.willReturn(List.of(expression1, expression2));
+		ExpressionBookItem item1 = ExpressionBookItem.builder()
+				.expressionBookId(10L)
+				.expressionId(1L)
+				.build();
+		ExpressionBookItem item2 = ExpressionBookItem.builder()
+				.expressionBookId(10L)
+				.expressionId(2L)
+				.build();
+		ReflectionTestUtils.setField(item1, "createdAt", LocalDateTime.of(2025, 5, 13, 12, 0));
+		ReflectionTestUtils.setField(item2, "createdAt", LocalDateTime.of(2025, 5, 13, 13, 0)); // 최신
+
+		// mocking
+		given(expressionBookItemRepository.findByMemberIdAndKeyword(memberId, keyword))
+				.willReturn(List.of(item1, item2));
+		given(expressionRepository.findAllById(List.of(1L, 2L)))
+				.willReturn(List.of(expression1, expression2));
 
 		// when
-		List<ExpressionResponse> responses = expressionBookService.searchExpressions(memberId, keyword);
+		List<ExpressionResponse> result = expressionBookService.searchExpressions(memberId, keyword);
 
 		// then
-		assertThat(responses).hasSize(2);
-		assertThat(responses.get(0).getSentence()).isEqualTo("hello world");
-		assertThat(responses.get(1).getSentence()).isEqualTo("say hello to my little friend");
-		verify(expressionBookItemRepository).findExpressionsByMemberAndKeyword(memberId, keyword);
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).getExpressionId()).isEqualTo(2L); // 최신 createdAt 먼저
+		assertThat(result.get(1).getExpressionId()).isEqualTo(1L);
 	}
+
 }
