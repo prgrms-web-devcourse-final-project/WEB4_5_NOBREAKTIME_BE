@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
@@ -255,7 +255,10 @@ public class MemberController {
     public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
                                                @Login CustomUserDetails userDetails) {
 
-        memberService.withdrawMember(userDetails.getMemberId());
+        Long memerId = userDetails.getMemberId();
+
+        memberService.withdrawMember(memerId);
+        memberService.deleteOldProfileImage(memerId);
 
         RsData<Void> response = new RsData<>(
                 "200",

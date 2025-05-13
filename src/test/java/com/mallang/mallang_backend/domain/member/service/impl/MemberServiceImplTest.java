@@ -5,13 +5,9 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
-import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
-import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
-import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,22 +35,12 @@ class MemberServiceImplTest {
     MemberQueryRepository memberQueryRepository;
 
     @Autowired
-    S3ImageUploader imageUploader;
-
-    @Autowired
-    EntityManager em;
-
-    @Autowired
-    SubscriptionService subscriptionService;
-
-    @Autowired
-    WordbookRepository wordbookRepository;
-
-    @Autowired
     private MemberService memberService;
 
     // 공통 초기화 데이터
     private Member createMember1() {
+        memberRepository.deleteAll();
+
         return Member.builder()
                 .platformId("123123A")
                 .email("test1@example.com")
@@ -77,7 +63,6 @@ class MemberServiceImplTest {
     }
 
     @Test
-    @Transactional
     @DisplayName("소셜 로그인 성공 케이스")
     void signupByOauth_Success() {
         // Given

@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.global.config.oauth;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.ExpressionQuizService;
