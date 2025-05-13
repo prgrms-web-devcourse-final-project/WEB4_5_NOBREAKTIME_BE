@@ -37,7 +37,6 @@ import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
 import com.mallang.mallang_backend.domain.video.video.event.VideoAnalyzedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.domain.video.video.service.VideoQueryService;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
