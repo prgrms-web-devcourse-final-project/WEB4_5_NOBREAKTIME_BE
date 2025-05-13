@@ -27,4 +27,13 @@ public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBo
 	List<Expression> findExpressionsByMemberAndKeyword(@Param("memberId") Long memberId, @Param("keyword") String keyword);
 
 	List<ExpressionBookItem> findAllById_ExpressionBookIdIn(List<Long> expressionBookIds);
+
+    @Query("""
+    SELECT i FROM ExpressionBookItem i
+    JOIN ExpressionBook b ON i.id.expressionBookId = b.id
+    JOIN Expression e ON i.id.expressionId = e.id
+    WHERE b.member.id = :memberId
+    AND (e.sentence LIKE %:keyword% OR e.description LIKE %:keyword%)
+""")
+    List<ExpressionBookItem> findByMemberIdAndKeyword(@Param("memberId") Long memberId, @Param("keyword") String keyword);
 }
