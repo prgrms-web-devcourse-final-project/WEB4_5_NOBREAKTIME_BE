@@ -52,7 +52,6 @@ public class MemberProfileServiceImpl implements MemberProfileService {
      * @throws ServiceException 파일이 비어있거나 지원하지 않는 타입일 경우, 회원이 존재하지 않을 경우 발생
      */
     @Override
-    @Transactional
     public String changeProfile(Long memberId,
                                 MultipartFile file) {
 
