@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.video.video.service.impl;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.invokeMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -214,8 +215,15 @@ class VideoServiceImplTest {
 
 		// when
 		SseEmitter emitter = new SseEmitter(0L);
-		AnalyzeVideoResponse response = videoService.analyzeVideo(memberId, videoId, emitter);
 
+		// when: private analyzeVideo() 직접 호출
+		AnalyzeVideoResponse response = invokeMethod(
+			videoService,
+			"analyzeVideo",    // 메서드 이름
+			memberId,
+			videoId,
+			emitter
+		);
 		// then
 		assertThat(response).isNotNull();
 		assertThat(response.getSubtitleResults()).hasSize(1);
