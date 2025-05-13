@@ -174,7 +174,8 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
                 .map(item -> ExpressionResponse.from(
                         expressionMap.get(item.getId().getExpressionId()),
-                        item.getCreatedAt()
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
                 ))
                 .toList();
     }
@@ -317,7 +318,8 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
                 .map(item -> ExpressionResponse.from(
                         expressionMap.get(item.getId().getExpressionId()),
-                        item.getCreatedAt()
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
                 ))
                 .toList();
     }

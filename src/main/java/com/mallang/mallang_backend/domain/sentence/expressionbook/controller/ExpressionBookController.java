@@ -142,7 +142,6 @@ public class ExpressionBookController {
     /**
      * 특정 표현함의 표현 목록 조회
      *
-     * @param expressionBookIds 표현함 ID 리스트
      * @param userDetails      로그인한 사용자 정보
      * @return 표현 목록을 담은 응답 객체
      */

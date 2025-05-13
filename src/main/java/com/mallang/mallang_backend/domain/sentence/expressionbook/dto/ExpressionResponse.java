@@ -23,8 +23,9 @@ public class ExpressionResponse {
     private String videoTitle;
     private LocalTime subtitleAt;
     private LocalDateTime createdAt;
+    private Long expressionBookId;
 
-    public static ExpressionResponse from(Expression expression, LocalDateTime createdAt) {
+    public static ExpressionResponse from(Expression expression, LocalDateTime createdAt, Long expressionBookId) {
         return new ExpressionResponse(
                 expression.getId(),
                 expression.getSentence(),
@@ -34,7 +35,8 @@ public class ExpressionResponse {
                 expression.getVideos() != null ? expression.getVideos().getId() : null,
                 expression.getVideos() != null ? expression.getVideos().getVideoTitle() : null,
                 expression.getSubtitleAt(),
-                createdAt
+                createdAt,
+                expressionBookId
         );
     }
 }
