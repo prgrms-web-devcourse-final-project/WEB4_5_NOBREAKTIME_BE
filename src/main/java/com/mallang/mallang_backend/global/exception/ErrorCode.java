@@ -28,6 +28,7 @@ public enum ErrorCode {
     // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     AUDIO_FILE_NOT_FOUND("404-2", "audio.file.not.found", HttpStatus.NOT_FOUND),
+    TOO_MANY_CONCURRENT_AUDIO_EXTRACTIONS("500-1", "too.many.concurrent.audio.extractions", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Video Errors
     VIDEO_LENGTH_EXCEED("400-1", "video.length.exceed", HttpStatus.BAD_REQUEST),

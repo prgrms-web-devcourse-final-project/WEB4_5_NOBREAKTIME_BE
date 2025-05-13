@@ -14,9 +14,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
@@ -52,10 +54,12 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -98,8 +102,8 @@ public class VideoServiceImpl implements VideoService {
 
 		// 북마크된 videoId 목록 조회
 		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
-				.map(bookmark -> bookmark.getVideos().getId())
-				.collect(Collectors.toSet());
+			.map(bookmark -> bookmark.getVideos().getId())
+			.collect(Collectors.toSet());
 
 		// ISO 코드 추출
 		String language = lang.toCode();
@@ -233,9 +237,20 @@ public class VideoServiceImpl implements VideoService {
 		}
 	}
 
+	@Async("analysisExecutor")
 	@Transactional
 	@Override
-	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId) throws IOException, InterruptedException {
+	public void analyzeWithSseAsync(Long memberId, String videoId, SseEmitter emitter) {
+		try {
+			AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitter);
+			emitter.send(SseEmitter.event().name("analysisComplete").data(result));
+			emitter.complete();
+		} catch (Exception ex) {
+			emitter.completeWithError(ex);
+		}
+	}
+
+	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, SseEmitter emitter) throws IOException, InterruptedException {
 		long startTotal = System.nanoTime(); // 전체 시작 시간
 		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
@@ -260,6 +275,10 @@ public class VideoServiceImpl implements VideoService {
 
 		boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
 		if (!locked) {
+			emitter.send(SseEmitter.event()
+				.name("lockChecking")
+				.data("동일한 영상의 분석이 진행중입니다..."));
+
 			// 락이 사라졌는지 10분간 계속 확인
 			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 2000L);
 
@@ -273,6 +292,11 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		try {
+			// **락 획득 알림**
+			emitter.send(SseEmitter.event()
+				.name("lockAcquired")
+				.data("Lock acquired, 곧 Audio 추출 시작합니다."));
+
 			// 3. 영상 정보 저장
 			start = System.nanoTime();
 			VideoDetail dto = fetchDetail(videoId);
@@ -284,11 +308,21 @@ public class VideoServiceImpl implements VideoService {
 			String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
 			log.debug("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
+			// **오디오 추출 완료 알림**
+			emitter.send(SseEmitter.event()
+				.name("audioExtracted")
+				.data("Audio 추출 완료, STT 분석 시작합니다."));
+
 			// 5. STT 요청
 			start = System.nanoTime();
 			NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
 			final String result = clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
 			log.debug("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// **STT 완료 알림**
+			emitter.send(SseEmitter.event()
+				.name("sttCompleted")
+				.data("STT 완료, GPT 분석 시작합니다."));
 
 			// 6. STT 결과 파싱
 			start = System.nanoTime();
@@ -314,7 +348,6 @@ public class VideoServiceImpl implements VideoService {
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
-
 		} finally {
 			// 락 해제
 			redisDistributedLock.unlock(lockKey, lockValue);
@@ -366,9 +399,9 @@ public class VideoServiceImpl implements VideoService {
 	@Transactional
 	public Videos saveVideoIfAbsent(String videoId) {
 		return videoRepository.findById(videoId)
-				.orElseGet(() -> {
-					VideoDetail dto = fetchDetail(videoId);
-					return upsertVideoEntity(dto);
-				});
+			.orElseGet(() -> {
+				VideoDetail dto = fetchDetail(videoId);
+				return upsertVideoEntity(dto);
+			});
 	}
 }

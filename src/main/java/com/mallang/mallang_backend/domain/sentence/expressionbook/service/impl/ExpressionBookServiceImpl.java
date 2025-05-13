@@ -1,16 +1,5 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service.impl;
 
-import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import com.mallang.mallang_backend.global.common.Language;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.entity.ExpressionQuizResult;
@@ -28,11 +17,24 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -144,21 +146,37 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
-    public List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+    public List<ExpressionResponse> getExpressionsByBook(Long memberId) {
+        // 사용자 인증
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
-        }
+        // 전체 표현함 아이템 조회
+        List<ExpressionBook> allBooks = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
+        List<Long> allBookIds = allBooks.stream()
+                .map(ExpressionBook::getId)
+                .toList();
+        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookIdIn(allBookIds);
 
-        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
+        // 표현 ID 한 번에 추출
+        List<Long> expressionIds = items.stream()
+                .map(i -> i.getId().getExpressionId())
+                .distinct()
+                .toList();
 
+        // 표현 엔티티 한 번에 조회
+        Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
+                .collect(Collectors.toMap(Expression::getId, Function.identity()));
+
+        // 표현함 아이템 추가순 기준으로 최신 정렬
         return items.stream()
-                .map(item -> expressionRepository.findById(item.getId().getExpressionId())
-                        .orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND)))
-                .map(ExpressionResponse::from)
+                .filter(item -> expressionMap.containsKey(item.getId().getExpressionId()))
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
+                .map(item -> ExpressionResponse.from(
+                        expressionMap.get(item.getId().getExpressionId()),
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
+                ))
                 .toList();
     }
 
@@ -284,8 +302,25 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     // 표현함에서 표현 검색
     @Override
     public List<ExpressionResponse> searchExpressions(Long memberId, String keyword) {
-        return expressionBookItemRepository.findExpressionsByMemberAndKeyword(memberId, keyword).stream()
-            .map(ExpressionResponse::from)
-            .toList();
+        // 검색 결과 ExpressionBookItem 기준으로 받아오기
+        List<ExpressionBookItem> items = expressionBookItemRepository.findByMemberIdAndKeyword(memberId, keyword);
+
+        List<Long> expressionIds = items.stream()
+                .map(i -> i.getId().getExpressionId())
+                .distinct()
+                .toList();
+
+        Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
+                .collect(Collectors.toMap(Expression::getId, Function.identity()));
+
+        return items.stream()
+                .filter(item -> expressionMap.containsKey(item.getId().getExpressionId()))
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
+                .map(item -> ExpressionResponse.from(
+                        expressionMap.get(item.getId().getExpressionId()),
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
+                ))
+                .toList();
     }
 }

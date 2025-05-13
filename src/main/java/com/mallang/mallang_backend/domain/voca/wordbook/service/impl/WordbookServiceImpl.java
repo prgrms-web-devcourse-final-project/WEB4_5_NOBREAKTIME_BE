@@ -22,6 +22,8 @@ import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.impl.SavedWordResultFetcher;
@@ -61,6 +63,7 @@ public class WordbookServiceImpl implements WordbookService {
 	private final WordQuizResultRepository wordQuizResultRepository;
 	private final RedisDistributedLock redisDistributedLock;
 	private final SavedWordResultFetcher savedWordResultFetcher;
+	private final VideoRepository videoRepository;
 
 	// 단어장에 단어 추가
 	@Transactional
@@ -348,6 +351,17 @@ public class WordbookServiceImpl implements WordbookService {
 			subtitleRepository.findByIdIn(subtitleIds).stream()
 				.collect(Collectors.toMap(Subtitle::getId, Function.identity()));
 
+		// Subtitle 엔티티 조회 (subtitleId가 null이 아닌 경우만)
+		List<String> videoIds = items.stream()
+			.map(WordbookItem::getVideoId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+
+		Map<String, Videos> videoMap = videoIds.isEmpty() ?
+			Collections.emptyMap() :
+			videoRepository.findByIdIn(videoIds).stream()
+				.collect(Collectors.toMap(Videos::getId, Function.identity()));
+
 		// 응답 생성
 		return items.stream()
 			.map(item -> {
@@ -363,6 +377,15 @@ public class WordbookServiceImpl implements WordbookService {
 					translatedSentence = subtitle.getTranslatedSentence();
 				}
 
+				String videoTitle = null;
+				String imageUrl = null;
+
+				if (item.getVideoId() != null) {
+					Videos videos = videoMap.get(item.getVideoId());
+					videoTitle = videos.getVideoTitle();
+					imageUrl = videos.getThumbnailImageUrl();
+				}
+
 				return new WordResponse(
 					item.getWord(),
 					wordEntity.getPos(),
@@ -371,6 +394,8 @@ public class WordbookServiceImpl implements WordbookService {
 					exampleSentence,
 					translatedSentence,
 					item.getVideoId(),
+					videoTitle,
+					imageUrl,
 					item.getSubtitleId(),
 					item.getCreatedAt()
 				);

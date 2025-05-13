@@ -25,6 +25,8 @@ import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
@@ -68,6 +70,9 @@ class WordbookServiceImplTest {
 
 	@Mock
 	private WordQuizResultRepository wordQuizResultRepository;
+
+	@Mock
+	private VideoRepository videoRepository;
 
 	private Member savedMember;
 	private Wordbook savedDefaultWordBook;
@@ -635,6 +640,20 @@ class WordbookServiceImplTest {
 				.build();
 			setId(subtitle2, 2L);
 
+			Videos videos1 = Videos.builder()
+				.id("ABCDE")
+				.videoTitle("example1")
+				.thumbnailImageUrl("https://i.ytimg.com/vi/OGz4EJIUPiA/mqdefault.jpg")
+				.language(Language.ENGLISH)
+				.build();
+
+			Videos videos2 = Videos.builder()
+				.id("BBBBB")
+				.videoTitle("example1")
+				.thumbnailImageUrl("https://i.ytimg.com/vi/OGz4EJIUPiA/mqdefault.jpg")
+				.language(Language.ENGLISH)
+				.build();
+
 			given(wordbookRepository.findByIdAndMemberId(wordbookId, savedMember.getId()))
 				.willReturn(Optional.of(wordbook));
 
@@ -646,6 +665,9 @@ class WordbookServiceImplTest {
 
 			given(subtitleRepository.findByIdIn(List.of(1L, 2L)))
 				.willReturn(List.of(subtitle1, subtitle2));
+
+			given(videoRepository.findByIdIn(List.of("ABCDE", "BBBBB")))
+				.willReturn(List.of(videos1, videos2));
 
 			List<WordResponse> result = wordbookService.getWordsRandomly(wordbookId, savedMember.getId());
 
