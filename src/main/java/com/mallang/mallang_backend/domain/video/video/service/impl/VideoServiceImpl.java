@@ -114,20 +114,16 @@ public class VideoServiceImpl implements VideoService {
 		long maxResults,
 		Set<String> bookmarkedIds
 	) {
-		try {
-			// 1) 캐시가 적용된 queryVideos() 호출
-			List<VideoResponse> responses =
-				videoQueryService.queryVideos(q, category, language, maxResults);
+		// 캐시가 적용된 queryVideos() 호출
+		List<VideoResponse> responses =
+			videoQueryService.queryVideos(q, category, language, maxResults);
 
-			// 2) 북마크 여부 세팅
-			responses.forEach(r ->
-				r.setBookmarked(bookmarkedIds.contains(r.getVideoId()))
-			);
+		// 북마크 여부 세팅
+		responses.forEach(r ->
+			r.setBookmarked(bookmarkedIds.contains(r.getVideoId()))
+		);
 
-			return responses;
-		} catch (IOException e) {
-			throw new ServiceException(VIDEO_ID_SEARCH_FAILED);
-		}
+		return responses;
 	}
 
 	/**
@@ -197,30 +193,6 @@ public class VideoServiceImpl implements VideoService {
 		boolean isDefault = !StringUtils.hasText(q) && !StringUtils.hasText(category);
 
 		return new SearchContext(query, region, langKey, category, isDefault);
-	}
-
-	/**
-	 * YouTube ID 목록으로 Video 모델 조회
-	 */
-	private List<Video> fetchVideoDetails(List<String> ids) {
-		return youtubeService.fetchVideosByIds(ids);
-	}
-
-	/**
-	 * ID 목록 조회를 위한 YouTube search 호출
-	 */
-	private List<String> fetchVideoIds(SearchContext ctx, long maxResults) {
-		try {
-			return youtubeService.searchVideoIds(
-				ctx.getQuery(),
-				ctx.getRegion(),
-				ctx.getLangKey(),
-				ctx.getCategory(),
-				maxResults
-			);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
-		}
 	}
 
 	@Transactional
