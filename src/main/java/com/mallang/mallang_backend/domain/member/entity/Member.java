@@ -29,13 +29,13 @@ public class Member {
     private Long id;
 
 
-    @Column(unique = true)
-    private String email; // 카카오 로그인 회원은 추가 입력 필요
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nickname;
 
     @Column
@@ -48,7 +48,7 @@ public class Member {
     @Column(nullable = false)
     private LoginPlatform loginPlatform;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String platformId; // 플랫폼 별 고유 식별자
 
     @Enumerated(EnumType.STRING)
@@ -160,18 +160,18 @@ public class Member {
     }
 
     // 회원 탈퇴 후 마스킹 처리
-    public void markAsWithdrawn() {
+    public void markAsWithdrawn(String uuid) {
         if (this.withdrawalDate != null) {
             throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
         }
         this.withdrawalDate = LocalDateTime.now();
-        maskSensitiveData();
+        maskSensitiveData(uuid);
     }
 
-    private void maskSensitiveData() {
-        this.platformId=null;
-        this.nickname = "탈퇴회원-" + this.id;
-        this.email = "withdrawn_" + this.id;
+    private void maskSensitiveData(String uuid) {
+        this.platformId = "withdrawn_" + this.id + " " + uuid + " " + LocalDateTime.now();
+        this.nickname = uuid; // 고유 랜덤 코드
+        this.email = "withdrawn_" + this.id + uuid + " " + LocalDateTime.now();
         this.profileImageUrl = null;
         this.loginPlatform = LoginPlatform.NONE;
         this.subscriptionType = SubscriptionType.NONE;

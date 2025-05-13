@@ -2,8 +2,11 @@ package com.mallang.mallang_backend.global.config.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLogRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.config.oauth.processor.OAuth2UserProcessor;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -26,6 +29,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final MemberRepository memberRepository;
     private final List<OAuth2UserProcessor> processors;
     private final S3ImageUploader imageUploader;
+    private final WithdrawnLogRepository logRepository;
 
     // 실제 구현 예시: CustomCircuitBreakerConfig - [oauthUserLoginService] 성공 (702ms)
     @Retry(name = "apiRetry", fallbackMethod = "fallbackMethod")
@@ -112,36 +117,47 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      */
     @Async("securityTaskExecutor")
     public void handleExistingMember(String platformId) {
-        boolean exists = memberRepository.existsByPlatformId(platformId);
 
-        if (exists) {
-            log.info("이미 존재하는 회원: {}", platformId);
+        Member member = memberRepository.findByPlatformId(platformId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+        if (member.getPlatformId() == null) {
+            throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
         }
+
+        log.info("이미 존재하는 회원: {}", platformId);
     }
 
+    // 추후 서비스 로직 분리 필요
     /**
-     * 신규 회원 가입 처리 메서드
+     * 신규 회원을 등록합니다.
      *
-     * @param platform 로그인 플랫폼 정보
+     * @param platform       로그인 플랫폼 정보
+     * @param userAttributes 사용자 속성 정보 (플랫폼에서 전달)
+     * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우 예외 발생
      */
     @Async("securityTaskExecutor")
     public void registerNewMember(LoginPlatform platform,
-                                     Map<String, Object> userAttributes) {
+                                  Map<String, Object> userAttributes) {
 
+        // 필수 속성 추출
         String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
-        String email = (String) userAttributes.get("email"); // null 가능
+
+        // 30일 이내 탈퇴 이력이 존재하면 예외 발생
+        validateWithdrawnLogNotRejoinable(platformId);
+
+        String email = (String) userAttributes.get("email");
         String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
-        String nickname = originalNickname;
         String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
 
-        nickname = generateUniqueNickname(nickname, originalNickname);
+        // 닉네임 중복 방지 로직 적용
+        String nickname = generateUniqueNickname(originalNickname);
 
         log.debug("사용자 platformId: {}, email: {}, nickname: {}, profileImage: {}",
                 platformId, email, nickname, profileImage);
 
-        // S3에 프로필 이미지 업로드
-        ImageUploadRequest request = new ImageUploadRequest(profileImage);
-        String s3ProfileImageUrl = imageUploader.uploadImageURL(request);
+        // 프로필 이미지 S3 업로드
+        String s3ProfileImageUrl = uploadProfileImage(profileImage);
 
         memberService.signupByOauth(
                 platformId,
@@ -153,24 +169,64 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     }
 
     /**
-     * 닉네임이 중복될 경우, 원본 닉네임 뒤에 2~3자리 랜덤 문자열을 붙여
-     * 고유한 닉네임을 생성합니다.
+     * 30일 이내 탈퇴 이력이 있는 경우 가입을 제한합니다.
      *
-     * @param nickname         중복 여부를 확인할 닉네임
-     * @param originalNickname 원본 닉네임(랜덤 문자열을 붙이기 위한 기준)
-     * @return 사용 가능한 고유 닉네임
+     * @param platformId 플랫폼 고유 아이디
+     * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우
      */
-    private String generateUniqueNickname(String nickname, String originalNickname) {
-        while (!memberService.isNicknameAvailable(nickname)) {
-            // 2~3자리 랜덤 문자열 생성
-            String randomSuffix = RandomStringGenerator.generate(2 +
-                    new SecureRandom().nextInt(2)); // 2 또는 3자리
-            nickname = originalNickname + randomSuffix;
+    private void validateWithdrawnLogNotRejoinable(String platformId) {
+
+        if (logRepository.existsByOriginalPlatformId(platformId)) {
+
+            WithdrawnLog withdrawnLog = logRepository.findByOriginalPlatformId(platformId);
+            LocalDateTime rejoinAvailableAt = withdrawnLog.getCreatedAt().plusDays(30); // 가입 가능 날짜
+
+            if (rejoinAvailableAt.isAfter(LocalDateTime.now())) {
+                log.warn("아직 가입할 수 없는 회원: {}", platformId);
+                throw new ServiceException(CANNOT_SIGNUP_WITH_THIS_ID);
+            }
         }
-        return nickname;
     }
 
-    private OAuth2User fallbackMethod(OAuth2UserRequest userRequest, Exception e) {
+    /**
+     * 프로필 이미지를 S3에 업로드하고 URL을 반환합니다.
+     *
+     * @param profileImageUrl 업로드할 이미지 URL
+     * @return S3에 업로드된 이미지 URL
+     */
+    private String uploadProfileImage(String profileImageUrl) {
+        ImageUploadRequest request = new ImageUploadRequest(profileImageUrl);
+        return imageUploader.uploadImageURL(request);
+    }
+
+    /**
+     * 원본 닉네임을 기반으로 고유한 닉네임을 생성합니다.
+     * - 중복 시 랜덤 접미사(2~3자리)를 추가
+     * - 최대 5회 시도 후 예외 발생
+     *
+     * @param originalNickname 사용자가 입력한 원본 닉네임
+     * @return 사용 가능한 고유 닉네임
+     * @throws ServiceException 유일한 닉네임 생성 실패 시
+     */
+    private String generateUniqueNickname(String originalNickname) {
+        final int MAX_ATTEMPTS = 5;
+        String currentNickname = originalNickname;
+
+        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            if (memberService.isNicknameAvailable(currentNickname)) {
+                return currentNickname;
+            }
+            String randomSuffix = RandomStringGenerator.generate(2 + new SecureRandom().nextInt(2));
+            currentNickname = originalNickname + randomSuffix;
+        }
+
+        log.error("닉네임 생성 실패: {}", originalNickname);
+        throw new ServiceException(NICKNAME_GENERATION_FAILED);
+    }
+
+    private OAuth2User fallbackMethod(OAuth2UserRequest userRequest,
+                                      Exception e) {
+
         if (e instanceof ResourceAccessException) {
             log.error("OAuth 서버 연결 실패: {}", e.getMessage());
             throw new ServiceException(OAUTH_NETWORK_ERROR, e);
