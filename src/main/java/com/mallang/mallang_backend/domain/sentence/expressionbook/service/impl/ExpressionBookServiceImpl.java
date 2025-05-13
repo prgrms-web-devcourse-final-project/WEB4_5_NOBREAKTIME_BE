@@ -146,7 +146,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    public List<ExpressionResponse> getExpressionsByBook(List<Long> expressionBookIds, Long memberId) {
+    public List<ExpressionResponse> getExpressionsByBook(Long memberId) {
         // 사용자 인증
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));

@@ -151,12 +151,11 @@ public class ExpressionBookController {
     @PossibleErrors({MEMBER_NOT_FOUND})
     @GetMapping("/view")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
-        @RequestParam(required = false) List<Long> expressionBookIds,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
-        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(expressionBookIds, memberId);
+        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(memberId);
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(new RsData<>(
