@@ -118,6 +118,10 @@
 </div>
 
 ### Monitoring
+<div> 
+    <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white"/>
+</div>
 
 ### Version management and collaboration tools
 <div> 
