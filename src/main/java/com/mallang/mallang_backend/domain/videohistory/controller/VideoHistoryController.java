@@ -64,7 +64,7 @@ public class VideoHistoryController {
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetail,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size
+        @RequestParam(defaultValue = "10") int size
     ) {
         Long memberId = userDetail.getMemberId();
         // 마지막에 본 것부터 차례로 정렬
