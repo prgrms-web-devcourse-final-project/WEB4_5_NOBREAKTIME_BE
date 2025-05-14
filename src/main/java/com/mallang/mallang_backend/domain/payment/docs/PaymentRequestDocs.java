@@ -30,10 +30,7 @@ public class PaymentRequestDocs extends RsDataDocs {
         @Schema(description = "결제 금액", example = "15000")
         private int amount;
 
-        @Schema(description = "성공 URL", example = "https://api.mallang.site/success")
-        private String successUrl;
-
-        @Schema(description = "실패 URL", example = "https://api.mallang.site/fail")
-        private String failUrl;
+        @Schema(description = "결제 통화 (원)", example = "KRW")
+        private String currency;
     }
 }
