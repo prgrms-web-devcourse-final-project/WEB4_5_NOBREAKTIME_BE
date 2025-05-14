@@ -9,6 +9,6 @@ public interface VideoHistoryService {
 
     List<VideoHistoryResponse> getRecentHistories(Long memberId); // 최근 5개
 
-    List<VideoHistoryResponse> getHistoriesByPage(Long memberId, int page, int size);
+    List<VideoHistoryResponse> getAllHistories(Long memberId); // 전체
 }
 

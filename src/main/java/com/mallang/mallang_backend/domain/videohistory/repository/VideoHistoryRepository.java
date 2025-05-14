@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -27,7 +25,7 @@ public interface VideoHistoryRepository extends JpaRepository<VideoHistory, Long
     Optional<VideoHistory> findByMemberAndVideos(Member member, Videos videos);
 
     // 페이징 조회
-    Page<VideoHistory> findAllByMemberOrderByLastViewedAtDesc(Member member,Pageable pageable);
+    List<VideoHistory> findAllByMemberOrderByLastViewedAtDesc(Member member);
 
-    List<VideoHistory> findAllByMemberOrderByLastViewedAtAsc(Member member, Pageable pageable);
+    List<VideoHistory> findAllByMemberOrderByLastViewedAtAsc(Member member);
 }

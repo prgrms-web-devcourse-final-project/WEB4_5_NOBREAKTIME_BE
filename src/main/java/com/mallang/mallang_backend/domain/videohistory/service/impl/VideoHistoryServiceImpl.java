@@ -5,9 +5,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.List;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,10 +65,15 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 		}
 
 		int excess = (int)(total - MAX_HISTORY_PER_MEMBER);
-		Pageable page = PageRequest.of(0, excess, Sort.by("lastViewedAt").ascending());
-		List<VideoHistory> toDelete =
-			videoHistoryRepository.findAllByMemberOrderByLastViewedAtAsc(member, page);
 
+		// 전체를 오래된 순으로 조회
+		List<VideoHistory> allHistoriesAsc =
+			videoHistoryRepository.findAllByMemberOrderByLastViewedAtAsc(member);
+
+		// 초과 개수만큼 오래된 것만 잘라내기
+		List<VideoHistory> toDelete = allHistoriesAsc.subList(0, excess);
+
+		// 일괄 삭제
 		videoHistoryRepository.deleteAllInBatch(toDelete);
 	}
 
@@ -91,18 +93,15 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 	}
 
 
-	/**
-	 * 페이징 조회
-	 */
+	/** 전체 조회 */
 	@Override
 	@Transactional(readOnly = true)
-	public List<VideoHistoryResponse> getHistoriesByPage(Long memberId, int page, int size) {
+	public List<VideoHistoryResponse> getAllHistories(Long memberId) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-		Pageable pageable = PageRequest.of(page, size, Sort.by("lastViewedAt").descending());
 		return videoHistoryRepository
-			.findAllByMemberOrderByLastViewedAtDesc(member, pageable)
+			.findAllByMemberOrderByLastViewedAtDesc(member)
 			.stream()
 			.map(VideoHistoryResponse::from)
 			.toList();

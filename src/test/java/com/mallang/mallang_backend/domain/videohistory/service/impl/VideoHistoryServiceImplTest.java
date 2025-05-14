@@ -7,22 +7,15 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.*;
 
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Page;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
@@ -39,7 +32,9 @@ class VideoHistoryServiceImplTest {
 	@Mock private MemberRepository memberRepository;
 	@Mock private VideoRepository videoRepository;
 	@InjectMocks private VideoHistoryServiceImpl service;
+
 	@Captor private ArgumentCaptor<VideoHistory> historyCaptor;
+	@Captor private ArgumentCaptor<List<VideoHistory>> deleteCaptor;
 
 	private final Long MEMBER_ID = 123L;
 	private final String VIDEO_ID1 = "10L";
@@ -77,6 +72,10 @@ class VideoHistoryServiceImplTest {
 			.willReturn(Optional.of(member));
 		given(videoRepository.findById(VIDEO_ID1))
 			.willReturn(Optional.of(videos1));
+		given(repository.findByMemberAndVideos(member, videos1))
+			.willReturn(Optional.empty());
+		// 삭제 로직이 실행되지 않도록
+		given(repository.countByMember(member)).willReturn(0);
 
 		service.save(MEMBER_ID, VIDEO_ID1);
 
@@ -86,6 +85,8 @@ class VideoHistoryServiceImplTest {
 		assertThat(saved.getVideos()).isEqualTo(videos1);
 		assertThat(saved.getCreatedAt()).isNotNull();
 		assertThat(saved.getLastViewedAt()).isEqualTo(saved.getCreatedAt());
+
+		then(repository).should(never()).deleteAllInBatch(anyList());
 	}
 
 	@Test @DisplayName("getRecentHistories() 호출 시 최신 5개 DTO 반환")
@@ -93,6 +94,7 @@ class VideoHistoryServiceImplTest {
 		given(memberRepository.findById(MEMBER_ID))
 			.willReturn(Optional.of(member));
 
+		// 엔티티 생성 및 lastViewedAt 설정
 		VideoHistory e1 = VideoHistory.builder().member(member).videos(videos1).build();
 		VideoHistory e2 = VideoHistory.builder().member(member).videos(videos2).build();
 		Field fv = VideoHistory.class.getDeclaredField("lastViewedAt");
@@ -100,6 +102,7 @@ class VideoHistoryServiceImplTest {
 		fv.set(e1, dto1.getLastViewedAt());
 		fv.set(e2, dto2.getLastViewedAt());
 
+		// Videos 엔티티 getter 모킹
 		given(videos1.getId()).willReturn(VIDEO_ID1);
 		given(videos1.getVideoTitle()).willReturn(TITLE1);
 		given(videos1.getThumbnailImageUrl()).willReturn(THUMB1);
@@ -112,8 +115,7 @@ class VideoHistoryServiceImplTest {
 
 		List<VideoHistoryResponse> result = service.getRecentHistories(MEMBER_ID);
 
-		then(repository).should()
-			.findTop5ByMemberOrderByLastViewedAtDesc(member);
+		then(repository).should().findTop5ByMemberOrderByLastViewedAtDesc(member);
 		assertThat(result).hasSize(2)
 			.extracting("videoId", "lastViewedAt")
 			.containsExactly(
@@ -122,8 +124,8 @@ class VideoHistoryServiceImplTest {
 			);
 	}
 
-	@Test @DisplayName("getHistoriesByPage() 호출 시 페이징된 DTO 리스트 반환")
-	void getHistoriesByPage_shouldReturnListOfDtos() throws Exception {
+	@Test @DisplayName("getAllHistories() 호출 시 전체 기록을 DTO로 변환하여 반환한다")
+	void getAllHistories_shouldReturnMappedDtos() throws Exception {
 		given(memberRepository.findById(MEMBER_ID))
 			.willReturn(Optional.of(member));
 
@@ -141,18 +143,40 @@ class VideoHistoryServiceImplTest {
 		given(videos2.getVideoTitle()).willReturn(TITLE2);
 		given(videos2.getThumbnailImageUrl()).willReturn(THUMB2);
 
-		Pageable pageable = PageRequest.of(0, 2, Sort.by("lastViewedAt").descending());
-		Page<VideoHistory> page = new PageImpl<>(List.of(e1, e2), pageable, 10);
+		// 전체 내림차순(e2 먼저, e1 나중)
+		given(repository.findAllByMemberOrderByLastViewedAtDesc(member))
+			.willReturn(List.of(e2, e1));
 
-		given(repository.findAllByMemberOrderByLastViewedAtDesc(member, pageable))
-			.willReturn(page);
+		List<VideoHistoryResponse> result = service.getAllHistories(MEMBER_ID);
 
-		List<VideoHistoryResponse> result = service.getHistoriesByPage(MEMBER_ID, 0, 2);
+		then(repository).should().findAllByMemberOrderByLastViewedAtDesc(member);
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0)).usingRecursiveComparison().isEqualTo(dto2);
+		assertThat(result.get(1)).usingRecursiveComparison().isEqualTo(dto1);
+	}
 
-		then(repository).should()
-			.findAllByMemberOrderByLastViewedAtDesc(member, pageable);
-		assertThat(result).hasSize(2)
-			.usingRecursiveFieldByFieldElementComparator()
-			.containsExactly(dto1, dto2);
+	@Test @DisplayName("save() 호출 시 50개 초과하면 오래된 excess개만 삭제")
+	void save_shouldDeleteOnlyExcessOnes() {
+		given(memberRepository.findById(MEMBER_ID))
+			.willReturn(Optional.of(member));
+		given(videoRepository.findById(VIDEO_ID1))
+			.willReturn(Optional.of(videos1));
+		given(repository.findByMemberAndVideos(member, videos1))
+			.willReturn(Optional.empty());
+		// 이미 52개 있다고 가정
+		given(repository.countByMember(member)).willReturn(52);
+
+		List<VideoHistory> all = IntStream.range(0, 52)
+			.mapToObj(i -> mock(VideoHistory.class))
+			.toList();
+		given(repository.findAllByMemberOrderByLastViewedAtAsc(member))
+			.willReturn(all);
+
+		service.save(MEMBER_ID, VIDEO_ID1);
+
+		then(repository).should().deleteAllInBatch(deleteCaptor.capture());
+		List<VideoHistory> deleted = deleteCaptor.getValue();
+		assertThat(deleted).hasSize(2)
+			.containsExactly(all.get(0), all.get(1));
 	}
 }
