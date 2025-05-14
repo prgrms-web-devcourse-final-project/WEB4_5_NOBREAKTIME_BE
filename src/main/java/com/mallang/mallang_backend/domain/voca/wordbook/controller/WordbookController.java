@@ -1,40 +1,23 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Wordbook", description = "단어장 관련 API")
 @RestController
@@ -295,22 +278,20 @@ public class WordbookController {
 
 	/**
 	 * 단어장 페이지에 접속했을 때, 선택한 단어장의 단어들을 조회합니다. 선택한 단어장이 없으면 "기본" 단어장의 단어를 조회합니다.
-	 * @param wordbookId 단어장 ID
 	 * @param userDetail 로그인한 회원
 	 * @return 단어 리스트
 	 */
-	@Operation(summary = "단어 목록 조회", description = "특정 단어장의 단어 목록을 조회합니다.")
+	@Operation(summary = "전체 단어 목록 조회", description = "로그인한 사용자의 모든 단어장에 있는 단어들을 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
-	@PossibleErrors({MEMBER_NOT_FOUND, NO_WORDBOOK_EXIST_OR_FORBIDDEN})
+	@PossibleErrors({MEMBER_NOT_FOUND})
 	@GetMapping("/view")
 	public ResponseEntity<RsData<List<WordResponse>>> getWordbookItems(
-		@RequestParam(required = false) Long wordbookId,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
 
-		List<WordResponse> words = wordbookService.getWordbookItems(wordbookId, memberId);
+		List<WordResponse> words = wordbookService.getWordbookItems(memberId);
 		return ResponseEntity.ok(new RsData<>(
 			"200",
 			"단어 목록이 조회되었습니다.",

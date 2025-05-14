@@ -78,6 +78,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional
     public void withdrawMember(Long memberId) {
         withdrawalService.withdrawMember(memberId);
     }
@@ -88,6 +89,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional
     public String changeProfile(Long memberId, MultipartFile file) {
         return profileService.changeProfile(memberId, file);
     }

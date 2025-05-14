@@ -43,7 +43,6 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
      *
      * @param memberId 대상 회원 ID
      */
-    @Transactional
     public void withdrawMember(Long memberId) {
         Member member = findMemberOrThrow(memberId);
         String uuid = UUID.randomUUID().toString();
@@ -72,7 +71,6 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     }
 
     private void downgradeSubscriptionToBasic(Long memberId) {
-        subscriptionService.updateSubscriptionType(memberId, SubscriptionType.BASIC);
     }
 
     /**

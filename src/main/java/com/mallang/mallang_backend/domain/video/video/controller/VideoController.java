@@ -4,13 +4,16 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
@@ -44,27 +47,28 @@ public class VideoController {
     @Operation(summary = "영상 분석", description = "Youtube ID로 영상을 분석하여 자막과 핵심 단어를 반환합니다.")
     @ApiResponse(responseCode = "200", description = "영상 분석이 완료되었습니다.")
     @PossibleErrors({VIDEO_ID_SEARCH_FAILED, AUDIO_DOWNLOAD_FAILED, API_ERROR})
-    @GetMapping("/{youtubeVideoId}/analysis")
-    public ResponseEntity<RsData<AnalyzeVideoResponse>> videoAnalysis(
+    @GetMapping(
+        value = "/{youtubeVideoId}/analysis",
+        produces = MediaType.TEXT_EVENT_STREAM_VALUE
+    )
+    public SseEmitter videoAnalysis(
         @PathVariable String youtubeVideoId,
-        @Parameter(hidden = true)
-        @Login CustomUserDetails userDetail
+        @Parameter(hidden = true) @Login CustomUserDetails userDetail
     ) {
         Long memberId = userDetail.getMemberId();
+        // 0L을 주면 타임아웃 없이 무제한 대기
+        SseEmitter emitter = new SseEmitter(0L);
 
-        AnalyzeVideoResponse response;
-
+        // 초기 연결 알림
         try {
-            response = videoService.analyzeVideo(memberId, youtubeVideoId);
-        } catch (IOException | InterruptedException e) {
-            throw new ServiceException(AUDIO_DOWNLOAD_FAILED);
+            emitter.send(SseEmitter.event().name("INIT").data("스트림 연결 성공"));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+            return emitter;
         }
 
-        return ResponseEntity.ok(new RsData<>(
-            "200",
-            "영상 분석이 완료되었습니다.",
-            response
-        ));
+        videoService.analyzeWithSseAsync(memberId, youtubeVideoId, emitter);
+        return emitter;
     }
 
     /**

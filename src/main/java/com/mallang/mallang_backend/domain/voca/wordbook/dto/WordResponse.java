@@ -1,10 +1,10 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.dto;
 
-import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,6 +17,9 @@ public class WordResponse {
 	private String exampleSentence;
 	private String translatedSentence;
 	private String videoId;
+	private String videoTitle;
+	private String imageUrl;
 	private Long subtitleId;
 	private LocalDateTime createdAt;
+	private Long wordBookId;
 }
