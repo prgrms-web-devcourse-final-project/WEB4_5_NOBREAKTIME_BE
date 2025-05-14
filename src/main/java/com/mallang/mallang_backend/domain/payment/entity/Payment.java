@@ -22,9 +22,7 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    private Long memberId; // 회원 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id")
@@ -32,10 +30,13 @@ public class Payment {
 
     // == 결제 정보 ==
     @Column(nullable = false, unique = true)
-    private String orderId; // 결제 요청 시 전송하는 값
+    private String orderId; // 결제 요청 시 전송하는 값 (자동 결제 - customerKey 로 이용)
 
     @Column(unique = true)
     private String paymentKey; // 각 결제를 식별하는 값 (PG사 제공) -> 취소 시에도 이용
+
+    @Column(unique = true)
+    private String billingKey; // 자동 결제 시에 이용하는 값
 
     @Column(nullable = false)
     private int totalAmount; // 총 결제 금액
@@ -44,8 +45,7 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PayStatus payStatus; // 현재 결제 상태
 
-    @Enumerated(EnumType.STRING)
-    private PayPlatform platform; // 결제 수단
+    private String method; // 결제 방법 (카드, 휴대폰, 앱, 웹)
 
     // ==== 결제 성공 ====
     @Column
@@ -53,8 +53,7 @@ public class Payment {
 
     // ==== 결제 실패 ====
     @Column
-    @Enumerated(EnumType.STRING)
-    private PaymentFailureReason failureReason; // 결제 실패 사유
+    private String failureReason; // 결제 실패 사유
 
     // ==== 결제 취소 / 환불 ====
     @Column
@@ -63,43 +62,47 @@ public class Payment {
 
     /**
      * 필수 값만 우선 저장
-     * @param member        # 회원
+     * @param memberId      # 회원 ID
      * @param plan          # 구독
      * @param orderId       # 거래 ID
      *
      */
     @Builder
-    public Payment(Member member,
+    public Payment(Long memberId,
                    Plan plan,
                    String orderId
     ) {
-        this.member = member;
+        this.memberId = memberId;
         this.plan = plan;
         this.totalAmount = plan.getAmount();
         this.orderId = orderId;
-        this.payStatus = PayStatus.PENDING; // 최초 상태는 '대기'
+        this.payStatus = PayStatus.READY; // 최초 상태는 '대기'
     }
 
     /**
      * 결제가 성공하면,
      * 승인 시각(approvedAt), 결제 상태(payStatus), 결제 플랫폼(platfom) 등 성공 관련 필드를 업데이트
      */
-    public void success(String paymentKey,
-                        LocalDateTime approvedAt) {
+    public void updateSuccessInfo(String paymentKey,
+                                  LocalDateTime approvedAt,
+                                  String method) {
 
         this.paymentKey = paymentKey;
         this.approvedAt = approvedAt;
-        this.payStatus = PayStatus.SUCCESS;
+        this.method = method;
+        this.payStatus = PayStatus.DONE;
     }
 
     /**
      * 결제가 실패하면,
      * 실패 사유(failureReason), 결제 상태(payStatus) 등을 업데이트
      */
-    public void fail(PaymentFailureReason reason) {
-
+    public void updateFailInfo(String paymentKey,
+                               String reason
+    ) {
+        this.paymentKey = paymentKey;
         this.failureReason = reason;
-        this.payStatus = PayStatus.FAILED;
+        this.payStatus = PayStatus.ABORTED;
     }
 
     /**
@@ -110,5 +113,9 @@ public class Payment {
 
         this.canceledReason = reason;
         this.payStatus = PayStatus.CANCELED;
+    }
+
+    public void updatePayStatus(PayStatus status) {
+        this.payStatus = status;
     }
 }
