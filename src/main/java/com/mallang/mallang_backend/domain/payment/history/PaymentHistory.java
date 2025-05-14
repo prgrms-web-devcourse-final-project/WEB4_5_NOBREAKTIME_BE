@@ -3,12 +3,7 @@ package com.mallang.mallang_backend.domain.payment.history;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -29,27 +24,25 @@ public class PaymentHistory {
 
     @ManyToOne
     @JoinColumn(name = "payment_id")
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private Payment payment;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private PayStatus status; // 변경된 상태
 
     @Column(nullable = false)
     private LocalDateTime changedAt = LocalDateTime.now();
 
     @Column(columnDefinition = "TEXT")
-    private String reasonDetail; // 상태 변경 사유 Enum -> 문자열 변환해 저장 가능
+    private String reasonDetail;
 
     @Builder
     public PaymentHistory(Payment payment,
                           PayStatus status,
-                          LocalDateTime changedAt,
                           String reasonDetail
     ) {
         this.payment = payment;
         this.status = status;
-        this.changedAt = changedAt;
         this.reasonDetail = reasonDetail;
     }
 }
