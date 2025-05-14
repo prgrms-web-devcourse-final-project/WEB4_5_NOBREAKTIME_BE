@@ -84,6 +84,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.3'
 
 	// clova speech api
 	implementation 'org.apache.httpcomponents:httpclient:4.5.12'
@@ -118,6 +119,11 @@ dependencies {
 	// swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 	implementation 'com.danielfrak.code:springdoc-openapi-externalized-documentation:1.0.0'
+
+	// mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail:3.4.5'
+	testImplementation 'com.icegreen:greenmail-junit5:2.0.1'
+
 }
 
 tasks.named('test') {
