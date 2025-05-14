@@ -52,12 +52,10 @@ public class SwaggerConfig {
     public OpenApiCustomizer idempotencyKeyHeaderCustomizer() {
         return openApi -> {
             openApi.getPaths().forEach((path, pathItem) -> {
-                if ("/api/v1/payment/request".equals(path)) {
+                if ("/api/v1/payment/confirm".equals(path)) {
                     pathItem.readOperations().forEach(operation -> {
-                        // 헤더 파라미터 생성
                         Parameter idempotencyKeyParam = new Parameter()
-                                .name("Idempotency-pay-key")
-                                .in(ParameterIn.HEADER.toString())
+                                .name("Idempotency-key")
                                 .description(
                                         "멱등성 토큰 (클라이언트에서 생성한 UUID)\n" +
                                                 "- 생성 규칙:\n" +
