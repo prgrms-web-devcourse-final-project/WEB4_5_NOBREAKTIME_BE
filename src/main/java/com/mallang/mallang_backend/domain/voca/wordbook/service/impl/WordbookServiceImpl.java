@@ -152,8 +152,7 @@ public class WordbookServiceImpl implements WordbookService {
 			}
 
 			try {
-				String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
-				List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
+				List<Word> generatedWords = gptService.searchWord(word); // DB에 없으면 GPT 호출
 				wordRepository.saveAll(generatedWords);
 
 			} finally {

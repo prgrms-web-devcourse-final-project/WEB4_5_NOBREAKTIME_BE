@@ -1,6 +1,8 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -52,5 +55,47 @@ public class GptServiceImplTest {
 
 		assertThat(result).isNotEmpty();
 		assertThat(result.get(0).getKeywords()).extracting("word").doesNotContain("cease");
+	}
+
+	@Test
+	@DisplayName("단어 검색 시 예문에 단어 형태가 일치하지 않으면 예외 발생")
+	void searchWord_shouldThrowExceptionWhenExampleSentenceIsInvalid() {
+		String word = "cease";
+		String prompt = "some prompt";
+
+		when(gptPromptBuilder.buildPromptforSearchWord(word)).thenReturn(prompt);
+
+		OpenAiResponse mockResponse = new OpenAiResponse();
+		mockResponse.setChoices(List.of(
+			new OpenAiResponse.Choice(new Message("user", "동사 | 멈추다 | 2 | It ceases to exist without me | 나 없이는 존재할 수 없다."))
+		));
+
+		doReturn(mockResponse).when(gptServiceImpl).callGptApi(prompt);
+
+		// 예문에 "cease"가 정확히 포함되지 않은 경우 예외 발생
+		assertThatThrownBy(() -> {
+			gptServiceImpl.searchWord(word);
+		}).isInstanceOf(ServiceException.class);
+	}
+
+	@Test
+	@DisplayName("단어 검색 시 예문에 단어 형태가 정확히 일치하면 결과 반환")
+	void searchWord_shouldReturnValidWords() {
+		String word = "ceases";
+		String prompt = "some prompt";
+
+		when(gptPromptBuilder.buildPromptforSearchWord(word)).thenReturn(prompt);
+
+		OpenAiResponse mockResponse = new OpenAiResponse();
+		mockResponse.setChoices(List.of(
+			new OpenAiResponse.Choice(new Message("user", "동사 | 멈추다 | 2 | It ceases to exist without me | 나 없이는 존재할 수 없다."))
+		));
+
+		doReturn(mockResponse).when(gptServiceImpl).callGptApi(prompt);
+
+		List<Word> result = gptServiceImpl.searchWord(word);
+
+		assertThat(result).isNotEmpty();
+		assertThat(result.get(0).getWord()).isEqualTo("ceases");
 	}
 }

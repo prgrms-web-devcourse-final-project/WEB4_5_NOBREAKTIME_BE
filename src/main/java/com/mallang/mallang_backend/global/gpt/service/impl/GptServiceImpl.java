@@ -2,6 +2,8 @@ package com.mallang.mallang_backend.global.gpt.service.impl;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.*;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
@@ -17,9 +19,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 @Slf4j
 @Service
@@ -37,11 +41,36 @@ public class GptServiceImpl implements GptService {
      */
     @Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
     @Override
-    public String searchWord(String word)  {
+    public List<Word> searchWord(String word)  {
         String prompt = gptPromptBuilder.buildPromptforSearchWord(word);
         OpenAiResponse response = callGptApi(prompt);
         validateResponse(response);
-        return response.getChoices().get(0).getMessage().getContent();
+
+        String gptResult = response.getChoices().get(0).getMessage().getContent();
+
+        List<Word> generatedWords = parseGptResult(word, gptResult);
+        validateExampleSentence(generatedWords);
+
+        return generatedWords;
+    }
+
+    /**
+     * 예문이 단어의 형태 그대로 나오는지 검증하고, 형태가 다르면 예외를 발생시킵니다.
+     * <p>예: 예문이 "He ceases to exist."이고 word가 "cease"인 경우,
+     *      "cease"는 정확히 일치하지 않으므로 예외가 발생합니다.</p>
+     * @param generatedWords 검증할 단어 리스트
+     * @throws ServiceException 예문에 단어가 정확히 포함되지 않은 경우 발생
+     */
+    private void validateExampleSentence(List<Word> generatedWords) {
+        for (Word word : generatedWords) {
+            String exampleSentence = word.getExampleSentence();
+            String wordText = word.getWord().toLowerCase();
+
+            // 단어가 예문에 정확히 포함되는지 확인
+            if (!exampleSentence.matches(".*\\b" + Pattern.quote(wordText.toLowerCase()) + "\\b.*")) {
+                throw new ServiceException(ErrorCode.INVALID_WORD);
+            }
+        }
     }
 
     /**

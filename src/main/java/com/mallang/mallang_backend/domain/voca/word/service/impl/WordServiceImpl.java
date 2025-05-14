@@ -63,8 +63,7 @@ public class WordServiceImpl implements WordService {
 		}
 
 		try {
-			String gptResult = gptService.searchWord(word); // DB에 없으면 GPT 호출
-			List<Word> generatedWords = parseGptResult(word, gptResult); // GPT 결과 파싱
+			List<Word> generatedWords = gptService.searchWord(word); // DB에 없으면 GPT 호출
 			wordRepository.saveAll(generatedWords);
 			return new WordSearchResponse(convertToResponse(generatedWords)); // 변환 후 반환
 		} finally {
