@@ -71,7 +71,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     }
 
     private void downgradeSubscriptionToBasic(Long memberId) {
-        subscriptionService.updateSubscription(memberId, SubscriptionType.BASIC);
+        subscriptionService.updateSubscriptionType(memberId, SubscriptionType.BASIC);
     }
 
     /**
