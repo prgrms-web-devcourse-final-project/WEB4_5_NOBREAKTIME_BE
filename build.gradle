@@ -123,7 +123,6 @@ dependencies {
 	// mail
 	implementation 'org.springframework.boot:spring-boot-starter-mail:3.4.5'
 	testImplementation 'com.icegreen:greenmail-junit5:2.0.1'
-
 }
 
 tasks.named('test') {
