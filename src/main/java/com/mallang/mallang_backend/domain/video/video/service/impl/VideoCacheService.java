@@ -1,7 +1,5 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -10,13 +8,13 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.mallang.mallang_backend.domain.video.video.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
+import com.mallang.mallang_backend.domain.video.video.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
@@ -36,15 +34,23 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class VideoCacheService {
+	// 락 TTL: 락을 보유할 최대 시간 (밀리초) -> 30초로 설정
+	private static final long LOCK_TTL_MS      = 30_000L;
+	// 폴링 주기: 락 해제 여부를 확인하기 위한 간격 (밀리초) -> 100ms
+	private static final long WAIT_INTERVAL_MS = 100L;
+
 	private final YoutubeService youtubeService;
 	private final VideoSearchProperties youtubeSearchProperties;
 	private final CacheManager cacheManager;
 	private final RedisDistributedLock redisDistributedLock;
 
-	// 순환 참조 회피를 위한 자기 자신 프록시
+	// 순환 참조 방지를 위한 자기 자신 프록시
 	@Autowired @Lazy
 	private VideoCacheService self;
 
+	/**
+	 * 캐시에서 조회하고 MISS 시 fetchAndCache 호출
+	 */
 	@Cacheable(
 		cacheNames = "videoListCache",
 		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)"
@@ -56,6 +62,9 @@ public class VideoCacheService {
 		return fetchAndCache(q, category, language, fetchSize);
 	}
 
+	/**
+	 * YouTube API 호출 및 결과 필터링 후 캐시에 저장
+	 */
 	@CachePut(
 		cacheNames = "videoListCache",
 		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)"
@@ -91,6 +100,9 @@ public class VideoCacheService {
 		}
 	}
 
+	/**
+	 * 전체 영상 리스트 반환 (락 + 캐시 stampede 방지)
+	 */
 	public List<VideoResponse> getFullVideoList(
 		String q, String category, String language, long fetchSize
 	) {
@@ -102,12 +114,13 @@ public class VideoCacheService {
 		String lockKey   = "lock:video:cache:" + key;
 		String lockValue = UUID.randomUUID().toString();
 
-		// 락 획득
+		// 락 획득 시도 (TTL: 30초)
 		boolean lockAcquired = redisDistributedLock.tryLock(lockKey, lockValue, LOCK_TTL_MS);
 		if (lockAcquired) {
 			log.info("[CACHE LOCK ACQUIRED] key={} value={}", lockKey, lockValue);
 		} else {
 			log.info("[CACHE LOCK WAIT] key={}, waiting up to {}ms", lockKey, LOCK_TTL_MS);
+			// 최대 30초 동안 100ms 간격으로 락 해제 여부 확인
 			boolean waited = redisDistributedLock.waitForUnlockThenFetch(lockKey, LOCK_TTL_MS, WAIT_INTERVAL_MS);
 			if (waited) {
 				log.info("[CACHE LOCK RELEASED] key={}, proceeding", lockKey);
@@ -117,6 +130,7 @@ public class VideoCacheService {
 		}
 
 		try {
+			// 실제 캐시 조회 및 필요 시 업데이트
 			CachedVideos cached = self.loadCached(q, category, language, fetchSize);
 			if (cached.getRawFetchSize() < fetchSize) {
 				log.info("[CACHE UPDATE] storedSize={} < requestedSize={} → refreshing cache",
@@ -133,6 +147,7 @@ public class VideoCacheService {
 				: all.subList(0, (int) fetchSize);
 
 		} finally {
+			// 락 해제 (획득한 경우에만)
 			if (lockAcquired) {
 				boolean released = redisDistributedLock.unlock(lockKey, lockValue);
 				if (released) {
@@ -144,6 +159,9 @@ public class VideoCacheService {
 		}
 	}
 
+	/**
+	 * 검색 컨텍스트 생성 (쿼리, 지역, 언어 등)
+	 */
 	private SearchContext buildSearchContext(
 		String q, String category, String language
 	) {
