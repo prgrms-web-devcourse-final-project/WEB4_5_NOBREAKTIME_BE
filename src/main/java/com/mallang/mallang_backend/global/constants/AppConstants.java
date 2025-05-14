@@ -99,5 +99,5 @@ public class AppConstants {
 	 * Redis Lock TTL (Time To Live)
 	 */
 	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
-	public static final long WAIT_INTERVAL_MS = 500L;      // 폴링 주기 그대로
+	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
 }
