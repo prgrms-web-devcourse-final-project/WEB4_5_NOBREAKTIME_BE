@@ -28,6 +28,9 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
             - 품사와 해석은 반드시 한국어로 작성.
             - 예문은 해당 품사로 쓰인 실제 문장을 포함하세요.
             - 예문의 한국어 번역도 반드시 포함하세요.
+            - 예문은 주어진 단어의 형태 그대로만 사용 (예: was -> The light was too bright.)
+			- 어형 변화가 있는 단어도 예문에서는 주어진 단어 그대로 사용 (예: ceases, existed, going 등)
+			- 단어의 복수형, 시제 변화, 동명사 등 모든 형태를 포함하여 정확히 일치하는 단어로 예문 출력
             - 추가적인 설명 없이 위 형식으로만 출력하세요.
             
             입력된 단어: %s
