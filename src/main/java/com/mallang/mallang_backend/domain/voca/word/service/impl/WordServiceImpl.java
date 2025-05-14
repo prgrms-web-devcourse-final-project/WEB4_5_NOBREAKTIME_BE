@@ -1,16 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.word.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.mallang.mallang_backend.domain.voca.word.event.NewWordSearchedEvent;
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
@@ -19,8 +9,18 @@ import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.SAVED_WORD_CONCURRENCY_TIME_OUT;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORD_SAVE_FAILED;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +31,7 @@ public class WordServiceImpl implements WordService {
 	private final GptService gptService;
 	private final RedisDistributedLock redisDistributedLock;
 	private final SavedWordResultFetcher savedWordResultFetcher;
+	private final ApplicationEventPublisher publisher;
 
 	@Override
 	@Transactional
@@ -71,13 +72,21 @@ public class WordServiceImpl implements WordService {
 		}
 	}
 
+	/**
+	 * 단어를 검색하여 품사/해석/난이도 목록을 반환합니다.
+	 * DB에 없으면 SeviceException을 발생하고 이벤트로 단어를 GPT 검색하여 저장합니다.
+	 *
+	 * @param word 검색할 단어
+	 * @return WordSavedResponse 찾은 단어
+	 * @throws ServiceException 단어를 찾을 없을 때 예외 발생
+	 */
 	@Override
 	public WordSearchResponse searchWord(String word) {
 		List<Word> words = wordRepository.findByWord(word);
 		if (words.isEmpty()) {
+			publisher.publishEvent(new NewWordSearchedEvent(word));
 			throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
 		}
-
 		return new WordSearchResponse(convertToResponse(words));
 	}
 
