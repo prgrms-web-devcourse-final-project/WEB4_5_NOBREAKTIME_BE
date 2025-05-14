@@ -1,6 +1,8 @@
-package com.mallang.mallang_backend.domain.video.video.dto;
+package com.mallang.mallang_backend.domain.video.video.cache.dto;
 
 import java.util.List;
+
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -17,12 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.cache.CacheManager;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mallang.mallang_backend.domain.video.video.dto.CachedVideos;
+import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
+import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
-import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
@@ -33,10 +31,7 @@ import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 class VideoCacheServiceTest {
 
 	@Mock
-	private YoutubeService youtubeService;
-
-	@Mock
-	private VideoSearchProperties youtubeSearchProperties;
+	private VideoCacheClient cacheClient;
 
 	@Mock
 	private CacheManager cacheManager;
@@ -50,112 +45,76 @@ class VideoCacheServiceTest {
 	@DisplayName("테스트 설정 및 Spy 주입")
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		service = spy(new VideoCacheService(
-			youtubeService,
-			youtubeSearchProperties,
-			cacheManager,
-			redisDistributedLock
-		));
-		ReflectionTestUtils.setField(service, "self", service);
-
-		// 기본 검색 설정 맵 생성
-		VideoSearchProperties.SearchDefault sd = new VideoSearchProperties.SearchDefault();
-		sd.setQuery("defaultQuery");
-		sd.setRegion("US");
-		var defaults = Collections.singletonMap("en", sd);
-		when(youtubeSearchProperties.getDefaults()).thenReturn(defaults);
+		service = new VideoCacheService(cacheClient, cacheManager, redisDistributedLock);
 	}
 
 	@Test
 	@DisplayName("캐시 히트 후 저장된 크기가 요청 크기 이상이면 SubList 반환")
-	void getFullVideoList_whenCacheHitAndStoredSizeEnough_shouldReturnSubList() {
-		// given
+	void whenCacheHitAndStoredSizeEnough_thenReturnSubList() {
 		String q = "foo", category = "bar", language = "en";
 		long fetchSize = 3;
-		List<VideoResponse> fiveVideos = Collections.nCopies(5, mock(VideoResponse.class));
-		CachedVideos cached = new CachedVideos(5, fiveVideos);
+		List<VideoResponse> videos = Collections.nCopies(5, mock(VideoResponse.class));
+		CachedVideos cached = new CachedVideos(5, videos);
 
-		doReturn(cached)
-			.when(service).loadCached(q, category, language, fetchSize);
-
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(cached);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 		when(redisDistributedLock.unlock(anyString(), anyString())).thenReturn(true);
 
-		// when
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
-		// then
 		assertThat(result).hasSize((int) fetchSize);
-		verify(service).loadCached(q, category, language, fetchSize);
-		verify(service, never()).fetchAndCache(anyString(), anyString(), anyString(), anyLong());
+		verify(cacheClient).loadCached(q, category, language, fetchSize);
+		verify(cacheClient, never()).fetchAndCache(anyString(), anyString(), anyString(), anyLong());
 	}
 
 	@Test
 	@DisplayName("캐시 히트하지만 저장된 크기가 요청 크기보다 작으면 fetchAndCache 호출")
-	void getFullVideoList_whenCacheHitButStoredSizeTooSmall_shouldCallFetchAndCache() {
-		// given
+	void whenCacheHitButSizeTooSmall_thenCallFetchAndCache() {
 		String q = "", category = "", language = "";
 		long fetchSize = 7;
-		CachedVideos smallCache = new CachedVideos(3, Collections.nCopies(3, mock(VideoResponse.class)));
-		CachedVideos freshCache = new CachedVideos(7, Collections.nCopies(7, mock(VideoResponse.class)));
+		CachedVideos small = new CachedVideos(3, Collections.nCopies(3, mock(VideoResponse.class)));
+		CachedVideos fresh = new CachedVideos(7, Collections.nCopies(7, mock(VideoResponse.class)));
 
-		doReturn(smallCache)
-			.when(service).loadCached(q, category, language, fetchSize);
-		doReturn(freshCache)
-			.when(service).fetchAndCache(q, category, language, fetchSize);
-
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(small);
+		when(cacheClient.fetchAndCache(q, category, language, fetchSize)).thenReturn(fresh);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
 		when(redisDistributedLock.unlock(anyString(), anyString())).thenReturn(true);
 
-		// when
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
-		// then
 		assertThat(result).hasSize((int) fetchSize);
-		verify(service).loadCached(q, category, language, fetchSize);
-		verify(service).fetchAndCache(q, category, language, fetchSize);
+		verify(cacheClient).loadCached(q, category, language, fetchSize);
+		verify(cacheClient).fetchAndCache(q, category, language, fetchSize);
 	}
 
 	@Test
 	@DisplayName("락 획득 실패 시 대기 후 진행")
-	void getFullVideoList_whenLockNotAcquired_shouldWaitThenProceed() {
-		// given
+	void whenLockNotAcquired_thenWaitAndProceed() {
 		String q = "x", category = "y", language = "z";
 		long fetchSize = 2;
 		CachedVideos cached = new CachedVideos(2, Collections.nCopies(2, mock(VideoResponse.class)));
 
-		doReturn(cached)
-			.when(service).loadCached(q, category, language, fetchSize);
-
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(cached);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(false);
-		// WAIT_INTERVAL_MS = 500L으로 조정
-		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L)))
-			.thenReturn(true);
+		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L))).thenReturn(true);
 
-		// when
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
-		// then
 		assertThat(result).hasSize((int) fetchSize);
 		verify(redisDistributedLock).waitForUnlockThenFetch(anyString(), anyLong(), eq(500L));
 	}
 
 	@Test
 	@DisplayName("락 대기 타임아웃 시 예외 발생")
-	void getFullVideoList_whenWaitTimeout_shouldThrowException() {
-		// given
+	void whenWaitTimeout_thenThrowServiceException() {
 		String q = "timeout", category = "", language = "en";
 		long fetchSize = 4;
 		CachedVideos cached = new CachedVideos(4, Collections.nCopies(4, mock(VideoResponse.class)));
 
-		doReturn(cached)
-			.when(service).loadCached(q, category, language, fetchSize);
-
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(cached);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(false);
-		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L)))
-			.thenReturn(false);
+		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L))).thenReturn(false);
 
-		// when / then
 		assertThatThrownBy(() -> service.getFullVideoList(q, category, language, fetchSize))
 			.isInstanceOf(ServiceException.class)
 			.extracting("errorCode").isEqualTo(ErrorCode.CACHE_LOCK_TIMEOUT);
@@ -163,17 +122,14 @@ class VideoCacheServiceTest {
 
 	@Test
 	@DisplayName("loadCached 예외 발생 시 락 해제 및 예외 전파")
-	void getFullVideoList_whenLoadCachedThrows_shouldUnlockAndRethrow() {
-		// given
+	void whenLoadCachedThrows_thenUnlockAndRethrow() {
 		String q = "error", category = "", language = "en";
 		long fetchSize = 1;
 
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
-		doThrow(new RuntimeException("boom"))
-			.when(service).loadCached(q, category, language, fetchSize);
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenThrow(new RuntimeException("boom"));
 		when(redisDistributedLock.unlock(anyString(), anyString())).thenReturn(true);
 
-		// when / then
 		assertThatThrownBy(() -> service.getFullVideoList(q, category, language, fetchSize))
 			.isInstanceOf(RuntimeException.class)
 			.hasMessage("boom");
@@ -181,27 +137,46 @@ class VideoCacheServiceTest {
 	}
 
 	@Test
-	@DisplayName("락 해제 실패 시에도 예외 없이 로직 정상 종료 및 unlock 호출 확인")
-	void getFullVideoList_whenUnlockFails_shouldStillProceed() {
-		// given
+	@DisplayName("락 해제 실패 시 재시도 후 정상 종료")
+	void whenUnlockFails_thenRetryAndProceed() {
 		String q = "unlockFail", category = "", language = "en";
 		long fetchSize = 2;
-		List<VideoResponse> videos = Collections.nCopies(2, mock(VideoResponse.class));
-		CachedVideos cached = new CachedVideos(2, videos);
+		CachedVideos cached = new CachedVideos(2, Collections.nCopies(2, mock(VideoResponse.class)));
 
-		doReturn(cached)
-			.when(service).loadCached(q, category, language, fetchSize);
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(cached);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
-		// unlock 실패 시나리오: 첫 호출 실패, 재시도 성공
 		when(redisDistributedLock.unlock(anyString(), anyString()))
 			.thenReturn(false)
 			.thenReturn(true);
+
+		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
+		assertThat(result).hasSize((int) fetchSize);
+		verify(redisDistributedLock, times(2)).unlock(anyString(), anyString());
+	}
+
+	@Test
+	@DisplayName("락 못잡았지만 대기 성공 후 저장된 크기 작으면 fetchAndCache 호출")
+	void whenLockNotAcquiredButWaitSucceededAndSizeTooSmall_thenCallFetchAndCache() {
+		// given
+		String q = "q", category = "c", language = "l";
+		long fetchSize = 5;
+		// loadCached 반환값 rawFetchSize < fetchSize
+		CachedVideos small = new CachedVideos(3, Collections.nCopies(3, mock(VideoResponse.class)));
+		CachedVideos fresh = new CachedVideos(5, Collections.nCopies(5, mock(VideoResponse.class)));
+
+		when(cacheClient.loadCached(q, category, language, fetchSize)).thenReturn(small);
+		when(cacheClient.fetchAndCache(q, category, language, fetchSize)).thenReturn(fresh);
+
+		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(false);
+		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L))).thenReturn(true);
+		when(redisDistributedLock.unlock(anyString(), anyString())).thenReturn(true);
 
 		// when
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
 		// then
 		assertThat(result).hasSize((int) fetchSize);
-		verify(redisDistributedLock, times(2)).unlock(anyString(), anyString());
+		verify(cacheClient).loadCached(q, category, language, fetchSize);
+		verify(cacheClient).fetchAndCache(q, category, language, fetchSize);
 	}
 }
