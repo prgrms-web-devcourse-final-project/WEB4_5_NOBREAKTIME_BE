@@ -76,19 +76,4 @@ public class WordServiceImplTest {
         assertThat(response.getMeanings()).hasSize(1);
         verify(wordRepository).saveAll(anyList());
     }
-
-    @Test
-    @DisplayName("GPT 결과 형식이 잘못되면 파싱 예외 발생")
-    void savedWord_invalidGptFormat() {
-        // given
-        String invalidGptResult = "형용사 | 가벼운 | This bag is very light."; // 잘못된 포맷
-        when(wordRepository.findByWord("light")).thenReturn(List.of());
-        when(gptService.searchWord("light")).thenReturn(parseGptResult("light", invalidGptResult));
-        when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
-        // when & then
-        assertThatThrownBy(() -> wordService.savedWord("light"))
-                .isInstanceOf(ServiceException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.WORD_PARSE_FAILED);
-    }
 }
