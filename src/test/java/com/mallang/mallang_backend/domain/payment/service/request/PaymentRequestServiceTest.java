@@ -4,20 +4,17 @@ import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.payment.dto.PaymentRequest;
-import com.mallang.mallang_backend.domain.payment.dto.PaymentSimpleRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.plan.entity.PlanPeriod;
-import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
 import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -25,10 +22,7 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -86,11 +80,11 @@ class PaymentRequestServiceTest {
         );
 
         // Redis 멱등성 저장은 정상 동작한다고 가정
-        doNothing().when(paymentRedisService).saveDataToRedis(anyString(), anyString(), anyInt());
+        doNothing().when(paymentRedisService).saveDataToRedis(anyString(), anyInt());
 
         // when
         PaymentRequest paymentRequest = paymentRequestService.createPaymentRequest(
-                "testKey123", member.getId(), simpleRequest);
+                member.getId(), simpleRequest);
 
         // then
         assertThat(paymentRequest).isNotNull();
