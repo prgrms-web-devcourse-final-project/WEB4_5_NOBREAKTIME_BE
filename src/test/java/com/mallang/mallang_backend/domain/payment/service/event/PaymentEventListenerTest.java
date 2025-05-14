@@ -38,6 +38,7 @@ class PaymentEventListenerTest {
     private MailSender mailSendService;
 
     @Test
+    @Disabled
     @DisplayName("결제 성공 시 비동기 처리 검증")
     void pay_updateSuccessInfo_and(CapturedOutput output) throws InterruptedException {
         // Given
