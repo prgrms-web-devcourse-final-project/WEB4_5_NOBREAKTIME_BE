@@ -123,7 +123,8 @@ public class VideoCacheService {
 			if (waited) {
 				log.info("[CACHE LOCK RELEASED] key={}, proceeding", lockKey);
 			} else {
-				log.warn("[CACHE LOCK TIMEOUT] key={} after waiting {}ms", key, LOCK_TTL_MS);
+				log.error("[CACHE LOCK TIMEOUT] key={} after waiting {}ms – aborting cache flow", key, LOCK_TTL_MS);
+				throw new ServiceException(ErrorCode.CACHE_LOCK_TIMEOUT);
 			}
 		}
 
@@ -145,9 +146,17 @@ public class VideoCacheService {
 				: all.subList(0, (int) fetchSize);
 
 		} finally {
-			// 락 해제 (획득한 경우에만)
+			// 락 해제 (획득한 경우에만) + 재시도 로직
 			if (lockAcquired) {
 				boolean released = redisDistributedLock.unlock(lockKey, lockValue);
+				if (!released) {
+					// 한 번 재시도
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException ignored) { }
+					released = redisDistributedLock.unlock(lockKey, lockValue);
+				}
+
 				if (released) {
 					log.info("[CACHE LOCK RELEASED] key={} value={}", lockKey, lockValue);
 				} else {

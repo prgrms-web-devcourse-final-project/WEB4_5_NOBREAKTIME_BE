@@ -23,6 +23,8 @@ import com.mallang.mallang_backend.domain.video.video.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,7 +85,7 @@ class VideoCacheServiceTest {
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
 		// then
-		assertThat(result).hasSize((int)fetchSize);
+		assertThat(result).hasSize((int) fetchSize);
 		verify(service).loadCached(q, category, language, fetchSize);
 		verify(service, never()).fetchAndCache(anyString(), anyString(), anyString(), anyLong());
 	}
@@ -109,7 +111,7 @@ class VideoCacheServiceTest {
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
 		// then
-		assertThat(result).hasSize((int)fetchSize);
+		assertThat(result).hasSize((int) fetchSize);
 		verify(service).loadCached(q, category, language, fetchSize);
 		verify(service).fetchAndCache(q, category, language, fetchSize);
 	}
@@ -126,6 +128,7 @@ class VideoCacheServiceTest {
 			.when(service).loadCached(q, category, language, fetchSize);
 
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(false);
+		// WAIT_INTERVAL_MS = 500L으로 조정
 		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L)))
 			.thenReturn(true);
 
@@ -133,13 +136,13 @@ class VideoCacheServiceTest {
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
 		// then
-		assertThat(result).hasSize((int)fetchSize);
+		assertThat(result).hasSize((int) fetchSize);
 		verify(redisDistributedLock).waitForUnlockThenFetch(anyString(), anyLong(), eq(500L));
 	}
 
 	@Test
-	@DisplayName("락 대기 타임아웃 시 fetchAndCache 없이 진행")
-	void getFullVideoList_whenWaitTimeout_shouldProceedWithoutFetch() {
+	@DisplayName("락 대기 타임아웃 시 예외 발생")
+	void getFullVideoList_whenWaitTimeout_shouldThrowException() {
 		// given
 		String q = "timeout", category = "", language = "en";
 		long fetchSize = 4;
@@ -152,12 +155,10 @@ class VideoCacheServiceTest {
 		when(redisDistributedLock.waitForUnlockThenFetch(anyString(), anyLong(), eq(500L)))
 			.thenReturn(false);
 
-		// when
-		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
-
-		// then
-		assertThat(result).hasSize((int)fetchSize);
-		verify(service, never()).fetchAndCache(anyString(), anyString(), anyString(), anyLong());
+		// when / then
+		assertThatThrownBy(() -> service.getFullVideoList(q, category, language, fetchSize))
+			.isInstanceOf(ServiceException.class)
+			.extracting("errorCode").isEqualTo(ErrorCode.CACHE_LOCK_TIMEOUT);
 	}
 
 	@Test
@@ -178,6 +179,7 @@ class VideoCacheServiceTest {
 			.hasMessage("boom");
 		verify(redisDistributedLock).unlock(anyString(), anyString());
 	}
+
 	@Test
 	@DisplayName("락 해제 실패 시에도 예외 없이 로직 정상 종료 및 unlock 호출 확인")
 	void getFullVideoList_whenUnlockFails_shouldStillProceed() {
@@ -190,15 +192,16 @@ class VideoCacheServiceTest {
 		doReturn(cached)
 			.when(service).loadCached(q, category, language, fetchSize);
 		when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
-		// unlock 실패 시나리오
-		when(redisDistributedLock.unlock(anyString(), anyString())).thenReturn(false);
+		// unlock 실패 시나리오: 첫 호출 실패, 재시도 성공
+		when(redisDistributedLock.unlock(anyString(), anyString()))
+			.thenReturn(false)
+			.thenReturn(true);
 
 		// when
 		List<VideoResponse> result = service.getFullVideoList(q, category, language, fetchSize);
 
 		// then
-		// 결과는 정상이며, unlock 호출이 이루어졌는지 검증
-		assertThat(result).hasSize((int)fetchSize);
-		verify(redisDistributedLock).unlock(anyString(), anyString());
+		assertThat(result).hasSize((int) fetchSize);
+		verify(redisDistributedLock, times(2)).unlock(anyString(), anyString());
 	}
 }

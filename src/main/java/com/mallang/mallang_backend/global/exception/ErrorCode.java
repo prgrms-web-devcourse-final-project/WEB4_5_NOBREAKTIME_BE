@@ -138,7 +138,10 @@ public enum ErrorCode {
 
     // 학습 레벨 측정 에러
     LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
-    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // 캐시 관련 에러
+    CACHE_LOCK_TIMEOUT("500-6", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
