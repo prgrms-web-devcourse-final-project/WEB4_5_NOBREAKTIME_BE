@@ -1,20 +1,18 @@
 package com.mallang.mallang_backend.domain.payment.service.request;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.payment.dto.PaymentRequest;
-import com.mallang.mallang_backend.domain.payment.dto.PaymentSimpleRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
+import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.plan.entity.PlanPeriod;
 import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +21,7 @@ import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.*;
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
@@ -32,16 +31,10 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 @Transactional(readOnly = true)
 public class PaymentRequestServiceImpl implements PaymentRequestService {
 
-    @Value("${toss.payment.successURL}")
-    private String successURL;
-
-    @Value("${toss.payment.failURL}")
-    private String failURL;
-
     private final PaymentRepository paymentRepository;
     private final PlanRepository planRepository;
-    private final MemberRepository memberRepository;
     private final PaymentRedisService redisService;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * 결제 요청을 생성합니다.
@@ -51,8 +44,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
      * @return 결제 요청 응답
      */
     @Transactional
-    public PaymentRequest createPaymentRequest(String idempotencyKey,
-                                               Long memberId,
+    public PaymentRequest createPaymentRequest(Long memberId,
                                                PaymentSimpleRequest simpleRequest) {
 
         String orderId = generatedOrderId(memberId);
@@ -64,7 +56,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
         }
 
         // redis 저장 이후에 DB 업데이트, redis 저장 실패 -> 결제 요청 취소
-        redisService.saveDataToRedis(idempotencyKey, orderId, selectedPlan.getAmount());
+        redisService.saveDataToRedis(orderId, selectedPlan.getAmount());
 
         Long paymentId = createPaymentIfNotExists(
                 memberId,
@@ -75,7 +67,10 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
         Payment payment = paymentRepository.findById(paymentId).orElseThrow(() ->
                 new ServiceException(PAYMENT_NOT_FOUND));
 
-        return PaymentRequest.from(payment, successURL, failURL);
+        // 결제 요청 로그 생성 이벤트 발생
+        publisher.publishEvent(new PaymentUpdatedEvent(payment.getId(), READY, "결제 요청 생성"));
+
+        return PaymentRequest.from(payment);
     }
 
     /**
@@ -94,7 +89,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
 
     /**
      * 주어진 회원 ID를 기반으로 주문 ID를 생성합니다.
-     * <p>
+     *
      * 주문 ID는 "yyMMdd-랜덤5자리-ID" 형식으로 생성됩니다.
      *
      * @param memberId 주문을 생성한 회원의 ID
@@ -130,12 +125,12 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
      * @throws ServiceException 이미 동일한 주문 ID가 존재할 경우
      */
     private Long createPaymentIfNotExists(Long memberId,
-                                         Plan selectedPlan,
-                                         String orderId) {
+                                          Plan selectedPlan,
+                                          String orderId) {
 
         // TODO LOCK 적용 필수
         if (paymentRepository.existsByOrderId(orderId)) {
-            throw new ServiceException(ORDER_ID_CONFLICT);
+            throw new ServiceException(PAYMENT_CONFLICT);
         }
 
         return createNewPayment(memberId, selectedPlan, orderId);
@@ -145,11 +140,8 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
                                   Plan selectedPlan,
                                   String orderId) {
 
-        Member orderedMember = memberRepository.findById(memberId).orElseThrow(() ->
-                new ServiceException(MEMBER_NOT_FOUND));
-
         Payment payment = Payment.builder()
-                .member(orderedMember)
+                .memberId(memberId)
                 .plan(selectedPlan)
                 .orderId(orderId)
                 .build();
@@ -158,9 +150,10 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
         return paymentRepository.save(payment).getId(); // 오류 핸들러에서 저장 오류 처리
     }
 
-    @Scheduled(fixedDelay = 30000) // 30초마다 실행
+    // @Scheduled(fixedDelay = 30000) // 30초마다 실행
     public void checkPendingPayment() {
-        // TODO 결제가 요청된 후에 응답이 오지 않았을 때에는 결제 상태를 PENDING -> FAIL 변경
+        // TODO 결제가 요청된 후에 10 분 안에 응답이 오지 않았을 때에는 결제 상태를 PENDING -> FAIL 변경
+        // 토스 페이: 결제 인증이 유효한 10분 안에 상점에서 결제 승인 API를 호출하지 않으면 해당 결제는 만료됩니다.
     }
 }
 
