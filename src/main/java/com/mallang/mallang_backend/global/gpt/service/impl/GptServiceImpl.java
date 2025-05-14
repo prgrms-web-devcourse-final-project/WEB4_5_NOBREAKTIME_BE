@@ -1,27 +1,22 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.List;
-
+import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
+import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.dto.*;
+import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
+import com.mallang.mallang_backend.global.gpt.service.GptService;
+import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
-import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
-import com.mallang.mallang_backend.global.gpt.dto.Message;
-import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
-import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
-import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
-import com.mallang.mallang_backend.global.gpt.service.GptService;
-import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
+import java.util.List;
 
-import io.github.resilience4j.retry.annotation.Retry;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -92,7 +87,24 @@ public class GptServiceImpl implements GptService {
         String content = response.getChoices().get(0).getMessage().getContent();
 
         // 응답 파싱
-        return GptScriptProcessor.parseAnalysisResult(content, segments);
+        List<GptSubtitleResponse> responses = GptScriptProcessor.parseAnalysisResult(content, segments);
+        return removeInvalidKeyword(responses);
+    }
+
+    /**
+     * Original 에 부분집합으로 포함되지 않는 Keyword 제거
+     * @param responses OpenAI의 응답 객체 GptSubtitleResponse
+     * @return 부분집합으로 포함되지 않는 Keyword 가 제거된 GptSubtitleResponse
+     */
+    private List<GptSubtitleResponse> removeInvalidKeyword(List<GptSubtitleResponse> responses) {
+        return responses.stream()
+            .peek(response -> {
+                List<KeywordInfo> validKeywords = response.getKeywords().stream()
+                    .filter(keyword -> response.getOriginal().contains(keyword.getWord()))
+                    .toList();
+                response.setKeywords(validKeywords);
+            })
+            .toList();
     }
 
     @Override
