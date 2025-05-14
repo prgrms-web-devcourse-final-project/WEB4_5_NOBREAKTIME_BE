@@ -28,4 +28,6 @@ public interface VideoHistoryRepository extends JpaRepository<VideoHistory, Long
 
     // 페이징 조회
     Page<VideoHistory> findAllByMemberOrderByLastViewedAtDesc(Member member,Pageable pageable);
+
+    List<VideoHistory> findAllByMemberOrderByLastViewedAtAsc(Member member, Pageable pageable);
 }

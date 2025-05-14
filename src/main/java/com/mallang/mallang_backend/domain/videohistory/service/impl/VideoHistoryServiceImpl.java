@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.util.List;
@@ -36,23 +37,44 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 	@Override
 	@Transactional
 	public void save(Long memberId, String videoId) {
-		// Member / Video 로드
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 		Videos videos = videoRepository.findById(videoId)
 			.orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
-		// 조회한 비디오가 존재하는지 확인
 		videoHistoryRepository.findByMemberAndVideos(member, videos)
-			.ifPresentOrElse(VideoHistory::updateTimestamp, () -> {
-	            // 조회한 비디오가 존재하지 않는 경우
-				VideoHistory newHistory = VideoHistory.builder()
-					.member(member)
-					.videos(videos)
-					.build();
-				videoHistoryRepository.save(newHistory);
-			});
+			.ifPresentOrElse(
+				VideoHistory::updateTimestamp,
+				() -> videoHistoryRepository.save(
+					VideoHistory.builder()
+						.member(member)
+						.videos(videos)
+						.build()
+				)
+			);
+
+		// 초과 기록이 있으면 삭제
+		removeExcessHistories(member);
 	}
+
+	/**
+	 * 회원별 기록이 MAX_HISTORY_PER_MEMBER 를 초과하면
+	 * 오래된 것부터 삭제
+	 */
+	private void removeExcessHistories(Member member) {
+		long total = videoHistoryRepository.countByMember(member);
+		if (total <= MAX_HISTORY_PER_MEMBER) {
+			return;
+		}
+
+		int excess = (int)(total - MAX_HISTORY_PER_MEMBER);
+		Pageable page = PageRequest.of(0, excess, Sort.by("lastViewedAt").ascending());
+		List<VideoHistory> toDelete =
+			videoHistoryRepository.findAllByMemberOrderByLastViewedAtAsc(member, page);
+
+		videoHistoryRepository.deleteAllInBatch(toDelete);
+	}
+
 
 	/** 최근 5개 조회 */
 	@Override
