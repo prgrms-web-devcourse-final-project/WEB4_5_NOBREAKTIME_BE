@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -34,10 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class VideoCacheService {
-	// 락 TTL: 락을 보유할 최대 시간 (밀리초) -> 30초로 설정
-	private static final long LOCK_TTL_MS      = 30_000L;
-	// 폴링 주기: 락 해제 여부를 확인하기 위한 간격 (밀리초) -> 100ms
-	private static final long WAIT_INTERVAL_MS = 100L;
 
 	private final YoutubeService youtubeService;
 	private final VideoSearchProperties youtubeSearchProperties;
