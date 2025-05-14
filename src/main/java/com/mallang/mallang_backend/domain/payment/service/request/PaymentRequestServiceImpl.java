@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.payment.service.request;
 
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
@@ -21,11 +22,9 @@ import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.READY;
-import static com.mallang.mallang_backend.global.constants.AppConstants.CHARACTERS;
-import static com.mallang.mallang_backend.global.constants.AppConstants.DATE_FORMATTER;
+import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
 
 @Slf4j
 @Service
