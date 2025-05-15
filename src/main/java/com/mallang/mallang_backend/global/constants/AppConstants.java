@@ -68,9 +68,9 @@ public class AppConstants {
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 
 	/**
-	 * 영상 학습 퀴즈 최대 개수
+	 * 비디오 히스토리 최대 갯수
 	 */
-	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+	public static final int MAX_HISTORY_PER_MEMBER = 50;
 
     /**
      * s3 에 업로드 할 프로필 사진의 prefix
@@ -94,4 +94,10 @@ public class AppConstants {
      * 주문 ID 생성 용도
      */
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+
+	/**
+	 * Redis Lock TTL (Time To Live)
+	 */
+	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
+	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
 }

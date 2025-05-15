@@ -3,11 +3,10 @@ package com.mallang.mallang_backend.global.gpt.service.impl;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
-import com.mallang.mallang_backend.global.gpt.dto.Message;
-import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
-import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
+import com.mallang.mallang_backend.global.gpt.dto.*;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
@@ -20,10 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 @Slf4j
 @Service
@@ -49,11 +53,36 @@ public class GptServiceImpl implements GptService {
      */
     @Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
     @Override
-    public String searchWord(String word)  {
+    public List<Word> searchWord(String word)  {
         String prompt = gptPromptBuilder.buildPromptforSearchWord(word);
         OpenAiResponse response = callGptApi(prompt);
         validateResponse(response);
-        return response.getChoices().get(0).getMessage().getContent();
+
+        String gptResult = response.getChoices().get(0).getMessage().getContent();
+
+        List<Word> generatedWords = parseGptResult(word, gptResult);
+        validateExampleSentence(generatedWords);
+
+        return generatedWords;
+    }
+
+    /**
+     * 예문이 단어의 형태 그대로 나오는지 검증하고, 형태가 다르면 예외를 발생시킵니다.
+     * <p>예: 예문이 "He ceases to exist."이고 word가 "cease"인 경우,
+     *      "cease"는 정확히 일치하지 않으므로 예외가 발생합니다.</p>
+     * @param generatedWords 검증할 단어 리스트
+     * @throws ServiceException 예문에 단어가 정확히 포함되지 않은 경우 발생
+     */
+    private void validateExampleSentence(List<Word> generatedWords) {
+        for (Word word : generatedWords) {
+            String exampleSentence = word.getExampleSentence();
+            String wordText = word.getWord().toLowerCase();
+
+            // 단어가 예문에 정확히 포함되는지 확인
+            if (!exampleSentence.matches(".*\\b" + Pattern.quote(wordText.toLowerCase()) + "\\b.*")) {
+                throw new ServiceException(ErrorCode.INVALID_WORD);
+            }
+        }
     }
 
     /**
@@ -102,7 +131,46 @@ public class GptServiceImpl implements GptService {
         String content = response.getChoices().get(0).getMessage().getContent();
 
         // 응답 파싱
-        return GptScriptProcessor.parseAnalysisResult(content, segments);
+        List<GptSubtitleResponse> responses = GptScriptProcessor.parseAnalysisResult(content, segments);
+        return removeInvalidKeyword(responses);
+    }
+
+    /**
+     * Original 문장에서 단어 단위로 정확히 일치하지 않는 Keyword 를 제거합니다.
+     *
+     * <p>예: original 이 "He ceases the exist."이고 keyword 가 "cease"인 경우,
+     * "cease"는 정확히 일치하지 않으므로 제거됩니다.</p>
+     *
+     * <p>비교는 다음 조건에 따릅니다:
+     * <ul>
+     *   <li>original 은 공백 기준으로 단어 분리</li>
+     *   <li>단어는 알파벳 외 문자(문장부호 등)를 제거하고 소문자로 변환</li>
+     *   <li>keyword 의 단어도 동일하게 정제 후 비교</li>
+     *   <li>정제된 단어가 정확히 일치하는 경우만 유효</li>
+     * </ul>
+     * </p>
+     *
+     * @param responses OpenAI의 응답 객체 리스트
+     * @return 정확히 일치하는 단어만 Keyword 로 유지된 GptSubtitleResponse 리스트
+     */
+    private List<GptSubtitleResponse> removeInvalidKeyword(List<GptSubtitleResponse> responses) {
+        return responses.stream()
+            .peek(response -> {
+                // original 문장을 띄어쓰기로 나누어 Set에 담음
+                Set<String> originalWords = Arrays.stream(response.getOriginal().split("\\s+"))
+                    .map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase()) // 문장부호 제거, 소문자화
+                    .collect(Collectors.toSet());
+
+                List<KeywordInfo> validKeywords = response.getKeywords().stream()
+                    .filter(keyword -> {
+                        String word = keyword.getWord().replaceAll("[^a-zA-Z]", "").toLowerCase();
+                        return originalWords.contains(word);
+                    })
+                    .toList();
+
+                response.setKeywords(validKeywords);
+            })
+            .toList();
     }
 
     @Override

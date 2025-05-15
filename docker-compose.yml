@@ -25,6 +25,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=mallang#1234
     depends_on:
       - prometheus
+    volumes:
+      - ./grafana:/var/lib/grafana
     networks:
       - monitoring
     volumes:

@@ -5,11 +5,8 @@ import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.impl.WordServiceImpl;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,7 +63,7 @@ public class WordServiceImplTest {
         // given
         String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
         when(wordRepository.findByWord("light")).thenReturn(List.of());
-        when(gptService.searchWord("light")).thenReturn(gptResult);
+        when(gptService.searchWord("light")).thenReturn(parseGptResult("light", gptResult));
         when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
         // when
         WordSearchResponse response = wordService.savedWord("light");
@@ -74,20 +71,5 @@ public class WordServiceImplTest {
         // then
         assertThat(response.getMeanings()).hasSize(1);
         verify(wordRepository).saveAll(anyList());
-    }
-
-    @Test
-    @DisplayName("GPT 결과 형식이 잘못되면 파싱 예외 발생")
-    void savedWord_invalidGptFormat() {
-        // given
-        String invalidGptResult = "형용사 | 가벼운 | This bag is very light."; // 잘못된 포맷
-        when(wordRepository.findByWord("light")).thenReturn(List.of());
-        when(gptService.searchWord("light")).thenReturn(invalidGptResult);
-        when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
-        // when & then
-        assertThatThrownBy(() -> wordService.savedWord("light"))
-                .isInstanceOf(ServiceException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.WORD_PARSE_FAILED);
     }
 }

@@ -6,19 +6,13 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
@@ -170,7 +164,7 @@ public class MemberController {
             ))
     @PossibleErrors({DUPLICATE_FILED, MEMBER_NOT_FOUND})
     @PatchMapping("/me")
-    public ResponseEntity<RsData<?>> changeMemberInformation(ChangeInfoRequest request,
+    public ResponseEntity<RsData<?>> changeMemberInformation(@RequestBody ChangeInfoRequest request,
                                                              @Parameter(hidden = true)
                                                              @Login CustomUserDetails userDetails) {
 
@@ -253,15 +247,22 @@ public class MemberController {
     @PossibleErrors({MEMBER_ALREADY_WITHDRAWN, MEMBER_NOT_FOUND, NOT_EXIST_BUCKET})
     @DeleteMapping("/me")
     public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
-                                               @Login CustomUserDetails userDetails) {
+                                               @Login CustomUserDetails userDetails,
+                                               HttpServletResponse response) {
 
-        memberService.withdrawMember(userDetails.getMemberId());
+        Long memerId = userDetails.getMemberId();
 
-        RsData<Void> response = new RsData<>(
+        memberService.withdrawMember(memerId);
+        memberService.deleteOldProfileImage(memerId);
+
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+
+        RsData<Void> rsp = new RsData<>(
                 "200",
                 "회원 탈퇴가 완료되었습니다."
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rsp);
     }
 }

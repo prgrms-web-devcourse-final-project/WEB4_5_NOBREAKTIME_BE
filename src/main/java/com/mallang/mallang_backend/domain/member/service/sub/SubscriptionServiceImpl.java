@@ -1,9 +1,8 @@
-package com.mallang.mallang_backend.domain.member.service.impl;
+package com.mallang.mallang_backend.domain.member.service.sub;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +16,17 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final MemberRepository memberRepository;
+
+    /**
+     * member 에 접근해서 구독 정보를 가져 오기
+     *
+     * @param memberId
+     * @return member 의 구독 타입에서 가져온 권한 정보
+     */
+    @Override
+    public String getRoleName(Long memberId) {
+        return findMemberOrThrow(memberId).getSubscriptionType().getRoleName();
+    }
 
     /**
      * 사용자가 활성 구독 상태인지 확인

@@ -9,10 +9,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.IDEM_KEY_PREFIX;
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.CONNECTION_FAIL;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -22,25 +23,18 @@ public class PaymentRedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     /**
-     * 주문 ID와 금액 / 멱등성 보장 토큰을 Redis 에 저장합니다.
-     *
+     * 주문 ID와 금액을 Redis 에 저장합니다.
+     * <p>
      * - redis 저장이 결제의 전제 조건
      *
      * @param orderId 주문 ID
      * @param amount  결제 금액
      */
     // TODO 동시 요청 시 값을 덮어 쓸 가능성이 있음 LOCK 적용
-    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackRedisException")
-    public void saveDataToRedis(String idempotencyKey,
-                                String orderId,
-                                int amount) {
-
-        String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;
-        redisTemplate.opsForValue().set(
-                redisIdemKey,
-                "processed",
-                Duration.ofHours(24));
-
+    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
+    public void saveDataToRedis(String orderId,
+                                int amount
+    ) {
         String orderKey = ORDER_ID_PREFIX + orderId;
         redisTemplate.opsForValue().set(
                 orderKey,
@@ -48,14 +42,53 @@ public class PaymentRedisService {
                 Duration.ofHours(24));
     }
 
-    private void fallbackRedisException(String idempotencyKey,
-                                        String orderId,
-                                        int amount,
-                                        Exception e) {
+    // redis 에서 저장된 주문 ID와 결제 금액이 일치하는지 확인
+    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
+    public void checkOrderIdAndAmount(String orderId,
+                                      int amount
+    ) {
 
+        String redisKey = ORDER_ID_PREFIX + orderId;
+        Object value = redisTemplate.opsForValue().get(redisKey);
+        log.debug("결제 정보 검증 시작: orderId: {}, amount: {}, value: {}",
+                orderId, amount, value);
+
+        Integer savedAmount = Optional.ofNullable(value)
+                .map(Object::toString)
+                .map(Integer::valueOf)
+                .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+
+        if (!savedAmount.equals(amount)) {
+            throw new ServiceException(PAYMENT_NOT_FOUND);
+        }
+
+        log.info("결제 정보 검증 성공: orderId: {}, amount: {}",
+                orderId, amount);
+    }
+
+    public void checkIdemkeyAndSave(String idempotencyKey
+    ) {
+        String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;
+
+        if (redisTemplate.hasKey(redisIdemKey)) {
+            log.warn("동일 주문에 대한 중복 결제 전송 - Key: {}", redisIdemKey);
+            throw new ServiceException(PAYMENT_CONFLICT);
+        }
+
+        redisTemplate.opsForValue().set(
+                redisIdemKey,
+                "processed",
+                Duration.ofHours(24));
+    }
+
+    private void fallbackMethod(String orderId,
+                                  int amount,
+                                  Exception e
+    ) {
         if (e instanceof QueryTimeoutException) {
-            log.error("결제 임시 정보 저장 오류: {}", e.getMessage(), e);
+            log.error("결제 요청 중 오류 발생: {}", e.getMessage(), e);
             throw new ServiceException(CONNECTION_FAIL, e);
         }
+        throw new ServiceException(PAYMENT_CONFLICT, e);
     }
 }

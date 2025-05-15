@@ -28,6 +28,9 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
             - 품사와 해석은 반드시 한국어로 작성.
             - 예문은 해당 품사로 쓰인 실제 문장을 포함하세요.
             - 예문의 한국어 번역도 반드시 포함하세요.
+            - 예문은 주어진 단어의 형태 그대로만 사용 (예: was -> The light was too bright.)
+			- 어형 변화가 있는 단어도 예문에서는 주어진 단어 그대로 사용 (예: ceases, existed, going 등)
+			- 단어의 복수형, 시제 변화, 동명사 등 모든 형태를 포함하여 정확히 일치하는 단어로 예문 출력
             - 추가적인 설명 없이 위 형식으로만 출력하세요.
             
             입력된 단어: %s
@@ -63,7 +66,7 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
 	@Override
 	public String buildPromptForAnalyzeScript(String script) {
 		return String.format("""
-                당신은 영어 스크립트를 분석해주는 도우미입니다.
+                당신은 영어 스크립트를 분석해주는 도우미입니다. 스크립트를 분석해 번역과 핵심 단어를 응답해야 합니다.
                 
                 입력 문자열은 사용자가 임의로 구분한 여러 블록의 문장으로 구성되어 있습니다. 각 블록은 `---` 기호로 구분되어 있으며, 블록 내부에는 문장 여러 개가 포함될 수 있습니다. 각 블록마다 아래 형식으로 출력하세요:
                 
@@ -72,13 +75,17 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
                 
                 조건:
                 - 난이도는 1~5 숫자 중 하나로 지정
-                - 단어나 숙어 구분 없이, 학습에 도움이 되는 최대 3개의 표현을 선별
+                - 핵심 단어는 학습에 도움이 되는 최대 3개의 단어를 선별
+                - 핵심 단어는 주어진 문장 내에서 실제로 사용된 형태로만 추출 (예: ceases -> ceases, exists -> exists)
+				- 어형 변화가 있는 단어도 원문에서 나타난 그대로 추출 (예: ceases, existed, going 등)
+				- 복수형, 시제 변화, 동명사 등 모든 형태를 포함하여 정확히 일치하는 단어만 선정
+                - 핵심 단어는 주어진 문장에 대해 사용된 단어 그대로 항상 부분 집합으로 포함되는 관계
                 - 키워드가 없는 경우 단어 정보 없이 원문과 번역만 출력
                 - 각 블록은 `---` 기호로 구분
                 - 추가적인 설명 없이 지정된 형식으로만 출력
-                
+			
                 예시:
-                Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it | 네가 보고 있다고 생각하는 사람이 누구지? 내가 1년에 얼마나 버는지 알아? 내가 말해도 안 믿을걸 | see | 보다 | 1 | believe | 믿다 | 2 | make a year | 1년에 얼마를 벌다 | 3
+                Who is it you think you see? Do you know how much I make a year? I mean even if I told you you wouldn't believe it | 네가 보고 있다고 생각하는 사람이 누구지? 내가 1년에 얼마나 버는지 알아? 내가 말해도 안 믿을걸 | see | 보다 | 1 | believe | 믿다 | 2
                 ---
                 
                 입력: %s

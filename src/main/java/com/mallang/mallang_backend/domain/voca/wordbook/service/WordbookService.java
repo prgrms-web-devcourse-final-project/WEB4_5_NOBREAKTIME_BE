@@ -1,14 +1,8 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service;
 
-import java.util.List;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import java.util.List;
 
 public interface WordbookService {
 	void addWords(Long wordbookId, AddWordToWordbookListRequest request, Long memberId);
@@ -31,5 +25,5 @@ public interface WordbookService {
 	
 	List<WordResponse> searchWordFromWordbook(Long memberId, String keyword);
 
-	List<WordResponse> getWordbookItems(Long wordbookId, Long memberId);
+	List<WordResponse> getWordbookItems(Long memberId);
 }
