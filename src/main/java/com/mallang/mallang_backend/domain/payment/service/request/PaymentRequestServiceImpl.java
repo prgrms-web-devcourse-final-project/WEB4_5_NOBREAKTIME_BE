@@ -26,6 +26,7 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.CHARACTE
 import static com.mallang.mallang_backend.global.constants.AppConstants.DATE_FORMATTER;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
