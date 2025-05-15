@@ -1,24 +1,5 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
@@ -30,22 +11,33 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class WordbookServiceImplTest {
@@ -605,6 +597,9 @@ class WordbookServiceImplTest {
 				.subtitleId(2L)
 				.wordbook(wordbook)
 				.build();
+
+			setField(item1, "createdAt", LocalDateTime.now());
+			setField(item2, "createdAt", LocalDateTime.now().minusMinutes(1));
 
 			List<WordbookItem> items = List.of(item1, item2);
 

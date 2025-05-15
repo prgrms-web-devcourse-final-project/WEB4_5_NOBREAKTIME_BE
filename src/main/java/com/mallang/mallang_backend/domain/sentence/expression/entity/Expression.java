@@ -1,10 +1,8 @@
 package com.mallang.mallang_backend.domain.sentence.expression.entity;
 
 
-import java.time.LocalTime;
-
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,7 +14,7 @@ import java.time.LocalTime;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Expression {
+public class Expression extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,7 +1,6 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity;
 
-import java.time.LocalDateTime;
-
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -13,13 +12,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ExpressionBookItem {
+public class ExpressionBookItem extends BaseTime {
 
     @EmbeddedId
     private ExpressionBookItemId id;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
     private Boolean isLearned = false;
@@ -30,7 +26,6 @@ public class ExpressionBookItem {
             Long expressionBookId
     ) {
         this.id = new ExpressionBookItemId(expressionId, expressionBookId);
-        this.createdAt = LocalDateTime.now();
     }
 
     public void updateLearned(boolean isLearned) {

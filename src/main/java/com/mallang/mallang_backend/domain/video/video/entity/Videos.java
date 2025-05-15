@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.video.video.entity;
 
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Videos {
+public class Videos extends BaseTime {
 
     @Id
     @Column(nullable = false, name = "video_id")

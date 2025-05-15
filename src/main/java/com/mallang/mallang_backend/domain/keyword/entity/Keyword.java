@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.keyword.entity;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Keyword {
+public class Keyword extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
