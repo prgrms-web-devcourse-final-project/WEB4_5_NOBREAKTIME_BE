@@ -1,17 +1,19 @@
 package com.mallang.mallang_backend.test;
 
+import org.springframework.stereotype.Service;
+
 import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.impl.GptServiceImpl;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TestService {
+public class TestMonitorService {
 
     private final GptServiceImpl gptServiceImpl;
     private final MeterRegistry meterRegistry;

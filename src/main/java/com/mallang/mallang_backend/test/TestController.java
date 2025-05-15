@@ -25,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 public class TestController {
 
     private final MemberRepository memberRepository;
-    private final TestService testService;
+    private final TestMonitorService testMonitorService;
 
     @Value("${slack.webhook.url}")
     private String webhookUrl;
@@ -51,7 +51,7 @@ public class TestController {
     @GetMapping("/test/gpt")
     public String testGptService() {
         try {
-            testService.testGptService(); // GPT 서비스 테스트 메서드 호출
+            testMonitorService.testGptService(); // GPT 서비스 테스트 메서드 호출
             return "GPT 서비스 테스트가 성공적으로 완료되었습니다.";
         } catch (Exception e) {
             return "GPT 서비스 테스트 중 오류가 발생했습니다: " + e.getMessage();
