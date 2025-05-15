@@ -1,22 +1,5 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
@@ -27,16 +10,7 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.impl.SavedWordResultFetcher;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -46,8 +20,18 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 @Service
 @RequiredArgsConstructor
@@ -307,20 +291,25 @@ public class WordbookServiceImpl implements WordbookService {
 	}
 
 	@Override
-	public List<WordResponse> getWordbookItems(Long wordbookId, Long memberId) {
+	public List<WordResponse> getWordbookItems(Long memberId) {
+		// 사용자 조회
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-		Wordbook wordbook;
-		if (wordbookId == null) {
-			wordbook = wordbookRepository.findByMemberAndName(member, DEFAULT_WORDBOOK_NAME)
-				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
-		} else {
-			wordbook = wordbookRepository.findById(wordbookId)
-				.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+		// 사용자의 모든 단어장 조회
+		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
+		if (wordbooks.isEmpty()) {
+			return Collections.emptyList();
 		}
 
-		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
+		// 모든 wordbookId 추출
+		List<Long> wordbookIds = wordbooks.stream()
+				.map(Wordbook::getId)
+				.toList();
+
+		// 모든 WordbookItem 조회
+		List<WordbookItem> items = wordbookItemRepository.findAllByWordbookIdIn(wordbookIds);
+
 		return convertToWordResponses(items);
 	}
 
@@ -379,7 +368,7 @@ public class WordbookServiceImpl implements WordbookService {
 				String videoTitle = null;
 				String imageUrl = null;
 
-				if (item.getVideoId() != null) {
+				if (item.getVideoId() != null && videoMap.containsKey(item.getVideoId())) {
 					Videos videos = videoMap.get(item.getVideoId());
 					videoTitle = videos.getVideoTitle();
 					imageUrl = videos.getThumbnailImageUrl();
@@ -396,10 +385,12 @@ public class WordbookServiceImpl implements WordbookService {
 					videoTitle,
 					imageUrl,
 					item.getSubtitleId(),
-					item.getCreatedAt()
+					item.getCreatedAt(),
+					item.getWordbook().getId()
 				);
 			})
 			.filter(Objects::nonNull)
+			.sorted(Comparator.comparing(WordResponse::getCreatedAt).reversed())
 			.collect(Collectors.toList());
 	}
 }

@@ -135,7 +135,12 @@ public enum ErrorCode {
     PLAN_NOT_FOUND("404-2", "plan.not.found", HttpStatus.NOT_FOUND),
     CONNECTION_FAIL("500-3", "connection.fail", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_NOT_FOUND("404-4", "payment.not.found", HttpStatus.NOT_FOUND),
-    ORDER_ID_CONFLICT("409-5", "order.id.conflict", HttpStatus.CONFLICT),
+    PAYMENT_CONFLICT("409-5", "order.id.conflict", HttpStatus.CONFLICT),
+    PAYMENT_AMOUNT_MISMATCH("409-6", "payment.rejected", HttpStatus.CONFLICT),
+    PAYMENT_CONFIRM_FAIL("500-4", "payment.confirm.fail", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // 메일 전송 에러
+    EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 학습 레벨 측정 에러
     LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),

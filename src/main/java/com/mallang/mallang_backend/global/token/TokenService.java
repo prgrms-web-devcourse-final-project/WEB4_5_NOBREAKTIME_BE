@@ -88,27 +88,14 @@ public class TokenService {
         // TODO 토큰값을 DB 에 저장하는 로직 추가, redis 에서 삭제 -> 이후 DB 반영
     }
 
-    // 블랙리스트에서 토큰 확인
-    public boolean isTokenBlacklisted(String token) {
-        Long expirationTime = blacklist.get(token);
-        if (expirationTime == null) {
-            return false;
-        }
-        // 만료 시간이 지난 경우 제거
-        if (System.currentTimeMillis() > expirationTime) {
-            blacklist.remove(token);
-            return false;
-        }
-        return true;
-    }
-
     /**
-     * 로그아웃 시 해당 토큰을 쿠키에서 삭제하고, 블랙리스트에 추가합니다.
+     * 로그아웃 시 해당 토큰을 쿠키 및 redis 에서 삭제합니다.
      *
      * @param response HttpServletResponse 객체
      * @param memberId redis 삭제 객체
      */
-    public void invalidateTokenAndDeleteRedisRefreshToken (HttpServletResponse response, Long memberId) {
+    public void invalidateTokenAndDeleteRedisRefreshToken (HttpServletResponse response,
+                                                           Long memberId) {
         if (response == null) return;
 
         deleteTokenInCookie(response, REFRESH_TOKEN);
@@ -131,19 +118,5 @@ public class TokenService {
 
         log.debug("토큰 쿠키가 삭제되었습니다. 쿠키 이름: {}, Value: {}",
                 expiredCookie.getName(), expiredCookie.getValue());
-    }
-
-    /**
-     * 블랙리스트에 토큰을 추가하는 메서드입니다.
-     * 토큰과 만료 시간을 저장하여 이후 검증 시 사용합니다.
-     *
-     * @param token 블랙리스트에 추가할 토큰 문자열
-     */
-    public void addToBlacklist(String token) {
-        if (token == null || token.trim().isEmpty()) return;
-
-        long expirationTime = System.currentTimeMillis() + refreshExpiration;
-        blacklist.put(token, expirationTime);
-        log.info("블랙리스트에 토큰 추가: {}, 만료 시간: {}", token, expirationTime);
     }
 }
