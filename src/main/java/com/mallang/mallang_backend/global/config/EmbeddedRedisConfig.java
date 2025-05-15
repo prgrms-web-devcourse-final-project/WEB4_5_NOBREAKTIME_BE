@@ -6,7 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 @Configuration
 public class EmbeddedRedisConfig {
@@ -16,7 +17,7 @@ public class EmbeddedRedisConfig {
 
     @PostConstruct
     public void startRedis() throws IOException {
-        if (isPortInUse(redisPort)) {
+        if (isPortInUse("127.0.0.1", redisPort)) {
             return;
         }
         redisServer = new RedisServer(redisPort);
@@ -31,13 +32,12 @@ public class EmbeddedRedisConfig {
     }
 
     // 포트 사용 여부 확인
-    private boolean isPortInUse(int port) {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            // 포트가 사용 중이 아니면 여기까지 옴
-            return false;
+    private boolean isPortInUse(String host, int port) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(host, port), 200);
+            return true; // 연결 성공 → 포트 사용 중
         } catch (IOException e) {
-            // 포트가 이미 사용 중이면 예외 발생
-            return true;
+            return false; // 연결 실패 → 포트 사용 중 아님
         }
     }
 }
