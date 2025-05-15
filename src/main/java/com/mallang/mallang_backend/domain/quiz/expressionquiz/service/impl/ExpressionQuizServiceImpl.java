@@ -1,17 +1,5 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizItem;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
@@ -29,8 +17,14 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -80,8 +74,11 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
 			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
 
+		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
+			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 		return new ExpressionQuizItem(
 			expression.getId(),
+			expressionBook.getId(),
 			createQuestion(expression.getSentence()),
 			expression.getSentence(),
 			parseWord(expression.getSentence()),
