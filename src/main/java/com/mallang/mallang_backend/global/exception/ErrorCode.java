@@ -138,6 +138,8 @@ public enum ErrorCode {
     PAYMENT_CONFLICT("409-5", "order.id.conflict", HttpStatus.CONFLICT),
     PAYMENT_AMOUNT_MISMATCH("409-6", "payment.rejected", HttpStatus.CONFLICT),
     PAYMENT_CONFIRM_FAIL("500-4", "payment.confirm.fail", HttpStatus.INTERNAL_SERVER_ERROR),
+    BILLING_PAYMENT_FAIL("400-3", "billing.payment.fail", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_NOT_FOUND("404-5", "subscription.not.found", HttpStatus.NOT_FOUND),
 
     // 메일 전송 에러
     EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
