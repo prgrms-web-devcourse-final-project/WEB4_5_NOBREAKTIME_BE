@@ -1,29 +1,29 @@
 package com.mallang.mallang_backend.domain.video.youtube.service;
 
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.model.SearchListResponse;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoListResponse;
+import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
+import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
+import com.mallang.mallang_backend.global.dto.TokenUsageType;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.google.api.services.youtube.model.Video;
-import com.google.api.services.youtube.model.VideoListResponse;
-import com.mallang.mallang_backend.domain.video.youtube.client.YouTubeClient;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +38,7 @@ public class YoutubeService {
 	private final Executor youtubeApiExecutor;
 
 	// 검색: 키워드 기반으로 videoId만 가져오기
+	@MonitorExternalApi(name = "youtube")
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchVideoIds")
 	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackSearchVideoIds")
 	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackSearchVideoIds")
@@ -107,6 +108,7 @@ public class YoutubeService {
 	/**
 	 * 실제 동기 fetch 로직
 	 */
+	@MonitorExternalApi(name = "youtube", usageType = TokenUsageType.FETCH_REQUEST)
 	public List<Video> fetchVideosByIds(List<String> videoIds) {
 		YouTube youtube = youtubeClient.getClient();
 		List<List<String>> chunks = new ArrayList<>();

@@ -1,14 +1,14 @@
-INSERT INTO WORD (WORD, POS, MEANING, DIFFICULTY, EXAMPLE_SENTENCE, TRANSLATED_SENTENCE)
-VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '이 가방은 매우 가볍다.'),
-       ('light', '명사', '빛', 'EASY', 'The light was too bright.', '빛이 너무 밝았다.'),
-       ('light', '명사', '전등', 'EASY', 'She turned off the light before leaving.', '그녀는 떠나기 전에 전등을 껐다.'),
-       ('light', '동사', '불을 켜다', 'NORMAL', 'Please light the candles.', '촛불을 켜 주세요.'),
-       ('light', '동사', '밝게 하다', 'HARD', 'The room is lit by a large window.', '그 방은 큰 창문으로 밝아진다.'),
-       ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.');
+INSERT INTO WORD (WORD, POS, MEANING, DIFFICULTY, EXAMPLE_SENTENCE, TRANSLATED_SENTENCE, CREATED_AT, MODIFIED_AT)
+VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '이 가방은 매우 가볍다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '명사', '빛', 'EASY', 'The light was too bright.', '빛이 너무 밝았다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '명사', '전등', 'EASY', 'She turned off the light before leaving.', '그녀는 떠나기 전에 전등을 껐다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '동사', '불을 켜다', 'NORMAL', 'Please light the candles.', '촛불을 켜 주세요.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '동사', '밝게 하다', 'HARD', 'The room is lit by a large window.', '그 방은 큰 창문으로 밝아진다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- BASIC 플랜 (기간 상관없이 동일한 혜택)
-INSERT INTO plan (type, period, amount, description, benefits)
+INSERT INTO plan (type, period, amount, description, benefits, created_at, modified_at)
 VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "BASIC 플랜",
@@ -18,7 +18,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('BASIC', 'SIX_MONTHS', 0, '기본 서비스 플랜',
         '{
@@ -29,7 +29,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('BASIC', 'YEAR', 0, '기본 서비스 플랜',
         '{
@@ -40,7 +40,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- STANDARD 플랜
        ('STANDARD', 'MONTHLY', 4500, '스탠다드 정기 구독',
@@ -60,7 +60,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 4500,
             "discountRate": 0
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('STANDARD', 'SIX_MONTHS', 24300, '스탠다드 6개월 구독',
         '{
@@ -79,7 +79,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 24300,
             "discountRate": 0.1
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('STANDARD', 'YEAR', 43200, '스탠다드 1년 구독',
         '{
@@ -98,7 +98,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 43200,
             "discountRate": 0.2
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- PREMIUM 플랜
        ('PREMIUM', 'MONTHLY', 8500, '프리미엄 정기 구독',
@@ -118,7 +118,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 8500,
             "discountRate": 0
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('PREMIUM', 'SIX_MONTHS', 45900, '프리미엄 6개월 구독',
         '{
@@ -137,7 +137,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 45900,
             "discountRate": 0.1
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('PREMIUM', 'YEAR', 81600, '프리미엄 1년 구독',
         '{
@@ -156,23 +156,24 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 81600,
             "discountRate": 0.2
           }
-        }');
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 INSERT INTO member (
-    email, password, nickname, profile_image_url, created_at, login_platform, platform_id,
+    email, password, nickname, profile_image_url, login_platform, platform_id,
     language, subscription_type, word_goal, video_goal, word_level, expression_level,
-    withdrawal_date, measured_at
+    withdrawal_date, measured_at, created_at, modified_at
 ) VALUES
 -- 1번 회원: 구글 로그인, STANDARD 구독
-('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', NOW(), 'GOOGLE', 'google-uid-123',
- 'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW()),
+('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', 'GOOGLE', 'google-uid-123',
+ 'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 2번 회원: 카카오 로그인, PREMIUM 구독
-('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', NOW(), 'KAKAO', 'kakao-uid-456',
- 'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW()),
+('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', 'KAKAO', 'kakao-uid-456',
+ 'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 3번 회원: 네이버 로그인, STANDARD 구독, 탈퇴 처리
-('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', NOW(), 'NAVER', 'naver-uid-789',
- 'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW());
+('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', 'NAVER', 'naver-uid-789',
+ 'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO payment (member_id,
                      plan_id,

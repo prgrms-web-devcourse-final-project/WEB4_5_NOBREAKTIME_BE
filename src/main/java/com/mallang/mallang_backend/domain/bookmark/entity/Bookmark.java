@@ -2,18 +2,17 @@ package com.mallang.mallang_backend.domain.bookmark.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Bookmark {
+public class Bookmark extends BaseTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "bookmark_id")
@@ -26,9 +25,6 @@ public class Bookmark {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_id", nullable = false)
     private Videos videos;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
     public Bookmark(Member member, Videos videos) {

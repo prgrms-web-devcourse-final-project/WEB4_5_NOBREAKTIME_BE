@@ -1,6 +1,5 @@
 package com.mallang.mallang_backend.domain.payment.entity;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import jakarta.persistence.*;
 import lombok.*;

@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.video.subtitle.entity;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor
-public class Subtitle {
+public class Subtitle extends BaseTime {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

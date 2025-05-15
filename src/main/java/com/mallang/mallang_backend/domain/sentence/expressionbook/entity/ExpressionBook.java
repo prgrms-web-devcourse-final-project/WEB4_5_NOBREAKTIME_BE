@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,7 +21,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONB
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ExpressionBook {
+public class ExpressionBook extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
