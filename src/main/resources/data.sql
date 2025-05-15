@@ -1,10 +1,10 @@
-INSERT INTO WORD (WORD, POS, MEANING, DIFFICULTY, EXAMPLE_SENTENCE, TRANSLATED_SENTENCE)
-VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '이 가방은 매우 가볍다.'),
-       ('light', '명사', '빛', 'EASY', 'The light was too bright.', '빛이 너무 밝았다.'),
-       ('light', '명사', '전등', 'EASY', 'She turned off the light before leaving.', '그녀는 떠나기 전에 전등을 껐다.'),
-       ('light', '동사', '불을 켜다', 'NORMAL', 'Please light the candles.', '촛불을 켜 주세요.'),
-       ('light', '동사', '밝게 하다', 'HARD', 'The room is lit by a large window.', '그 방은 큰 창문으로 밝아진다.'),
-       ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.');
+INSERT INTO WORD (WORD, POS, MEANING, DIFFICULTY, EXAMPLE_SENTENCE, TRANSLATED_SENTENCE, CREATED_AT, MODIFIED_AT)
+VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '이 가방은 매우 가볍다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '명사', '빛', 'EASY', 'The light was too bright.', '빛이 너무 밝았다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '명사', '전등', 'EASY', 'She turned off the light before leaving.', '그녀는 떠나기 전에 전등을 껐다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '동사', '불을 켜다', 'NORMAL', 'Please light the candles.', '촛불을 켜 주세요.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '동사', '밝게 하다', 'HARD', 'The room is lit by a large window.', '그 방은 큰 창문으로 밝아진다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+       ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 -- BASIC 플랜 (기간 상관없이 동일한 혜택)
@@ -159,21 +159,21 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO member (
-    email, password, nickname, profile_image_url, created_at, login_platform, platform_id,
+    email, password, nickname, profile_image_url, login_platform, platform_id,
     language, subscription_type, word_goal, video_goal, word_level, expression_level,
-    withdrawal_date, measured_at
+    withdrawal_date, measured_at, created_at, modified_at
 ) VALUES
 -- 1번 회원: 구글 로그인, STANDARD 구독
-('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', NOW(), 'GOOGLE', 'google-uid-123',
- 'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW()),
+('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', 'GOOGLE', 'google-uid-123',
+ 'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 2번 회원: 카카오 로그인, PREMIUM 구독
-('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', NOW(), 'KAKAO', 'kakao-uid-456',
- 'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW()),
+('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', 'KAKAO', 'kakao-uid-456',
+ 'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 3번 회원: 네이버 로그인, STANDARD 구독, 탈퇴 처리
-('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', NOW(), 'NAVER', 'naver-uid-789',
- 'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW());
+('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', 'NAVER', 'naver-uid-789',
+ 'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO payment (member_id,
                      plan_id,
@@ -184,7 +184,9 @@ INSERT INTO payment (member_id,
                      method,
                      approved_at,
                      failure_reason,
-                     canceled_reason)
+                     canceled_reason,
+                     created_at,
+                     modified_at)
 VALUES (1,
         6,
         'test1',
@@ -194,7 +196,9 @@ VALUES (1,
         'CARD', -- 결제 방법 (카드)
         NOW(), -- 결제 승인 시간
         NULL, -- 실패 사유 없음
-        NULL -- 취소 사유 없음
+        NULL, -- 취소 사유 없음
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
        );
 
 INSERT INTO payment (
@@ -207,7 +211,9 @@ INSERT INTO payment (
     method,
     approved_at,
     failure_reason,
-    canceled_reason
+    canceled_reason,
+    created_at,
+    modified_at
 ) VALUES (
              1,
              6,
@@ -218,7 +224,9 @@ INSERT INTO payment (
              'PHONE', -- 결제 방법 (휴대폰)
              NOW(),    -- 승인 시간 없음
              'NOT_FOUND_PAYMENT', -- 결제를 찾을 수 없음 (예시)
-             NULL     -- 취소 사유 없음
+             NULL,     -- 취소 사유 없음
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
          );
 
 INSERT INTO payment_history (

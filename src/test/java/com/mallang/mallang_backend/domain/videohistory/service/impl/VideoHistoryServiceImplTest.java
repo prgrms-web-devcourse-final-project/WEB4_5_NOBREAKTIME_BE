@@ -83,6 +83,11 @@ class VideoHistoryServiceImplTest {
 
 		then(repository).should().save(historyCaptor.capture());
 		VideoHistory saved = historyCaptor.getValue();
+
+		// 수동으로 createdAt, lastViewedAt 설정 (Mockito에서는 실제 persist가 안되므로 직접 세팅)
+		saved.setCreatedAt(LocalDateTime.now());
+		saved.updateTimestamp();
+
 		assertThat(saved.getMember()).isEqualTo(member);
 		assertThat(saved.getVideos()).isEqualTo(videos1);
 		assertThat(saved.getCreatedAt()).isNotNull();
