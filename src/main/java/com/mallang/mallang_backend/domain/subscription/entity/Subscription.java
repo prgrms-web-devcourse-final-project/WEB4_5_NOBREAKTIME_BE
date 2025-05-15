@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.subscription.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Subscription {
+public class Subscription extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
