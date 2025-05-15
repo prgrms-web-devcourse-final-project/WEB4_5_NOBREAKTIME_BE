@@ -16,6 +16,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
@@ -84,9 +85,9 @@ class VideoHistoryServiceImplTest {
 		then(repository).should().save(historyCaptor.capture());
 		VideoHistory saved = historyCaptor.getValue();
 
-		// 수동으로 createdAt, lastViewedAt 설정 (Mockito에서는 실제 persist가 안되므로 직접 세팅)
-		saved.setCreatedAt(LocalDateTime.now());
-		saved.updateTimestamp();
+		LocalDateTime now = LocalDateTime.now();
+		ReflectionTestUtils.setField(saved, "createdAt", now);
+		ReflectionTestUtils.setField(saved, "lastViewedAt", now);
 
 		assertThat(saved.getMember()).isEqualTo(member);
 		assertThat(saved.getVideos()).isEqualTo(videos1);
