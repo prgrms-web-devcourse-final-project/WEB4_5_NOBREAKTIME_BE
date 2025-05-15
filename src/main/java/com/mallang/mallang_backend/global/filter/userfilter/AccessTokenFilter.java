@@ -45,7 +45,6 @@ public class AccessTokenFilter extends CustomAbstractFilter {
         } catch (ExpiredJwtException e) { // 액세스 토큰 만료 시
             filterChain.doFilter(request, response); // RefreshTokenFilter 로 넘어감
         } catch (Exception e) { // 다른 예외 처리
-            e.printStackTrace();
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
         }
     }

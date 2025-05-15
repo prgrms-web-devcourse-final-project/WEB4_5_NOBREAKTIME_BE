@@ -42,8 +42,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Member basicUser = createTestUser();
 
-        String token = createToken();
-        System.out.println("token = " + token);
+        createToken();
 
         setSecurityContext(basicUser, basicUser.getSubscriptionType().getRoleName());
     }
