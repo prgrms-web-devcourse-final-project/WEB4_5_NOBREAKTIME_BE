@@ -68,9 +68,9 @@ public class AppConstants {
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 
 	/**
-	 * 영상 학습 퀴즈 최대 개수
+	 * 비디오 히스토리 최대 갯수
 	 */
-	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+	public static final int MAX_HISTORY_PER_MEMBER = 50;
 
     /**
      * s3 에 업로드 할 프로필 사진의 prefix
