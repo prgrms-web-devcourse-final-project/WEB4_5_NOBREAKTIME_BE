@@ -184,9 +184,7 @@ INSERT INTO payment (member_id,
                      method,
                      approved_at,
                      failure_reason,
-                     canceled_reason,
-                     created_at,
-                     modified_at)
+                     canceled_reason)
 VALUES (1,
         6,
         'test1',
@@ -196,9 +194,7 @@ VALUES (1,
         'CARD', -- 결제 방법 (카드)
         NOW(), -- 결제 승인 시간
         NULL, -- 실패 사유 없음
-        NULL, -- 취소 사유 없음
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP
+        NULL -- 취소 사유 없음
        );
 
 INSERT INTO payment (
@@ -211,9 +207,7 @@ INSERT INTO payment (
     method,
     approved_at,
     failure_reason,
-    canceled_reason,
-    created_at,
-    modified_at
+    canceled_reason
 ) VALUES (
              1,
              6,
@@ -224,9 +218,7 @@ INSERT INTO payment (
              'PHONE', -- 결제 방법 (휴대폰)
              NOW(),    -- 승인 시간 없음
              'NOT_FOUND_PAYMENT', -- 결제를 찾을 수 없음 (예시)
-             NULL,     -- 취소 사유 없음
-                CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP
+             NULL     -- 취소 사유 없음
          );
 
 INSERT INTO payment_history (
