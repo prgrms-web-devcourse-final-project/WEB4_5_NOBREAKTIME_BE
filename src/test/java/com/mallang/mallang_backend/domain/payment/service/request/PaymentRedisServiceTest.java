@@ -14,12 +14,10 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.IDEM_KEY_PREFIX;
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ORDER_ID_CONFLICT;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -49,23 +47,19 @@ class PaymentRedisServiceTest {
 
     @Test
     @DisplayName("Redis 정상 저장 시 재시도 없이 성공")
-    void saveDataToRedis_Success() {
+    void saveDataToRedis_updateSuccessInfo() {
         // Given
-        String idempotencyKey = "idem_123";
         String orderId = "order_456";
         int amount = 10000;
 
         // When & Then
         assertThatCode(() -> paymentRedisService.saveDataToRedis(
-                idempotencyKey,
                 orderId,
                 amount
-                ))
+        ))
                 .doesNotThrowAnyException();
 
         // Verify
-        verify(valueOperations, times(1)).set(eq(IDEM_KEY_PREFIX + "idem_123"),
-                eq("processed"), any(Duration.class));
         verify(valueOperations, times(1)).set(eq(ORDER_ID_PREFIX + "order_456"),
                 eq("10000"), any(Duration.class));
     }
@@ -78,7 +72,7 @@ class PaymentRedisServiceTest {
                 .when(valueOperations).set(anyString(), anyString(), any(Duration.class));
 
         // When & Then
-        assertThatThrownBy(() -> paymentRedisService.saveDataToRedis(IDEM_KEY_PREFIX + "idem_123",
+        assertThatThrownBy(() -> paymentRedisService.saveDataToRedis(
                 ORDER_ID_PREFIX + "order_456", 10000))
                 .isInstanceOf(ServiceException.class);
 
@@ -88,7 +82,8 @@ class PaymentRedisServiceTest {
     }
 
     @Test
-    void Redis_저장_실패시_DB_미반영_검증() {
+    @DisplayName("Redis 에 저장 실패하였다면 DB에도 저장되지 않는다")
+    void Verify_DB_Not_Updated_When_Redis_Save_Fails() {
         // given: Redis 모킹 설정
         ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
 
@@ -100,40 +95,9 @@ class PaymentRedisServiceTest {
 
         // when
         assertThrows(ServiceException.class, () ->
-                paymentRedisService.saveDataToRedis("token123", "order456", 10000));
+                paymentRedisService.saveDataToRedis("order456", 10000));
 
         // then: DB에 주문 정보 미존재 검증
         assertFalse(paymentRepository.existsByOrderId("order456"));
-    }
-
-    @Test
-    void 멱등성_토큰_중복_요청_방지_검증() {
-        // Redis 모킹 설정
-        ValueOperations<String, Object> valueOps = mock(ValueOperations.class);
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
-
-        // 키 존재 상태 추적용 AtomicBoolean
-        AtomicBoolean isKeyExist = new AtomicBoolean(false);
-
-        // hasKey() 동작 제어
-        when(redisTemplate.hasKey(IDEM_KEY_PREFIX + "dupToken"))
-                .thenAnswer(inv -> isKeyExist.get());
-
-        // set() 호출시 키 존재 상태 변경
-        doAnswer(inv -> {
-            isKeyExist.set(true);
-            return null;
-        }).when(valueOps).set(eq(IDEM_KEY_PREFIX + "dupToken"), any(), any(Duration.class));
-
-        // 첫 번째 요청 성공
-        paymentRedisService.saveDataToRedis("dupToken", "order789", 20000);
-
-        // 두 번째 요청 시 예외 발생 검증
-        ServiceException exception = assertThrows(ServiceException.class,
-                () -> paymentRedisService.saveDataToRedis("dupToken", "order789", 20000)
-        );
-
-        assertThat(exception.getErrorCode()).isEqualTo(ORDER_ID_CONFLICT);
-        verify(valueOps, times(2)).set(anyString(), any(), any(Duration.class));
     }
 }

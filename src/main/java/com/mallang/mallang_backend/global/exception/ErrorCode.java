@@ -49,6 +49,7 @@ public enum ErrorCode {
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_NOT_FOUND("404-1", "word.not.found", HttpStatus.NOT_FOUND),
     SAVED_WORD_CONCURRENCY_TIME_OUT("500-4", "saved.word.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_WORD("500-5", "invalid.word", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
@@ -148,7 +149,7 @@ public enum ErrorCode {
     // 캐시 관련 에러
     CACHE_LOCK_TIMEOUT("500-6", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR);
 
-    private final String code;
+	private final String code;
     private final String messageCode; // 메시지 프로퍼티
     private final HttpStatus status;
 }

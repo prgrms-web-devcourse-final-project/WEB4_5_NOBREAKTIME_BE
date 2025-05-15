@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.google.api.services.youtube.model.Video;
@@ -50,10 +51,8 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 
 @Slf4j
 @Service
@@ -62,7 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoServiceImpl implements VideoService {
 
 	private final VideoRepository videoRepository;
-	private final VideoSearchProperties youtubeSearchProperties;
 	private final YoutubeService youtubeService;
 	private final YoutubeAudioExtractor youtubeAudioExtractor;
 	private final GptService gptService;
@@ -284,7 +282,6 @@ public class VideoServiceImpl implements VideoService {
 			start = System.nanoTime();
 			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);

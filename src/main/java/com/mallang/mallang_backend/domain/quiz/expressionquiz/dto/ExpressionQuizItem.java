@@ -1,18 +1,19 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExpressionQuizItem {
-	private Long expressionQuizItemId;
+	private Long expressionId;
+	private Long expressionBookId;
 	private String question;
 	private String original;
 	private List<String> choices;
