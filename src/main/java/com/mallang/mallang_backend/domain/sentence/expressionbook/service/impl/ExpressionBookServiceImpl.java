@@ -18,6 +18,7 @@ import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepo
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,12 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
 
+        if (!member.canUseAdditaional()) {
+            books = books.stream()
+                    .filter(eb -> ExpressionBook.isDefault(eb))
+                    .toList();
+        }
+
         for (ExpressionBook book : books) {
             int expressionCount = expressionBookItemRepository.countByIdExpressionBookId(book.getId());
             System.out.println(expressionCount);
@@ -113,7 +120,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        if (expressionBook.getMember().getSubscriptionType() == BASIC) {
+        if (!expressionBook.getMember().canUseAdditaional()) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
@@ -134,7 +141,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        if (expressionBook.getMember().getSubscriptionType() == BASIC) {
+        if (!expressionBook.getMember().canUseAdditaional()) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
@@ -190,9 +197,25 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
     @Override
     @Transactional
-    public void save(ExpressionSaveRequest request, Long expressionBookId) {
+    public void save(ExpressionSaveRequest request, Long expressionBookId, Long memberId) {
         String videoId = request.getVideoId();
         Long subtitleId = request.getSubtitleId();
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        // 자신의 표현함이 아니면 표현 추가 실패
+        if (!expressionBook.getMember().getId().equals(memberId)) {
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        // 추가 표현함 사용 권한이 없으면 추가 표현함에 표현 추가 실패
+        if (!member.canUseAdditaional() && !ExpressionBook.isDefault(expressionBook)) {
+            throw new ServiceException(NO_PERMISSION);
+        }
 
         Subtitle subtitle = subtitleRepository.findById(subtitleId)
                 .orElseThrow(() -> new ServiceException(SUBTITLE_NOT_FOUND));
@@ -201,9 +224,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         String description = subtitle.getTranslatedSentence();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         LocalTime subtitleAt = LocalTime.parse(subtitle.getStartTime(), formatter);
-
-        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
 
@@ -239,19 +259,29 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     @Override
     public void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(request.getExpressionBookId())
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+        ExpressionBook expressionBook = expressionBookRepository.findById(request.getExpressionBookId())
                 .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        // 자신의 표현함이 아니면 표현 추가 실패
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
+        // 추가 단어장 사용 권한이 없으면 추가 단어장의 단어 삭제 불가능
+        if (!ExpressionBook.isDefault(expressionBook) && !member.canUseAdditaional()) {
+            throw new ServiceException(ErrorCode.NO_PERMISSION);
+        }
+
+        // 삭제할 ID 리스트
         List<ExpressionBookItemId> ids = request.getExpressionIds().stream()
                 .map(expressionId -> new ExpressionBookItemId(expressionId, request.getExpressionBookId()))
                 .toList();
 
         // 표현에 대한 퀴즈 결과 삭제
-        expressionQuizResultRepository.deleteAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), book);
+        expressionQuizResultRepository.deleteAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), expressionBook);
         // 표현 삭제
         expressionBookItemRepository.deleteAllById(ids);
     }

@@ -1,31 +1,21 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.entity;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_RENAME_DEFAULT_FORBIDDEN;
 
 @Getter
 @Entity
@@ -80,7 +70,11 @@ public class Wordbook {
 		return defaultWordbooks;
 	}
 
-	/**
+    public static boolean isDefault(Wordbook wordbook) {
+		return wordbook.getName().equals(DEFAULT_WORDBOOK_NAME);
+    }
+
+    /**
 	 * 추가 단어장의 이름을 변경합니다. 변경하려는 단어장의 기존 이름이 '기본'이거나 변경하려는 이름이 '기본'이면 실패합니다.
 	 * @param name 변경하려는 단어장 이름
 	 */

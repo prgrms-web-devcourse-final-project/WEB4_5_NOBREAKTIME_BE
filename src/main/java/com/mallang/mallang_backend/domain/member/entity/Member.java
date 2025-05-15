@@ -1,21 +1,14 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALREADY_WITHDRAWN;
 
 @Entity
 @Getter
@@ -181,4 +174,11 @@ public class Member {
         this.profileImageUrl = profileImageUrl;
     }
 
+    /**
+     * 추가 단어장, 표현함을 사용할 수 있는지 여부를 검사한다.
+     * @return 추가 단어장, 표현함을 사용할 수 있는지 여부
+     */
+    public boolean canUseAdditaional() {
+        return subscriptionType != SubscriptionType.BASIC;
+    }
 }

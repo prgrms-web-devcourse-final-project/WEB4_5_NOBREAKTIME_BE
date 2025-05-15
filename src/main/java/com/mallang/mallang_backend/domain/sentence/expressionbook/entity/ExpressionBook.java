@@ -65,6 +65,15 @@ public class ExpressionBook {
     }
 
     /**
+     * 표현함이 기본 표현함인지 검사합니다.
+     * @param expressionBook 검사할 표현함
+     * @return 기본 표현함 여부
+     */
+    public static boolean isDefault(ExpressionBook expressionBook) {
+        return DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName());
+    }
+
+    /**
      * 추가 표현함의 이름을 변경합니다. 변경하려는 표현함의 기존 이름이 '기본 표현함'이거나 변경하려는 이름이 '기본 표현함'이면 실패합니다.
      * @param newName 변경하려는 단어장 이름
      */
