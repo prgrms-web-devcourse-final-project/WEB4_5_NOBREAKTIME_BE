@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WordQuizItem {
-    private Long wordQuizItemId;
+    private Long wordbookItemId;
     private String word;
     private String question;
     private String original;

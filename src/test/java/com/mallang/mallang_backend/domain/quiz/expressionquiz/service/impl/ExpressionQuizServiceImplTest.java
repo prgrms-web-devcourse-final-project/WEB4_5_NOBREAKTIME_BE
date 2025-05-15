@@ -1,23 +1,5 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
-
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizItem;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
@@ -36,6 +18,23 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.util.ReflectionTestUtil;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class ExpressionQuizServiceImplTest {
@@ -93,6 +92,9 @@ class ExpressionQuizServiceImplTest {
 		when(expressionRepository.findById(expressionId))
 			.thenReturn(Optional.of(expression));
 
+		when(expressionBookRepository.findById(expressionBookId))
+			.thenReturn(Optional.of(expressionBook));
+
 		when(expressionQuizRepository.save(any())).thenAnswer(invocation -> {
 			ExpressionQuiz saved = invocation.getArgument(0);
 			setField(saved, "id", 999L);
@@ -107,7 +109,8 @@ class ExpressionQuizServiceImplTest {
 		assertThat(response.getQuizId()).isEqualTo(999L);
 		assertThat(response.getQuizItems()).hasSize(1);
 		ExpressionQuizItem quizItem = response.getQuizItems().get(0);
-		assertThat(quizItem.getExpressionQuizItemId()).isEqualTo(100L);
+		assertThat(quizItem.getExpressionId()).isEqualTo(100L);
+		assertThat(quizItem.getExpressionBookId()).isEqualTo(1L);
 		assertThat(quizItem.getOriginal()).isEqualTo("Let's, This is apple!");
 		assertThat(quizItem.getQuestion()).isEqualTo("{}, {} {} {}!");
 		assertThat(quizItem.getChoices()).containsExactlyInAnyOrder("This", "is", "apple", "Let's");

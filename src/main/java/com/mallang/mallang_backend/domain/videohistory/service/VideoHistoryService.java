@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.domain.videohistory.service;
 
-import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
-
 import java.util.List;
+
+import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 
 public interface VideoHistoryService {
     void save(Long memberId, String videoId);

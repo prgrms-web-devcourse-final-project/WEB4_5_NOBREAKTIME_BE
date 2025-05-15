@@ -1,24 +1,19 @@
 package com.mallang.mallang_backend.domain.voca.word.controller;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchRequest;
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORD_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORD_SAVE_FAILED;
 
 @RestController
 @RequestMapping("/api/v1/words")
@@ -62,7 +57,7 @@ public class WordController {
         WordSearchRequest wordSearchRequest
     ) {
         String word = wordSearchRequest.getWord();
-        WordSearchResponse response = wordService.searchWord(wordSearchRequest.getWord());
+        WordSearchResponse response = wordService.searchWord(word);
         return ResponseEntity.ok(new RsData<>(
             "200",
             wordSearchRequest.getWord() + "에 대한 조회 결과입니다.",

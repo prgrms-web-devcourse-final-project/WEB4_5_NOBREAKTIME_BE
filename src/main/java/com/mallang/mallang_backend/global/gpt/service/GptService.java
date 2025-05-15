@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 
 public interface GptService {
@@ -14,7 +15,7 @@ public interface GptService {
      * @param word 검색할 단어
      * @return GPT 응답 결과
      */
-    String searchWord(String word);
+    List<Word> searchWord(String word);
 
     /**
      * 문장을 분석하여 GPT 응답을 반환합니다.

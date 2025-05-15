@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.QWordbookItem;
 import org.springframework.stereotype.Repository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.QWordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordStatus;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.querydsl.core.BooleanBuilder;

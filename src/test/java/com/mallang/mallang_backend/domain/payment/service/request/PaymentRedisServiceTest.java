@@ -16,10 +16,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Duration;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+
 
 @SpringBootTest
 class PaymentRedisServiceTest {

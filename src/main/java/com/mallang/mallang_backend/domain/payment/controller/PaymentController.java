@@ -48,7 +48,6 @@ public class PaymentController {
     private final JwtService jwtService;
     private final TokenService tokenService;
 
-
     @Operation(
             summary = "결제 요청 정보 생성",
             description = "로그인한 회원의 정보와 결제 요청 데이터를 받아 결제 요청 정보를 생성합니다."
@@ -83,27 +82,27 @@ public class PaymentController {
             HttpServletResponse response
     ) {
 
-        paymentService.checkIdemkeyAndSave(request.getIdempotencyKey()); // 중복 호출 확인
+        paymentService.checkIdemkeyAndSave(request.getIdempotencyKey());
         paymentService.updatePaymentStatus(
                 request.getOrderId(),
                 PayStatus.IN_PROGRESS
-        ); // 결제 승인 대기 상태로 업데이트
+        );
 
-        PaymentResponse result = paymentService.sendApproveRequest(request); // 결제 API 호출 (승인 로직 진행)
+        PaymentResponse result = paymentService.sendApproveRequest(request);
 
         paymentService.processPaymentResult(
                 request.getOrderId(),
                 result
-        ); // DB 저장 및 성공 및 실패 이벤트 발행
+        );
 
         MemberGrantedInfo grantedInfo = paymentService
-                .getMemberId(request.getOrderId()); // 새로운 권한 정보 발행
+                .getMemberId(request.getOrderId());
 
         Long memberId = grantedInfo.memberId();
         String roleName = grantedInfo.roleName();
 
-        setSecurityContext(memberId, roleName); // 시큐리티 객체 업데이트
-        setNewJwtTokens(response, memberId, roleName); // 토큰 정보 업데이트
+        setSecurityContext(memberId, roleName);
+        setNewJwtTokens(response, memberId, roleName);
 
         RsData<String> rsp = new RsData<>(
                 "200",
@@ -116,14 +115,14 @@ public class PaymentController {
             summary = "결제 승인 실패 처리",
             description = "결제 요청에 실패한 경우 결제 상태를 ABORTED로 변경하고 실패 로그를 기록합니다."
     )
-    @PostMapping("/fail") // 요청 자체가 실패한 경우
+    @PostMapping("/fail")
     public ResponseEntity<RsData<String>> failedPayment(
             @Valid @RequestBody PaymentFailureRequest request
     ) {
         paymentService.updatePaymentStatus(
                 request.getOrderId(),
                 PayStatus.ABORTED
-        ); // 결제 상태 업데이트 및 실패 로그 기록
+        );
 
         RsData<String> rsp = new RsData<>(
                 "200",
@@ -133,7 +132,6 @@ public class PaymentController {
         return ResponseEntity.status(200).body(rsp);
     }
 
-    // 구독한 권한에 맞는 시큐리티 인증 정보를 재발급합니다.
     private void setSecurityContext(Long memberId,
                                     String roleName
     ) {
@@ -146,7 +144,6 @@ public class PaymentController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-    // 구독한 권한에 맞는 jwt 토큰을 재발급합니다.
     private void setNewJwtTokens(HttpServletResponse response,
                                  Long memberId,
                                  String roleName

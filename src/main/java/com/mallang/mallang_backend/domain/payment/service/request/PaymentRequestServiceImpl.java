@@ -21,9 +21,21 @@ import java.time.LocalDate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.*;
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.READY;
+import static com.mallang.mallang_backend.global.constants.AppConstants.CHARACTERS;
+import static com.mallang.mallang_backend.global.constants.AppConstants.DATE_FORMATTER;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class PaymentRequestServiceImpl implements PaymentRequestService {
+
+    // ... [나머지 코드는 변경 없이 유지] ...
+
+}
+
 
 @Slf4j
 @Service

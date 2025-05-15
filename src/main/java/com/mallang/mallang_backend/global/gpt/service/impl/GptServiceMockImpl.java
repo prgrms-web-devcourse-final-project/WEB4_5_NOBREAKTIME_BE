@@ -1,14 +1,8 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_API_CALL_FAILED;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_RESPONSE_EMPTY;
-
-import java.util.List;
-
-import org.springframework.web.reactive.function.client.WebClient;
-
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
@@ -17,11 +11,17 @@ import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
-
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_API_CALL_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_RESPONSE_EMPTY;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 /**
  * 부하 테스트 진행을 위해 OpenAI 요청을 Mock Server 연결로 대체한 테스트용 GptService.
@@ -38,11 +38,13 @@ public class GptServiceMockImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
 	@Override
-	public String searchWord(String word)  {
+	public List<Word> searchWord(String word)  {
 		String prompt = gptPromptBuilder.buildPromptforSearchWord(word);
 		OpenAiResponse response = callGptApiWordAnalyze(prompt);
 		validateResponse(response);
-		return response.getChoices().get(0).getMessage().getContent();
+		String gptResult = response.getChoices().get(0).getMessage().getContent();
+		List<Word> generatedWords = parseGptResult(word, gptResult);
+		return generatedWords;
 	}
 
 	/**
