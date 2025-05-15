@@ -122,9 +122,11 @@ public class Member extends BaseTime {
         this.language = language;
     }
 
-    // 구독 플랜 업데이트
+    // 구독 플랜 업데이트 -> 변경 내역이 같이 않을 때에만 업데이트 할 수 있도록
     public void updateSubscription(SubscriptionType subscriptionType) {
-        this.subscriptionType = subscriptionType;
+        if (this.subscriptionType != subscriptionType) {
+            this.subscriptionType = subscriptionType;
+        }
     }
 
     public void updateWordGoal(int wordGoal) {
