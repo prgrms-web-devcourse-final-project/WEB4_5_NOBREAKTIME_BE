@@ -51,6 +51,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "무제한 단어 저장 가능",
             "무제한 표현 저장 가능",
             "무제한 표현함 생성 가능",
+            "무제한 영상 시청 가능"
             "무제한 퀴즈 풀이 가능"
           ],
           "notice": "매달 구독이 자동으로 갱신돼요.",
@@ -69,6 +70,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "무제한 단어 저장 가능",
             "무제한 표현 저장 가능",
             "무제한 표현함 생성 가능",
+            "무제한 영상 시청 가능"
             "무제한 퀴즈 풀이 가능"
           ],
           "notice": "6개월을 한 번에 구독하면 10% 저렴하게 이용할 수 있어요.",
@@ -87,6 +89,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "무제한 단어 저장 가능",
             "무제한 표현 저장 가능",
             "무제한 표현함 생성 가능",
+            "무제한 영상 시청 가능"
             "무제한 퀴즈 풀이 가능"
           ],
           "notice": "1년을 한 번에 구독하면 20% 저렴하게 이용할 수 있어요.",
@@ -102,9 +105,12 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "프리미엄 정기 구독",
           "features": [
-            "모든 언어를 자유롭게 이용할 수 있어요",
-            "다양한 언어를 통합적으로 학습할 수 있습니다",
-            "언어 제한 없이 모든 기능을 사용할 수 있습니다"
+            "모든 언어를 자유롭게 이용",
+            "AI 코치와의 실시간 대화 시나리오",
+            "인터랙티브 쉐도잉/롤플레잉 챌린지",
+            "프리미엄 회원 전용 스터디 그룹",
+            "AI 맞춤 커리큘럼/로드맵 제공",
+            "학습 데이터 다운로드"
           ],
           "notice": "매달 구독이 자동으로 갱신돼요.",
           "priceInfo": {
@@ -118,9 +124,12 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "프리미엄 6개월 구독",
           "features": [
-            "모든 언어를 자유롭게 이용할 수 있어요",
-            "다양한 언어를 통합적으로 학습할 수 있습니다",
-            "언어 제한 없이 모든 기능을 사용할 수 있습니다"
+            "모든 언어를 자유롭게 이용",
+            "AI 코치와의 실시간 대화 시나리오",
+            "인터랙티브 쉐도잉/롤플레잉 챌린지",
+            "프리미엄 회원 전용 스터디 그룹",
+            "AI 맞춤 커리큘럼/로드맵 제공",
+            "학습 데이터 다운로드"
           ],
           "notice": "6개월을 한 번에 구독하면 10% 저렴하게 이용할 수 있어요.",
           "priceInfo": {
@@ -134,9 +143,12 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "프리미엄 1년 구독",
           "features": [
-            "모든 언어를 자유롭게 이용할 수 있어요",
-            "다양한 언어를 통합적으로 학습할 수 있습니다",
-            "언어 제한 없이 모든 기능을 사용할 수 있습니다"
+            "모든 언어를 자유롭게 이용",
+            "AI 코치와의 실시간 대화 시나리오",
+            "인터랙티브 쉐도잉/롤플레잉 챌린지",
+            "프리미엄 회원 전용 스터디 그룹",
+            "AI 맞춤 커리큘럼/로드맵 제공",
+            "학습 데이터 다운로드"
           ],
           "notice": "1년을 한 번에 구독하면 20% 저렴하게 이용할 수 있어요.",
           "priceInfo": {
@@ -146,3 +158,77 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
           }
         }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
+INSERT INTO member (
+    email, password, nickname, profile_image_url, created_at, login_platform, platform_id,
+    language, subscription_type, word_goal, video_goal, word_level, expression_level,
+    withdrawal_date, measured_at
+) VALUES
+-- 1번 회원: 구글 로그인, STANDARD 구독
+('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', NOW(), 'GOOGLE', 'google-uid-123',
+ 'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW()),
+
+-- 2번 회원: 카카오 로그인, PREMIUM 구독
+('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', NOW(), 'KAKAO', 'kakao-uid-456',
+ 'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW()),
+
+-- 3번 회원: 네이버 로그인, STANDARD 구독, 탈퇴 처리
+('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', NOW(), 'NAVER', 'naver-uid-789',
+ 'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW());
+
+INSERT INTO payment (member_id,
+                     plan_id,
+                     order_id,
+                     payment_key,
+                     total_amount,
+                     pay_status,
+                     method,
+                     approved_at,
+                     failure_reason,
+                     canceled_reason)
+VALUES (1,
+        6,
+        'test1',
+        '5b4f7b3e-7d6a-4c8a-ae12-3f1d8c9a1b2f', -- 랜덤 UUID (실제로는 새로 생성)
+        10000,
+        'DONE',
+        'CARD', -- 결제 방법 (카드)
+        NOW(), -- 결제 승인 시간
+        NULL, -- 실패 사유 없음
+        NULL -- 취소 사유 없음
+       );
+
+INSERT INTO payment (
+    member_id,
+    plan_id,
+    order_id,
+    payment_key,
+    total_amount,
+    pay_status,
+    method,
+    approved_at,
+    failure_reason,
+    canceled_reason
+) VALUES (
+             1,
+             6,
+             'test2',
+             'a3e5f7c1-9b2d-4f8a-8c6d-0e1f2a3b4c5d', -- 랜덤 UUID (실제로는 새로 생성)
+             5000,
+             'ABORTED',
+             'PHONE', -- 결제 방법 (휴대폰)
+             NOW(),    -- 승인 시간 없음
+             'NOT_FOUND_PAYMENT', -- 결제를 찾을 수 없음 (예시)
+             NULL     -- 취소 사유 없음
+         );
+
+INSERT INTO payment_history (
+    payment_id,
+    status,
+    changed_at,
+    reason_detail
+) VALUES (
+             1,           -- payment_id (위 payment 테이블의 PK)
+             'DONE',      -- status (PayStatus의 DONE)
+             NOW(),       -- changed_at (현재 시간)
+             NULL         -- reason_detail (사유 없음, 필요시 값 입력)
+         );

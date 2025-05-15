@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.dto;
+package com.mallang.mallang_backend.domain.payment.dto.request;
 
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import lombok.*;
@@ -12,21 +12,16 @@ public class PaymentRequest {
     private String orderId;
     private String orderName;
     private int amount;
-    private String successUrl;
-    private String failUrl;
+    private String currency = "KRW";
 
     public static PaymentRequest from(
-            Payment payment,
-            String successUrl,
-            String failUrl
+            Payment payment
     ) {
         PaymentRequest request = new PaymentRequest();
 
         request.setOrderId(payment.getOrderId());
         request.setOrderName(payment.getPlan().getDescription());
         request.setAmount(payment.getTotalAmount());
-        request.setSuccessUrl(successUrl);
-        request.setFailUrl(failUrl);
 
         return request;
     }

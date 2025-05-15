@@ -5,10 +5,11 @@ import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -29,17 +30,19 @@ public class Subscription extends BaseTime {
     private Plan plan; // 구독한 플랜에 대한 정보
 
     @Column(nullable = false)
-    private LocalDate startedAt; // 구독 시작 날짜
+    private LocalDateTime startedAt; // 구독 시작 날짜
 
     @Column(nullable = false)
-    private LocalDate expiredAt; // 구독 만료 날짜
+    private LocalDateTime expiredAt; // 구독 만료 날짜
 
+    @Enumerated(EnumType.STRING)
     private SubscriptionStatus status = SubscriptionStatus.ACTIVE; // 구독 상태
 
+    @Builder
     public Subscription(Member member,
                         Plan plan,
-                        LocalDate startedAt,
-                        LocalDate expiredAt
+                        LocalDateTime startedAt,
+                        LocalDateTime expiredAt
     ) {
         this.member = member;
         this.plan = plan;

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 import static com.mallang.mallang_backend.domain.member.entity.QMember.member;
 
+
 @Repository
 @RequiredArgsConstructor
 public class MemberQueryRepository {
