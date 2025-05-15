@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
-import com.mallang.mallang_backend.domain.member.service.sub.SubscriptionService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
+import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
@@ -62,11 +63,8 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      * @throws ServiceException 결제 정보가 존재하지 않을 경우 예외 발생
      */
     // 반환된 값을 가지고 결제 결과를 업데이트
-    public void processPaymentResult(String orderId,
-                                     PaymentResponse result
-    ) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+    public void processPaymentResult(String orderId, PaymentResponse result) {
+        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
 
         if (result.getStatus().equals("DONE")) {
             handleApprovalSuccess(payment, result); // 결제 성공
@@ -80,23 +78,15 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      * 결제 엔티티를 실패 상태로 업데이트하고, 결제 실패 이벤트를 발행해 로그를 기록합니다.
      *
      * @param payment 결제 엔티티
-     * @param result 결제 승인 응답 정보
+     * @param result  결제 승인 응답 정보
      * @throws ServiceException 결제 승인 실패 시 예외 발생
      */
-    private void handleApprovalFailure(Payment payment,
-                                       PaymentResponse result
-    ) {
+    private void handleApprovalFailure(Payment payment, PaymentResponse result) {
         payment.updateFailInfo( // 결제 실패 상태로 업데이트
-                result.getPaymentKey(),
-                result.getFailure().getCode()
-        );
+                result.getPaymentKey(), result.getFailure().getCode());
         publisher.publishEvent(new PaymentFailedEvent( // 결제 실패 이벤트 발생
-                payment.getId(),
-                result.getFailure().getCode(),
-                result.getFailure().getMessage()
-        ));
-        log.error("[결제승인실패] orderId: {}, paymentKey: {}, status: {}",
-                payment.getOrderId(), result.getPaymentKey(), result.getStatus());
+                payment.getId(), result.getFailure().getCode(), result.getFailure().getMessage()));
+        log.error("[결제승인실패] orderId: {}, paymentKey: {}, status: {}", payment.getOrderId(), result.getPaymentKey(), result.getStatus());
 
         throw new ServiceException(PAYMENT_CONFIRM_FAIL);
     }
@@ -108,30 +98,15 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      * @param payment 결제 엔티티
      * @param result  결제 승인 응답 정보
      */
-    private void handleApprovalSuccess(Payment payment,
-                                       PaymentResponse result
-    ) {
-        payment.updateSuccessInfo(
-                result.getPaymentKey(),
-                createApprovedTime(result),
-                result.getMethod()
-        );
+    private void handleApprovalSuccess(Payment payment, PaymentResponse result) {
+        payment.updateSuccessInfo(result.getPaymentKey(), createApprovedTime(result), result.getMethod());
         String receiptUrl = result.getReceipt().getUrl();
         publisher.publishEvent(new PaymentUpdatedEvent( // 결제 성공 이벤트 발생
-                payment.getId(),
-                DONE,
-                DONE.getDescription()
-        ));
+                payment.getId(), DONE, DONE.getDescription()));
         publisher.publishEvent(new PaymentMailSendEvent( // 메일 발송 이벤트 발생
-                payment.getId(),
-                payment.getMemberId(),
-                receiptUrl)
-        );
+                payment.getId(), payment.getMemberId(), receiptUrl));
         subscriptionService.updateSubscriptionInfo( // 구독 업데이트
-                payment.getMemberId(),
-                payment.getPlan(),
-                createApprovedTime(result)
-        );
+                payment.getMemberId(), payment.getPlan(), createApprovedTime(result));
     }
 
     /**
@@ -140,12 +115,8 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      * @param request 결제 승인 요청 정보
      * @throws ServiceException 유효성 검증 실패 시 예외 발생
      */
-    private void validatePaymentRequest(PaymentApproveRequest request
-    ) {
-        redisService.checkOrderIdAndAmount(
-                request.getOrderId(),
-                request.getAmount()
-        );
+    private void validatePaymentRequest(PaymentApproveRequest request) {
+        redisService.checkOrderIdAndAmount(request.getOrderId(), request.getAmount());
     }
 
     /**
@@ -155,10 +126,89 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      * @return 승인 시각(LocalDateTime)
      * @throws NullPointerException result 또는 승인 시각이 null인 경우
      */
-    private LocalDateTime createApprovedTime(PaymentResponse result
-    ) {
+    private LocalDateTime createApprovedTime(PaymentResponse result) {
         String approvedAtToString = Objects.requireNonNull(result).getApprovedAt();
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(approvedAtToString);
         return offsetDateTime.toLocalDateTime();
     }
+
+    // ========== 자동 결제 메서드 =========
+
+    // 빌링 키를 통해 반환된 값을 가지고 결제 결과 업데이트 및 이벤트를 발행
+    @Override
+    public void processAutoBillingPaymentResult(BillingPaymentResponse response
+    ) {
+        Payment payment = paymentRepository.findByOrderId(response.getOrderId())
+                .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+
+        String paymentKey = response.getPaymentKey();
+
+        if (response.getStatus().equals("DONE")) {
+            handleBillingApprovalSuccess(payment, response); // 결제 성공
+        } else {
+            handleBillingApprovalFailure(payment,
+                    response.getFailure().getCode(),
+                    response.getFailure().getMessage(),
+                    paymentKey); // 결제 승인 실패
+        }
+    }
+
+    private void handleBillingApprovalSuccess(Payment payment,
+                                              BillingPaymentResponse response
+    ) {
+        payment.updateBillingSuccessInfo(
+                createApprovedTime(response.getApprovedAt()),
+                response.getMethod(),
+                response.getPaymentKey()
+        ); // 객체 업데이트 (결제 성공)
+
+        subscriptionService.updateSubscriptionInfo( // 구독 업데이트
+                payment.getMemberId(),
+                payment.getPlan(),
+                createApprovedTime(response.getApprovedAt())
+        );
+        subscriptionService.updateIsAutoRenew(payment.getMemberId());
+
+        publisher.publishEvent(new PaymentUpdatedEvent( // 구독 갱신 성공 이벤트 발생
+                payment.getId(),
+                DONE,
+                DONE.getDescription()
+        ));
+
+        publisher.publishEvent(new PaymentMailSendEvent( // 메일 발송 이벤트 발생
+                payment.getId(),
+                payment.getMemberId(),
+                response.getReceipt().getUrl()
+        ));
+    }
+
+    private void handleBillingApprovalFailure(Payment payment,
+                                              String paymentKey,
+                                              String code,
+                                              String message
+    ) {
+
+        payment.updateFailInfo(
+                paymentKey,
+                message
+        ); // DB 업데이트
+
+        publisher.publishEvent(new PaymentFailedEvent( // 구독 갱신 실패 이벤트 발생
+                payment.getId(),
+                code,
+                message
+        ));
+
+        // 구독 업데이트 -> 실패하면 BASIC 으로 돌아가기
+        subscriptionService.downgradeSubscriptionToBasic(payment.getMemberId());
+
+        throw new ServiceException(BILLING_PAYMENT_FAIL);
+    }
+
+    private LocalDateTime createApprovedTime(String approvedAt) {
+        OffsetDateTime offsetDateTime = OffsetDateTime.parse(approvedAt);
+        return offsetDateTime.toLocalDateTime();
+    }
+
+
 }
