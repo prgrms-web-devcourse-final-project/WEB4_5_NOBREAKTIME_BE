@@ -12,6 +12,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert.rules.yml:/etc/prometheus/alert.rules.yml
     networks:
       - monitoring
 
@@ -26,7 +27,22 @@ services:
       - prometheus
     networks:
       - monitoring
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: monitoring-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    networks:
+      - monitoring
 
 networks:
   monitoring:
     driver: bridge # default
+
+volumes:
+  grafana-data:
