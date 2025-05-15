@@ -94,4 +94,10 @@ public class AppConstants {
      * 주문 ID 생성 용도
      */
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+
+	/**
+	 * Redis Lock TTL (Time To Live)
+	 */
+	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
+	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
 }
