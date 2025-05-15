@@ -8,7 +8,7 @@ VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '�
 
 
 -- BASIC 플랜 (기간 상관없이 동일한 혜택)
-INSERT INTO plan (type, period, amount, description, benefits)
+INSERT INTO plan (type, period, amount, description, benefits, created_at, modified_at)
 VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         '{
           "title": "BASIC 플랜",
@@ -18,7 +18,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('BASIC', 'SIX_MONTHS', 0, '기본 서비스 플랜',
         '{
@@ -29,7 +29,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('BASIC', 'YEAR', 0, '기본 서비스 플랜',
         '{
@@ -40,7 +40,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "영상 재생은 월 300시간까지 이용할 수 있어요"
           ],
           "notice": "기본으로 제공되는 무료 기능입니다. 더 많은 기능을 원하시면 스탠다드 또는 프리미엄 플랜을 이용해 보세요."
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- STANDARD 플랜
        ('STANDARD', 'MONTHLY', 4500, '스탠다드 정기 구독',
@@ -59,7 +59,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 4500,
             "discountRate": 0
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('STANDARD', 'SIX_MONTHS', 24300, '스탠다드 6개월 구독',
         '{
@@ -77,7 +77,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 24300,
             "discountRate": 0.1
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('STANDARD', 'YEAR', 43200, '스탠다드 1년 구독',
         '{
@@ -95,7 +95,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 43200,
             "discountRate": 0.2
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- PREMIUM 플랜
        ('PREMIUM', 'MONTHLY', 8500, '프리미엄 정기 구독',
@@ -112,7 +112,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 8500,
             "discountRate": 0
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('PREMIUM', 'SIX_MONTHS', 45900, '프리미엄 6개월 구독',
         '{
@@ -128,7 +128,7 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 45900,
             "discountRate": 0.1
           }
-        }'),
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
        ('PREMIUM', 'YEAR', 81600, '프리미엄 1년 구독',
         '{
@@ -144,5 +144,5 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
             "discountPrice": 81600,
             "discountRate": 0.2
           }
-        }');
+        }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
