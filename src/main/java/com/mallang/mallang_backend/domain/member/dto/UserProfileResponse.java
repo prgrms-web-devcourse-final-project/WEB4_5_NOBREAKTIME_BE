@@ -5,8 +5,11 @@ import com.mallang.mallang_backend.global.common.Language;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "회원 전체 정보 조회 응답 DTO")
@@ -26,4 +29,7 @@ public class UserProfileResponse {
 
     @Schema(description = "언어 설정 정보", example = "ENGLISH")
     private Language language;
+
+    @Schema(description = "구독 내역")
+    private List<SubscriptionResponse> subscriptions;
 }
