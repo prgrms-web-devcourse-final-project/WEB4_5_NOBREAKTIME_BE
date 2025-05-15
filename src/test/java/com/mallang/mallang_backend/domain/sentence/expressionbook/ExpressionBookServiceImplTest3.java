@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.sentence.expressionbook;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquizresult.repository.ExpressionQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.DeleteExpressionsRequest;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.MoveExpressionsRequest;
@@ -41,6 +42,9 @@ class ExpressionBookServiceImplTest3 {
     @Mock
     private ExpressionQuizResultRepository expressionQuizResultRepository;
 
+    @Mock
+    private MemberRepository memberRepository;
+
     @Test
     @DisplayName("deleteExpressionsFromBook(): 표현 삭제 성공")
     void deleteExpressionsFromBook_shouldDeleteSuccessfully() {
@@ -49,12 +53,14 @@ class ExpressionBookServiceImplTest3 {
         List<Long> expressionIds = List.of(100L, 101L);
 
         Member member = mockMember(memberId);
+        member.updateSubscription(SubscriptionType.STANDARD);
         ExpressionBook book = mockBook(bookId, member);
 
         DeleteExpressionsRequest request = new DeleteExpressionsRequest();
         request.setExpressionBookId(bookId);
         request.setExpressionIds(expressionIds);
 
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
         when(expressionBookRepository.findById(bookId)).thenReturn(Optional.of(book));
 
         expressionBookService.deleteExpressionsFromExpressionBook(request, memberId);
@@ -77,6 +83,7 @@ class ExpressionBookServiceImplTest3 {
         request.setExpressionBookId(1L);
         request.setExpressionIds(List.of(100L));
 
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(mockMember(memberId)));
         when(expressionBookRepository.findById(1L)).thenReturn(Optional.of(book));
 
         assertThrows(ServiceException.class,

@@ -250,6 +250,7 @@ class ExpressionBookServiceImplTest2 {
 	void getByMember_shouldReturnListOfBooks() {
 		Long memberId = 1L;
 		Member member = Member.builder().language(Language.ENGLISH).build();
+		member.updateSubscription(SubscriptionType.STANDARD);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		ExpressionBook book1 = ExpressionBook.builder().name("One").language(Language.ENGLISH).member(member).build();

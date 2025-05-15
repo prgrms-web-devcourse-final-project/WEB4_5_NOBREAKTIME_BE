@@ -15,7 +15,7 @@ public interface ExpressionBookService {
 
     List<ExpressionResponse> getExpressionsByBook(Long memberId);
 
-    void save(ExpressionSaveRequest request, Long expressionBookId);
+    void save(ExpressionSaveRequest request, Long expressionBookId, Long memberId);
 
     void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId);
 

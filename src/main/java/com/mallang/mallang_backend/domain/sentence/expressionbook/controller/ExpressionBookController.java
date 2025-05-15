@@ -178,9 +178,12 @@ public class ExpressionBookController {
     @PostMapping("/{expressionBookId}/expressions")
     public ResponseEntity<RsData<?>> saveExpression(
         @PathVariable("expressionBookId") Long expressionBookId,
-        @RequestBody ExpressionSaveRequest request
+        @RequestBody ExpressionSaveRequest request,
+        @Login CustomUserDetails userDetails
     ) {
-        expressionBookService.save(request, expressionBookId);
+        Long memberId = userDetails.getMemberId();
+
+        expressionBookService.save(request, expressionBookId, memberId);
         return ResponseEntity.ok(new RsData<>(
             "200",
             "표현함에 표현이 저장되었습니다."
