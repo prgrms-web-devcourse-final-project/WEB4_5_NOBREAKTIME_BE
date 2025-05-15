@@ -2,15 +2,22 @@ package com.mallang.mallang_backend.domain.member.service.profile;
 
 
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
+import com.mallang.mallang_backend.domain.member.dto.SubscriptionResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
+import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Clock;
+import java.util.Collections;
+import java.util.List;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
@@ -21,7 +28,7 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 
     private final S3ImageUploader imageUploader;
     private final MemberRepository memberRepository;
-
+    private final SubscriptionRepository subscriptionRepository;
 
     /**
      * 주어진 회원 ID로 사용자 프로필 정보를 조회합니다.
@@ -34,12 +41,36 @@ public class MemberProfileServiceImpl implements MemberProfileService {
     public UserProfileResponse getUserProfile(Long memberId) {
         Member member = findMemberOrThrow(memberId);
 
+        List<Subscription> subscriptions = subscriptionRepository.findByMember(member)
+                .orElse(Collections.emptyList());
+
+        List<SubscriptionResponse> subscriptionResponses = toSubscriptionResponses(subscriptions);
+
         return UserProfileResponse.builder()
                 .nickname(member.getNickname())
                 .email(member.getEmail())
                 .profileImage(member.getProfileImageUrl())
                 .subscriptionType(member.getSubscriptionType())
                 .language(member.getLanguage())
+                .subscriptions(subscriptionResponses)
+                .build();
+    }
+
+    // 구독 리스트를 DTO 리스트로 변환하는 메서드
+    private List<SubscriptionResponse> toSubscriptionResponses(List<Subscription> subscriptions) {
+        return subscriptions.stream()
+                .map(this::toSubscriptionResponse)
+                .toList();
+    }
+
+    // 구독 엔티티를 DTO로 변환하는 메서드
+    private SubscriptionResponse toSubscriptionResponse(Subscription subscription) {
+        return SubscriptionResponse.builder()
+                .amount(subscription.getPlan().getAmount())
+                .planName(subscription.getPlan().getType())
+                .startedAt(subscription.getStartedAt())
+                .expiredAt(subscription.getExpiredAt())
+                .isPossibleToCancel(subscription.isPossibleToCancel(Clock.systemDefaultZone()))
                 .build();
     }
 
