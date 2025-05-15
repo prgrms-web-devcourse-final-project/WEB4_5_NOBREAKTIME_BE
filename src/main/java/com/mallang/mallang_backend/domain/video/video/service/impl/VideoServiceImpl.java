@@ -1,5 +1,24 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
@@ -12,7 +31,6 @@ import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
-import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
@@ -35,23 +53,6 @@ import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
-import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
-
 
 @Slf4j
 @Service
@@ -60,7 +61,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VID
 public class VideoServiceImpl implements VideoService {
 
 	private final VideoRepository videoRepository;
-	private final VideoSearchProperties youtubeSearchProperties;
 	private final YoutubeService youtubeService;
 	private final YoutubeAudioExtractor youtubeAudioExtractor;
 	private final GptService gptService;
@@ -175,24 +175,6 @@ public class VideoServiceImpl implements VideoService {
 		}
 	}
 
-	/**
-	 * 검색 컨텍스트 빌더 (검색 요청에 필요한 모든 파라미터를 한 번에 묶어주는 역할)
-	 */
-	private SearchContext buildSearchContext(String q, String category, String language) {
-		String langKey = Optional.ofNullable(language)
-			.filter(StringUtils::hasText)
-			.map(String::toLowerCase)
-			.orElse("en");
-
-		var defaults = youtubeSearchProperties.getDefaults()
-			.getOrDefault(langKey, youtubeSearchProperties.getDefaults().get("en"));
-		String region = defaults.getRegion();
-		String query = StringUtils.hasText(q) ? q : defaults.getQuery();
-		boolean isDefault = !StringUtils.hasText(q) && !StringUtils.hasText(category);
-
-		return new SearchContext(query, region, langKey, category, isDefault);
-	}
-
 	@Async("analysisExecutor")
 	@Transactional
 	@Override
@@ -300,7 +282,6 @@ public class VideoServiceImpl implements VideoService {
 			start = System.nanoTime();
 			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
