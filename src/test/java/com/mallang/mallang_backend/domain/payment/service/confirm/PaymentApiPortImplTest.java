@@ -59,7 +59,7 @@ public class PaymentApiPortImplTest {
         // WebClient가 Mock 서버를 바라보도록 설정
         WebClient webClient = WebClient.create(mockWebServer.
                 url("/v1/payments/confirm").toString());
-        paymentApiPort = new PaymentApiPortImpl(webClient);
+        paymentApiPort = new PaymentApiPortImpl(webClient, webClient);
 
         //when
         PaymentApproveRequest request = PaymentApproveRequest.builder()
@@ -100,7 +100,7 @@ public class PaymentApiPortImplTest {
         // WebClient가 Mock 서버를 바라보도록 설정
         WebClient webClient = WebClient.create(mockWebServer.
                 url("https://api.tosspayments.com/v1/payments/confirm").toString());
-        paymentApiPort = new PaymentApiPortImpl(webClient);
+        paymentApiPort = new PaymentApiPortImpl(webClient ,webClient);
 
         //when
         PaymentApproveRequest request = PaymentApproveRequest.builder()

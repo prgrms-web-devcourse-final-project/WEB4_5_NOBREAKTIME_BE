@@ -38,7 +38,6 @@ public class Plan {
     @Enumerated(EnumType.STRING)
     private PlanPeriod period; // // MONTHLY, SIX_MONTHS, YEAR
 
-    @Column(nullable = false)
     private String description;
 
     @Column(columnDefinition = "TEXT")

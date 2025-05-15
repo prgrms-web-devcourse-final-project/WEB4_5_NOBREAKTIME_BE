@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.payment.service.confirm;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
+import com.mallang.mallang_backend.domain.payment.dto.approve.Receipt;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class PaymentConfirmServiceImplUnitTest {
         String approvedAt = "2025-05-13T18:59:04+09:00";
         int amount = 43200;
         String method = "간편결제";
-        PaymentResponse.Receipt receipt = new PaymentResponse.Receipt("http://test.com");
+        Receipt receipt = new Receipt("http://test.com");
 
         PaymentApproveRequest request = PaymentApproveRequest.builder()
                 .idempotencyKey(paymentKey)

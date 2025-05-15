@@ -53,8 +53,8 @@ public class PaymentEventListener {
         PayStatus lastStatus = historyQueryRepository.findByPaymentLastStatus(payment.getId());
         String beforeStatus = (lastStatus != null) ? lastStatus.name() : "NONE";
 
-        saveHistory(payment, event.getStatus(), event.getMessage()); // 실패 히스토리
-        log.error("[PaymentLog-Update] 결제 내역 업데이트 orderId: {} | before -> after: {} -> {}, reason: {}",
+        saveHistory(payment, event.getStatus(), event.getMessage());
+        log.info("[PaymentLog-Update] 결제 내역 업데이트 orderId: {} | before -> after: {} -> {}, reason: {}",
                 payment.getId(), beforeStatus, event.getStatus(), event.getMessage());
     }
 
