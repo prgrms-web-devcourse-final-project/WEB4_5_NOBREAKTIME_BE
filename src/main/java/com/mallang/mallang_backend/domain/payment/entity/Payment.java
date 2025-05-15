@@ -37,6 +37,8 @@ public class Payment {
     @Column(unique = true)
     private String billingKey; // 자동 결제 시에 이용하는 값
 
+    private String customerKey; // 자동 결제 시에 이용하는 값
+
     @Column(nullable = false)
     private int totalAmount; // 총 결제 금액
 
@@ -116,5 +118,22 @@ public class Payment {
 
     public void updatePayStatus(PayStatus status) {
         this.payStatus = status;
+    }
+
+    // 자동 결제 카드 승인 완료 후
+    public void updateBillingKeyAndCustomerKey(String billingKey, String customerKey) {
+        this.billingKey = billingKey;
+        this.customerKey = customerKey;
+    }
+
+    // 자동 결제가 성공했을 때
+    public void updateBillingSuccessInfo(LocalDateTime approvedAt,
+                                         String method,
+                                         String paymentKey
+    ) {
+        this.approvedAt = approvedAt;
+        this.method = method;
+        this.paymentKey = paymentKey;
+        this.payStatus = PayStatus.DONE;
     }
 }

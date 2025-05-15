@@ -1,7 +1,12 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
+import com.mallang.mallang_backend.domain.payment.dto.approve.BillingApproveRequest;
+import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
+import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.IssueBillingKeyRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.IssueBillingKeyResponse;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+
+import java.util.Objects;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.API_ERROR;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_CONFIRM_FAIL;
@@ -24,7 +31,8 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_CON
 @RequiredArgsConstructor
 public class PaymentApiPortImpl implements PaymentApiPort {
 
-    private final WebClient tossPaymentsWebClient;
+    private final WebClient tossPaymentsSingleWebClient;
+    private final WebClient tossPaymentsBillingWebClient;
 
     /**
      * 토스 페이먼츠 결제 승인 API 호출
@@ -91,7 +99,7 @@ public class PaymentApiPortImpl implements PaymentApiPort {
         // 요청 본문에는 결제 승인 요청 객체(request)를 전달합니다.
         // 응답은 PaymentResponse 타입으로 역직렬화하여 동기 방식으로(block) 반환합니다.
 
-        return tossPaymentsWebClient.post()
+        return tossPaymentsSingleWebClient.post()
                 .uri("/v1/payments/confirm")
                 .header("Idempotency-Key", idempotencyKey) // 중복 요청 방지
                 .bodyValue(request)
@@ -99,4 +107,67 @@ public class PaymentApiPortImpl implements PaymentApiPort {
                 .bodyToMono(PaymentResponse.class)
                 .block();
     }
+
+    // ========= 자동 결제 요청 로직 =========
+
+    @Override
+    public String callTossPaymentBillingAPI(BillingPaymentRequest approveRequest
+    ) {
+        log.debug("[빌링 키 발급 프로세스 시작] orderId: {}", approveRequest.getOrderId());
+
+        String customerKey = approveRequest.getCustomerKey();
+        String authKey = approveRequest.getAuthKey();
+
+        IssueBillingKeyRequest billingRequest = new IssueBillingKeyRequest(customerKey, authKey);
+
+        try {
+            IssueBillingKeyResponse billingResponse = tossPaymentsBillingWebClient.post()
+                    .uri("/v1/billing/authorizations/issue")
+                    .header("Content-Type", "application/json")
+                    .bodyValue(billingRequest)
+                    .retrieve()
+                    .bodyToMono(IssueBillingKeyResponse.class)
+                    .block();
+
+            log.debug("[빌링 키 Response] : {}", billingResponse);
+            log.info("[빌링 키 발급 성공] orderId: {}, billingKey: {}",
+                    approveRequest.getOrderId(), billingResponse.getBillingKey());
+
+            return Objects.requireNonNull(billingResponse).getBillingKey();
+        } catch (WebClientResponseException e) {
+            log.error("[빌링 키 발급 실패] orderId: {} | Status: {} | Error: {}",
+                    approveRequest.getOrderId(), e.getStatusCode(), e.getResponseBodyAsString());
+
+            throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
+        } catch (Exception e) {
+            log.error("[시스템 에러] orderId: {} | Error: {}",
+                    approveRequest.getOrderId(), e.getMessage(), e);
+
+            throw new ServiceException(API_ERROR, e);
+        }
+    }
+
+    // 빌링 키를 이용해서 결제 요청을 전송한 후 응답 객체를 반환
+    @Override
+    public BillingPaymentResponse payWithBillingKey(String billingKey,
+                                                    BillingPaymentRequest request
+    ) {
+        BillingApproveRequest payRequest = new BillingApproveRequest(
+                request.getCustomerKey(),
+                request.getAmount(),
+                request.getOrderId(),
+                request.getOrderName()
+        );
+
+        return tossPaymentsBillingWebClient.post()
+                .uri("/v1/billing/" + billingKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(payRequest)
+                .retrieve()
+                .bodyToMono(BillingPaymentResponse.class)
+                .block();
+    }
+
+
+
 }
