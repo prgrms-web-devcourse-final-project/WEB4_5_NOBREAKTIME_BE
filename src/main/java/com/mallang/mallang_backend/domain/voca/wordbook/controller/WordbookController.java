@@ -1,23 +1,40 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.controller;
 
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookRenameRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Wordbook", description = "단어장 관련 API")
 @RestController
@@ -40,7 +57,7 @@ public class WordbookController {
 	@PostMapping("/{wordbookId}/words")
 	public ResponseEntity<RsData<Void>> addWords(
 		@PathVariable Long wordbookId,
-		@RequestBody AddWordToWordbookListRequest request,
+		@RequestBody @Valid AddWordToWordbookListRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -66,7 +83,7 @@ public class WordbookController {
 	@PostMapping("/{wordbookId}/words/custom")
 	public ResponseEntity<RsData<Void>> addWordCustom(
 		@PathVariable Long wordbookId,
-		@RequestBody AddWordRequest request,
+		@RequestBody @Valid AddWordRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -91,7 +108,7 @@ public class WordbookController {
 	@PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_IS_NONE, WORDBOOK_CREATE_DEFAULT_FORBIDDEN})
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
-		@RequestBody WordbookCreateRequest request,
+		@RequestBody @Valid WordbookCreateRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -118,7 +135,7 @@ public class WordbookController {
 	@PatchMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> renameWordbook(
 		@PathVariable Long wordbookId,
-		@RequestBody WordbookRenameRequest request,
+		@RequestBody @Valid WordbookRenameRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -166,7 +183,7 @@ public class WordbookController {
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PatchMapping("/words/move")
 	public ResponseEntity<RsData<Void>> moveWords(
-		@RequestBody WordMoveRequest request,
+		@RequestBody @Valid WordMoveRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -190,7 +207,7 @@ public class WordbookController {
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PostMapping("/words/delete")
 	public ResponseEntity<RsData<Void>> deleteWords(
-		@RequestBody WordDeleteRequest request,
+		@RequestBody @Valid WordDeleteRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -248,31 +265,6 @@ public class WordbookController {
 			"200",
 			"단어장 목록 조회에 성공했습니다.",
 			wordbooks
-		));
-	}
-
-	/**
-	 * 단어 검색
-	 *
-	 * @param keyword 검색어
-	 * @return 단어 목록
-	 */
-	@Operation(summary = "단어 검색", description = "내 단어장에서 단어를 검색합니다.")
-	@ApiResponse(responseCode = "200", description = "단어 검색 결과입니다.")
-	@PossibleErrors({MEMBER_NOT_FOUND})
-	@GetMapping("/search")
-	public ResponseEntity<RsData<List<WordResponse>>> searchWords(
-		@RequestParam String keyword,
-		@Parameter(hidden = true)
-		@Login CustomUserDetails userDetail
-	) {
-		Long memberId = userDetail.getMemberId();
-
-		List<WordResponse> result = wordbookService.searchWordFromWordbook(memberId, keyword);
-		return ResponseEntity.ok(new RsData<>(
-			"200",
-			"단어 검색 결과입니다.",
-			result
 		));
 	}
 

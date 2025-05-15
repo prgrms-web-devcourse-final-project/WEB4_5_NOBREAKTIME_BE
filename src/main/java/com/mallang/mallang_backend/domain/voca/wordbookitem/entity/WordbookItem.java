@@ -1,23 +1,13 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
-import java.time.LocalDateTime;
-
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -53,7 +43,7 @@ public class WordbookItem {
     private LocalDateTime lastStudiedAt = createdAt; // 기본 값, 이후에 추가로 공부하면 변경
 
     @Column(nullable = false)
-    private boolean isLearned = false;
+    private boolean learned = false;
 
     @Builder
     public WordbookItem(
@@ -75,7 +65,7 @@ public class WordbookItem {
     }
 
     public void updateLearned(boolean isLearned) {
-        this.isLearned = isLearned;
+        this.learned = isLearned;
     }
 
     public void updateLastStudiedAt(LocalDateTime lastStudiedAt) {

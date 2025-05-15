@@ -24,7 +24,7 @@ public class ExpressionBook {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ExpressionBook_id")
+    @Column(name = "expression_book_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

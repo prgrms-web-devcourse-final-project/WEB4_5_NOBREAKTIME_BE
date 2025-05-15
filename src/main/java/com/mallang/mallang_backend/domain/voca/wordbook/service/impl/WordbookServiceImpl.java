@@ -20,6 +20,7 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
+import com.mallang.mallang_backend.global.validation.WordValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,9 +58,19 @@ public class WordbookServiceImpl implements WordbookService {
 		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		// 단어가 사용자의 설정 언어와 일치하는지 검사
+		boolean hasMismatch = request.getWords().stream()
+			.map(w -> w.getWord())
+			.anyMatch(word -> !WordValidator.isLanguageMatch(word, member.getLanguage()));
+		if (hasMismatch) {
+			throw new ServiceException(LANGUAGE_MISMATCH);
+		}
+
 		for (AddWordToWordbookRequest dto : request.getWords()) {
 			// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-			// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
 			saveWordIfNotExist(dto.getWord());
 
 			// 단어가 단어장에 저장되어 있지 않을 때만 저장
@@ -86,10 +97,16 @@ public class WordbookServiceImpl implements WordbookService {
 		Wordbook wordbook = wordbookRepository.findByIdAndMemberId(wordbookId, memberId)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
 		String word = request.getWord();
 
+		if (!WordValidator.isLanguageMatch(word, member.getLanguage())) {
+			throw new ServiceException(LANGUAGE_MISMATCH);
+		}
+
 		// 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-		// TODO: 핵심 단어가 처리 중일 때 Redis Key 기반 락으로 건너뛰는 처리 필요
 		saveWordIfNotExist(word);
 
 		// 단어가 단어장에 저장되어 있지 않을 때만 저장
@@ -277,17 +294,10 @@ public class WordbookServiceImpl implements WordbookService {
 			.map(w -> new WordbookResponse(
 				w.getId(),
 				w.getName(),
-				w.getLanguage()
+				w.getLanguage(),
+				wordbookItemRepository.countByWordbook(w),
+				wordbookItemRepository.countByWordbookAndLearnedTrue(w)
 			)).toList();
-	}
-
-	@Override
-	public List<WordResponse> searchWordFromWordbook(Long memberId, String keyword) {
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-		List<WordbookItem> items = wordbookItemRepository.findByWordbook_MemberAndWordContaining(member, keyword);
-
-		return convertToWordResponses(items);
 	}
 
 	@Override

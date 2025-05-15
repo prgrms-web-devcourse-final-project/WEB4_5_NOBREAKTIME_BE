@@ -49,6 +49,7 @@ public enum ErrorCode {
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_NOT_FOUND("404-1", "word.not.found", HttpStatus.NOT_FOUND),
     SAVED_WORD_CONCURRENCY_TIME_OUT("500-4", "saved.word.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    LANGUAGE_MISMATCH("400-1", "language.mismatch", HttpStatus.BAD_REQUEST),
     INVALID_WORD("500-5", "invalid.word", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ExpressionBook Errors

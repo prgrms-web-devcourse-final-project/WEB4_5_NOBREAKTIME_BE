@@ -1,30 +1,24 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.controller;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordbookQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "WordQuiz", description = "단어 퀴즈 관련 API")
 @RestController
@@ -45,7 +39,7 @@ public class WordQuizController {
 	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 문제를 조회했습니다.")
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_IS_EMPTY})
 	@GetMapping("/{wordbookId}/quiz")
-	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
+	public ResponseEntity<RsData<WordbookQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
@@ -53,7 +47,7 @@ public class WordQuizController {
 		Long memberId = userDetail.getMemberId();
 		Member member = memberService.getMemberById(memberId);
 
-		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
+		WordbookQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",

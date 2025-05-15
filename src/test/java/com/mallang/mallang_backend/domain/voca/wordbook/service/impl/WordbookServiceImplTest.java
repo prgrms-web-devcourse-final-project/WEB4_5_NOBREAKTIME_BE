@@ -122,6 +122,7 @@ class WordbookServiceImplTest {
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
 		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
 			Optional.empty());
+		given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
 
 		wordbookService.addWords(savedWordbook.getId(), request, savedMember.getId());
 
@@ -141,6 +142,7 @@ class WordbookServiceImplTest {
 		given(wordRepository.findByWord("apple")).willReturn(List.of(savedWord));
 		given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple")).willReturn(
 			Optional.empty());
+		given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
 
 		wordbookService.addWordCustom(savedWordbook.getId(), dto, savedMember.getId());
 

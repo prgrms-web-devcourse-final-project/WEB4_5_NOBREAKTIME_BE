@@ -41,30 +41,30 @@ public class ExpressionBookController {
     @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
     @PossibleErrors({MEMBER_NOT_FOUND, NO_EXPRESSIONBOOK_CREATE_PERMISSION, EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN, DUPLICATE_EXPRESSIONBOOK_NAME})
     @PostMapping
-    public ResponseEntity<RsData<ExpressionBookResponse>> create(
+    public ResponseEntity<RsData<Long>> create(
         @RequestBody @Valid ExpressionBookRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
-        ExpressionBookResponse response = expressionBookService.create(request, memberId);
+        Long expressionBookId = expressionBookService.create(request, memberId);
 
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(new RsData<>(
                 "200",
                 "추가 표현함이 생성되었습니다.",
-                response
+                expressionBookId
             ));
     }
 
     /**
-     * 추가 표현함 전체 조회
+     * 회원의 표현함 목록 조회
      *
-     * @param userDetails 로그인한 사용자 정보
+     * @param userDetails 로그인한 회원 정보
      * @return 표현함 목록을 담은 응답 객체
      */
-    @Operation(summary = "표현함 전체 조회", description = "로그인한 사용자의 모든 추가 표현함을 조회합니다.")
+    @Operation(summary = "표현함 목록 조회", description = "로그인한 회원의 표현함 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 목록 조회에 성공했습니다.")
     @PossibleErrors({MEMBER_NOT_FOUND})
     @GetMapping

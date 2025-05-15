@@ -1,37 +1,9 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.service.impl;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
-import static java.time.temporal.ChronoUnit.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.eq;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordbookQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizResult;
@@ -47,6 +19,36 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.NO_WORDBOOK_EXIST_OR_FORBIDDEN;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_IS_EMPTY;
+import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.eq;
 
 @ExtendWith(MockitoExtension.class)
 public class WordQuizServiceImplTest {
@@ -150,7 +152,7 @@ public class WordQuizServiceImplTest {
                 return quiz;
             });
 
-            WordQuizResponse response = wordQuizService.generateWordbookQuiz(wordbookId, savedMember);
+            WordbookQuizResponse response = wordQuizService.generateWordbookQuiz(wordbookId, savedMember);
 
             assertThat(response.getQuizId()).isEqualTo(999L);
             assertThat(response.getQuizItems()).hasSize(2);
@@ -224,7 +226,7 @@ public class WordQuizServiceImplTest {
     }
 
     @Nested
-    @DisplayName("단어장 통합 퀴즈 생성")
+    @DisplayName("통합 퀴즈 생성")
     class WordTotalQuiz {
         @Test
         @DisplayName("실패 - 단어 수 부족 시 예외가 발생해야 한다")
