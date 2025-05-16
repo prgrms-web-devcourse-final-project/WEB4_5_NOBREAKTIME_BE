@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -188,8 +189,8 @@ class VideoServiceImplTest {
 			.setSnippet(snippet);
 
 		// youtubeService Mock 설정
-		when(youtubeService.fetchVideosByIds(List.of(videoId)))
-			.thenReturn(List.of(video));
+		when(youtubeService.fetchVideosByIdsAsync(List.of(videoId)))
+			.thenReturn(CompletableFuture.completedFuture(List.of(video)));
 
 		when(youtubeAudioExtractor.extractAudio(anyString()))
 			.thenReturn(audioFile);
