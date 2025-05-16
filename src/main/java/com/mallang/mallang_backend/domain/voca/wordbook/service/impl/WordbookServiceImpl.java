@@ -341,6 +341,8 @@ public class WordbookServiceImpl implements WordbookService {
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
+        validateWordbookIdsExist(wordbookIds);
+
         List<WordbookItem> items = findWordbookItems(wordbookIds, member);
 
         return convertToWordResponses(items);
@@ -377,6 +379,27 @@ public class WordbookServiceImpl implements WordbookService {
         }
 
         return wordbookItemRepository.findAllByWordbookIdInOrderByCreatedAtDesc(wordbookIds);
+    }
+
+    private void validateWordbookIdsExist(List<Long> requestedIds) {
+        // 단어장 ID가 비어있거나 null인 경우 기본 단어장 조회
+        if (requestedIds == null || requestedIds.isEmpty()) {
+            return; // 기본 단어장 케이스는 통과
+        }
+
+        // 실제 존재하는 ID 조회
+        Set<Long> existingIdSet = wordbookRepository.findAllById(requestedIds).stream()
+                .map(Wordbook::getId)
+                .collect(Collectors.toSet());
+
+        // 존재하지 않는 ID 추출
+        List<Long> invalidIds = requestedIds.stream()
+                .filter(id -> !existingIdSet.contains(id))
+                .toList();
+
+        if (!invalidIds.isEmpty()) {
+            throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
+        }
     }
 
     private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {
