@@ -63,7 +63,8 @@ public class VideoCacheClient {
 
 			List<VideoResponse> list = ids.isEmpty()
 				? List.of()
-				: youtubeService.fetchVideosByIds(ids).stream()
+				: youtubeService.fetchVideosByIdsAsync(ids)
+				.join().stream()
 				.filter(VideoUtils::isCreativeCommons)
 				.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
 				.filter(v -> VideoUtils.isDurationLessThanOrEqualTo20Minutes(v))

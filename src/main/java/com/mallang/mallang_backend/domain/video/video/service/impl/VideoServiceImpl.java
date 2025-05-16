@@ -16,7 +16,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.google.api.services.youtube.model.Video;
@@ -38,7 +37,6 @@ import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
 import com.mallang.mallang_backend.domain.video.video.event.VideoAnalyzedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.global.common.Language;
@@ -51,6 +49,7 @@ import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -131,7 +130,9 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	private VideoDetail fetchDetail(String videoId) {
-		List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
+		List<Video> ytVideos =  youtubeService
+			.fetchVideosByIdsAsync(List.of(videoId))
+			.join();
 		var ytVideo = ytVideos.stream()
 			.findFirst()
 			.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
