@@ -87,8 +87,9 @@ public interface WordbookService {
 	 * 단어장 페이지에 접속했을 때, 선택한 단어장의 단어들을 조회합니다.
 	 * <BR>
 	 * 선택한 단어장이 없으면 "기본" 단어장의 단어를 조회합니다.
-	 * @param memberId 로그인한 회원 ID
-	 * @return 단어장 아이템의 단어 리스트
+	 * @param wordbookIds 단어장 ID 리스트
+	 * @param userDetail 로그인한 회원
+	 * @return 단어 리스트
 	 */
-	List<WordResponse> getWordbookItems(Long memberId);
+	List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId);
 }

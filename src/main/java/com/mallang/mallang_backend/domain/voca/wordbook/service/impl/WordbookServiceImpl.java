@@ -335,27 +335,71 @@ public class WordbookServiceImpl implements WordbookService {
                 )).toList();
     }
 
-    @Override
-    public List<WordResponse> getWordbookItems(Long memberId) {
-        // 사용자 조회
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+	@Override
+	public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
+		// 사용자 인증
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        // 사용자의 모든 단어장 조회
-        List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
-        if (wordbooks.isEmpty()) {
-            return Collections.emptyList();
-        }
+        validateWordbookIdsExist(wordbookIds);
 
-        // 모든 wordbookId 추출
-        List<Long> wordbookIds = wordbooks.stream()
-                .map(Wordbook::getId)
-                .toList();
-
-        // 모든 WordbookItem 조회
-        List<WordbookItem> items = wordbookItemRepository.findAllByWordbookIdIn(wordbookIds);
+        List<WordbookItem> items = findWordbookItems(wordbookIds, member);
 
         return convertToWordResponses(items);
+	}
+
+    private List<WordbookItem> findWordbookItems(List<Long> wordbookIds, Member member) {
+
+        // 기본 단어장 조회 - 단어장 Id가 비어있거나 null인 경우
+        if (wordbookIds == null || wordbookIds.isEmpty()) {
+            Wordbook wordbook = wordbookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_WORDBOOK_NAME, member.getLanguage())
+                    .orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+            return wordbookItemRepository.findAllByWordbookOrderByCreatedAtDesc(wordbook);
+        }
+
+        // 단일 단어장 조회 - 단어장 Id가 1개인 경우
+        if (wordbookIds.size() == 1) {
+            Wordbook wordbook = wordbookRepository.findById(wordbookIds.get(0))
+                    .orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+            if(!wordbook.getMember().getId().equals(member.getId())) {
+                throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
+            }
+
+            return wordbookItemRepository.findAllByWordbookOrderByCreatedAtDesc(wordbook);
+        }
+
+        // 여러 단어장 조회 - 단어장 Id가 2개 이상인 경우
+        List<Wordbook> wordbooks = wordbookRepository.findAllById(wordbookIds);
+
+        // 단어장 소유자 확인
+        if (wordbooks.stream().anyMatch(wb -> !wb.getMember().getId().equals(member.getId()))) {
+            throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
+        }
+
+        return wordbookItemRepository.findAllByWordbookIdInOrderByCreatedAtDesc(wordbookIds);
+    }
+
+    private void validateWordbookIdsExist(List<Long> requestedIds) {
+        // 단어장 ID가 비어있거나 null인 경우 기본 단어장 조회
+        if (requestedIds == null || requestedIds.isEmpty()) {
+            return; // 기본 단어장 케이스는 통과
+        }
+
+        // 실제 존재하는 ID 조회
+        Set<Long> existingIdSet = wordbookRepository.findAllById(requestedIds).stream()
+                .map(Wordbook::getId)
+                .collect(Collectors.toSet());
+
+        // 존재하지 않는 ID 추출
+        List<Long> invalidIds = requestedIds.stream()
+                .filter(id -> !existingIdSet.contains(id))
+                .toList();
+
+        if (!invalidIds.isEmpty()) {
+            throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
+        }
     }
 
     private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {

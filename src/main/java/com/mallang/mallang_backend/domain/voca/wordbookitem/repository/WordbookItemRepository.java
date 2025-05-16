@@ -20,4 +20,8 @@ public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long
     List<WordbookItem> findAllByWordbookIdIn(List<Long> wordbookIds);
 	int countByWordbook(Wordbook wordbook);
 	int countByWordbookAndLearnedTrue(Wordbook wordbook);
+
+	List<WordbookItem> findAllByWordbookOrderByCreatedAtDesc(Wordbook wordbook);
+
+	List<WordbookItem> findAllByWordbookIdInOrderByCreatedAtDesc(List<Long> wordbookIds);
 }
