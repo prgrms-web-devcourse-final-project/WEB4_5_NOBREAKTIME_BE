@@ -40,4 +40,8 @@ public interface ExpressionBookItemRepository extends JpaRepository<ExpressionBo
     int countByIdExpressionBookId(Long id);
 
     int countByIdExpressionBookIdAndLearnedTrue(Long expressionBookId);
+
+    List<ExpressionBookItem> findAllById_ExpressionBookIdOrderByCreatedAtDesc(Long id);
+
+    List<ExpressionBookItem> findAllById_ExpressionBookIdInOrderByCreatedAtDesc(List<Long> expressionBookIds);
 }
