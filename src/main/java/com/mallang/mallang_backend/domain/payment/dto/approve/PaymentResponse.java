@@ -29,29 +29,11 @@ public class PaymentResponse {
     private String method;
     private Receipt receipt;
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Receipt {
-        private String url;
-    }
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class EasyPay {
         private String provider;
-    }
-
-    @Getter
-    @Setter
-    @ToString
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Failure {
-        private String code;
-        private String message;
     }
 }

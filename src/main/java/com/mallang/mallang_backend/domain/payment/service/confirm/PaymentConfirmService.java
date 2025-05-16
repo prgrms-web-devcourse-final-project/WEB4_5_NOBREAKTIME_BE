@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
+import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 
@@ -9,4 +10,8 @@ public interface PaymentConfirmService {
     // 결제 응답을 DB에 저장
     void processPaymentResult(String orderId,
                               PaymentResponse result);
+
+    // 반환된 값을 가지고 결제 결과 업데이트 및 이벤트를 발행
+    void processAutoBillingPaymentResult(BillingPaymentResponse response);
 }
+

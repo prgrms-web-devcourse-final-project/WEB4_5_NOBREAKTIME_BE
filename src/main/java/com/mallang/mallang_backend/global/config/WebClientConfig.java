@@ -24,9 +24,20 @@ public class WebClientConfig {
     }
 
     @Bean
-    public WebClient tossPaymentsWebClient() {
+    public WebClient tossPaymentsSingleWebClient() {
         String encodedKey = Base64.getEncoder()
                 .encodeToString((paymentWidgetKey + ":").getBytes());
+
+        return WebClient.builder()
+                .baseUrl("https://api.tosspayments.com")
+                .defaultHeader("Authorization", "Basic " + encodedKey)
+                .build();
+    }
+
+    @Bean
+    public WebClient tossPaymentsBillingWebClient() {
+        String encodedKey = Base64.getEncoder()
+                .encodeToString((paymentApiSecretKey + ":").getBytes());
 
         return WebClient.builder()
                 .baseUrl("https://api.tosspayments.com")

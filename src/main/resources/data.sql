@@ -232,3 +232,9 @@ INSERT INTO payment_history (
              NOW(),       -- changed_at (현재 시간)
              NULL         -- reason_detail (사유 없음, 필요시 값 입력)
          );
+
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-01-01 00:00:00', '2025-01-31 00:00:00', 'EXPIRED', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-01-31 00:00:00', '2025-03-02 00:00:00', 'EXPIRED', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-03-02 00:00:00', '2025-04-01 00:00:00', 'EXPIRED', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-04-01 00:00:00', '2025-05-01 00:00:00', 'EXPIRED', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-05-01 00:00:00', '2025-05-31 00:00:00', 'ACTIVE', true);

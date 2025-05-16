@@ -81,14 +81,14 @@ public class MemberController {
             ))
     @PossibleErrors(MEMBER_NOT_FOUND)
     @GetMapping("/me")
-    public ResponseEntity<RsData<?>> getMyProfile(
+    public ResponseEntity<RsData<UserProfileResponse>> getMyProfile(
             @Parameter(hidden = true)
             @Login CustomUserDetails userDetails) {
 
         Long memberId = userDetails.getMemberId();
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
 
-        RsData<?> response = new RsData<>(
+        RsData<UserProfileResponse> response = new RsData<>(
                 "200",
                 "내 정보 확인 성공",
                 userProfile);
