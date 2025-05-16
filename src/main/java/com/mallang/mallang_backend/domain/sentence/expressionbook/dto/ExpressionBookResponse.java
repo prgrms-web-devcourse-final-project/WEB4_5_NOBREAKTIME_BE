@@ -12,18 +12,20 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpressionBookResponse {
-    private Long id;
+    private Long expressionBookId;
     private String name;
     private Language language;
-    private Long memberId;
+    private int expressionCount;
+    private int learnedExpressionCount;
 
     // 표현함 등록 응답을 위한 DTO 생성자
-    public static ExpressionBookResponse from(ExpressionBook book) {
+    public static ExpressionBookResponse from(ExpressionBook book, int expressionCount, int learnedExpressionCount) {
         return new ExpressionBookResponse(
                 book.getId(),
                 book.getName(),
                 book.getLanguage(),
-                book.getMember().getId()
+                expressionCount,
+                learnedExpressionCount
         );
     }
 }

@@ -1,14 +1,10 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Embeddable
 @Getter
@@ -16,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ExpressionBookItemId implements Serializable {
-
     @Column(name = "expression_id")
     private Long expressionId;
 

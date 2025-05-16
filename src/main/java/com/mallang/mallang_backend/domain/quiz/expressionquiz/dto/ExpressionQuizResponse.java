@@ -9,5 +9,6 @@ import lombok.Setter;
 @Setter
 public class ExpressionQuizResponse {
 	private Long quizId;
+	private String expressionBookName;
 	List<ExpressionQuizItem> quizItems;
 }

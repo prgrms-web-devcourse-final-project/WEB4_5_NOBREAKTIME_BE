@@ -10,7 +10,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class WordbookResponse {
-	private Long id;
+	private Long wordbookId;
 	private String name;
 	private Language language;
+	private int wordCount;
+	private int learnedWordCount;
 }

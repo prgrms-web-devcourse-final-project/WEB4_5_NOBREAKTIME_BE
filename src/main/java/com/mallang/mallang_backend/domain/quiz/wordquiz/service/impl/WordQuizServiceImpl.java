@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItem;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordbookQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
@@ -47,7 +48,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	@Transactional
 	@Override
-	public WordQuizResponse generateWordbookQuiz(Long wordbookId, Member member) {
+	public WordbookQuizResponse generateWordbookQuiz(Long wordbookId, Member member) {
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
@@ -72,8 +73,9 @@ public class WordQuizServiceImpl implements WordQuizService {
 			.build();
 
 		Long quizId = wordQuizRepository.save(wordQuiz).getId();
-		WordQuizResponse response = new WordQuizResponse();
+		WordbookQuizResponse response = new WordbookQuizResponse();
 		response.setQuizId(quizId);
+		response.setWordbookName(wordbook.getName());
 		response.setQuizItems(quizzes);
 
 		return response;

@@ -1,13 +1,19 @@
 package com.mallang.mallang_backend.global.init;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.*;
-
+import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
+import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,19 +21,10 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
-import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
-import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
-import com.mallang.mallang_backend.global.common.Language;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import javax.crypto.SecretKey;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.*;
 
 @Slf4j
 @Component
