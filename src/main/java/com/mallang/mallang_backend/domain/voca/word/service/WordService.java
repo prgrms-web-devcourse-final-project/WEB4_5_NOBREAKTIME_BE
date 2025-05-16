@@ -19,5 +19,5 @@ public interface WordService {
      * @param word 검색할 단어
      * @return WordSavedResponse
      */
-    WordSearchResponse searchWord(String word);
+    WordSearchResponse searchWord(String word, Long memberId);
 }

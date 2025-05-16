@@ -87,13 +87,11 @@ class ExpressionBookServiceImplTest2 {
 		given(expressionBookRepository.save(any())).willReturn(saved);
 
 		// when
-		ExpressionBookResponse response = expressionBookService.create(request, memberId);
+		Long response = expressionBookService.create(request, memberId);
 
 		// then
 		assertNotNull(response);
-		assertEquals("My Book", response.getName());
-		assertEquals(Language.ENGLISH, response.getLanguage());
-		assertEquals(memberId, response.getMemberId());
+		assertEquals(response, saved.getId());
 	}
 
 	@Test
@@ -112,7 +110,7 @@ class ExpressionBookServiceImplTest2 {
 
 	@Test
 	@DisplayName("create()는 BASIC 회원이 생성 시 예외를 던진다")
-	void testCreateExpressionBook_failsForBasicUser() throws Exception {
+	void testCreateExpressionBook_failsForBasicUser() {
 		// given
 		Long memberId = 1L;
 
@@ -252,6 +250,7 @@ class ExpressionBookServiceImplTest2 {
 	void getByMember_shouldReturnListOfBooks() {
 		Long memberId = 1L;
 		Member member = Member.builder().language(Language.ENGLISH).build();
+		member.updateSubscription(SubscriptionType.STANDARD);
 		ReflectionTestUtils.setField(member, "id", memberId);
 
 		ExpressionBook book1 = ExpressionBook.builder().name("One").language(Language.ENGLISH).member(member).build();
@@ -545,5 +544,4 @@ class ExpressionBookServiceImplTest2 {
 		assertThat(result.get(0).getExpressionId()).isEqualTo(2L); // 최신 createdAt 먼저
 		assertThat(result.get(1).getExpressionId()).isEqualTo(1L);
 	}
-
 }

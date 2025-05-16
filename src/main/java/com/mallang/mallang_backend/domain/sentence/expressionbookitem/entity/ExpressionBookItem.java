@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,7 +20,10 @@ public class ExpressionBookItem extends BaseTime {
     private ExpressionBookItemId id;
 
     @Column(nullable = false)
-    private Boolean isLearned = false;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    private boolean learned = false;
 
     @Builder
     public ExpressionBookItem(
@@ -29,6 +34,6 @@ public class ExpressionBookItem extends BaseTime {
     }
 
     public void updateLearned(boolean isLearned) {
-        this.isLearned = isLearned;
+        this.learned = isLearned;
     }
 }

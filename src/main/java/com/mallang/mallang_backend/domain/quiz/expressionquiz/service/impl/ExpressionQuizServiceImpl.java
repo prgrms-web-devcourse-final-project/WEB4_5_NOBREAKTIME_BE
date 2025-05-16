@@ -65,6 +65,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		Long quizId = expressionQuizRepository.save(wordQuiz).getId();
 		ExpressionQuizResponse response = new ExpressionQuizResponse();
 		response.setQuizId(quizId);
+		response.setExpressionBookName(expressionBook.getName());
 		response.setQuizItems(quizzes);
 
 		return response;

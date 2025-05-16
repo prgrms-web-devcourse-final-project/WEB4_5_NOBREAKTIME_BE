@@ -173,4 +173,11 @@ public class Member extends BaseTime {
         this.profileImageUrl = profileImageUrl;
     }
 
+    /**
+     * 추가 단어장, 표현함을 사용할 수 있는지 여부를 검사한다.
+     * @return 추가 단어장, 표현함을 사용할 수 있는지 여부
+     */
+    public boolean canUseAdditaional() {
+        return subscriptionType != SubscriptionType.BASIC;
+    }
 }

@@ -71,7 +71,11 @@ public class Wordbook extends BaseTime {
 		return defaultWordbooks;
 	}
 
-	/**
+    public static boolean isDefault(Wordbook wordbook) {
+		return wordbook.getName().equals(DEFAULT_WORDBOOK_NAME);
+    }
+
+    /**
 	 * 추가 단어장의 이름을 변경합니다. 변경하려는 단어장의 기존 이름이 '기본'이거나 변경하려는 이름이 '기본'이면 실패합니다.
 	 * @param name 변경하려는 단어장 이름
 	 */
