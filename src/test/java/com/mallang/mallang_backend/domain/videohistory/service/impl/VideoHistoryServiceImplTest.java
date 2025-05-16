@@ -1,22 +1,5 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.IntStream;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
@@ -24,6 +7,26 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.IntStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class VideoHistoryServiceImplTest {
@@ -81,6 +84,11 @@ class VideoHistoryServiceImplTest {
 
 		then(repository).should().save(historyCaptor.capture());
 		VideoHistory saved = historyCaptor.getValue();
+
+		LocalDateTime now = LocalDateTime.now();
+		ReflectionTestUtils.setField(saved, "createdAt", now);
+		ReflectionTestUtils.setField(saved, "lastViewedAt", now);
+
 		assertThat(saved.getMember()).isEqualTo(member);
 		assertThat(saved.getVideos()).isEqualTo(videos1);
 		assertThat(saved.getCreatedAt()).isNotNull();

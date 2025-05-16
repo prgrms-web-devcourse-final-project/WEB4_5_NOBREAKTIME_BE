@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,7 +15,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALRE
 @Getter
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member {
+public class Member extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,9 +34,6 @@ public class Member {
 
     @Column
     private String profileImageUrl;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -67,7 +65,7 @@ public class Member {
     private LocalDateTime withdrawalDate;
 
     @Column(nullable = false)
-    private LocalDateTime measuredAt = createdAt;
+    private LocalDateTime measuredAt;
 
     @Builder
     public Member(
@@ -86,6 +84,7 @@ public class Member {
         this.profileImageUrl = profileImageUrl;
         this.loginPlatform = loginPlatform;
         this.language = language;
+        this.measuredAt = LocalDateTime.now();
     }
 
     /**

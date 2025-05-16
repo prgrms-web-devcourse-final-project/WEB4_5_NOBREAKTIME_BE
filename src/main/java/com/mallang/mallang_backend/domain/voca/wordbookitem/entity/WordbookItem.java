@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.wordbookitem.entity;
 
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WordbookItem {
+public class WordbookItem extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,15 +33,12 @@ public class WordbookItem {
     @Column(nullable = true, name = "subtitle_id")
     private Long subtitleId; // 해석
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private WordStatus wordStatus = WordStatus.NEW; // 기본
 
     @Column(nullable = false)
-    private LocalDateTime lastStudiedAt = createdAt; // 기본 값, 이후에 추가로 공부하면 변경
+    private LocalDateTime lastStudiedAt = LocalDateTime.now(); // 기본 값, 이후에 추가로 공부하면 변경
 
     @Column(nullable = false)
     private boolean learned = false;

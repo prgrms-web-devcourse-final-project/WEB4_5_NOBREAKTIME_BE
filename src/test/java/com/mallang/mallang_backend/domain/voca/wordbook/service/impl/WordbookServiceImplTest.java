@@ -26,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,7 @@ import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class WordbookServiceImplTest {
@@ -613,6 +615,7 @@ class WordbookServiceImplTest {
                     .subtitleId(1L)
                     .wordbook(wordbook)
                     .build();
+            setField(item1, "createdAt", LocalDateTime.now());
 
             WordbookItem item2 = WordbookItem.builder()
                     .word("banana")
@@ -620,6 +623,7 @@ class WordbookServiceImplTest {
                     .subtitleId(2L)
                     .wordbook(wordbook)
                     .build();
+            setField(item2, "createdAt", LocalDateTime.now());
 
             List<WordbookItem> items = List.of(item1, item2);
 

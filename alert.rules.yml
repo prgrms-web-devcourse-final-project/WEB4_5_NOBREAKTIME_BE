@@ -1,0 +1,134 @@
+groups:
+  - name: http_alerts
+    rules:
+      - alert: Non2xxErrorDetected
+        expr: increase(http_server_requests_seconds_count{status!~"2.."}[1m]) > 0
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[HTTP Alert] 상태 코드 {{ $labels.status }} 오류 감지"
+          description: >
+            ❗ 최근 1분 동안 다음 오류가 감지되었습니다.
+            • 상태 코드: {{ $labels.status }}
+            • URI: {{ $labels.uri }}
+            • 메서드: {{ $labels.method }}
+            • 총 발생 횟수: {{ $value | printf "%.0f" }} 회
+
+      # 95퍼센타일 기준 응답 지연 감지 (1초 이상)
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (le)) > 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "[Performance Alert] P95 응답 지연 초과"
+          description: >
+            ⏱ 최근 1분간 전체 요청의 95% 응답 시간이 1초를 초과했습니다.
+            성능 저하 가능성이 있습니다.
+
+      # 99퍼센타일 기준 응답 지연 심각 (2초 이상)
+      - alert: HighLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[1m])) by (le)) > 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "[Performance Alert] P99 응답 지연 심각"
+          description: >
+            ⏱ 최근 1분간 전체 요청의 99% 응답 시간이 2초를 초과했습니다.
+            긴급한 성능 병목이 발생했을 수 있습니다.
+
+      # 메모리 사용률 경고
+      - alert: HighJvmMemoryUsage
+        expr: jvm_memory_used_bytes / jvm_memory_max_bytes > 0.9
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM 메모리 사용량 90% 초과"
+          description: >
+            🚨 현재 JVM 메모리 사용량이 90%를 초과하고 있습니다.
+
+      # GC 시간 지연 감지
+      - alert: LongGcPause
+        expr: rate(jvm_gc_pause_seconds_sum[1m]) > 0.5
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM GC 지연 발생"
+          description: >
+            ⚠️ 최근 GC로 인한 지연이 0.5초 이상 발생했습니다.
+
+      # 요청 수 급증 감지 (트래픽 이상 탐지)
+      # 실 운영) 1분간 180건 이상 요청(> 3) 발생 시 감지 | 1분간 계속 유지되었을 때만 Alert 발동
+      - alert: SuddenTrafficSpike
+        expr: rate(http_server_requests_seconds_count[1m]) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "[Traffic Alert] 트래픽 급증 감지"
+          description: >
+            🚨 최근 1분간 초당 요청 수가 비정상적으로 증가했습니다.
+            • 초당 평균 요청 수: {{ $value | printf "%.2f" }}
+
+      # OpenAI API 사용량 80% 초과 (1분 기준)
+      - alert: GptUsage80PercentThreshold
+        expr: increase(external_api_token_usage_total{api="openai"}[1m]) > 160
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[GPT Alert] OpenAI API 사용량 80% 초과"
+          description: >
+            🚨 최근 1분간 OpenAI API 사용량이 임계치(80%)를 초과했습니다.
+            • 사용량: {{ $value | printf "%.0f" }} / 200
+
+      # YouTube API 사용량 80% 초과 (1분 기준)
+      - alert: YoutubeUsage80PercentThreshold
+        expr: increase(external_api_token_usage_total{api="youtube"}[1m]) > 8000
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[YouTube Alert] YouTube API 사용량 80% 초과"
+          description: >
+            🚨 최근 1분간 YouTube API 사용량이 임계치(80%)를 초과했습니다.
+            • 사용량: {{ $value | printf "%.0f" }} / 10000
+            
+
+# ---   test   ------------------------------------------------------------------------------------------
+  - name: test_http_alerts
+    rules:
+      - alert: Test_Non2xxErrorDetected
+        expr: increase(http_server_requests_seconds_count{status!~"2.."}[1m]) > 0
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[TEST] 상태 코드 오류 감지"
+          description: |
+            🔧 테스트 알람: 1분 내 2xx 외 상태 코드 발생.
+
+      - alert: Test_GptApiUsage
+        expr: increase(external_api_token_usage_total{api="openai"}[1m]) > 1
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[TEST] GPT API 사용량 경고"
+          description: |
+            🔧 테스트 알람: GPT API 1건 이상 사용.
+
+      - alert: Test_YoutubeApiUsage
+        expr: increase(external_api_token_usage_total{api="youtube"}[1m]) > 1
+        for: 0s
+        labels:
+          severity: warning
+        annotations:
+          summary: "[TEST] YouTube API 사용량 경고"
+          description: |
+            🔧 테스트 알람: YouTube API 1건 이상 사용.
+

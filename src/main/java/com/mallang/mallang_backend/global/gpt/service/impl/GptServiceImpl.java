@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.global.gpt.service.impl;
 
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
+import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -10,12 +11,15 @@ import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +36,14 @@ public class GptServiceImpl implements GptService {
 
     private final WebClient openAiWebClient;
     private final GptPromptBuilder gptPromptBuilder;
+    private final MeterRegistry meterRegistry;
+
+    private Counter gptCallCounter;
+
+    @PostConstruct
+    public void init() {
+        this.gptCallCounter = meterRegistry.counter("gpt_api_call_total");
+    }
 
     @Value("${spring.ai.openai.api-key}")
     private String openAiApiKey;
@@ -205,29 +217,36 @@ public class GptServiceImpl implements GptService {
     /**
      * GPT API 호출
      */
-    protected OpenAiResponse callGptApi(String prompt) {
-        log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
+    @MonitorExternalApi(name = "openai")
+    public OpenAiResponse callGptApi(String prompt) {
+        try {
+            log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
 
-        return openAiWebClient.post()
-            .header("Authorization", "Bearer " + openAiApiKey)
-            .bodyValue(buildRequestBody(prompt))
-            .retrieve()
-            .onStatus(
-                status -> status.is4xxClientError() || status.is5xxServerError(),
-                clientResponse -> clientResponse.bodyToMono(String.class)
-                    .map(body -> {
-                        log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
-                        return new ServiceException(GPT_API_CALL_FAILED);
-                    })
-            )
-            .bodyToMono(OpenAiResponse.class)
-            .block();
+            OpenAiResponse response = openAiWebClient.post()
+                    .header("Authorization", "Bearer " + openAiApiKey)
+                    .bodyValue(buildRequestBody(prompt))
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .map(body -> {
+                                        log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
+                                        return new ServiceException(GPT_API_CALL_FAILED);
+                                    })
+                    )
+                    .bodyToMono(OpenAiResponse.class)
+                    .block();
+
+            return response;
+        } catch (Exception e) {
+            throw new ServiceException(GPT_API_CALL_FAILED, e);
+        }
     }
 
     /**
      * GPT 응답이 null이거나 빈 경우를 검증
      */
-    private void validateResponse(OpenAiResponse response) {
+    public void validateResponse(OpenAiResponse response) {
         if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
             log.error("[GptService] GPT 응답이 비어있습니다.");
             throw new ServiceException(GPT_RESPONSE_EMPTY);

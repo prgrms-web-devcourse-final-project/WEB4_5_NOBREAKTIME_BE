@@ -1,25 +1,40 @@
 package com.mallang.mallang_backend.domain.payment.controller;
 
 import com.mallang.mallang_backend.domain.payment.docs.PaymentRequestDocs;
+import com.mallang.mallang_backend.domain.payment.dto.after.PaymentFailureRequest;
+import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
+import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
+import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
+import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
+import com.mallang.mallang_backend.global.token.JwtService;
+import com.mallang.mallang_backend.global.token.TokenPair;
+import com.mallang.mallang_backend.global.token.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+import static com.mallang.mallang_backend.domain.payment.service.common.PaymentService.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
@@ -29,7 +44,9 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class PaymentController {
 
     private final PaymentRequestService requestService;
-
+    private final PaymentService paymentService;
+    private final JwtService jwtService;
+    private final TokenService tokenService;
 
     @Operation(
             summary = "결제 요청 정보 생성",
@@ -53,17 +70,97 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO 성공 경우
-    /**
-     * /success?paymentType={PAYMENT_TYPE}&orderId={ORDER_ID}
-     * &paymentKey={PAYMENT_KEY}&amount={AMOUNT}
-     */
+    @Operation(
+            summary = "결제 요청 성공 이후 결제 승인 로직",
+            description = "결제 승인 요청을 전송하고, 결제 상태를 업데이트하며, 권한 정보 및 JWT 토큰을 갱신합니다."
+    )
+    @TimeTrace
+    @PossibleErrors({PAYMENT_NOT_FOUND, PAYMENT_CONFIRM_FAIL, PAYMENT_CONFLICT})
+    @PostMapping("/confirm")
+    public ResponseEntity<RsData<String>> succeedPayment(
+            @Valid @RequestBody PaymentApproveRequest request,
+            HttpServletResponse response
+    ) {
 
-    // TODO 실패 경우
-    /**
-     * /fail?code={ERROR_CODE}&message={ERROR_MESSAGE}
-     * &orderId={ORDER_ID}
-     */
+        paymentService.checkIdemkeyAndSave(request.getIdempotencyKey());
+        paymentService.updatePaymentStatus(
+                request.getOrderId(),
+                PayStatus.IN_PROGRESS
+        );
+
+        PaymentResponse result = paymentService.sendApproveRequest(request);
+
+        paymentService.processPaymentResult(
+                request.getOrderId(),
+                result
+        );
+
+        MemberGrantedInfo grantedInfo = paymentService
+                .getMemberId(request.getOrderId());
+
+        Long memberId = grantedInfo.memberId();
+        String roleName = grantedInfo.roleName();
+
+        setSecurityContext(memberId, roleName);
+        setNewJwtTokens(response, memberId, roleName);
+
+        RsData<String> rsp = new RsData<>(
+                "200",
+                "결제 승인 완료");
+
+        return ResponseEntity.ok(rsp);
+    }
+
+    @Operation(
+            summary = "결제 승인 실패 처리",
+            description = "결제 요청에 실패한 경우 결제 상태를 ABORTED로 변경하고 실패 로그를 기록합니다."
+    )
+    @PostMapping("/fail")
+    public ResponseEntity<RsData<String>> failedPayment(
+            @Valid @RequestBody PaymentFailureRequest request
+    ) {
+        paymentService.updatePaymentStatus(
+                request.getOrderId(),
+                PayStatus.ABORTED
+        );
+
+        RsData<String> rsp = new RsData<>(
+                "200",
+                "결제 승인 실패 업데이트 완료"
+        );
+
+        return ResponseEntity.status(200).body(rsp);
+    }
+
+    private void setSecurityContext(Long memberId,
+                                    String roleName
+    ) {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        memberId,
+                        null,
+                        List.of(new SimpleGrantedAuthority(roleName))
+                );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private void setNewJwtTokens(HttpServletResponse response,
+                                 Long memberId,
+                                 String roleName
+    ) {
+        TokenPair tokenPair = tokenService.createTokenPair(
+                memberId,
+                roleName
+        );
+        jwtService.setJwtSessionCookie(
+                tokenPair.getAccessToken(),
+                response
+        );
+        jwtService.setJwtPersistentCookie(
+                tokenPair.getRefreshToken(),
+                response
+        );
+    }
 }
 
 
