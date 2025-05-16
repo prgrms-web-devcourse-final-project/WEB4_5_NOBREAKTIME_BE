@@ -6,7 +6,7 @@ import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.sub.SubscriptionService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.member.service.profile.MemberProfileService;
 import com.mallang.mallang_backend.domain.member.service.valid.MemberValidationService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;

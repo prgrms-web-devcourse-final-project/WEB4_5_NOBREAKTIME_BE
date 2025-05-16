@@ -2,12 +2,11 @@ package com.mallang.mallang_backend.domain.member.service.withdrawn;
 
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLogRepository;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.sub.SubscriptionService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

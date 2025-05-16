@@ -3,7 +3,7 @@ package com.mallang.mallang_backend.domain.member.log.withdrawn;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.member.service.sub.SubscriptionService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.member.service.main.MemberServiceImpl;
 import com.mallang.mallang_backend.global.common.Language;
 import lombok.extern.slf4j.Slf4j;
