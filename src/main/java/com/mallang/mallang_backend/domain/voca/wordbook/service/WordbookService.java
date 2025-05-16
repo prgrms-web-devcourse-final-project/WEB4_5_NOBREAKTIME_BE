@@ -25,5 +25,5 @@ public interface WordbookService {
 	
 	List<WordResponse> searchWordFromWordbook(Long memberId, String keyword);
 
-	List<WordResponse> getWordbookItems(Long memberId);
+	List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId);
 }

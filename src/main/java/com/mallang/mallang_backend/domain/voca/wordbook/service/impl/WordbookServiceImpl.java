@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 @Service
 @RequiredArgsConstructor
@@ -291,26 +290,42 @@ public class WordbookServiceImpl implements WordbookService {
 	}
 
 	@Override
-	public List<WordResponse> getWordbookItems(Long memberId) {
-		// 사용자 조회
+	public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
+		// 사용자 인증
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+				.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-		// 사용자의 모든 단어장 조회
-		List<Wordbook> wordbooks = wordbookRepository.findAllByMember(member);
-		if (wordbooks.isEmpty()) {
-			return Collections.emptyList();
+		Wordbook wordbook;
+		List<WordbookItem> items;
+
+		// 단어장 Id가 비어있다면 기본 단어장 - 단어 아이템 조회
+		if (wordbookIds == null || wordbookIds.isEmpty()) {
+			wordbook = wordbookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_WORDBOOK_NAME, member.getLanguage())
+					.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+			items = wordbookItemRepository.findAllByWordbook(wordbook);
+
+			// 단일 단어장만 선택했다면 해당 단어장 - 단어 아이템 조회
+		} else if (wordbookIds.size() == 1) {
+			wordbook = wordbookRepository.findById(wordbookIds.get(0))
+					.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
+
+			if(!wordbook.getMember().getId().equals(memberId)) {
+				throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
+			}
+
+			items = wordbookItemRepository.findAllByWordbook(wordbook);
+			// 여러 단어장 선택했다면 여러 단어장 - 단어 아이템들 조회
+		} else {
+			items = wordbookItemRepository.findAllByWordbookIdIn(wordbookIds);
 		}
 
-		// 모든 wordbookId 추출
-		List<Long> wordbookIds = wordbooks.stream()
-				.map(Wordbook::getId)
+		// createdAt 내림차순 정렬
+		List<WordbookItem> sortedItems = items.stream()
+				.sorted(Comparator.comparing(WordbookItem::getCreatedAt).reversed())
 				.toList();
 
-		// 모든 WordbookItem 조회
-		List<WordbookItem> items = wordbookItemRepository.findAllByWordbookIdIn(wordbookIds);
-
-		return convertToWordResponses(items);
+		return convertToWordResponses(sortedItems);
 	}
 
 	private List<WordResponse> convertToWordResponses(List<WordbookItem> items) {

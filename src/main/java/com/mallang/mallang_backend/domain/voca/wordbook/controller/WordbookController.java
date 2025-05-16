@@ -278,20 +278,22 @@ public class WordbookController {
 
 	/**
 	 * 단어장 페이지에 접속했을 때, 선택한 단어장의 단어들을 조회합니다. 선택한 단어장이 없으면 "기본" 단어장의 단어를 조회합니다.
+	 * @param wordbookIds 단어장 ID 리스트
 	 * @param userDetail 로그인한 회원
 	 * @return 단어 리스트
 	 */
-	@Operation(summary = "전체 단어 목록 조회", description = "로그인한 사용자의 모든 단어장에 있는 단어들을 조회합니다.")
+	@Operation(summary = "여러 단어장의 단어 목록 조회", description = "체크된 여러 단어장의 단어들을 등록 날짜 기준으로 정렬하여 조회합니다.")
 	@ApiResponse(responseCode = "200", description = "단어 목록이 조회되었습니다.")
-	@PossibleErrors({MEMBER_NOT_FOUND})
+	@PossibleErrors({MEMBER_NOT_FOUND, NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@GetMapping("/view")
 	public ResponseEntity<RsData<List<WordResponse>>> getWordbookItems(
+		@RequestParam(required = false) List<Long> wordbookIds,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
 		Long memberId = userDetail.getMemberId();
 
-		List<WordResponse> words = wordbookService.getWordbookItems(memberId);
+		List<WordResponse> words = wordbookService.getWordbookItems(wordbookIds, memberId);
 		return ResponseEntity.ok(new RsData<>(
 			"200",
 			"단어 목록이 조회되었습니다.",
