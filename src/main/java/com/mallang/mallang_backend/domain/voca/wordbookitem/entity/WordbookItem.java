@@ -41,7 +41,7 @@ public class WordbookItem extends BaseTime {
     private LocalDateTime lastStudiedAt = LocalDateTime.now(); // 기본 값, 이후에 추가로 공부하면 변경
 
     @Column(nullable = false)
-    private boolean isLearned = false;
+    private boolean learned = false;
 
     @Builder
     public WordbookItem(
@@ -63,7 +63,7 @@ public class WordbookItem extends BaseTime {
     }
 
     public void updateLearned(boolean isLearned) {
-        this.isLearned = isLearned;
+        this.learned = isLearned;
     }
 
     public void updateLastStudiedAt(LocalDateTime lastStudiedAt) {

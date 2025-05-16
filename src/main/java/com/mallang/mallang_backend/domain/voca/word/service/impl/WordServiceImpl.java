@@ -1,14 +1,17 @@
 package com.mallang.mallang_backend.domain.voca.word.service.impl;
 
-import com.mallang.mallang_backend.domain.voca.word.event.NewWordSearchedEvent;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.domain.voca.word.event.NewWordSearchedEvent;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
+import com.mallang.mallang_backend.global.validation.WordValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -19,8 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.SAVED_WORD_CONCURRENCY_TIME_OUT;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.WORD_SAVE_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class WordServiceImpl implements WordService {
 	private final GptService gptService;
 	private final RedisDistributedLock redisDistributedLock;
 	private final SavedWordResultFetcher savedWordResultFetcher;
+	private final MemberRepository memberRepository;
 	private final ApplicationEventPublisher publisher;
 
 	@Override
@@ -81,12 +84,21 @@ public class WordServiceImpl implements WordService {
 	 * @throws ServiceException 단어를 찾을 없을 때 예외 발생
 	 */
 	@Override
-	public WordSearchResponse searchWord(String word) {
+	public WordSearchResponse searchWord(String word, Long memberId) {
 		List<Word> words = wordRepository.findByWord(word);
 		if (words.isEmpty()) {
 			publisher.publishEvent(new NewWordSearchedEvent(word));
 			throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
 		}
+
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		// 단어가 설정한 언어와 맞는지 검증
+		if (!WordValidator.isLanguageMatch(word, member.getLanguage())) {
+			throw new ServiceException(LANGUAGE_MISMATCH);
+		}
+
 		return new WordSearchResponse(convertToResponse(words));
 	}
 

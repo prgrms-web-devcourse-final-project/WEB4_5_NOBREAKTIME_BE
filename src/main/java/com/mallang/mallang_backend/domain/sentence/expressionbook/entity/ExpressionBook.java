@@ -25,7 +25,7 @@ public class ExpressionBook extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ExpressionBook_id")
+    @Column(name = "expression_book_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -63,6 +63,15 @@ public class ExpressionBook extends BaseTime {
                     .build());
         }
         return defaultExpressionbook;
+    }
+
+    /**
+     * 표현함이 기본 표현함인지 검사합니다.
+     * @param expressionBook 검사할 표현함
+     * @return 기본 표현함 여부
+     */
+    public static boolean isDefault(ExpressionBook expressionBook) {
+        return DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName());
     }
 
     /**

@@ -7,7 +7,8 @@ import java.util.List;
 
 @Getter
 @Setter
-public class WordQuizResponse {
-	private Long quizId;
-	List<WordQuizItem> quizItems;
+public class WordbookQuizResponse {
+    private Long quizId;
+    private String wordbookName;
+    List<WordQuizItem> quizItems;
 }

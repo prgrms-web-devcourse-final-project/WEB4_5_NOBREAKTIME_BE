@@ -1,20 +1,23 @@
 package com.mallang.mallang_backend.global.common;
 
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import lombok.Getter;
 
 @Getter
 public enum Language {
-    ENGLISH("en-US"),
-    JAPANESE("ja"),
-    NONE("none"),
-    ALL("all"); // 프리미엄 회원의 경우
+    ENGLISH("en-US", "^[a-zA-Z\\\\s]+$"),
+    JAPANESE("ja", "^[\\\\u3040-\\\\u309F\\\\u30A0-\\\\u30FF\\\\uFF66-\\\\uFF9F\\\\u4E00-\\\\u9FFF\\\\s]+$"),
+    NONE("none", ""),
+    ALL("all", ""); // 프리미엄 회원의 경우
 
     private final String languageCode;
+    private final String pattern;
 
-    Language(String languageCode) {
+    Language(String languageCode, String pattern) {
         this.languageCode = languageCode;
+        this.pattern = pattern;
     }
 
     /**
@@ -51,5 +54,13 @@ public enum Language {
         }
         String[] parts = this.languageCode.split("-");
         return parts[0].toLowerCase();
+    }
+
+    public boolean matches(String word) {
+        if (this == NONE || this == ALL) {
+            return false;
+        }
+        Pattern compile = Pattern.compile(pattern);
+        return compile.matcher(word).matches();
     }
 }

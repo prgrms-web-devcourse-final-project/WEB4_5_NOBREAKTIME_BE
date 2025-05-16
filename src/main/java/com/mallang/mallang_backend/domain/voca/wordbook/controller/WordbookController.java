@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,7 +41,7 @@ public class WordbookController {
 	@PostMapping("/{wordbookId}/words")
 	public ResponseEntity<RsData<Void>> addWords(
 		@PathVariable Long wordbookId,
-		@RequestBody AddWordToWordbookListRequest request,
+		@RequestBody @Valid AddWordToWordbookListRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -66,7 +67,7 @@ public class WordbookController {
 	@PostMapping("/{wordbookId}/words/custom")
 	public ResponseEntity<RsData<Void>> addWordCustom(
 		@PathVariable Long wordbookId,
-		@RequestBody AddWordRequest request,
+		@RequestBody @Valid AddWordRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -91,7 +92,7 @@ public class WordbookController {
 	@PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_IS_NONE, WORDBOOK_CREATE_DEFAULT_FORBIDDEN})
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
-		@RequestBody WordbookCreateRequest request,
+		@RequestBody @Valid WordbookCreateRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -114,11 +115,12 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 이름 변경", description = "단어장의 이름을 변경합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장의 이름이 변경되었습니다.")
+	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN})
 	@PatchMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> renameWordbook(
 		@PathVariable Long wordbookId,
-		@RequestBody WordbookRenameRequest request,
+		@RequestBody @Valid WordbookRenameRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -139,6 +141,7 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어장 삭제", description = "특정 단어장을 삭제합니다.")
 	@ApiResponse(responseCode = "200", description = "단어장이 삭제되었습니다.")
+	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_DELETE_DEFAULT_FORBIDDEN})
 	@DeleteMapping("/{wordbookId}")
 	public ResponseEntity<RsData<Void>> deleteWordbook(
@@ -163,10 +166,11 @@ public class WordbookController {
 	 */
 	@Operation(summary = "단어 이동", description = "단어를 다른 단어장으로 이동합니다.")
 	@ApiResponse(responseCode = "200", description = "단어들이 이동되었습니다.")
+	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PatchMapping("/words/move")
 	public ResponseEntity<RsData<Void>> moveWords(
-		@RequestBody WordMoveRequest request,
+		@RequestBody @Valid WordMoveRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -190,7 +194,7 @@ public class WordbookController {
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_ITEM_NOT_FOUND})
 	@PostMapping("/words/delete")
 	public ResponseEntity<RsData<Void>> deleteWords(
-		@RequestBody WordDeleteRequest request,
+		@RequestBody @Valid WordDeleteRequest request,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
 	) {
@@ -248,31 +252,6 @@ public class WordbookController {
 			"200",
 			"단어장 목록 조회에 성공했습니다.",
 			wordbooks
-		));
-	}
-
-	/**
-	 * 단어 검색
-	 *
-	 * @param keyword 검색어
-	 * @return 단어 목록
-	 */
-	@Operation(summary = "단어 검색", description = "내 단어장에서 단어를 검색합니다.")
-	@ApiResponse(responseCode = "200", description = "단어 검색 결과입니다.")
-	@PossibleErrors({MEMBER_NOT_FOUND})
-	@GetMapping("/search")
-	public ResponseEntity<RsData<List<WordResponse>>> searchWords(
-		@RequestParam String keyword,
-		@Parameter(hidden = true)
-		@Login CustomUserDetails userDetail
-	) {
-		Long memberId = userDetail.getMemberId();
-
-		List<WordResponse> result = wordbookService.searchWordFromWordbook(memberId, keyword);
-		return ResponseEntity.ok(new RsData<>(
-			"200",
-			"단어 검색 결과입니다.",
-			result
 		));
 	}
 

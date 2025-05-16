@@ -173,6 +173,6 @@ class ExpressionQuizServiceImplTest {
 
 		// then
 		verify(expressionQuizResultRepository, times(1)).save(any(ExpressionQuizResult.class));
-		assertThat(expressionBookItem.getIsLearned()).isTrue();
+		assertThat(expressionBookItem.isLearned()).isTrue();
 	}
 }
