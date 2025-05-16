@@ -17,5 +17,5 @@ public interface ExpressionBookRepository extends JpaRepository<ExpressionBook, 
 
 	List<ExpressionBook> findAllByMemberIdAndLanguage(Long memberId, Language language);
 
-    Optional<ExpressionBook> findByMemberAndNameAndLanguage(Member member, String name, Language language);
+    Optional<ExpressionBook> findByMemberAndNameAndLanguage(Member member, String expressionBookName, Language language);
 }
