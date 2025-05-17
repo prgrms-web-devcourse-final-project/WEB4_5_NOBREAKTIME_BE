@@ -109,7 +109,7 @@ jobs:
         uses: jtalk/url-health-check-action@v3
         with:
           url: "http://${{ secrets.MALLANG_SERVER_IP }}:${{env.STOPPED_PORT}}/env"
-          max-attempts: 5
+          max-attempts: 10
           retry-delay: 10s
 
       # 호스트 nginx 로 변경
