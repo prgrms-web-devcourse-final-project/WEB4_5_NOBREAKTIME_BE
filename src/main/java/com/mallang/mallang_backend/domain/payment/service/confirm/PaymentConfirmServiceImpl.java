@@ -11,6 +11,7 @@ import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentMailS
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_CONFLICT;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_NOT_FOUND;
 
 /**
  * 결제 승인 및 결과 처리 서비스 구현체입니다.
@@ -222,6 +226,6 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
         }
         // TODO 보상 로직을 생각할 것
         log.error("DB 저장 실패: {}", e.getMessage());
-        throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
+        throw new ServiceException(ErrorCode.PAYMENT_CONFIRM_FAIL, e);
     }
 }

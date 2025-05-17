@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor

@@ -22,6 +22,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

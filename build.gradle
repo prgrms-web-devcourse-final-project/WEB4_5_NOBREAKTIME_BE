@@ -40,14 +40,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
 	// JPA & DB
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	// implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-cache' // 캐시 이용
 	// implementation 'org.springframework.session:spring-session-data-redis' // 세션 클러스터링
+	// implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
@@ -81,6 +81,7 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.3'
 
 	// clova speech api
 	implementation 'org.apache.httpcomponents:httpclient:4.5.12'
@@ -111,6 +112,14 @@ dependencies {
 
 	// aws s3
 	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+
+	// swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+	implementation 'com.danielfrak.code:springdoc-openapi-externalized-documentation:1.0.0'
+
+	// mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail:3.4.5'
+	testImplementation 'com.icegreen:greenmail-junit5:2.0.1'
 }
 
 tasks.named('test') {

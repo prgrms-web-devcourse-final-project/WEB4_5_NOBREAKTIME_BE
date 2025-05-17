@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.payment.service.request;
 
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.IDEM_KEY_PREFIX;
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
