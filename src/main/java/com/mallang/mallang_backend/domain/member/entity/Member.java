@@ -13,7 +13,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALRE
 
 @Entity
 @Getter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseTime {
 

@@ -89,6 +89,7 @@ public class AppConstants {
     public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
     public static final String ORDER_ID_PREFIX = "order:";
     public static final String IDEM_KEY_PREFIX = "idempotencyKey:";
+    public static final String BILLING_KEY_PREFIX = "billing:";
 
     /**
      * 주문 ID 생성 용도
