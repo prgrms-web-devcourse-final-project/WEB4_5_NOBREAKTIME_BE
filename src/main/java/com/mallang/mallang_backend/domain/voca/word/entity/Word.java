@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.voca.word.entity;
 
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Word {
+public class Word extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

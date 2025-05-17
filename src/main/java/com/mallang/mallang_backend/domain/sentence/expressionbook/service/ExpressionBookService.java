@@ -1,12 +1,11 @@
 package com.mallang.mallang_backend.domain.sentence.expressionbook.service;
 
 import com.mallang.mallang_backend.domain.sentence.expressionbook.dto.*;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
 public interface ExpressionBookService {
-    ExpressionBookResponse create(@Valid ExpressionBookRequest request, Long memberId);
+    Long create(ExpressionBookRequest request, Long memberId);
 
     List<ExpressionBookResponse> getByMember(Long memberId);
 
@@ -14,9 +13,9 @@ public interface ExpressionBookService {
 
     void delete(Long expressionBookId, Long memberId);
 
-    List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId);
+    List<ExpressionResponse> getExpressionsByBook(Long memberId);
 
-    void save(ExpressionSaveRequest request, Long expressionBookId);
+    void save(ExpressionSaveRequest request, Long expressionBookId, Long memberId);
 
     void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId);
 

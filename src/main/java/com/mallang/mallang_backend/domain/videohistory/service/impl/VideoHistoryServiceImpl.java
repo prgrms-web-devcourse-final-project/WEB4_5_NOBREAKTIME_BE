@@ -7,7 +7,6 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
-import com.mallang.mallang_backend.domain.videohistory.mapper.VideoHistoryMapper;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 import com.mallang.mallang_backend.domain.videohistory.service.VideoHistoryService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -24,55 +23,85 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.VIDEO_ID_SE
 @RequiredArgsConstructor
 public class VideoHistoryServiceImpl implements VideoHistoryService {
 
-    private final VideoHistoryRepository videoHistoryRepository;
-    private final VideoHistoryMapper videoHistoryMapper;
-    private final MemberRepository memberRepository;
-    private final VideoRepository videoRepository;
-    private final VideoService videoService;
+	private final VideoHistoryRepository videoHistoryRepository;
+	private final MemberRepository memberRepository;
+	private final VideoRepository videoRepository;
+	private final VideoService videoService;
 
-    /** 기록 저장(쓰기 트랜잭션) */
-    @Override
-    @Transactional
-    public void save(Long memberId, String videoId) {
-        // Member / Video 로드
-        Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-        Videos videos = videoRepository.findById(videoId)
-            .orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
+	/** 기록 저장(쓰기 트랜잭션) */
+	@Override
+	@Transactional
+	public void save(Long memberId, String videoId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+		Videos videos = videoRepository.findById(videoId)
+			.orElseThrow(() -> new ServiceException(VIDEO_ID_SEARCH_FAILED));
 
-        VideoHistory history = VideoHistory.builder()
-            .member(member)
-            .videos(videos)
-            .build();
+		videoHistoryRepository.findByMemberAndVideos(member, videos)
+			.ifPresentOrElse(
+				VideoHistory::updateTimestamp,
+				() -> videoHistoryRepository.save(
+					VideoHistory.builder()
+						.member(member)
+						.videos(videos)
+						.build()
+				)
+			);
 
-        videoHistoryRepository.save(history);
-    }
+		// 초과 기록이 있으면 삭제
+		removeExcessHistories(member);
+	}
 
-    /** 최근 5개 조회 */
-    @Override
-    @Transactional(readOnly = true)
-    public List<VideoHistoryResponse> getRecentHistories(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+	/**
+	 * 회원별 기록이 MAX_HISTORY_PER_MEMBER 를 초과하면
+	 * 오래된 것부터 삭제
+	 */
+	private void removeExcessHistories(Member member) {
+		long total = videoHistoryRepository.countByMember(member);
+		if (total <= MAX_HISTORY_PER_MEMBER) {
+			return;
+		}
 
-        return videoHistoryRepository
-            .findTop5ByMemberOrderByCreatedAtDesc(member)
-            .stream()
-            .map(videoHistoryMapper::toDto)
-            .toList();
-    }
+		int excess = (int)(total - MAX_HISTORY_PER_MEMBER);
 
-    /** 전체 조회 */
-    @Override
-    @Transactional(readOnly = true)
-    public List<VideoHistoryResponse> getAllHistories(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-            .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+		// 전체를 오래된 순으로 조회
+		List<VideoHistory> allHistoriesAsc =
+			videoHistoryRepository.findAllByMemberOrderByLastViewedAtAsc(member);
 
-        return videoHistoryRepository
-            .findAllByMemberOrderByCreatedAtDesc(member)
-            .stream()
-            .map(videoHistoryMapper::toDto)
-            .toList();
-    }
+		// 초과 개수만큼 오래된 것만 잘라내기
+		List<VideoHistory> toDelete = allHistoriesAsc.subList(0, excess);
+
+		// 일괄 삭제
+		videoHistoryRepository.deleteAllInBatch(toDelete);
+	}
+
+
+	/** 최근 5개 조회 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<VideoHistoryResponse> getRecentHistories(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		return videoHistoryRepository
+			.findTop5ByMemberOrderByLastViewedAtDesc(member)
+			.stream()
+            .map(VideoHistoryResponse::from)
+			.toList();
+	}
+
+
+	/** 전체 조회 */
+	@Override
+	@Transactional(readOnly = true)
+	public List<VideoHistoryResponse> getAllHistories(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		return videoHistoryRepository
+			.findAllByMemberOrderByLastViewedAtDesc(member)
+			.stream()
+			.map(VideoHistoryResponse::from)
+			.toList();
+	}
 }

@@ -19,4 +19,6 @@ public interface WordbookRepository extends JpaRepository<Wordbook, Long> {
 	List<Wordbook> findAllByMemberIdAndLanguage(Long memberId, Language language);
 
 	Optional<Wordbook> findByMemberAndName(Member member, String name);
+
+    Optional<Wordbook> findByMemberAndNameAndLanguage(Member member, String wordbookName, Language language);
 }

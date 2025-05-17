@@ -16,4 +16,6 @@ public interface ExpressionBookRepository extends JpaRepository<ExpressionBook, 
     boolean existsByMemberAndName(Member member, String name);
 
 	List<ExpressionBook> findAllByMemberIdAndLanguage(Long memberId, Language language);
+
+    Optional<ExpressionBook> findByMemberAndNameAndLanguage(Member member, String name, Language language);
 }

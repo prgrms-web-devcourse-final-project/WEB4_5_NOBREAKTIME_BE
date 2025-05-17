@@ -17,6 +17,9 @@ public class WordResponse {
 	private String exampleSentence;
 	private String translatedSentence;
 	private String videoId;
+	private String videoTitle;
+	private String imageUrl;
 	private Long subtitleId;
 	private LocalDateTime createdAt;
+	private Long wordBookId;
 }

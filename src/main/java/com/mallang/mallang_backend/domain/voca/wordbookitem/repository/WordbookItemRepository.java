@@ -17,5 +17,11 @@ public interface WordbookItemRepository extends JpaRepository<WordbookItem, Long
 	void deleteAllByWordbookId(Long wordbookId);
 	List<WordbookItem> findAllByWordbookAndWordStatus(Wordbook wordbook, WordStatus wordStatus);
 	List<WordbookItem> findByWordbook_MemberAndCreatedAtAfter(Member member, LocalDateTime localDateTime);
-	List<WordbookItem> findByWordbook_MemberAndWordContaining(Member member, String keyword);
+    List<WordbookItem> findAllByWordbookIdIn(List<Long> wordbookIds);
+	int countByWordbook(Wordbook wordbook);
+	int countByWordbookAndLearnedTrue(Wordbook wordbook);
+
+	List<WordbookItem> findAllByWordbookOrderByCreatedAtDesc(Wordbook wordbook);
+
+	List<WordbookItem> findAllByWordbookIdInOrderByCreatedAtDesc(List<Long> wordbookIds);
 }

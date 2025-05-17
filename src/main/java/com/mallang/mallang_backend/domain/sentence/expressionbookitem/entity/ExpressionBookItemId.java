@@ -12,7 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ExpressionBookItemId implements Serializable {
-
     @Column(name = "expression_id")
     private Long expressionId;
 

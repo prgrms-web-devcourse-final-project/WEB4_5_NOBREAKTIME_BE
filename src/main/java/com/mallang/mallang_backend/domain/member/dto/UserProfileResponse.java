@@ -1,15 +1,15 @@
 package com.mallang.mallang_backend.domain.member.dto;
 
-import com.mallang.mallang_backend.domain.member.entity.Subscription;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.global.common.Language;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "회원 전체 정보 조회 응답 DTO")
@@ -25,8 +25,11 @@ public class UserProfileResponse {
     private String profileImage;
 
     @Schema(description = "구독 정보")
-    private Subscription subscription;
+    private SubscriptionType subscriptionType;
 
     @Schema(description = "언어 설정 정보", example = "ENGLISH")
     private Language language;
+
+    @Schema(description = "구독 내역")
+    private List<SubscriptionResponse> subscriptions;
 }

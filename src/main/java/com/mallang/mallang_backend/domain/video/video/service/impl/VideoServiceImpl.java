@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
 import com.google.api.services.youtube.model.Video;
+import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -10,9 +11,7 @@ import com.mallang.mallang_backend.domain.stt.converter.TranscriptParser;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
-import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
-import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoDetail;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
@@ -20,7 +19,6 @@ import com.mallang.mallang_backend.domain.video.video.event.KeywordSavedEvent;
 import com.mallang.mallang_backend.domain.video.video.event.VideoAnalyzedEvent;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
 import com.mallang.mallang_backend.global.common.Language;
@@ -31,20 +29,24 @@ import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
+import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
@@ -56,7 +58,6 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_
 public class VideoServiceImpl implements VideoService {
 
 	private final VideoRepository videoRepository;
-	private final VideoSearchProperties youtubeSearchProperties;
 	private final YoutubeService youtubeService;
 	private final YoutubeAudioExtractor youtubeAudioExtractor;
 	private final GptService gptService;
@@ -66,6 +67,10 @@ public class VideoServiceImpl implements VideoService {
 	private final ClovaSpeechClient clovaSpeechClient;
 	private final KeywordRepository keywordRepository;
 	private final ApplicationEventPublisher publisher;
+	private final RedisDistributedLock redisDistributedLock;
+	private final AnalyzeVideoResultFetcher analyzeVideoResultFetcher;
+	private final BookmarkRepository bookmarkRepository;
+	private final VideoQueryService videoQueryService;
 
 	// 회원 기준 영상 검색 메서드
 	@Override
@@ -84,11 +89,16 @@ public class VideoServiceImpl implements VideoService {
 			throw new ServiceException(ErrorCode.LANGUAGE_NOT_CONFIGURED);
 		}
 
+		// 북마크된 videoId 목록 조회
+		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
+			.map(bookmark -> bookmark.getVideos().getId())
+			.collect(Collectors.toSet());
+
 		// ISO 코드 추출
 		String language = lang.toCode();
 
 		// 검색 컨텍스트 준비
-		return getVideosByLanguage(q, category, language, maxResults);
+		return getVideosByLanguage(q, category, language, maxResults, bookmarkedIds);
 	}
 
 	@Override
@@ -96,30 +106,19 @@ public class VideoServiceImpl implements VideoService {
 		String q,
 		String category,
 		String language,
-		long maxResults
+		long maxResults,
+		Set<String> bookmarkedIds
 	) {
-		// 검색 컨텍스트 준비
-		SearchContext ctx = buildSearchContext(q, category, language);
-		log.info("context: {}", ctx);
+		// 캐시가 적용된 queryVideos() 호출
+		List<VideoResponse> responses =
+			videoQueryService.queryVideos(q, category, language, maxResults);
 
-		// ID 목록 조회
-		List<String> videoIds = fetchVideoIds(ctx, maxResults);
-		if (videoIds.isEmpty()) {
-			return Collections.emptyList();
-		}
+		// 북마크 여부 세팅
+		responses.forEach(r ->
+			r.setBookmarked(bookmarkedIds.contains(r.getVideoId()))
+		);
 
-		// 상세 비디오(YouTube 모델) 조회
-		List<Video> videos = fetchVideoDetails(videoIds);
-
-		// 필터링, 매핑, 셔플 (VideoUtils 이용)
-		List<VideoResponse> responses = videos.stream()
-			.filter(VideoUtils::isCreativeCommons)
-			.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
-			.filter(VideoUtils::isDurationLessThanOrEqualTo20Minutes)
-			.map(VideoUtils::toVideoResponse)
-			.toList();
-
-		return VideoUtils.shuffleIfDefault(responses, ctx.isDefaultSearch());
+		return responses;
 	}
 
 	/**
@@ -129,27 +128,25 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	private VideoDetail fetchDetail(String videoId) {
-		try {
-			List<Video> ytVideos = youtubeService.fetchVideosByIds(List.of(videoId));
-			var ytVideo = ytVideos.stream()
-				.findFirst()
-				.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+		List<Video> ytVideos =  youtubeService
+			.fetchVideosByIdsAsync(List.of(videoId))
+			.join();
+		var ytVideo = ytVideos.stream()
+			.findFirst()
+			.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
 
-			// 언어 정보 파싱
-			Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
+		// 언어 정보 파싱
+		Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
 
-			// 응답 DTO 생성
-			return new VideoDetail(
-				ytVideo.getId(),
-				ytVideo.getSnippet().getTitle(),
-				ytVideo.getSnippet().getDescription(),
-				ytVideo.getSnippet().getThumbnails().getMedium().getUrl(),
-				ytVideo.getSnippet().getChannelTitle(),
-				lang
-			);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
-		}
+		// 응답 DTO 생성
+		return new VideoDetail(
+			ytVideo.getId(),
+			ytVideo.getSnippet().getTitle(),
+			ytVideo.getSnippet().getDescription(),
+			ytVideo.getSnippet().getThumbnails().getMedium().getUrl(),
+			ytVideo.getSnippet().getChannelTitle(),
+			lang
+		);
 	}
 
 	/**
@@ -177,90 +174,120 @@ public class VideoServiceImpl implements VideoService {
 		}
 	}
 
-	/**
-	 * 검색 컨텍스트 빌더 (검색 요청에 필요한 모든 파라미터를 한 번에 묶어주는 역할)
-	 */
-	private SearchContext buildSearchContext(String q, String category, String language) {
-		String langKey = Optional.ofNullable(language)
-			.filter(StringUtils::hasText)
-			.map(String::toLowerCase)
-			.orElse("en");
-
-		var defaults = youtubeSearchProperties.getDefaults()
-			.getOrDefault(langKey, youtubeSearchProperties.getDefaults().get("en"));
-		String region = defaults.getRegion();
-		String query = StringUtils.hasText(q) ? q : defaults.getQuery();
-		boolean isDefault = !StringUtils.hasText(q) && !StringUtils.hasText(category);
-
-		return new SearchContext(query, region, langKey, category, isDefault);
-	}
-
-	/**
-	 * YouTube ID 목록으로 Video 모델 조회
-	 */
-	private List<Video> fetchVideoDetails(List<String> ids) {
-		try {
-			return youtubeService.fetchVideosByIds(ids);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_DETAIL_FETCH_FAILED);
-		}
-	}
-
-	/**
-	 * ID 목록 조회를 위한 YouTube search 호출
-	 */
-	private List<String> fetchVideoIds(SearchContext ctx, long maxResults) {
-		try {
-			return youtubeService.searchVideoIds(
-				ctx.getQuery(),
-				ctx.getRegion(),
-				ctx.getLangKey(),
-				ctx.getCategory(),
-				maxResults
-			);
-		} catch (IOException e) {
-			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED);
-		}
-	}
-
+	@Async("analysisExecutor")
 	@Transactional
 	@Override
-	public AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId) throws IOException, InterruptedException {
-		// 영상 정보 저장
-		VideoDetail dto = fetchDetail(videoId);
-		Videos video = upsertVideoEntity(dto);
+	public void analyzeWithSseAsync(Long memberId, String videoId, SseEmitter emitter) {
+		try {
+			AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitter);
+			emitter.send(SseEmitter.event().name("analysisComplete").data(result));
+			emitter.complete();
+		} catch (Exception ex) {
+			emitter.completeWithError(ex);
+		}
+	}
 
-		// 비디오 히스토리 저장 이벤트
+	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, SseEmitter emitter) throws IOException, InterruptedException {
+		long startTotal = System.nanoTime(); // 전체 시작 시간
+		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
+
+		// 1. 비디오 히스토리 저장 (비동기 요청)
+		long start = System.nanoTime();
 		publisher.publishEvent(new VideoViewedEvent(memberId, videoId));
+		log.debug("[AnalyzeVideo] 시청 히스토리 이벤트 발행 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-		// 기존 분석 결과 확인
-		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(video);
+		// 2. 기존 분석 결과 확인
+		List<Subtitle> existing = subtitleRepository.findAllByVideosFetchKeywords(videoId);
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
+			log.debug("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
 
-		// 2. 음성 추출
-		String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+		// 락 획득 시도
+		String lockKey = "lock:video:analysis:" + videoId;
+		String lockValue = UUID.randomUUID().toString();
+		long ttlMillis = Duration.ofMinutes(10).toMillis();
 
-		// 3. STT
-		NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
-		final String result =
-			clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
+		boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
+		if (!locked) {
+			emitter.send(SseEmitter.event()
+				.name("lockChecking")
+				.data("동일한 영상의 분석이 진행중입니다..."));
 
-		// STT 결과 → 세그먼트 파싱
-		Transcript transcript = transcriptParser.parseTranscriptJson(result);
-		List<TranscriptSegment> segments = transcript.getSegments();
+			// 락이 사라졌는지 10분간 계속 확인
+			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 2000L);
 
-		// GPT 분석
-		List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+			// 최대 재시도 시간까지 확인했으나 실패함
+			if (!lockAvailable) {
+				throw new ServiceException(ANALYZE_VIDEO_CONCURRENCY_TIME_OUT);
+			}
 
-		saveSubtitleAndKeyword(video, gptResult);
+			// 락이 사라졌으면 다른 작업으로 처리된 결과를 DB에서 찾아서 응답
+			return analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId);
+		}
 
-		// 비동기로 오디오 파일 삭제
-		publisher.publishEvent(new VideoAnalyzedEvent(fileName));
+		try {
+			// **락 획득 알림**
+			emitter.send(SseEmitter.event()
+				.name("lockAcquired")
+				.data("Lock acquired, 곧 Audio 추출 시작합니다."));
 
-		return AnalyzeVideoResponse.from(gptResult);
+			// 3. 영상 정보 저장
+			start = System.nanoTime();
+			VideoDetail dto = fetchDetail(videoId);
+			Videos video = upsertVideoEntity(dto);
+			log.debug("[AnalyzeVideo] 영상 정보 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 4. 음성 추출
+			start = System.nanoTime();
+			String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+			log.debug("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// **오디오 추출 완료 알림**
+			emitter.send(SseEmitter.event()
+				.name("audioExtracted")
+				.data("Audio 추출 완료, STT 분석 시작합니다."));
+
+			// 5. STT 요청
+			start = System.nanoTime();
+			NestRequestEntity requestEntity = new NestRequestEntity(video.getLanguage());
+			final String result = clovaSpeechClient.upload(new File(UPLOADS_DIR + fileName), requestEntity);
+			log.debug("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// **STT 완료 알림**
+			emitter.send(SseEmitter.event()
+				.name("sttCompleted")
+				.data("STT 완료, GPT 분석 시작합니다."));
+
+			// 6. STT 결과 파싱
+			start = System.nanoTime();
+			Transcript transcript = transcriptParser.parseTranscriptJson(result);
+			List<TranscriptSegment> segments = transcript.getSegments();
+			log.debug("[AnalyzeVideo] STT 결과 파싱 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 7. GPT 분석
+			start = System.nanoTime();
+			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 8. 저장
+			start = System.nanoTime();
+			saveSubtitleAndKeyword(video, gptResult);
+			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+
+			// 9. 파일 삭제 이벤트
+			start = System.nanoTime();
+			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
+			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+
+			return AnalyzeVideoResponse.from(gptResult);
+		} finally {
+			// 락 해제
+			redisDistributedLock.unlock(lockKey, lockValue);
+		}
 	}
 
 	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult) {
@@ -290,12 +317,27 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		// subtitle 먼저 저장 (ID를 키로 사용하는 keyword 저장을 위해)
-		subtitleRepository.saveAll(subtitleList);
+		List<Subtitle> savedSubtitles = subtitleRepository.saveAll(subtitleList);
+
+		// 저장된 엔티티의 PK(id)를 순서대로 DTO에 주입
+		for (int i = 0; i < savedSubtitles.size(); i++) {
+			gptResult.get(i).setSubtitleId(savedSubtitles.get(i).getId());
+		}
 
 		// keyword 저장
 		keywordRepository.saveAll(keywordList);
 
 		// 비동기로 핵심단어들 gpt 사용하여 단어DB에 저장
 		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
+	}
+
+	@Override
+	@Transactional
+	public Videos saveVideoIfAbsent(String videoId) {
+		return videoRepository.findById(videoId)
+			.orElseGet(() -> {
+				VideoDetail dto = fetchDetail(videoId);
+				return upsertVideoEntity(dto);
+			});
 	}
 }

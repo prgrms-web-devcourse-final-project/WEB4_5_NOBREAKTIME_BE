@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,32 +38,33 @@ public class ExpressionBookController {
      */
     @Operation(summary = "추가 표현함 생성", description = "추가 표현함 생성 요청을 처리합니다.")
     @ApiResponse(responseCode = "200", description = "추가 표현함이 생성되었습니다.")
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
     @PossibleErrors({MEMBER_NOT_FOUND, NO_EXPRESSIONBOOK_CREATE_PERMISSION, EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN, DUPLICATE_EXPRESSIONBOOK_NAME})
     @PostMapping
-    public ResponseEntity<RsData<ExpressionBookResponse>> create(
+    public ResponseEntity<RsData<Long>> create(
         @RequestBody @Valid ExpressionBookRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
-        ExpressionBookResponse response = expressionBookService.create(request, memberId);
+        Long expressionBookId = expressionBookService.create(request, memberId);
 
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(new RsData<>(
                 "200",
                 "추가 표현함이 생성되었습니다.",
-                response
+                expressionBookId
             ));
     }
 
     /**
-     * 추가 표현함 전체 조회
+     * 회원의 표현함 목록 조회
      *
-     * @param userDetails 로그인한 사용자 정보
+     * @param userDetails 로그인한 회원 정보
      * @return 표현함 목록을 담은 응답 객체
      */
-    @Operation(summary = "표현함 전체 조회", description = "로그인한 사용자의 모든 추가 표현함을 조회합니다.")
+    @Operation(summary = "표현함 목록 조회", description = "로그인한 회원의 표현함 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 목록 조회에 성공했습니다.")
     @PossibleErrors({MEMBER_NOT_FOUND})
     @GetMapping
@@ -91,7 +93,8 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 이름 수정", description = "특정 추가 표현함의 이름을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "표현함 이름이 수정되었습니다.")
-    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> updateName(
         @PathVariable Long expressionBookId,
@@ -118,7 +121,8 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현함 삭제", description = "특정 추가 표현함을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "표현함이 삭제되었습니다.")
-    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN})
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION, EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN})
     @DeleteMapping("/{expressionBookId}")
     public ResponseEntity<RsData<?>> delete(
         @PathVariable Long expressionBookId,
@@ -138,21 +142,19 @@ public class ExpressionBookController {
     /**
      * 특정 표현함의 표현 목록 조회
      *
-     * @param expressionBookId 표현함 ID
      * @param userDetails      로그인한 사용자 정보
      * @return 표현 목록을 담은 응답 객체
      */
-    @Operation(summary = "표현 목록 조회", description = "특정 표현함의 표현 목록을 조회합니다.")
+    @Operation(summary = "전체 표현 목록 조회", description = "모든 표현함의 표현들을 등록 날짜 기준으로 정렬하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함의 표현 목록 조회에 성공했습니다.")
-    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSION_NOT_FOUND})
-    @GetMapping("/{expressionBookId}/words")
+    @PossibleErrors({MEMBER_NOT_FOUND})
+    @GetMapping("/view")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
-        @PathVariable Long expressionBookId,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
-        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(expressionBookId, memberId);
+        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(memberId);
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(new RsData<>(
@@ -176,9 +178,12 @@ public class ExpressionBookController {
     @PostMapping("/{expressionBookId}/expressions")
     public ResponseEntity<RsData<?>> saveExpression(
         @PathVariable("expressionBookId") Long expressionBookId,
-        @RequestBody ExpressionSaveRequest request
+        @RequestBody ExpressionSaveRequest request,
+        @Login CustomUserDetails userDetails
     ) {
-        expressionBookService.save(request, expressionBookId);
+        Long memberId = userDetails.getMemberId();
+
+        expressionBookService.save(request, expressionBookId, memberId);
         return ResponseEntity.ok(new RsData<>(
             "200",
             "표현함에 표현이 저장되었습니다."
@@ -221,7 +226,8 @@ public class ExpressionBookController {
      */
     @Operation(summary = "표현 이동", description = "특정 표현함에서 다른 표현함으로 표현을 이동합니다.")
     @ApiResponse(responseCode = "200", description = "표현이 다른 표현함으로 이동되었습니다.")
-    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
+    @PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
+    @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
         @RequestBody MoveExpressionsRequest request,

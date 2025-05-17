@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.videohistory.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "video_history")
-public class VideoHistory {
+public class VideoHistory extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,13 +32,20 @@ public class VideoHistory {
     @JoinColumn(name = "video_id", nullable = false)
     private Videos videos;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "last_viewed_at", nullable = false)
+    private LocalDateTime lastViewedAt;
 
     @Builder
     public VideoHistory(Member member, Videos videos) {
         this.member = member;
         this.videos = videos;
-        this.createdAt = LocalDateTime.now();
+        this.lastViewedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 기록이 이미 존재할 때, 마지막 조회 시간을 현재 시각으로 갱신
+     */
+    public void updateTimestamp() {
+        this.lastViewedAt = LocalDateTime.now();
     }
 }

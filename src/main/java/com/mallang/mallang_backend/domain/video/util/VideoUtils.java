@@ -61,6 +61,21 @@ public final class VideoUtils {
 	}
 
 	/**
+	 * VideoResponse DTO로 매핑 (Setter 사용)
+	 * 북마크 여부 추가
+	 */
+	public static VideoResponse toVideoResponse(Video video, boolean isBookmarked) {
+		var snip = video.getSnippet();
+		VideoResponse dto = new VideoResponse();
+		dto.setVideoId(video.getId());
+		dto.setTitle(snip.getTitle());
+		dto.setDescription(snip.getDescription());
+		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
+		dto.setBookmarked(isBookmarked);
+		return dto;
+	}
+
+	/**
 	 * 기본 검색(defaultSearch)일 때 리스트를 섞어서 반환
 	 */
 	public static List<VideoResponse> shuffleIfDefault(List<VideoResponse> list, boolean isDefault) {

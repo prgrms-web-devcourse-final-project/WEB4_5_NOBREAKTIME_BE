@@ -1,0 +1,1 @@
+package com.mallang.mallang_backend.domain.plan.entity.domain.member.service.impl;

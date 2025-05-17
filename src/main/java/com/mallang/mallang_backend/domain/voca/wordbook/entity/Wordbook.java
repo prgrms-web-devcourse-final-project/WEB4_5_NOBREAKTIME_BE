@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.voca.wordbook.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -20,7 +21,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_RE
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Wordbook {
+public class Wordbook extends BaseTime {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "wordbook_id")
@@ -70,7 +71,11 @@ public class Wordbook {
 		return defaultWordbooks;
 	}
 
-	/**
+    public static boolean isDefault(Wordbook wordbook) {
+		return wordbook.getName().equals(DEFAULT_WORDBOOK_NAME);
+    }
+
+    /**
 	 * 추가 단어장의 이름을 변경합니다. 변경하려는 단어장의 기존 이름이 '기본'이거나 변경하려는 이름이 '기본'이면 실패합니다.
 	 * @param name 변경하려는 단어장 이름
 	 */

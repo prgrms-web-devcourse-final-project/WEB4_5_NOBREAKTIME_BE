@@ -1,9 +1,10 @@
 package com.mallang.mallang_backend.domain.quiz.wordquiz.controller;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordbookQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
@@ -38,7 +39,7 @@ public class WordQuizController {
 	@ApiResponse(responseCode = "200", description = "단어장 퀴즈 문제를 조회했습니다.")
 	@PossibleErrors({NO_WORDBOOK_EXIST_OR_FORBIDDEN, WORDBOOK_IS_EMPTY})
 	@GetMapping("/{wordbookId}/quiz")
-	public ResponseEntity<RsData<WordQuizResponse>> getWordbookQuiz(
+	public ResponseEntity<RsData<WordbookQuizResponse>> getWordbookQuiz(
 		@PathVariable Long wordbookId,
 		@Parameter(hidden = true)
 		@Login CustomUserDetails userDetail
@@ -46,7 +47,7 @@ public class WordQuizController {
 		Long memberId = userDetail.getMemberId();
 		Member member = memberService.getMemberById(memberId);
 
-		WordQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
+		WordbookQuizResponse quizResponse = wordQuizService.generateWordbookQuiz(wordbookId, member);
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",

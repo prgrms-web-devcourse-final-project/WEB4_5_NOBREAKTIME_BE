@@ -2,18 +2,17 @@ package com.mallang.mallang_backend.domain.quiz.wordquizresult.entity;
 
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WordQuizResult {
+public class WordQuizResult extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,9 +29,6 @@ public class WordQuizResult {
 
     @Column(nullable = false)
     private Boolean isCorrect = false;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
     public WordQuizResult(

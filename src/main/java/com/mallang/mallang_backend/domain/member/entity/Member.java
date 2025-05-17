@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,7 +17,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALRE
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Member {
+public class Member extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,26 +25,23 @@ public class Member {
     private Long id;
 
 
-    @Column(unique = true)
-    private String email; // 카카오 로그인 회원은 추가 입력 필요
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nickname;
 
     @Column
     private String profileImageUrl;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginPlatform loginPlatform;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String platformId; // 플랫폼 별 고유 식별자
 
     @Enumerated(EnumType.STRING)
@@ -52,10 +50,7 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Subscription subscription = Subscription.BASIC;
-
-    @Column(nullable = false)
-    private LocalDateTime subscribedAt = createdAt;
+    private SubscriptionType subscriptionType = SubscriptionType.BASIC;
 
     @Column(nullable = false)
     private int wordGoal = 20;
@@ -72,7 +67,7 @@ public class Member {
     private LocalDateTime withdrawalDate;
 
     @Column(nullable = false)
-    private LocalDateTime measuredAt = createdAt;
+    private LocalDateTime measuredAt;
 
     @Builder
     public Member(
@@ -91,6 +86,7 @@ public class Member {
         this.profileImageUrl = profileImageUrl;
         this.loginPlatform = loginPlatform;
         this.language = language;
+        this.measuredAt = LocalDateTime.now();
     }
 
     /**
@@ -123,14 +119,16 @@ public class Member {
         }
     }
 
-    // 언어 선택 업데이트 로직 -> 소셜 로그인 회원
+    // 언어 선택 업데이트
     public void updateLearningLanguage(Language language) {
         this.language = language;
     }
 
-    // 구독 플랜 업데이트
-    public void updateSubscription(Subscription subscription) {
-        this.subscription = subscription;
+    // 구독 플랜 업데이트 -> 변경 내역이 같이 않을 때에만 업데이트 할 수 있도록
+    public void updateSubscription(SubscriptionType subscriptionType) {
+        if (this.subscriptionType != subscriptionType) {
+            this.subscriptionType = subscriptionType;
+        }
     }
 
     public void updateWordGoal(int wordGoal) {
@@ -158,24 +156,32 @@ public class Member {
     }
 
     // 회원 탈퇴 후 마스킹 처리
-    public void markAsWithdrawn() {
+    public void markAsWithdrawn(String uuid) {
         if (this.withdrawalDate != null) {
             throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
         }
         this.withdrawalDate = LocalDateTime.now();
-        maskSensitiveData();
+        maskSensitiveData(uuid);
     }
 
-    private void maskSensitiveData() {
-        this.nickname = "탈퇴회원-" + this.id;
-        this.email = "withdrawn_" + this.id;
-        this.profileImageUrl = "delete";
+    private void maskSensitiveData(String uuid) {
+        this.platformId = "withdrawn_" + this.id + " " + uuid + " " + LocalDateTime.now();
+        this.nickname = uuid; // 고유 랜덤 코드
+        this.email = "withdrawn_" + this.id + uuid + " " + LocalDateTime.now();
+        this.profileImageUrl = null;
         this.loginPlatform = LoginPlatform.NONE;
-        this.subscription = Subscription.NONE;
+        this.subscriptionType = SubscriptionType.NONE;
     }
 
     public void updateProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
 
+    /**
+     * 추가 단어장, 표현함을 사용할 수 있는지 여부를 검사한다.
+     * @return 추가 단어장, 표현함을 사용할 수 있는지 여부
+     */
+    public boolean canUseAdditaional() {
+        return subscriptionType != SubscriptionType.BASIC;
+    }
 }

@@ -9,5 +9,6 @@ import java.util.List;
 @Setter
 public class ExpressionQuizResponse {
 	private Long quizId;
+	private String expressionBookName;
 	List<ExpressionQuizItem> quizItems;
 }

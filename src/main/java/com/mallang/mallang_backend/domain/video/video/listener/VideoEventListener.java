@@ -22,14 +22,15 @@ import java.nio.file.Paths;
 public class VideoEventListener {
 	private final WordService wordService;
 
-	@Async("videoExecutor")
+	@Async("addWordExecutor")
 	@TransactionalEventListener
 	public void handleVideoViewed(KeywordSavedEvent event) {
 		Keyword keyword = event.getKeyword();
 		wordService.savedWord(keyword.getWord());
+		log.debug("[KeywordSavedEvent] 단어 저장 완료 {}", keyword.getWord());
 	}
 
-	@Async("videoExecutor")
+	@Async("audioDeleteExecutor")
 	@TransactionalEventListener
 	public void handleVideoAnalyzed(VideoAnalyzedEvent event) {
 		String fileName = event.getFileName();
@@ -38,7 +39,7 @@ public class VideoEventListener {
 		try {
 			Path filePath = Paths.get(path);
 			Files.deleteIfExists(filePath);
-			log.info("Deleted file: {}", path);
+			log.debug("Deleted file: {}", path);
 		} catch (IOException e) {
 			log.warn("Failed to delete file: {}", path, e);
 			// TODO: 실패 시 알림 처리

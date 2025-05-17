@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.domain.quiz.expressionquiz.controller;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.dto.ExpressionQuizResultSaveRequest;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.service.ExpressionQuizService;

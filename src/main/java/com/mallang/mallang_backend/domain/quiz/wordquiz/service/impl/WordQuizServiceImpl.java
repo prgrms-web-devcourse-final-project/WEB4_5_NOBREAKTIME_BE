@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizItem;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordQuizResultSaveRequest;
+import com.mallang.mallang_backend.domain.quiz.wordquiz.dto.WordbookQuizResponse;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.service.WordQuizService;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,7 +48,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	@Transactional
 	@Override
-	public WordQuizResponse generateWordbookQuiz(Long wordbookId, Member member) {
+	public WordbookQuizResponse generateWordbookQuiz(Long wordbookId, Member member) {
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
@@ -71,8 +73,9 @@ public class WordQuizServiceImpl implements WordQuizService {
 			.build();
 
 		Long quizId = wordQuizRepository.save(wordQuiz).getId();
-		WordQuizResponse response = new WordQuizResponse();
+		WordbookQuizResponse response = new WordbookQuizResponse();
 		response.setQuizId(quizId);
+		response.setWordbookName(wordbook.getName());
 		response.setQuizItems(quizzes);
 
 		return response;
@@ -102,7 +105,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	private WordQuizItem createDto(Long id, String word, String original, String translated) {
 		WordQuizItem dto = new WordQuizItem();
-		dto.setWordQuizItemId(id);
+		dto.setWordbookItemId(id);
 		dto.setWord(word);
 		dto.setOriginal(original);
 		dto.setMeaning(translated);
@@ -112,7 +115,9 @@ public class WordQuizServiceImpl implements WordQuizService {
 
 	private String createQuestion(String word, String original) {
 		// 정답 단어를 {}로 대체
-		return original.replaceAll("\\b" + word + "\\b", "{}");
+		// (?i) 플래그로 대소문자 무시, \b로 단어 경계 매칭
+		String regex = "(?i)\\b" + Pattern.quote(word) + "\\b";
+		return original.replaceAll(regex, "{}");
 	}
 
 	// 단어 결과 저장

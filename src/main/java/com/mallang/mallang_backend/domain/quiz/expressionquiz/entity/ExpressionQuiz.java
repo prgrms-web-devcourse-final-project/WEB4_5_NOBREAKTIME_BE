@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.quiz.expressionquiz.entity;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.entity.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,15 +11,13 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.LocalDateTime;
-
 /**
  * 표현 퀴즈
  */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ExpressionQuiz {
+public class ExpressionQuiz extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,9 +35,6 @@ public class ExpressionQuiz {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Language language;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     // 생성 메서드
     @Builder

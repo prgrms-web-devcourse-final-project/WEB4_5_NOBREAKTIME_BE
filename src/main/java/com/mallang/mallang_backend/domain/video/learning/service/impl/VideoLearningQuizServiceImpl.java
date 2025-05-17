@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.MAX_VIDEO_LEARNING_QUIZ_ITEMS;
-
 @Service
 @RequiredArgsConstructor
 public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
@@ -61,7 +59,6 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 		Collections.shuffle(picked, random);
 
 		List<VideoLearningWordQuizItem> items = picked.stream()
-			.limit(MAX_VIDEO_LEARNING_QUIZ_ITEMS)
 			.map(VideoLearningWordQuizItem::from)
 			.collect(Collectors.toList());
 

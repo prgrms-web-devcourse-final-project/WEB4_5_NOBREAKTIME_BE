@@ -7,6 +7,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TranscriptSegment {
 
+	// 자막 ID
+	private Long id;
+
 	// 시작 시간 (ex. "00:01:23.500")
 	private String startTime;
 

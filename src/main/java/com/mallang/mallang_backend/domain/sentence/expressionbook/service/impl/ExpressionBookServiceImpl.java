@@ -17,6 +17,8 @@ import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
@@ -46,12 +53,16 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
     @Override
     @Transactional
-    public ExpressionBookResponse create(ExpressionBookRequest request, Long memberId) {
+    public Long create(ExpressionBookRequest request, Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!member.getSubscription().isStandardOrHigher()) {
+        if (member.getSubscriptionType() == BASIC) {
             throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
+        if (member.getLanguage() == Language.NONE) {
+            throw new ServiceException(LANGUAGE_IS_NONE);
         }
 
         if (request.getName().equals(DEFAULT_EXPRESSION_BOOK_NAME)) {
@@ -68,9 +79,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .member(member)
                 .build();
 
-        expressionBookRepository.save(expressionBook);
-
-        return ExpressionBookResponse.from(expressionBook);
+        return expressionBookRepository.save(expressionBook).getId();
     }
 
     @Override
@@ -80,22 +89,46 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         List<ExpressionBook> books = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
+
+        if (!member.canUseAdditaional()) {
+            books = books.stream()
+                    .filter(eb -> ExpressionBook.isDefault(eb))
+                    .toList();
+        }
+
+        for (ExpressionBook book : books) {
+            int expressionCount = expressionBookItemRepository.countByIdExpressionBookId(book.getId());
+            System.out.println(expressionCount);
+        }
+
         return books.stream()
-                .map(ExpressionBookResponse::from)
+                .map(book -> ExpressionBookResponse.from(
+                        book,
+                        expressionBookItemRepository.countByIdExpressionBookId(book.getId()),
+                        expressionBookItemRepository.countByIdExpressionBookIdAndLearnedTrue(book.getId())
+                ))
                 .toList();
     }
 
     @Override
     @Transactional
     public void updateName(Long expressionBookId, Long memberId, String newName) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
                 .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
-        book.updateName(newName);
+        if (!expressionBook.getMember().canUseAdditaional()) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
+
+        if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
+            throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
+        }
+
+        expressionBook.updateName(newName);
     }
 
     @Override
@@ -106,6 +139,10 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        if (!expressionBook.getMember().canUseAdditaional()) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
         }
 
         // 기본 표현함을 삭제 시도하면 실패
@@ -124,40 +161,69 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
-    public List<ExpressionResponse> getExpressionsByBook(Long expressionBookId, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+    public List<ExpressionResponse> getExpressionsByBook(Long memberId) {
+        // 사용자 인증
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
-            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
-        }
+        // 전체 표현함 아이템 조회
+        List<ExpressionBook> allBooks = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
+        List<Long> allBookIds = allBooks.stream()
+                .map(ExpressionBook::getId)
+                .toList();
+        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookIdIn(allBookIds);
 
-        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
+        // 표현 ID 한 번에 추출
+        List<Long> expressionIds = items.stream()
+                .map(i -> i.getId().getExpressionId())
+                .distinct()
+                .toList();
 
+        // 표현 엔티티 한 번에 조회
+        Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
+                .collect(Collectors.toMap(Expression::getId, Function.identity()));
+
+        // 표현함 아이템 추가순 기준으로 최신 정렬
         return items.stream()
-                .map(item -> expressionRepository.findById(item.getId().getExpressionId())
-                        .orElseThrow(() -> new ServiceException(EXPRESSION_NOT_FOUND)))
-                .map(ExpressionResponse::from)
+                .filter(item -> expressionMap.containsKey(item.getId().getExpressionId()))
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
+                .map(item -> ExpressionResponse.from(
+                        expressionMap.get(item.getId().getExpressionId()),
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
+                ))
                 .toList();
     }
 
     @Override
     @Transactional
-    public void save(ExpressionSaveRequest request, Long expressionBookId) {
+    public void save(ExpressionSaveRequest request, Long expressionBookId, Long memberId) {
         String videoId = request.getVideoId();
         Long subtitleId = request.getSubtitleId();
 
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        // 자신의 표현함이 아니면 표현 추가 실패
+        if (!expressionBook.getMember().getId().equals(memberId)) {
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        // 추가 표현함 사용 권한이 없으면 추가 표현함에 표현 추가 실패
+        if (!member.canUseAdditaional() && !ExpressionBook.isDefault(expressionBook)) {
+            throw new ServiceException(NO_PERMISSION);
+        }
+
         Subtitle subtitle = subtitleRepository.findById(subtitleId)
-            .orElseThrow(() -> new ServiceException(SUBTITLE_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(SUBTITLE_NOT_FOUND));
 
         String sentence = subtitle.getOriginalSentence();
         String description = subtitle.getTranslatedSentence();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         LocalTime subtitleAt = LocalTime.parse(subtitle.getStartTime(), formatter);
-
-        ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookId)
-                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
 
@@ -193,19 +259,29 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Transactional
     @Override
     public void deleteExpressionsFromExpressionBook(DeleteExpressionsRequest request, Long memberId) {
-        ExpressionBook book = expressionBookRepository.findById(request.getExpressionBookId())
-            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        if (!book.getMember().getId().equals(memberId)) {
+        ExpressionBook expressionBook = expressionBookRepository.findById(request.getExpressionBookId())
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        // 자신의 표현함이 아니면 표현 추가 실패
+        if (!expressionBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
+        // 추가 단어장 사용 권한이 없으면 추가 단어장의 단어 삭제 불가능
+        if (!ExpressionBook.isDefault(expressionBook) && !member.canUseAdditaional()) {
+            throw new ServiceException(ErrorCode.NO_PERMISSION);
+        }
+
+        // 삭제할 ID 리스트
         List<ExpressionBookItemId> ids = request.getExpressionIds().stream()
-            .map(expressionId -> new ExpressionBookItemId(expressionId, request.getExpressionBookId()))
-            .toList();
+                .map(expressionId -> new ExpressionBookItemId(expressionId, request.getExpressionBookId()))
+                .toList();
 
         // 표현에 대한 퀴즈 결과 삭제
-        expressionQuizResultRepository.deleteAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), book);
+        expressionQuizResultRepository.deleteAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), expressionBook);
         // 표현 삭제
         expressionBookItemRepository.deleteAllById(ids);
     }
@@ -215,19 +291,24 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     @Override
     public void moveExpressions(MoveExpressionsRequest request, Long memberId) {
         ExpressionBook sourceBook = expressionBookRepository.findById(request.getSourceExpressionBookId())
-            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
         ExpressionBook targetBook = expressionBookRepository.findById(request.getTargetExpressionBookId())
-            .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+                .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+        if (sourceBook.getMember().getSubscriptionType() == BASIC ||
+                targetBook.getMember().getSubscriptionType() == BASIC) {
+            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+        }
 
         if (!sourceBook.getMember().getId().equals(memberId) ||
-            !targetBook.getMember().getId().equals(memberId)) {
+                !targetBook.getMember().getId().equals(memberId)) {
             throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
         }
 
         List<ExpressionBookItemId> deleteIds = request.getExpressionIds().stream()
-            .map(expressionId -> new ExpressionBookItemId(expressionId, sourceBook.getId()))
-            .toList();
+                .map(expressionId -> new ExpressionBookItemId(expressionId, sourceBook.getId()))
+                .toList();
 
 
         // 새로운 표현을 생성하면서 목표 표현함에 저장
@@ -237,16 +318,16 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             if (expressionBookItemRepository.existsById(newId)) continue;
 
             ExpressionBookItem newItem = ExpressionBookItem.builder()
-                .expressionId(expressionId)
-                .expressionBookId(targetBook.getId())
-                .build();
+                    .expressionId(expressionId)
+                    .expressionBookId(targetBook.getId())
+                    .build();
 
             expressionBookItemRepository.save(newItem);
         }
 
         // 표현 퀴즈 결과의 표현 연결 변경
         List<ExpressionQuizResult> quizResults =
-            expressionQuizResultRepository.findAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), sourceBook);
+                expressionQuizResultRepository.findAllByExpression_IdInAndExpressionBook(request.getExpressionIds(), sourceBook);
         for (ExpressionQuizResult quizResult : quizResults) {
             quizResult.updateExpressionBook(targetBook);
         }
@@ -259,8 +340,25 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     // 표현함에서 표현 검색
     @Override
     public List<ExpressionResponse> searchExpressions(Long memberId, String keyword) {
-        return expressionBookItemRepository.findExpressionsByMemberAndKeyword(memberId, keyword).stream()
-            .map(ExpressionResponse::from)
-            .toList();
+        // 검색 결과 ExpressionBookItem 기준으로 받아오기
+        List<ExpressionBookItem> items = expressionBookItemRepository.findByMemberIdAndKeyword(memberId, keyword);
+
+        List<Long> expressionIds = items.stream()
+                .map(i -> i.getId().getExpressionId())
+                .distinct()
+                .toList();
+
+        Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
+                .collect(Collectors.toMap(Expression::getId, Function.identity()));
+
+        return items.stream()
+                .filter(item -> expressionMap.containsKey(item.getId().getExpressionId()))
+                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
+                .map(item -> ExpressionResponse.from(
+                        expressionMap.get(item.getId().getExpressionId()),
+                        item.getCreatedAt(),
+                        item.getId().getExpressionBookId()
+                ))
+                .toList();
     }
 }

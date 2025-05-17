@@ -65,6 +65,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		Long quizId = expressionQuizRepository.save(wordQuiz).getId();
 		ExpressionQuizResponse response = new ExpressionQuizResponse();
 		response.setQuizId(quizId);
+		response.setExpressionBookName(expressionBook.getName());
 		response.setQuizItems(quizzes);
 
 		return response;
@@ -74,8 +75,11 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
 			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
 
+		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
+			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 		return new ExpressionQuizItem(
 			expression.getId(),
+			expressionBook.getId(),
 			createQuestion(expression.getSentence()),
 			expression.getSentence(),
 			parseWord(expression.getSentence()),

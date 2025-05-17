@@ -12,7 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExpressionQuizItem {
-	private Long expressionQuizItemId;
+	private Long expressionId;
+	private Long expressionBookId;
 	private String question;
 	private String original;
 	private List<String> choices;

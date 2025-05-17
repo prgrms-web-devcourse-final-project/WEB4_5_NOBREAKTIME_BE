@@ -3,13 +3,12 @@ package com.mallang.mallang_backend.domain.member.controller;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.service.MemberService;
+import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
-import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,7 +39,6 @@ public class MemberController {
 
     private final MemberService memberService;
     private final TokenService tokenService;
-    private final JwtService jwtService;
 
     /**
      * @param userDetails 로그인 사용자 정보
@@ -81,14 +79,14 @@ public class MemberController {
             ))
     @PossibleErrors(MEMBER_NOT_FOUND)
     @GetMapping("/me")
-    public ResponseEntity<RsData<?>> getMyProfile(
+    public ResponseEntity<RsData<UserProfileResponse>> getMyProfile(
             @Parameter(hidden = true)
             @Login CustomUserDetails userDetails) {
 
         Long memberId = userDetails.getMemberId();
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
 
-        RsData<?> response = new RsData<>(
+        RsData<UserProfileResponse> response = new RsData<>(
                 "200",
                 "내 정보 확인 성공",
                 userProfile);
@@ -247,15 +245,22 @@ public class MemberController {
     @PossibleErrors({MEMBER_ALREADY_WITHDRAWN, MEMBER_NOT_FOUND, NOT_EXIST_BUCKET})
     @DeleteMapping("/me")
     public ResponseEntity<RsData<Void>> delete(@Parameter(hidden = true)
-                                               @Login CustomUserDetails userDetails) {
+                                               @Login CustomUserDetails userDetails,
+                                               HttpServletResponse response) {
 
-        memberService.withdrawMember(userDetails.getMemberId());
+        Long memerId = userDetails.getMemberId();
 
-        RsData<Void> response = new RsData<>(
+        memberService.withdrawMember(memerId);
+        memberService.deleteOldProfileImage(memerId);
+
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+
+        RsData<Void> rsp = new RsData<>(
                 "200",
                 "회원 탈퇴가 완료되었습니다."
         );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rsp);
     }
 }

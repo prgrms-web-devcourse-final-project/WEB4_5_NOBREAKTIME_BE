@@ -1,0 +1,15 @@
+package com.mallang.mallang_backend.domain.plan.entity.domain.payment.service.event.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+@AllArgsConstructor
+public class PaymentMailSendEvent {
+
+    private Long paymentId;
+    private Long memberId;
+    private String receiptUrl;
+}
