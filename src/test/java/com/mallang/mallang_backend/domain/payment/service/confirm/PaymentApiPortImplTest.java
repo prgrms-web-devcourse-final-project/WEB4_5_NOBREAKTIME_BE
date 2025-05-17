@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
+import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
@@ -25,6 +26,7 @@ public class PaymentApiPortImplTest {
 
     private static MockWebServer mockWebServer;
     private PaymentApiPortImpl paymentApiPort;
+    private PaymentRedisService redisService;
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -59,7 +61,7 @@ public class PaymentApiPortImplTest {
         // WebClient가 Mock 서버를 바라보도록 설정
         WebClient webClient = WebClient.create(mockWebServer.
                 url("/v1/payments/confirm").toString());
-        paymentApiPort = new PaymentApiPortImpl(webClient, webClient);
+        paymentApiPort = new PaymentApiPortImpl(webClient, webClient, redisService);
 
         //when
         PaymentApproveRequest request = PaymentApproveRequest.builder()
@@ -75,7 +77,7 @@ public class PaymentApiPortImplTest {
 
         //then
         assertThat(output.getOut())
-                .contains("[API 호출 실패]")
+                .contains("[결제 승인 실패]")
                 .contains("NOT_FOUND_PAYMENT_SESSION");
     }
 
@@ -100,7 +102,7 @@ public class PaymentApiPortImplTest {
         // WebClient가 Mock 서버를 바라보도록 설정
         WebClient webClient = WebClient.create(mockWebServer.
                 url("https://api.tosspayments.com/v1/payments/confirm").toString());
-        paymentApiPort = new PaymentApiPortImpl(webClient ,webClient);
+        paymentApiPort = new PaymentApiPortImpl(webClient ,webClient, redisService);
 
         //when
         PaymentApproveRequest request = PaymentApproveRequest.builder()
@@ -115,7 +117,7 @@ public class PaymentApiPortImplTest {
                 .isInstanceOf(ServiceException.class);
         //then
         assertThat(output.getOut())
-                .contains("[API 호출 실패]")
+                .contains("[결제 승인 실패]")
                 .contains("UNAUTHORIZED_KEY");
     }
 }

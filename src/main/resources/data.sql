@@ -183,8 +183,7 @@ INSERT INTO payment (member_id,
                      pay_status,
                      method,
                      approved_at,
-                     failure_reason,
-                     canceled_reason)
+                     failure_reason)
 VALUES (1,
         6,
         'test1',
@@ -193,8 +192,7 @@ VALUES (1,
         'DONE',
         'CARD', -- 결제 방법 (카드)
         NOW(), -- 결제 승인 시간
-        NULL, -- 실패 사유 없음
-        NULL -- 취소 사유 없음
+        NULL -- 실패 사유 없음
        );
 
 INSERT INTO payment (
@@ -206,8 +204,7 @@ INSERT INTO payment (
     pay_status,
     method,
     approved_at,
-    failure_reason,
-    canceled_reason
+    failure_reason
 ) VALUES (
              1,
              6,
@@ -217,8 +214,7 @@ INSERT INTO payment (
              'ABORTED',
              'PHONE', -- 결제 방법 (휴대폰)
              NOW(),    -- 승인 시간 없음
-             'NOT_FOUND_PAYMENT', -- 결제를 찾을 수 없음 (예시)
-             NULL     -- 취소 사유 없음
+             'NOT_FOUND_PAYMENT' -- 결제를 찾을 수 없음 (예시)
          );
 
 INSERT INTO payment_history (
@@ -234,7 +230,7 @@ INSERT INTO payment_history (
          );
 
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-01-01 00:00:00', '2025-01-31 00:00:00', 'EXPIRED', true);
-INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-01-31 00:00:00', '2025-03-02 00:00:00', 'EXPIRED', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-02-01 00:00:00', '2025-03-02 00:00:00', 'EXPIRED', true);
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-03-02 00:00:00', '2025-04-01 00:00:00', 'EXPIRED', true);
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-04-01 00:00:00', '2025-05-01 00:00:00', 'EXPIRED', true);
-INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-05-01 00:00:00', '2025-05-31 00:00:00', 'ACTIVE', true);
+INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (2, 7, '2025-05-01 00:00:00', '2025-05-31 00:00:00', 'ACTIVE', true);

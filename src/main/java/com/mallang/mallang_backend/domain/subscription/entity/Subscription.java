@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Subscription {
 
@@ -42,7 +41,7 @@ public class Subscription {
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status = SubscriptionStatus.ACTIVE; // 구독 상태
 
-    private Boolean isAutoRenew = false; // 구독 갱신 여부 판단
+    private Boolean isAutoRenew; // 구독 갱신 여부 판단
 
     @Builder
     public Subscription(Member member,
@@ -54,6 +53,7 @@ public class Subscription {
         this.plan = plan;
         this.startedAt = startedAt;
         this.expiredAt = expiredAt;
+        this.isAutoRenew = false;
     }
 
     public void updateStatus(SubscriptionStatus status) {
@@ -63,6 +63,9 @@ public class Subscription {
 
     // 구독 여부 판단 필드
     public void updateAutoRenew(Boolean isAutoRenew) {
+        if (this.isAutoRenew == isAutoRenew) {
+            return; // 동일하면 변경하지 않음
+        }
         this.isAutoRenew = isAutoRenew;
     }
 

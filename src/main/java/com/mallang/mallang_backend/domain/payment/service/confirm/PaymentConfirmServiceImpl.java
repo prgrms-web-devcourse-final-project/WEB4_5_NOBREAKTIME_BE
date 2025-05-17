@@ -1,27 +1,27 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
-import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
+import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentFailedEvent;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentMailSendEvent;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.Objects;
+import java.time.*;
 
-import static com.mallang.mallang_backend.domain.payment.entity.PayStatus.DONE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
@@ -38,6 +38,57 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
     private final PaymentApiPort paymentApiPort;
     private final SubscriptionService subscriptionService;
     private final ApplicationEventPublisher publisher;
+
+    // ========== 공통 메서드 추출 ========== //
+
+    /**
+     * 결제 성공 시 공통 처리 (이벤트 발행 + 구독 업데이트)
+     */
+    private void handleCommonSuccessActions(Payment payment,
+                                            LocalDateTime approvedAt,
+                                            String receiptUrl) {
+
+        // 상태값 분기 처리
+        PayStatus status = (payment.getBillingKey() != null)
+                ? PayStatus.AUTO_BILLING_APPROVED
+                : PayStatus.DONE;
+
+        // 이벤트 발행
+        publisher.publishEvent(new PaymentUpdatedEvent(
+                payment.getId(),
+                status,
+                status.getDescription()
+        ));
+
+        publisher.publishEvent(new PaymentMailSendEvent(
+                payment.getId(),
+                payment.getMemberId(),
+                receiptUrl
+        ));
+    }
+
+    /**
+     * 결제 실패 시 공통 처리
+     */
+    private void handleCommonFailureActions(Payment payment,
+                                            String paymentKey,
+                                            String code,
+                                            String message) {
+        payment.updateFailInfo(message);
+        publisher.publishEvent(new PaymentFailedEvent(
+                payment.getId(),
+                code,
+                message
+        ));
+        log.error("[결제실패] orderId: {}", payment.getOrderId());
+    }
+
+    /**
+     * ApprovedAt 변환 로직 통합
+     */
+    private LocalDateTime createApprovedTime(String approvedAt) {
+        return OffsetDateTime.parse(approvedAt).toLocalDateTime();
+    }
 
     /**
      * 결제 승인 요청을 외부 API로 전송하고 응답 객체를 반환합니다.
@@ -64,49 +115,41 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
      */
     // 반환된 값을 가지고 결제 결과를 업데이트
     public void processPaymentResult(String orderId, PaymentResponse result) {
-        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(
+                () -> new ServiceException(PAYMENT_NOT_FOUND));
 
         if (result.getStatus().equals("DONE")) {
-            handleApprovalSuccess(payment, result); // 결제 성공
+            payment.updateSuccessInfo(
+                    result.getPaymentKey(),
+                    createApprovedTime(result.getApprovedAt()),
+                    result.getMethod()); // 결제 성공 내역 업데이트
+
+            log.debug("[결제 성공] paymentKey: {}, approvedAt: {}",
+                    payment.getPaymentKey(), result.getApprovedAt());
+
+            // 구독 정보 업데이트
+            subscriptionService.updateSubscriptionInfo(
+                    payment.getMemberId(),
+                    payment.getPlan(),
+                    Clock.systemDefaultZone()
+            );
+
+            handleCommonSuccessActions(
+                    payment,
+                    createApprovedTime(result.getApprovedAt()),
+                    result.getReceipt().getUrl()
+            ); // 결제 성공
         } else {
-            handleApprovalFailure(payment, result); // 결제 승인 실패
+            payment.updateFailInfo(
+                    result.getFailure().getMessage()
+            ); // DB 업데이트
+            handleCommonFailureActions(
+                    payment,
+                    result.getPaymentKey(),
+                    result.getFailure().getCode(),
+                    result.getFailure().getMessage()
+            ); // 결제 승인 실패
         }
-    }
-
-    /**
-     * 결제 승인 실패를 처리하는 메서드입니다.
-     * 결제 엔티티를 실패 상태로 업데이트하고, 결제 실패 이벤트를 발행해 로그를 기록합니다.
-     *
-     * @param payment 결제 엔티티
-     * @param result  결제 승인 응답 정보
-     * @throws ServiceException 결제 승인 실패 시 예외 발생
-     */
-    private void handleApprovalFailure(Payment payment, PaymentResponse result) {
-        payment.updateFailInfo( // 결제 실패 상태로 업데이트
-                result.getPaymentKey(), result.getFailure().getCode());
-        publisher.publishEvent(new PaymentFailedEvent( // 결제 실패 이벤트 발생
-                payment.getId(), result.getFailure().getCode(), result.getFailure().getMessage()));
-        log.error("[결제승인실패] orderId: {}, paymentKey: {}, status: {}", payment.getOrderId(), result.getPaymentKey(), result.getStatus());
-
-        throw new ServiceException(PAYMENT_CONFIRM_FAIL);
-    }
-
-    /**
-     * 결제 승인 성공을 처리하는 메서드입니다.
-     * 결제 엔티티를 성공 상태로 업데이트하고, 결제 성공 이벤트를 발행하며, 구독 정보를 갱신합니다.
-     *
-     * @param payment 결제 엔티티
-     * @param result  결제 승인 응답 정보
-     */
-    private void handleApprovalSuccess(Payment payment, PaymentResponse result) {
-        payment.updateSuccessInfo(result.getPaymentKey(), createApprovedTime(result), result.getMethod());
-        String receiptUrl = result.getReceipt().getUrl();
-        publisher.publishEvent(new PaymentUpdatedEvent( // 결제 성공 이벤트 발생
-                payment.getId(), DONE, DONE.getDescription()));
-        publisher.publishEvent(new PaymentMailSendEvent( // 메일 발송 이벤트 발생
-                payment.getId(), payment.getMemberId(), receiptUrl));
-        subscriptionService.updateSubscriptionInfo( // 구독 업데이트
-                payment.getMemberId(), payment.getPlan(), createApprovedTime(result));
     }
 
     /**
@@ -119,96 +162,68 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
         redisService.checkOrderIdAndAmount(request.getOrderId(), request.getAmount());
     }
 
-    /**
-     * 결제 승인 시각을 ISO 에서 LocalDateTime 으로 변환합니다.
-     *
-     * @param result 결제 승인 응답 정보
-     * @return 승인 시각(LocalDateTime)
-     * @throws NullPointerException result 또는 승인 시각이 null인 경우
-     */
-    private LocalDateTime createApprovedTime(PaymentResponse result) {
-        String approvedAtToString = Objects.requireNonNull(result).getApprovedAt();
-        OffsetDateTime offsetDateTime = OffsetDateTime.parse(approvedAtToString);
-        return offsetDateTime.toLocalDateTime();
-    }
-
     // ========== 자동 결제 메서드 =========
 
-    // 빌링 키를 통해 반환된 값을 가지고 결제 결과 업데이트 및 이벤트를 발행
     @Override
-    public void processAutoBillingPaymentResult(BillingPaymentResponse response
-    ) {
+    @Retry(name = "retryDbSave", fallbackMethod = "retryDbSaveFallback")
+    @Transactional
+    public void processAutoBillingPaymentResult(BillingPaymentResponse response) {
+
         Payment payment = paymentRepository.findByOrderId(response.getOrderId())
                 .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
 
         String paymentKey = response.getPaymentKey();
 
         if (response.getStatus().equals("DONE")) {
-            handleBillingApprovalSuccess(payment, response); // 결제 성공
+
+            payment.updateBillingSuccessInfo(
+                    createApprovedTime(response.getApprovedAt()),
+                    response.getMethod(),
+                    paymentKey
+            ); // 결제 성공 내역 업데이트
+
+
+            renewalSubscription(payment); // 구독 업데이트 + 갱신
+            handleCommonSuccessActions(
+                    payment,
+                    createApprovedTime(response.getApprovedAt()),
+                    response.getReceipt().getUrl()
+            ); // 결제 성공
         } else {
-            handleBillingApprovalFailure(payment,
+            subscriptionService.downgradeSubscriptionToBasic(payment.getMemberId());
+            handleCommonFailureActions(
+                    payment,
                     response.getFailure().getCode(),
                     response.getFailure().getMessage(),
-                    paymentKey); // 결제 승인 실패
+                    paymentKey
+            ); // 결제 승인 실패
         }
     }
 
-    private void handleBillingApprovalSuccess(Payment payment,
-                                              BillingPaymentResponse response
-    ) {
-        payment.updateBillingSuccessInfo(
-                createApprovedTime(response.getApprovedAt()),
-                response.getMethod(),
-                response.getPaymentKey()
-        ); // 객체 업데이트 (결제 성공)
+    private void renewalSubscription(Payment payment) {
+        // 오늘 날짜 기준 +1일 후의 00:00을 Clock 으로 생성 (구독 갱신은 하루 후)
+        ZoneId zone = ZoneId.systemDefault(); // 또는 ZoneId.of("Asia/Seoul")
+        LocalDate tomorrow = LocalDate.now(zone).plusDays(1);
+        ZonedDateTime tomorrowStart = tomorrow.atStartOfDay(zone);
+        Clock tomorrowClock = Clock.fixed(tomorrowStart.toInstant(), zone);
 
-        subscriptionService.updateSubscriptionInfo( // 구독 업데이트
+        subscriptionService.updateSubscriptionInfo(
                 payment.getMemberId(),
                 payment.getPlan(),
-                createApprovedTime(response.getApprovedAt())
+                tomorrowClock
         );
+
         subscriptionService.updateIsAutoRenew(payment.getMemberId());
-
-        publisher.publishEvent(new PaymentUpdatedEvent( // 구독 갱신 성공 이벤트 발생
-                payment.getId(),
-                DONE,
-                DONE.getDescription()
-        ));
-
-        publisher.publishEvent(new PaymentMailSendEvent( // 메일 발송 이벤트 발생
-                payment.getId(),
-                payment.getMemberId(),
-                response.getReceipt().getUrl()
-        ));
     }
 
-    private void handleBillingApprovalFailure(Payment payment,
-                                              String paymentKey,
-                                              String code,
-                                              String message
-    ) {
-
-        payment.updateFailInfo(
-                paymentKey,
-                message
-        ); // DB 업데이트
-
-        publisher.publishEvent(new PaymentFailedEvent( // 구독 갱신 실패 이벤트 발생
-                payment.getId(),
-                code,
-                message
-        ));
-
-        // 구독 업데이트 -> 실패하면 BASIC 으로 돌아가기
-        subscriptionService.downgradeSubscriptionToBasic(payment.getMemberId());
-
-        throw new ServiceException(BILLING_PAYMENT_FAIL);
+    // 아예 밖에서 해결할 수도 있고 아니면 여기서 처리해도 되고 근데 그냥 밖에서 처리하는 게 편할 듯
+    public void retryDbSaveFallback(BillingPaymentResponse response,
+                                    Exception e) {
+        if (e instanceof PessimisticLockingFailureException) {
+            throw new ServiceException(PAYMENT_CONFLICT, e);
+        }
+        // TODO 보상 로직을 생각할 것
+        log.error("DB 저장 실패: {}", e.getMessage());
+        throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
     }
-
-    private LocalDateTime createApprovedTime(String approvedAt) {
-        OffsetDateTime offsetDateTime = OffsetDateTime.parse(approvedAt);
-        return offsetDateTime.toLocalDateTime();
-    }
-
-
 }

@@ -66,7 +66,7 @@ public class PaymentRedisService {
                 orderId, amount);
     }
 
-    public void checkIdemkeyAndSave(String idempotencyKey
+    public void checkAndSaveIdempotencyKey(String idempotencyKey
     ) {
         String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;
 
@@ -79,6 +79,7 @@ public class PaymentRedisService {
                 redisIdemKey,
                 "processed",
                 Duration.ofHours(24));
+        log.info("멱등성 토큰 키 저장 성공: {}", idempotencyKey);
     }
 
     private void fallbackMethod(String orderId,
@@ -90,5 +91,16 @@ public class PaymentRedisService {
             throw new ServiceException(CONNECTION_FAIL, e);
         }
         throw new ServiceException(PAYMENT_CONFLICT, e);
+    }
+
+    // 자동 결제 실패 시 해당 내용을 삭제하고 재시도 할 수 있도록 함
+    public void deleteIdempotencyKey(String customerKey, String orderId) {
+        String customerOrderIdKey = IDEM_KEY_PREFIX + orderId + "-" + customerKey;
+
+        if (redisTemplate.hasKey(customerOrderIdKey)) {
+            redisTemplate.delete(customerOrderIdKey);
+        } else {
+            log.warn("삭제할 키가 없습니다: {}", customerOrderIdKey);
+        }
     }
 }

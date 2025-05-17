@@ -2,7 +2,10 @@ package com.mallang.mallang_backend.domain.payment.entity;
 
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +15,6 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Entity
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
@@ -34,7 +36,6 @@ public class Payment {
     @Column(unique = true)
     private String paymentKey; // 각 결제를 식별하는 값 (PG사 제공) -> 취소 시에도 이용
 
-    @Column(unique = true)
     private String billingKey; // 자동 결제 시에 이용하는 값
 
     private String customerKey; // 자동 결제 시에 이용하는 값
@@ -55,11 +56,6 @@ public class Payment {
     // ==== 결제 실패 ====
     @Column
     private String failureReason; // 결제 실패 사유
-
-    // ==== 결제 취소 / 환불 ====
-    @Column
-    @Enumerated(EnumType.STRING)
-    private PaymentCancelReason canceledReason; // 결제 취소 사유
 
     /**
      * 필수 값만 우선 저장
@@ -94,29 +90,13 @@ public class Payment {
         this.payStatus = PayStatus.DONE;
     }
 
-    /**
-     * 결제가 실패하면,
-     * 실패 사유(failureReason), 결제 상태(payStatus) 등을 업데이트
-     */
-    public void updateFailInfo(String paymentKey,
-                               String reason
+    public void updateFailInfo(String reason
     ) {
-        this.paymentKey = paymentKey;
         this.failureReason = reason;
-        this.payStatus = PayStatus.ABORTED;
     }
 
-    /**
-     * 결제가 취소/환불되면,
-     * 취소 사유(canceledReason), 결제 상태(payStatus) 등을 업데이트
-     */
-    public void cancel(PaymentCancelReason reason) {
 
-        this.canceledReason = reason;
-        this.payStatus = PayStatus.CANCELED;
-    }
-
-    public void updatePayStatus(PayStatus status) {
+    public void updateStatus(PayStatus status) {
         this.payStatus = status;
     }
 
@@ -134,6 +114,10 @@ public class Payment {
         this.approvedAt = approvedAt;
         this.method = method;
         this.paymentKey = paymentKey;
-        this.payStatus = PayStatus.DONE;
+        this.payStatus = PayStatus.AUTO_BILLING_APPROVED;
+    }
+
+    public void updateOrderId(String orderId) {
+        this.orderId = orderId;
     }
 }

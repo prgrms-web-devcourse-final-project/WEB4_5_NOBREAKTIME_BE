@@ -40,6 +40,11 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        if (memberRepository.findById(1L).isPresent()) {
+            log.info("데이터 초기화가 이미 진행되었습니다.");
+            return;
+        }
+
         Member basicUser = createTestUser();
 
         createToken();

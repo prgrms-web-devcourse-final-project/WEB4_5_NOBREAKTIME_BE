@@ -2,15 +2,17 @@ package com.mallang.mallang_backend.domain.subscription.service;
 
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 
-import java.time.LocalDateTime;
+import java.time.Clock;
 
 public interface SubscriptionService {
 
     String getRoleName(Long memberId);
     boolean hasActiveSubscription(Long memberId);
+    // 구독 테이블 업데이트
     void updateSubscriptionInfo(Long memberId,
                                 Plan plan,
-                                LocalDateTime startDate);
+                                Clock startDate);
+
     void updateIsAutoRenew(Long memberId);
 
     void downgradeSubscriptionToBasic(Long memberId);

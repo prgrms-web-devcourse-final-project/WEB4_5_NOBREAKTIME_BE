@@ -15,8 +15,11 @@ public class LoggingAspect {
     @Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
     public void allControllers() {}
 
+    @Pointcut("execution(* com.mallang.mallang_backend.domain.payment.scheduler..*(..))")
+    public void paymentScheduler() {}
+
     // @RestController 애노테이션 기반으로 적용
-    @Around("allControllers()")
+    @Around("allControllers() || paymentScheduler()")
     public Object loggingParameter(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();

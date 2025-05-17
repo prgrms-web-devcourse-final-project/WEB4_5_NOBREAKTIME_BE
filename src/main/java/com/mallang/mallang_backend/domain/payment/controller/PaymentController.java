@@ -2,16 +2,11 @@ package com.mallang.mallang_backend.domain.payment.controller;
 
 import com.mallang.mallang_backend.domain.payment.docs.PaymentRequestDocs;
 import com.mallang.mallang_backend.domain.payment.dto.after.PaymentFailureRequest;
-import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
-import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
-import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
-import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
-import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
-import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
@@ -38,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.domain.payment.service.common.PaymentService.*;
+import static com.mallang.mallang_backend.domain.payment.service.common.PaymentService.MemberGrantedInfo;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
@@ -48,11 +43,9 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 @Tag(name = "결제 관리 API", description = "빌링 키 발급 및 자동 결제 관리를 위한 API")
 public class PaymentController {
 
-    private final PaymentRequestService requestService;
     private final PaymentService paymentService;
     private final JwtService jwtService;
     private final TokenService tokenService;
-    private final SubscriptionService subscriptionService;
 
     @Operation(
             summary = "결제 요청 정보 생성",
@@ -66,13 +59,13 @@ public class PaymentController {
             @Parameter(hidden = true) @Login CustomUserDetails userDetails,
             @Valid @RequestBody PaymentSimpleRequest simpleRequest) {
 
-        PaymentRequest request = requestService.createPaymentRequest(
-                userDetails.getMemberId(),
-                simpleRequest);
-
-        RsData<PaymentRequest> response = new RsData<>("200",
+        RsData<PaymentRequest> response = new RsData<>(
+                "200",
                 "결제 요청 정보를 생성 및 전송 성공",
-                request);
+                paymentService.createPaymentRequest(
+                        userDetails.getMemberId(),
+                        simpleRequest));
+
         return ResponseEntity.ok(response);
     }
 
@@ -88,21 +81,7 @@ public class PaymentController {
             HttpServletResponse response
     ) {
 
-        paymentService.checkIdemkeyAndSave(request.getIdempotencyKey());
-        paymentService.updatePaymentStatus(
-                request.getOrderId(),
-                PayStatus.IN_PROGRESS
-        );
-
-        PaymentResponse result = paymentService.sendApproveRequest(request);
-
-        paymentService.processPaymentResult(
-                request.getOrderId(),
-                result
-        );
-
-        MemberGrantedInfo grantedInfo = paymentService
-                .getMemberId(request.getOrderId());
+        MemberGrantedInfo grantedInfo = paymentService.processPaymentAndUpdateSubscription(request);
 
         Long memberId = grantedInfo.memberId();
         String roleName = grantedInfo.roleName();
@@ -118,17 +97,15 @@ public class PaymentController {
     }
 
     @Operation(
-            summary = "결제 승인 실패 처리",
+            summary = "결제 요청 실패 처리",
             description = "결제 요청에 실패한 경우 결제 상태를 ABORTED로 변경하고 실패 로그를 기록합니다."
     )
     @PostMapping("/fail")
     public ResponseEntity<RsData<String>> failedPayment(
             @Valid @RequestBody PaymentFailureRequest request
     ) {
-        paymentService.updatePaymentStatus(
-                request.getOrderId(),
-                PayStatus.ABORTED
-        );
+
+        paymentService.handleFailedPayment(request.getOrderId(), request.getCode());
 
         RsData<String> rsp = new RsData<>(
                 "200",
@@ -141,90 +118,47 @@ public class PaymentController {
     // ======== 자동 결제 ======== //
 
     /**
-     * 빌링 키 발급 및 자동 결제 요청을 처리합니다.
-     * <p>
+     * 빌링 키 발급 ( + 자동 결제 요청을 처리)
+     *
      * 처리 프로세스:
      * 1. 결제 서비스로부터 빌링 키 발급
      * 2. 고객 정보에 빌링 키 및 고객 키 업데이트
-     * 3. 결제 상태를 '진행 중'으로 변경
-     * 4. 자동 결제 승인 요청 전송
-     * 5. 결제 결과 처리 및 최종 응답 반환
+     *
+     * [이후 자동 결제 시]
+     * 1. 빌링 키 / 고객 키를 이용해서 자동 결제 승인 요청
+     * 2. 결제 결과 처리 및 최종 응답 반환
      *
      * @param request 결제 요청 정보 (주문 ID, 고객 키 등)
      * @return 처리 결과 메시지 (성공 시 200 코드 반환)
      */
     @Operation(
-            summary = "빌링 키 발급 및 결제 처리",
-            description = "빌링 키 발급부터 자동 결제 승인까지의 전체 프로세스를 처리하는 API"
+            summary = "자동 결제 키(빌링 키) 발급",
+            description = "빌링 키를 발급하고 제대로 발급이 되었을 때에는 200, " +
+                    "발급에 문제가 생겼을 경우 error 가 발생합니다." +
+                    "제대로 처리되지 않았을 경우에는 단순히 한 달 결제가 된 것으로 판단합니다." +
+                    "이후에 갱신이 가능하지 않도록 처리하고, 내역에서도 갱신 취소가 불가능합니다."
     )
     @PossibleErrors({PAYMENT_CONFIRM_FAIL, API_ERROR, PAYMENT_NOT_FOUND})
-    @PostMapping("/confirm/issue-billing-key")
+    @PostMapping("/issue-billing-key")
     public ResponseEntity<RsData<String>> succeedBillingPayment(
             @Valid @RequestBody BillingPaymentRequest request) {
 
-        // 1. 빌링 키 발급
-        String billingKey = paymentService.issueBillingKey(request);
-
-        // 2. 고객 정보 업데이트
-        paymentService.updateBillingKeyAndCustomerKey(
-                request.getOrderId(),
-                billingKey,
-                request.getCustomerKey()
-        );
-
-        // 3. 결제 상태 변경
-        paymentService.updatePaymentStatus(
-                request.getOrderId(),
-                PayStatus.IN_PROGRESS
-        );
-
-        // 4. 자동 결제 승인 요청
-        BillingPaymentResponse approveResponse =
-                paymentService.sendApproveAutoBillingRequest(
-                        request,
-                        billingKey
-                );
-
-        // 5. 결제 결과 처리
-        paymentService.processAutoBillingPaymentResult(approveResponse);
+       paymentService.processIssueBillingKey(request);
 
         RsData<String> response = new RsData<>(
                 "200",
-                "구독 결제 완료"
+                "자동 빌링 키 발급 완료"
         );
 
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 빌링 키 발급 실패 시 결제 상태를 업데이트합니다.
-     *
-     * 처리 프로세스:
-     * 1. 회원 ID 기반 결제 내역 조회
-     * 2. 결제 상태 ABORTED로 변경
-     *
-     * @param userDetails 인증된 사용자 정보
-     * @return 처리 결과 메시지 (성공 시 200 코드 반환)
-     */
-    @Operation(
-            summary = "빌링 키 발급 실패 처리",
-            description = "카드 인증 실패 시 결제 상태를 중단 상태로 변경하는 API"
-    )
-    @PostMapping("/fail/issue-billing-key")
-    public ResponseEntity<RsData<String>> failedBillingPayment(
-            @Parameter(hidden = true) @Login CustomUserDetails userDetails) {
+    // 테스트 코드
+    public ResponseEntity<String> autoBillingPayment(
+            @Login CustomUserDetails userDetails) {
+        // autoBillingService.executeAutoBilling();
 
-        // 1. 결제 내역 조회
-        String orderId = paymentService.getPaymentByMemberId(userDetails.getMemberId());
-
-        // 2. 결제 상태 업데이트
-        paymentService.updatePaymentStatus(orderId, PayStatus.ABORTED);
-
-        RsData<String> response = new RsData<>(
-                "200",
-                "결제 상태 업데이트 완료");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok("자동 결제 완료");
     }
 
     // ======== 구독 해지 ======== //
@@ -232,7 +166,7 @@ public class PaymentController {
     public ResponseEntity<RsData<String>> cancelSubscription(
             @Parameter(hidden = true) @Login CustomUserDetails userDetails
     ) {
-        subscriptionService.cancelSubscription(userDetails.getMemberId());
+        paymentService.cancelSubscription(userDetails.getMemberId());
 
         RsData<String> response = new RsData<>(
                 "200",

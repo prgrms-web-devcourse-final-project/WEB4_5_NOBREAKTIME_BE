@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.subscription.service;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.entity.SubscriptionStatus;
@@ -31,6 +32,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionQueryRepository queryRepository;
+    private final PaymentRepository paymentRepository;
 
     /**
      * member 에 접근해서 구독 정보를 가져 오기
@@ -69,7 +71,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override
     public void updateSubscriptionInfo(Long memberId,
                                        Plan plan,
-                                       LocalDateTime startDate) {
+                                       Clock clock) {
+
+        // 현재 시간을 Clock 기반으로 생성
+        LocalDateTime startDate = LocalDateTime.now(clock);
+        LocalDateTime expiredDate = startDate.plusMonths(plan.getPeriod().getMonths());
+
         Member member = findMemberOrThrow(memberId);
         SubscriptionType preType = member.getSubscriptionType();
         member.updateSubscription(plan.getType());
@@ -78,18 +85,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .member(member)
                 .plan(plan)
                 .startedAt(startDate)
-                .expiredAt(startDate.plusMonths(plan.getPeriod().getMonths()))
+                .expiredAt(expiredDate) // 계산된 시간 사용
                 .build();
 
         subscriptionRepository.save(newSubs);
 
-        log.info("[결제변경이력] 사용자ID:{}|구독등급:{}→{}|변경기간:{}~{}",
-                memberId,
-                preType,
-                member.getSubscriptionType(),
-                newSubs.getStartedAt(),
-                newSubs.getExpiredAt()
-        );
+        log.info("[결제변경이력] 사용자 ID:{}|구독등급:{}→{}|변경기간:{}~{}",
+                memberId, preType, member.getSubscriptionType(),
+                newSubs.getStartedAt(), newSubs.getExpiredAt());
     }
 
     @Override
@@ -116,6 +119,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 memberId, beforeAutoRenew, true);
     }
 
+    // 구독 만료 설정 -> 이미 다운그레이드된 구독을 또 다운그레이드해도 문제없어야 함
     @Override
     public void downgradeSubscriptionToBasic(Long memberId) {
         Member member = findMemberOrThrow(memberId);
@@ -123,7 +127,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         // 변경 전 구독 등급 저장
         SubscriptionType beforeType = member.getSubscriptionType();
 
-        // 구독 등급 BASIC으로 변경
+        // 구독 등급 BASIC 으로 변경
         member.updateSubscription(SubscriptionType.BASIC);
 
         // 구독 이력 조회 및 만료 처리
@@ -137,7 +141,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         lastSubscription.updateStatus(SubscriptionStatus.EXPIRED); // 구독 만료 설정
 
         // 변경 이력 로그 기록 (변경 전/후 등급 모두 기록)
-        log.info("[결제변경이력] 사용자ID:{} | 구독등급:{}→{}",
+        log.info("[결제변경이력] 사용자 ID:{} | 구독등급:{}→{}",
                 memberId, beforeType, SubscriptionType.BASIC);
     }
 
@@ -168,6 +172,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         // 최신 한 건 조회
         Subscription subscription = queryRepository.findLatestByMember(member).orElseThrow(
                 () -> new ServiceException(SUBSCRIPTION_NOT_FOUND));
+
         subscription.updateStatus(SubscriptionStatus.CANCELED);
         subscription.updateAutoRenew(false); // 자동 결제 여부 초기화
 
