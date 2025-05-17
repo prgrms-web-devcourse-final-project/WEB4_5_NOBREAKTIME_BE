@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.subscription.repository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.subscription.entity.QSubscription;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
