@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Bookmark", description = "영상 북마크 관련 API")
 @RestController

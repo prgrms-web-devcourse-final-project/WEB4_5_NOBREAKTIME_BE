@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GptSubtitleResponse {
+    private Long subtitleId;            // 자막 아이디
     private String startTime;           // 자막 시작 시간
     private String endTime;             // 자막 종료 시간
     private String speaker;             // 화자 정보
@@ -27,6 +28,7 @@ public class GptSubtitleResponse {
     public static List<GptSubtitleResponse> from(List<Subtitle> subtitles) {
         return subtitles.stream()
                 .map(s -> new GptSubtitleResponse(
+                        s.getId(),
                         s.getStartTime(),
                         s.getEndTime(),
                         s.getSpeaker(),

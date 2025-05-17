@@ -2,7 +2,10 @@ package com.mallang.mallang_backend.global.util.youtube;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,6 +27,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	private final ProcessRunner processRunner;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
+	@Bulkhead(name = "audioExtraction", fallbackMethod = "extractFallback")
 	@Override
 	public String extractAudio(String youtubeUrl) throws IOException, InterruptedException {
 		ensureUploadsDirectoryExists();
@@ -36,6 +40,11 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 		runAudioExtraction(youtubeUrl, UPLOADS_DIR + fileName);
 
 		return fileName;
+	}
+
+	// 대기가 길어져도 슬롯이 안 풀리면 이곳이 호출됩니다.
+	public String extractFallback(String url, BulkheadFullException ex) {
+		throw new ServiceException(ErrorCode.TOO_MANY_CONCURRENT_AUDIO_EXTRACTIONS);
 	}
 
 	private void ensureUploadsDirectoryExists() {

@@ -81,6 +81,7 @@ public class GptScriptProcessor {
             TranscriptSegment seg = segments.get(i);
 
             GptSubtitleResponse dto = new GptSubtitleResponse(
+                    seg.getId(),
                     seg.getStartTime(),
                     seg.getEndTime(),
                     seg.getSpeaker(),
@@ -111,6 +112,9 @@ public class GptScriptProcessor {
             String[] parts = line.split("\\|"); // 한 줄을 '|' 기준으로 나누기
             if (parts.length != 5) {
                 // 품사|뜻|난이도 형식이 아닌 경우
+                System.out.println("[단어 저장 실패]");
+                System.out.println("word = " + word);
+                System.out.println("gptResult = \n" + gptResult);
                 throw new ServiceException(ErrorCode.WORD_PARSE_FAILED);
             }
 

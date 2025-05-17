@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
+@AllArgsConstructor
 public enum ErrorCode {
 
     // Member Errors
@@ -14,6 +15,8 @@ public enum ErrorCode {
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     NOT_CHANGED("400-9", "not.changed", HttpStatus.BAD_REQUEST),
     LANGUAGE_ALREADY_SET("410-9", "language.already.set", HttpStatus.CONFLICT),
+    CANNOT_SIGNUP_WITH_THIS_ID("409-2", "cannot.signup.with.this.id", HttpStatus.UNAUTHORIZED),
+    NICKNAME_GENERATION_FAILED("500-1", "nickname.generation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
@@ -24,6 +27,7 @@ public enum ErrorCode {
     // Audio Errors
     AUDIO_DOWNLOAD_FAILED("500-1", "audio.download.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     AUDIO_FILE_NOT_FOUND("404-2", "audio.file.not.found", HttpStatus.NOT_FOUND),
+    TOO_MANY_CONCURRENT_AUDIO_EXTRACTIONS("500-1", "too.many.concurrent.audio.extractions", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Video Errors
     VIDEO_LENGTH_EXCEED("400-1", "video.length.exceed", HttpStatus.BAD_REQUEST),
@@ -31,6 +35,9 @@ public enum ErrorCode {
     VIDEO_PATH_CREATION_FAILED("500-1", "upload.path.creation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_ID_SEARCH_FAILED("500-1", "video.id.search.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     VIDEO_DETAIL_FETCH_FAILED("500-2", "video.detail.fetch.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_CONCURRENCY_TIME_OUT("500-4", "analyze.video.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    ANALYZE_VIDEO_FAILED("500-5", "analyze.video.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    CATEGORY_NOT_FOUND("404-2", "category.not.found", HttpStatus.NOT_FOUND),
 
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -41,6 +48,9 @@ public enum ErrorCode {
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_PARSE_FAILED("500-3", "word.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     WORD_NOT_FOUND("404-1", "word.not.found", HttpStatus.NOT_FOUND),
+    SAVED_WORD_CONCURRENCY_TIME_OUT("500-4", "saved.word.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
+    LANGUAGE_MISMATCH("400-1", "language.mismatch", HttpStatus.BAD_REQUEST),
+    INVALID_WORD("500-5", "invalid.word", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // ExpressionBook Errors
     EXPRESSION_BOOK_NOT_FOUND("404-1", "expression.book.not.found", HttpStatus.NOT_FOUND),
@@ -64,6 +74,7 @@ public enum ErrorCode {
     // 단어장에 해당 단어가 없음
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
     LANGUAGE_IS_NONE("400-1", "language.is.none", HttpStatus.BAD_REQUEST),
+    NO_PERMISSION("403-1", "no.permission", HttpStatus.FORBIDDEN),
 
     // Parse Errors
     INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST),
@@ -118,18 +129,35 @@ public enum ErrorCode {
     // 영상 학습 퀴즈용 에러
     KEYWORD_NOT_FOUND("404-1", "keyword.not.found", HttpStatus.NOT_FOUND),
 
+    // 북마크 에러
+    BOOKMARK_ALREADY_EXISTS("409-2", "bookmark.already.exists", HttpStatus.CONFLICT),
+    BOOKMARK_NOT_FOUND("404-3", "bookmark.not.found", HttpStatus.NOT_FOUND),
+
+    // 결제 상황 오류
+    PLAN_NOT_FOUND("404-2", "plan.not.found", HttpStatus.NOT_FOUND),
+    CONNECTION_FAIL("500-3", "connection.fail", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_NOT_FOUND("404-4", "payment.not.found", HttpStatus.NOT_FOUND),
+    PAYMENT_CONFLICT("409-5", "order.id.conflict", HttpStatus.CONFLICT),
+    PAYMENT_AMOUNT_MISMATCH("409-6", "payment.rejected", HttpStatus.CONFLICT),
+    PAYMENT_CONFIRM_FAIL("500-4", "payment.confirm.fail", HttpStatus.INTERNAL_SERVER_ERROR),
+    BILLING_PAYMENT_FAIL("400-3", "billing.payment.fail", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_NOT_FOUND("404-5", "subscription.not.found", HttpStatus.NOT_FOUND),
+    BILLING_KEY_ISSUE_FAILED("400-4", "billing.key.issue.failed", HttpStatus.BAD_REQUEST),
+    INVALID_PAYMENT_STATUS("400-5", "invalid.payment.status", HttpStatus.BAD_REQUEST),
+    MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
+    INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
+
+    // 메일 전송 에러
+    EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // 학습 레벨 측정 에러
     LEVEL_NOT_MEASURABLE("400-1", "level.not.measurable", HttpStatus.BAD_REQUEST),
-    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // 캐시 관련 에러
+    CACHE_LOCK_TIMEOUT("500-6", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
     private final HttpStatus status;
-
-    ErrorCode(String code, String messageCode, HttpStatus status) {
-        this.code = code;
-        this.messageCode = messageCode;
-        this.status = status;
-    }
-
 }

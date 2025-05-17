@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class OpenAiResponse {
     private List<Choice> choices;
+    private Usage usage;
 
     @Getter
     @Setter
@@ -20,5 +21,15 @@ public class OpenAiResponse {
     @NoArgsConstructor
     public static class Choice {
         private Message message;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Usage {
+        private int prompt_tokens;
+        private int completion_tokens;
+        private int total_tokens;
     }
 }

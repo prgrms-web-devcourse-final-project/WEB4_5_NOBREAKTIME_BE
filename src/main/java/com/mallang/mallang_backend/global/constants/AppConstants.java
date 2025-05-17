@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.constants;
 
+import java.time.format.DateTimeFormatter;
+
 public class AppConstants {
 
     /**
@@ -66,9 +68,9 @@ public class AppConstants {
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 
 	/**
-	 * 영상 학습 퀴즈 최대 개수
+	 * 비디오 히스토리 최대 갯수
 	 */
-	public static final int MAX_VIDEO_LEARNING_QUIZ_ITEMS = 5;
+	public static final int MAX_HISTORY_PER_MEMBER = 50;
 
     /**
      * s3 에 업로드 할 프로필 사진의 prefix
@@ -79,7 +81,24 @@ public class AppConstants {
     /**
      * 자동 가입 시 닉네임 중복 처리 용도
      */
-    public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    public static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
+    /**
+     * redis 저장용 key prefix
+     */
     public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
+    public static final String ORDER_ID_PREFIX = "order:";
+    public static final String IDEM_KEY_PREFIX = "idempotencyKey:";
+    public static final String BILLING_KEY_PREFIX = "billing:";
+
+    /**
+     * 주문 ID 생성 용도
+     */
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+
+	/**
+	 * Redis Lock TTL (Time To Live)
+	 */
+	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
+	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
 }

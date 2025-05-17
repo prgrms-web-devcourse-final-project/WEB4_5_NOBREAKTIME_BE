@@ -43,21 +43,6 @@ public class JwtService {
                 .compact();
     }
 
-    // JWT 유효성 검사
-    public boolean isValidToken(String token) {
-        SecretKey key = getSecretKey(secretKey);
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (JwtException e) {
-            handleAuthException(e);
-            return false;
-        }
-    }
-
     // JWT 검증 및 Claims 객체 추출
     public Claims parseAndValidateToken(String token) {
         SecretKey key = getSecretKey(secretKey);
@@ -91,8 +76,8 @@ public class JwtService {
                                        HttpServletResponse response) {
 
         Cookie cookie = new Cookie(REFRESH_TOKEN, token);
-        cookie.setHttpOnly(true);
         cookie.setPath("/");                // 전체 사이트에서 접근 가능
+        cookie.setHttpOnly(true);
         cookie.setSecure(true);             // HTTPS 통신 시에만 전송
         cookie.setHttpOnly(true);           // 자바스크립트 접근 불가 (XSS 방지)
 
@@ -101,7 +86,7 @@ public class JwtService {
         cookie.setMaxAge(maxAgeSeconds);    // 쿠키 만료 시간(초 단위)
 
         // SameSite=Lax 속성 추가
-        cookie.setAttribute("SameSite", "Lax");
+        cookie.setAttribute("SameSite", "None");
 
         response.addCookie(cookie);
     }
