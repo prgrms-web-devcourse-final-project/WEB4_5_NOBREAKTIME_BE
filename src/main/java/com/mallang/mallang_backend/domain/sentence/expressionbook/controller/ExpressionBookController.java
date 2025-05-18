@@ -180,7 +180,7 @@ public class ExpressionBookController {
     @PostMapping("/{expressionBookId}/expressions")
     public ResponseEntity<RsData<?>> saveExpression(
         @PathVariable("expressionBookId") Long expressionBookId,
-        @RequestBody ExpressionSaveRequest request,
+        @RequestBody @Valid ExpressionSaveRequest request,
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -204,7 +204,7 @@ public class ExpressionBookController {
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
     @PostMapping("/expressions/delete")
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
-        @RequestBody DeleteExpressionsRequest request,
+        @RequestBody @Valid DeleteExpressionsRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
@@ -232,7 +232,7 @@ public class ExpressionBookController {
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
-        @RequestBody MoveExpressionsRequest request,
+        @RequestBody @Valid MoveExpressionsRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
