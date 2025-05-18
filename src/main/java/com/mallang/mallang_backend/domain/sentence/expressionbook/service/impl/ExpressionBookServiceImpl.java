@@ -96,11 +96,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                     .toList();
         }
 
-        for (ExpressionBook book : books) {
-            int expressionCount = expressionBookItemRepository.countByIdExpressionBookId(book.getId());
-            System.out.println(expressionCount);
-        }
-
         return books.stream()
                 .map(book -> ExpressionBookResponse.from(
                         book,
