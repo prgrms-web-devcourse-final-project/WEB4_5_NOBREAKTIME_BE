@@ -1,9 +1,11 @@
+
 package com.mallang.mallang_backend.domain.payment.service.common;
 
-import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
-import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
-import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
+import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
+import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
@@ -11,6 +13,8 @@ import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentApiPort
 import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentConfirmService;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -31,30 +35,111 @@ public class PaymentService {
     private final PaymentRedisService redisService;
     private final PaymentConfirmService paymentConfirmService;
     private final PaymentApiPort paymentApiPort;
+    private final SubscriptionService subscriptionService;
+    private final PaymentRequestService paymentRequestService;
 
-    public MemberGrantedInfo getMemberId(String orderId) {
-        Payment payment = findByOrderIdThrows(orderId);
-        return new MemberGrantedInfo(
-                payment.getMemberId(),
-                payment.getPlan().getType().getRoleName());
-    }
+    // ============== 기본 결제 로직 =================== //
+    @Transactional // 보상 처리 로직이 필요함
+    public MemberGrantedInfo processPaymentAndUpdateSubscription(PaymentApproveRequest request) {
+        try {
+            // 1. 멱등성 키 검증 및 저장 (트랜잭션 내)
+            redisService.checkAndSaveIdempotencyKey(request.getIdempotencyKey());
 
-    public record MemberGrantedInfo(Long memberId, String roleName) {
-    }
+            // 2. 결제 요청 값이 정확한지 검증 (Redis 체크)
+            redisService.checkOrderIdAndAmount(request.getOrderId(), request.getAmount());
 
-    public void checkIdemkeyAndSave(String idempotencyKey
-    ) {
-        redisService.checkIdemkeyAndSave(idempotencyKey);
+            // 3. 결제 상태 IN_PROGRESS로 업데이트 (트랜잭션 내)
+            Payment payment = paymentRepository.findByOrderId(request.getOrderId())
+                    .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+
+            updatePaymentStatus(request.getOrderId(), PayStatus.IN_PROGRESS);
+
+            // 4. 외부 결제 승인 API 호출 (트랜잭션 밖)
+            PaymentResponse response = paymentApiPort.callTossPaymentAPI(request);
+
+            // 5. 결제 결과 처리 (트랜잭션 내)
+            paymentConfirmService.processPaymentResult(request.getOrderId(), response);
+
+            // 5. 멤버 권한 정보 조회 (트랜잭션 내)
+            return new MemberGrantedInfo(
+                    payment.getMemberId(),
+                    payment.getPlan().getType().getRoleName()
+            );
+        } catch (Exception e) {
+            log.error("[결제 실패] orderId: {}", request.getOrderId());
+            // 결제 실패 시 결제 상태 변경
+            throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
+        }
     }
 
     @Transactional
-    public void updatePaymentStatus(String orderId,
-                                    PayStatus changedPayStatus
-    ) {
-        Payment payment = findByOrderIdThrows(orderId);
-        payment.updatePayStatus(changedPayStatus);
+    public PaymentRequest createPaymentRequest(Long memberId,
+                                               PaymentSimpleRequest simpleRequest) {
+        return paymentRequestService.createPaymentRequest(memberId, simpleRequest);
+    }
 
-        // 결제 히스토리 업데이트 이벤트 발행
+    // ============= 자동 결제 메서드 ============ //
+
+    // 빌링 키를 발급하는 로직
+    @Transactional
+    public void processIssueBillingKey(BillingPaymentRequest request) {
+        try {
+            // 1. 빌링 키 발급 (외부 API) (트랜잭션 밖)
+            String billingKey = paymentApiPort.issueBillingKey(
+                    request.getCustomerKey(),
+                    request.getAuthKey(),
+                    request.getOrderId()
+            );
+
+            // 2. 고객 정보 업데이트 (DB) - 빌링 키, 고객 키 업데이트
+            updateBillingKeyAndCustomerKey(
+                    request.getOrderId(),
+                    billingKey,
+                    request.getCustomerKey()
+            );
+
+            Payment payment = findByOrderIdThrows(request.getOrderId());
+
+            // 3. 구독 상태 변경 (DB)
+            subscriptionService.updateIsAutoRenew(payment.getMemberId());
+        } catch (Exception e) {
+            log.error("[구독 갱신 빌링 키 발급 실패] orderId: {}", request.getOrderId());
+            throw new ServiceException(BILLING_KEY_ISSUE_FAILED, e);
+        }
+    }
+
+    @Transactional
+    public void cancelSubscription(Long memberId) {
+        subscriptionService.cancelSubscription(memberId);
+    }
+
+    // ============== 공통 결제 실패 로직 =========== //
+    @Transactional
+    public void handleFailedPayment(String orderId, String errorCode) {
+        // 1. 결제 내역 조회 (트랜잭션 내)
+        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
+
+        // 2. 결제 상태 업데이트 (트랜잭션 내)
+        payment.updateStatus(PayStatus.ABORTED);
+
+        // 3. 결제 상태 업데이트 (에러 코드)
+        payment.updateFailInfo(errorCode);
+    }
+
+    // ============ 프라이빗 메서드 =========== //
+
+    /**
+     * 주문 ID에 해당하는 결제의 상태를 변경하고, 결제 상태 변경 이벤트를 발행합니다.
+     *
+     * @param orderId          주문 ID
+     * @param changedPayStatus 변경할 결제 상태
+     */
+    public void updatePaymentStatus(String orderId,
+                                     PayStatus changedPayStatus) {
+        Payment payment = findByOrderIdThrows(orderId);
+        payment.updateStatus(changedPayStatus);
+
+        // 결제 상태 변경 이벤트 발행
         publisher.publishEvent(new PaymentUpdatedEvent(
                 payment.getId(),
                 changedPayStatus,
@@ -62,66 +147,47 @@ public class PaymentService {
         ));
     }
 
-    // 결제 승인 요청 전송 후 응답 객체 반환
-    public PaymentResponse sendApproveRequest(PaymentApproveRequest request
-    ) {
-        updatePaymentStatus(request.getOrderId(), PayStatus.IN_PROGRESS); // 결제 승인 대기 상태로 업데이트
-        return paymentConfirmService.sendApproveRequest(request);
-    }
+    /**
+     * 주문 ID에 해당하는 결제 정보에 빌링 키와 고객 키를 업데이트합니다.
+     * 트랜잭션 내에서 실행되며 영속성 컨텍스트가 자동으로 관리됩니다.
+     *
+     * @param orderId     주문 ID
+     * @param billingKey  발급받은 빌링 키
+     * @param customerKey 발급받은 고객 키
+     */
+    private void updateBillingKeyAndCustomerKey(String orderId,
+                                                String billingKey,
+                                                String customerKey) {
 
-    // DB에 저장
-    @Transactional
-    public void processPaymentResult(String orderId,
-                                     PaymentResponse result
-    ) {
-        paymentConfirmService.processPaymentResult(orderId, result);
-    }
-
-    private Payment findByOrderIdThrows(String orderId) {
-        return paymentRepository.findByOrderId(orderId).orElseThrow(() ->
-                new ServiceException(PAYMENT_NOT_FOUND));
-    }
-
-    // ========== 자동 결제 메서드 =========
-
-    // 1. 토스 API 로 요청을 보내서 빌링 키를 발급 받기
-    // TODO orderId 와 billingKey 를 redis 에 저장하고 중복 요청을 거절하기
-    public String issueBillingKey(BillingPaymentRequest request
-    ) {
-        return paymentApiPort.callTossPaymentBillingAPI(request);
-    }
-
-    // 2. 빌링 키 - 고객 키를 DB에 업데이트 (이후 자동 결제 시에 이용할 값)
-    @Transactional
-    public void updateBillingKeyAndCustomerKey(String OrderId,
-                                               String billingKey,
-                                               String customerKey
-    ) {
-        Payment payment = paymentRepository.findByOrderId(OrderId).orElseThrow(
-                () -> new ServiceException(PAYMENT_NOT_FOUND));
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
 
         payment.updateBillingKeyAndCustomerKey(billingKey, customerKey);
-        log.debug("[자동 결제 키 저장] billingKey: {}, customerKey: {}", billingKey, customerKey);
+
+        updatePaymentStatus(orderId, PayStatus.AUTO_BILLING_READY); // 변경 여부 고려
+
+        log.debug("[자동 결제 키 저장] billingKey: {}, customerKey: {}",
+                billingKey, customerKey);
     }
 
-    // 3. 발급 받은 빌링 키로 자동으로 결제 시작 -> 응답 반환 (성공 혹 실패)
-    public BillingPaymentResponse sendApproveAutoBillingRequest(BillingPaymentRequest request,
-                                                                String billingKey
-    ) {
-        return paymentApiPort.payWithBillingKey(billingKey,
-                request
-        );
+    /**
+     * 주문 ID로 결제 정보를 조회합니다. 존재하지 않으면 ServiceException을 발생시킵니다.
+     *
+     * @param orderId 주문 ID
+     * @return 결제 정보
+     * @throws ServiceException 결제 정보가 없을 경우
+     */
+    private Payment findByOrderIdThrows(String orderId) {
+        return paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
     }
 
-    // 4. 받은 응답을 DB에 저장 및 구독 설정 업데이트
-    @Transactional
-    public void processAutoBillingPaymentResult(BillingPaymentResponse approveResponse
-    ) {
-        paymentConfirmService.processAutoBillingPaymentResult(approveResponse);
-    }
-
-    // 유저 ID 로 결제 정보 가져오기
-    public String getPaymentByMemberId(Long memberId) {
-        return paymentRepository.findByMemberId(memberId).getLast().getOrderId();
+    /**
+     * 회원 ID와 권한 이름 정보를 담는 레코드입니다.
+     *
+     * @param memberId 회원 ID
+     * @param roleName 권한 이름
+     */
+    public record MemberGrantedInfo(Long memberId, String roleName) {
     }
 }

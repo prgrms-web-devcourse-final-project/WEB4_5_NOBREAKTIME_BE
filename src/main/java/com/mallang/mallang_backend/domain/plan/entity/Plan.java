@@ -16,7 +16,6 @@ import lombok.*;
                 @UniqueConstraint(columnNames = {"type", "period"})
         }
 )
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Plan extends BaseTime {
 

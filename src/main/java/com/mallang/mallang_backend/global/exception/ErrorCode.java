@@ -1,9 +1,8 @@
 package com.mallang.mallang_backend.global.exception;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -143,6 +142,10 @@ public enum ErrorCode {
     PAYMENT_CONFIRM_FAIL("500-4", "payment.confirm.fail", HttpStatus.INTERNAL_SERVER_ERROR),
     BILLING_PAYMENT_FAIL("400-3", "billing.payment.fail", HttpStatus.BAD_REQUEST),
     SUBSCRIPTION_NOT_FOUND("404-5", "subscription.not.found", HttpStatus.NOT_FOUND),
+    BILLING_KEY_ISSUE_FAILED("400-4", "billing.key.issue.failed", HttpStatus.BAD_REQUEST),
+    INVALID_PAYMENT_STATUS("400-5", "invalid.payment.status", HttpStatus.BAD_REQUEST),
+    MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
+    INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
 
     // 메일 전송 에러
     EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
