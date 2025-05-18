@@ -84,7 +84,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
     public List<ExpressionBookResponse> getByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
