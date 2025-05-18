@@ -71,6 +71,8 @@ public enum ErrorCode {
     WORDBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "wordbook.rename.default.forbidden", HttpStatus.FORBIDDEN),
     // 기본 단어장은 삭제할 수 없음
     WORDBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "wordbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
+    // 단어장 이름이 중복됨
+    DUPLICATE_WORDBOOK_NAME("400-2", "wordbook.name.duplicate", HttpStatus.BAD_REQUEST),
     // 단어장에 해당 단어가 없음
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
     LANGUAGE_IS_NONE("400-1", "language.is.none", HttpStatus.BAD_REQUEST),
