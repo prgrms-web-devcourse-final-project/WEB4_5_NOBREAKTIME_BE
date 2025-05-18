@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
@@ -36,6 +37,7 @@ import java.util.Map;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 
 /**
  * 성공 핸들러에서 사용자 정보를 받아 로그인 + DB 추가 과정을 분리
@@ -137,6 +139,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우 예외 발생
      */
     @Async("securityTaskExecutor")
+    @Transactional
     public void registerNewMember(LoginPlatform platform,
                                   Map<String, Object> userAttributes) {
 
@@ -210,18 +213,26 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      */
     private String generateUniqueNickname(String originalNickname) {
         final int MAX_ATTEMPTS = 5;
-        String currentNickname = originalNickname;
+        String base = truncateNickname(originalNickname, 20);
+        String current = base;
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-            if (memberService.isNicknameAvailable(currentNickname)) {
-                return currentNickname;
+            if (memberService.isNicknameAvailable(current)) {
+                return current;
             }
-            String randomSuffix = RandomStringGenerator.generate(2 + new SecureRandom().nextInt(2));
-            currentNickname = originalNickname + randomSuffix;
+            current += generateSuffix();
         }
 
         log.error("닉네임 생성 실패: {}", originalNickname);
         throw new ServiceException(NICKNAME_GENERATION_FAILED);
+    }
+
+    private String truncateNickname(String name, int maxLength) {
+        return name.length() > maxLength ? name.substring(0, maxLength) : name;
+    }
+
+    private String generateSuffix() {
+        return RandomStringGenerator.generate(2);
     }
 
     private OAuth2User fallbackMethod(OAuth2UserRequest userRequest,
