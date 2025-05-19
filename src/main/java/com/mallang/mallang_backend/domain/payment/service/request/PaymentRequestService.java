@@ -6,4 +6,5 @@ import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleReque
 public interface PaymentRequestService {
     PaymentRequest createPaymentRequest(Long memberId,
                                         PaymentSimpleRequest simpleRequest);
+    String generatedOrderId(Long memberId);
 }

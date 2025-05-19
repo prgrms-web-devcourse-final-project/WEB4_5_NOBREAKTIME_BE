@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.service.event.dto;
+package com.mallang.mallang_backend.domain.payment.event.dto;
 
 import lombok.*;
 

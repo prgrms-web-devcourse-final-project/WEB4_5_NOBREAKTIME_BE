@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.service.event.dto;
+package com.mallang.mallang_backend.domain.payment.event.dto;
 
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import lombok.AllArgsConstructor;
