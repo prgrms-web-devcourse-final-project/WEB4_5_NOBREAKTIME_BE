@@ -24,8 +24,7 @@ public interface VideoHistoryRepository extends JpaRepository<VideoHistory, Long
 
     Optional<VideoHistory> findByMemberAndVideos(Member member, Videos videos);
 
-    // 페이징 조회
-    List<VideoHistory> findAllByMemberOrderByLastViewedAtDesc(Member member);
+    // 50개 조회
+    List<VideoHistory> findTop50ByMemberOrderByLastViewedAtDesc(Member member);
 
-    List<VideoHistory> findAllByMemberOrderByLastViewedAtAsc(Member member);
 }
