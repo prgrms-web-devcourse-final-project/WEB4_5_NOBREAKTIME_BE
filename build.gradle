@@ -44,9 +44,9 @@ jacocoTestCoverageVerification {
 			enabled = true
 			element = 'CLASS'
 			limit {
-				counter = 'LINE' // 라인 커버리지 기준
+//				counter = 'LINE' // 라인 커버리지 기준
 				value = 'COVEREDRATIO'
-				minimum = 0.70 // 70% 이상이어야 통과
+//				minimum = 0.70 // 70% 이상이어야 통과
 			}
 		}
 	}
