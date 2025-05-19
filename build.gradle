@@ -20,14 +20,33 @@ jacoco {
 }
 
 jacocoTestCoverageVerification {
+	afterEvaluate {
+		classDirectories.setFrom(
+				files(classDirectories.files.collect { dir ->
+					fileTree(dir: dir, excludes: [
+                            '**/exception/**', // 예외 처리용 클래스 (로직이 거의 없음)
+                            '**/dto/**', // 데이터 전달 객체 (getter/setter만 있음)
+                            '**/thirdparty/**', // 외부 라이브러리 연동 코드 (테스트가 불필요하거나 어렵고, 직접 작성한 코드가 아님)
+                            '**/entity/**',
+                            '**/Q*.class',
+                            '**/config/**',
+                            '**/common/**',
+                            '**/constants/**',
+                            '**/infrastructure/**',
+                            '**/resilience4j/**'
+					])
+				})
+		)
+	}
+
 	violationRules {
 		rule {
 			enabled = true
 			element = 'CLASS'
 			limit {
-				// counter = 'LINE' // 라인 커버리지 기준
+				counter = 'LINE' // 라인 커버리지 기준
 				value = 'COVEREDRATIO'
-				// minimum = 0.70 // 70% 이상이어야 통과
+				minimum = 0.70 // 70% 이상이어야 통과
 			}
 		}
 	}
@@ -35,27 +54,30 @@ jacocoTestCoverageVerification {
 
 
 jacocoTestReport {
-	reports {
-		// xml.required.set(true)
-		// csv.required.set(true) 필요하신 분들은 주석 해제하고 소나 큐브 etc... 와 연동하셔도 됩니다
-		html.required.set(true)
+    reports {
+        // xml.required.set(true)
+        // csv.required.set(true) 필요하신 분들은 주석 해제하고 소나 큐브 etc... 와 연동하셔도 됩니다
+        html.required.set(true)
 
-		// xml.destination file(project.layout.buildDirectory.dir("jacoco/index.xml")) as File
-		// csv.destination file(project.layout.buildDirectory.dir("jacoco/index.csv")) as File
-		html.destination file(project.layout.buildDirectory.dir("jacoco/index.html")) as File
-	}
+        // xml.destination file(project.layout.buildDirectory.dir("jacoco/index.xml")) as File
+        // csv.destination file(project.layout.buildDirectory.dir("jacoco/index.csv")) as File
+        html.destination file(project.layout.buildDirectory.dir("jacoco/index.html")) as File
+    }
 
 	afterEvaluate {
 		classDirectories.setFrom(
 				files(classDirectories.files.collect {
 					fileTree(dir: it, excludes: [
-							'**/exception/**', // 예외 처리용 클래스 (로직이 거의 없음)
-							'**/dto/**', // 데이터 전달 객체 (getter/setter만 있음)
-							'**/thirdparty/**', // 외부 라이브러리 연동 코드 (테스트가 불필요하거나 어렵고, 직접 작성한 코드가 아님)
-							'**/config/**',
-							'**/common/**',
-							'**/constants/**',
-							'**/resilience4j/**'
+                            '**/exception/**', // 예외 처리용 클래스 (로직이 거의 없음)
+                            '**/dto/**', // 데이터 전달 객체 (getter/setter만 있음)
+                            '**/thirdparty/**', // 외부 라이브러리 연동 코드 (테스트가 불필요하거나 어렵고, 직접 작성한 코드가 아님)
+							'**/entity/**',
+							'**/Q*.class',
+                            '**/config/**',
+                            '**/common/**',
+                            '**/constants/**',
+							'**/infrastructure/**',
+                            '**/resilience4j/**'
 							// ... 제외할 패키지가 있다면 적용해 주세요
 					])
 				})
