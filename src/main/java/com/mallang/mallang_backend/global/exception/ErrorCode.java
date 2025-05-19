@@ -149,6 +149,11 @@ public enum ErrorCode {
     INVALID_PAYMENT_STATUS("400-5", "invalid.payment.status", HttpStatus.BAD_REQUEST),
     MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
+    ORDER_AMOUNT_MISMATCH("422-1", "order.amount.mismatch", HttpStatus.UNPROCESSABLE_ENTITY),
+
+    // 스케줄링 오류
+    INVALID_CRON_EXPRESSION_EXCEPTION_CODE("400-7", "invalid.cron.expression", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_STATUS_UPDATE_FAILED("500-2", "subscription.status.update.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 메일 전송 에러
     EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
