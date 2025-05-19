@@ -106,7 +106,6 @@ class VideoServiceImplTest {
 		Long memberId = 1L;
 		Member member = Member.builder()
 			.email("user@example.com")
-			.password("pass")
 			.nickname("nick")
 			.profileImageUrl(null)
 			.loginPlatform(LoginPlatform.NONE)
@@ -135,7 +134,6 @@ class VideoServiceImplTest {
 		Long memberId = 2L;
 		Member member = Member.builder()
 			.email("none@example.com")
-			.password("pass")
 			.nickname("nick")
 			.profileImageUrl(null)
 			.loginPlatform(LoginPlatform.NONE)
