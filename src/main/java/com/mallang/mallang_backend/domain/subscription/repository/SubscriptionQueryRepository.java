@@ -2,7 +2,7 @@ package com.mallang.mallang_backend.domain.subscription.repository;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.QMember;
-import com.mallang.mallang_backend.domain.payment.scheduler.SubscriptionRenewalDto;
+import com.mallang.mallang_backend.domain.payment.quartz.dto.SubscriptionRenewalDto;
 import com.mallang.mallang_backend.domain.plan.entity.QPlan;
 import com.mallang.mallang_backend.domain.subscription.entity.QSubscription;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;

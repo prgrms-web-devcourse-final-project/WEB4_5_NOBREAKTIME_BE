@@ -1,8 +1,9 @@
-package com.mallang.mallang_backend.domain.payment.scheduler;
+package com.mallang.mallang_backend.domain.payment.quartz.service;
 
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.event.dto.AutoBillingFailedEvent;
+import com.mallang.mallang_backend.domain.payment.quartz.dto.PaymentDto;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentQueryRepository;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;

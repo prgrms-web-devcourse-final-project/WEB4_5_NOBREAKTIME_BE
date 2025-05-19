@@ -1,6 +1,6 @@
-package com.mallang.mallang_backend.domain.payment.quartz;
+package com.mallang.mallang_backend.domain.payment.quartz.job;
 
-import com.mallang.mallang_backend.domain.payment.scheduler.AutoBillingService;
+import com.mallang.mallang_backend.domain.payment.quartz.service.AutoBillingService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,11 @@
 package com.mallang.mallang_backend.global.config;
 
 import com.mallang.mallang_backend.domain.payment.quartz.*;
+import com.mallang.mallang_backend.domain.payment.quartz.job.AutoBillingJob;
+import com.mallang.mallang_backend.domain.payment.quartz.job.SubscriptionExpireJob;
+import com.mallang.mallang_backend.domain.payment.quartz.listener.LoggingJobListener;
+import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryJobListener;
+import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryTriggerListener;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Qualifier;

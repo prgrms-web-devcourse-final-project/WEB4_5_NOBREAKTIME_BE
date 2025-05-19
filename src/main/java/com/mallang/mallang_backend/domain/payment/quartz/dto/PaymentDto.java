@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.scheduler;
+package com.mallang.mallang_backend.domain.payment.quartz.dto;
 
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;

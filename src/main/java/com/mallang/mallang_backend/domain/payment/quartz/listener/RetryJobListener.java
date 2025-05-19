@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.quartz;
+package com.mallang.mallang_backend.domain.payment.quartz.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;

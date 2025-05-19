@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.quartz;
+package com.mallang.mallang_backend.domain.payment.quartz.job;
 
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;

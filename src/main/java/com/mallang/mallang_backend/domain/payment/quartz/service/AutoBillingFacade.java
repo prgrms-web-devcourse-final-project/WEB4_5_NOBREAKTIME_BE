@@ -1,7 +1,9 @@
-package com.mallang.mallang_backend.domain.payment.scheduler;
+package com.mallang.mallang_backend.domain.payment.quartz.service;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
+import com.mallang.mallang_backend.domain.payment.quartz.dto.PaymentDto;
+import com.mallang.mallang_backend.domain.payment.quartz.dto.SubscriptionRenewalDto;
 import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentConfirmService;
 import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionQueryRepository;
@@ -21,7 +23,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AutoBillingHandler implements AutoBillingService {
+public class AutoBillingFacade implements AutoBillingService {
 
     private final SubscriptionQueryRepository queryRepository;
     private final PaymentApiPort apiPort;
