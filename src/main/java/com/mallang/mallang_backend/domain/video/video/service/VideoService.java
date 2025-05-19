@@ -1,14 +1,11 @@
 package com.mallang.mallang_backend.domain.video.video.service;
 
-import com.mallang.mallang_backend.domain.video.video.dto.AnalyzeVideoResponse;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface VideoService {
     List<VideoResponse> getVideosByLanguage(
@@ -32,12 +29,11 @@ public interface VideoService {
 	 *
 	 * @param memberId
 	 * @param videoID  유튜브 영상 ID
-	 * @param emitter
-	 * @return 영상 분석 결과
+	 * @param emitterId
 	 * @throws IOException          영상 음성 추출 실패
 	 * @throws InterruptedException 영상 음성 추출 실패
 	 */
-	void analyzeWithSseAsync(Long memberId, String videoID, SseEmitter emitter);
+	void analyzeWithSseAsync(Long memberId, String videoID, String emitterId);
 
 	Videos saveVideoIfAbsent(String videoId);
 }

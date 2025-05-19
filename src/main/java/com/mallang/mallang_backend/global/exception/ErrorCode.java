@@ -38,6 +38,7 @@ public enum ErrorCode {
     ANALYZE_VIDEO_CONCURRENCY_TIME_OUT("500-4", "analyze.video.concurrency.time.out", HttpStatus.INTERNAL_SERVER_ERROR),
     ANALYZE_VIDEO_FAILED("500-5", "analyze.video.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     CATEGORY_NOT_FOUND("404-2", "category.not.found", HttpStatus.NOT_FOUND),
+    VIDEO_ANALYSIS_FAILED("500-6", "video.analysis.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // GPT Errors
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -71,6 +72,8 @@ public enum ErrorCode {
     WORDBOOK_RENAME_DEFAULT_FORBIDDEN("403-1", "wordbook.rename.default.forbidden", HttpStatus.FORBIDDEN),
     // 기본 단어장은 삭제할 수 없음
     WORDBOOK_DELETE_DEFAULT_FORBIDDEN("403-1", "wordbook.delete.default.forbidden", HttpStatus.FORBIDDEN),
+    // 단어장 이름이 중복됨
+    DUPLICATE_WORDBOOK_NAME("400-2", "wordbook.name.duplicate", HttpStatus.BAD_REQUEST),
     // 단어장에 해당 단어가 없음
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
     LANGUAGE_IS_NONE("400-1", "language.is.none", HttpStatus.BAD_REQUEST),
@@ -146,6 +149,11 @@ public enum ErrorCode {
     INVALID_PAYMENT_STATUS("400-5", "invalid.payment.status", HttpStatus.BAD_REQUEST),
     MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
+    ORDER_AMOUNT_MISMATCH("422-1", "order.amount.mismatch", HttpStatus.UNPROCESSABLE_ENTITY),
+
+    // 스케줄링 오류
+    INVALID_CRON_EXPRESSION_EXCEPTION_CODE("400-7", "invalid.cron.expression", HttpStatus.BAD_REQUEST),
+    SUBSCRIPTION_STATUS_UPDATE_FAILED("500-2", "subscription.status.update.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 메일 전송 에러
     EMAIL_SEND_FAILED("500-5", "email.send.failed", HttpStatus.INTERNAL_SERVER_ERROR),
