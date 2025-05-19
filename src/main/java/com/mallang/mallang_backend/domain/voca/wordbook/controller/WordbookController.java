@@ -89,7 +89,7 @@ public class WordbookController {
 	@Operation(summary = "단어장 생성", description = "추가 단어장을 생성합니다.")
 	@ApiResponse(responseCode = "200", description = "추가 단어장이 생성되었습니다.")
 	@PreAuthorize("hasAnyRole('STANDARD', 'PREMIUM')")
-	@PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_IS_NONE, WORDBOOK_CREATE_DEFAULT_FORBIDDEN})
+	@PossibleErrors({MEMBER_NOT_FOUND, LANGUAGE_IS_NONE, WORDBOOK_CREATE_DEFAULT_FORBIDDEN, WORDBOOK_CREATE_DEFAULT_FORBIDDEN})
 	@PostMapping
 	public ResponseEntity<RsData<Long>> createWordbook(
 		@RequestBody @Valid WordbookCreateRequest request,
