@@ -118,7 +118,6 @@ public class MemberServiceImpl implements MemberService {
         Member member = Member.builder()
                 .platformId(platformId) // null 불가능
                 .email(email) // null 가능
-                .password(null)
                 .nickname(nickname)
                 .loginPlatform(loginPlatform)
                 .language(NONE)

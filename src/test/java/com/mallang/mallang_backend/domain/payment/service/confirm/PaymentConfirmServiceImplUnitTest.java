@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequ
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.Receipt;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -8,14 +8,11 @@ public interface SubscriptionService {
 
     String getRoleName(Long memberId);
     boolean hasActiveSubscription(Long memberId);
-    // 구독 테이블 업데이트
     void updateSubscriptionInfo(Long memberId,
                                 Plan plan,
                                 Clock startDate);
-
     void updateIsAutoRenew(Long memberId);
-
     void downgradeSubscriptionToBasic(Long memberId);
-
+    void updateSubscriptionStatus();
     void cancelSubscription(Long memberId);
 }

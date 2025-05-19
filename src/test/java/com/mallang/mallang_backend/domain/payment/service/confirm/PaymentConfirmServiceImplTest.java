@@ -6,6 +6,7 @@ import com.mallang.mallang_backend.domain.payment.dto.approve.Receipt;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
