@@ -53,7 +53,8 @@ public class AppConstants {
             "/swagger-ui/**",
             "/test",
             "/actuator/**",
-            "/api/auth/test"
+            "/api/auth/test",
+            "/api/v1/plans/**"
     };
     /**
      * 정적 리소스 확장자 패턴
