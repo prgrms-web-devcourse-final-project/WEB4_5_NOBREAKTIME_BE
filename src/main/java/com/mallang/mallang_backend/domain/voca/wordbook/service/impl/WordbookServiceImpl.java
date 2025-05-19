@@ -188,6 +188,10 @@ public class WordbookServiceImpl implements WordbookService {
             throw new ServiceException(WORDBOOK_CREATE_DEFAULT_FORBIDDEN);
         }
 
+        if (wordbookRepository.existsByMemberAndName(member, request.getName())) {
+            throw new ServiceException(DUPLICATE_WORDBOOK_NAME);
+        }
+
         Wordbook wordbook = Wordbook.builder()
                 .member(member)
                 .name(request.getName())
@@ -259,8 +263,7 @@ public class WordbookServiceImpl implements WordbookService {
     // 단어장에서 단어 삭제
     @Transactional
     @Override
-    public void
-    deleteWords(WordDeleteRequest request, Long memberId) {
+    public void deleteWords(WordDeleteRequest request, Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 

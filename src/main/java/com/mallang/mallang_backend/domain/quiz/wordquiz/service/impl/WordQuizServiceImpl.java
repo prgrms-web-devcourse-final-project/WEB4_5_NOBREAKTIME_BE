@@ -216,7 +216,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 		LocalDateTime now = LocalDateTime.now();
 		List<WordbookItem> sortedReviews = reviewWords.stream()
 			.sorted(Comparator.comparing((WordbookItem w) -> {
-				LocalDateTime due = w.getLastStudiedAt().plus(w.getWordStatus().getReviewInterval());
+				LocalDateTime due = w.getLastStudiedAt().plus(w.getWordStatus().getReviewIntervalDuration());
 				return Duration.between(due, now);
 			}).reversed().thenComparing(WordbookItem::getLastStudiedAt))
 			.collect(Collectors.toList());

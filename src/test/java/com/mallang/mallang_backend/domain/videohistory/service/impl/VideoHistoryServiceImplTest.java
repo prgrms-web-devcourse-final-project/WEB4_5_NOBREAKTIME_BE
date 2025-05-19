@@ -1,12 +1,13 @@
 package com.mallang.mallang_backend.domain.videohistory.service.impl;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
-import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
-import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,15 +19,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.BDDMockito.*;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.videohistory.dto.VideoHistoryResponse;
+import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
+import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class VideoHistoryServiceImplTest {
@@ -77,8 +76,6 @@ class VideoHistoryServiceImplTest {
 			.willReturn(Optional.of(videos1));
 		given(repository.findByMemberAndVideos(member, videos1))
 			.willReturn(Optional.empty());
-		// 삭제 로직이 실행되지 않도록
-		given(repository.countByMember(member)).willReturn(0);
 
 		service.save(MEMBER_ID, VIDEO_ID1);
 
@@ -152,39 +149,15 @@ class VideoHistoryServiceImplTest {
 		given(videos2.getThumbnailImageUrl()).willReturn(THUMB2);
 
 		// 전체 내림차순(e2 먼저, e1 나중)
-		given(repository.findAllByMemberOrderByLastViewedAtDesc(member))
+		given(repository.findTop50ByMemberOrderByLastViewedAtDesc(member))
 			.willReturn(List.of(e2, e1));
 
 		List<VideoHistoryResponse> result = service.getAllHistories(MEMBER_ID);
 
-		then(repository).should().findAllByMemberOrderByLastViewedAtDesc(member);
+		then(repository).should().findTop50ByMemberOrderByLastViewedAtDesc(member);
 		assertThat(result).hasSize(2);
 		assertThat(result.get(0)).usingRecursiveComparison().isEqualTo(dto2);
 		assertThat(result.get(1)).usingRecursiveComparison().isEqualTo(dto1);
 	}
 
-	@Test @DisplayName("save() 호출 시 50개 초과하면 오래된 excess개만 삭제")
-	void save_shouldDeleteOnlyExcessOnes() {
-		given(memberRepository.findById(MEMBER_ID))
-			.willReturn(Optional.of(member));
-		given(videoRepository.findById(VIDEO_ID1))
-			.willReturn(Optional.of(videos1));
-		given(repository.findByMemberAndVideos(member, videos1))
-			.willReturn(Optional.empty());
-		// 이미 52개 있다고 가정
-		given(repository.countByMember(member)).willReturn(52);
-
-		List<VideoHistory> all = IntStream.range(0, 52)
-			.mapToObj(i -> mock(VideoHistory.class))
-			.toList();
-		given(repository.findAllByMemberOrderByLastViewedAtAsc(member))
-			.willReturn(all);
-
-		service.save(MEMBER_ID, VIDEO_ID1);
-
-		then(repository).should().deleteAllInBatch(deleteCaptor.capture());
-		List<VideoHistory> deleted = deleteCaptor.getValue();
-		assertThat(deleted).hasSize(2)
-			.containsExactly(all.get(0), all.get(1));
-	}
 }

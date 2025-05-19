@@ -159,20 +159,20 @@ VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
         }', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO member (
-    email, password, nickname, profile_image_url, login_platform, platform_id,
+    email, nickname, profile_image_url, login_platform, platform_id,
     language, subscription_type, word_goal, video_goal, word_level, expression_level,
     withdrawal_date, measured_at, created_at, modified_at
 ) VALUES
 -- 1번 회원: 구글 로그인, STANDARD 구독
-('user1@gmail.com', 'pw1', '구글유저', 'https://mallang.com/profile1.png', 'GOOGLE', 'google-uid-123',
+('user1@gmail.com', '구글유저', 'https://mallang.com/profile1.png', 'GOOGLE', 'google-uid-123',
  'ENGLISH', 'BASIC', 20, 3, 1, 2, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 2번 회원: 카카오 로그인, PREMIUM 구독
-('user2@kakao.com', 'pw2', '카카오유저', 'https://mallang.com/profile2.png', 'KAKAO', 'kakao-uid-456',
+('user2@kakao.com', '카카오유저', 'https://mallang.com/profile2.png', 'KAKAO', 'kakao-uid-456',
  'ENGLISH', 'PREMIUM', 20, 3, 3, 1, NULL, NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- 3번 회원: 네이버 로그인, STANDARD 구독, 탈퇴 처리
-('user3@naver.com', 'pw3', '네이버유저', 'https://mallang.com/profile3.png', 'NAVER', 'naver-uid-789',
+('user3@naver.com', '네이버유저', 'https://mallang.com/profile3.png', 'NAVER', 'naver-uid-789',
  'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO payment (member_id,

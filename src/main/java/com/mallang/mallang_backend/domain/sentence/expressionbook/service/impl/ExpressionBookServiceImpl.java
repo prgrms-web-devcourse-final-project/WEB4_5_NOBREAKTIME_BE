@@ -84,7 +84,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
     public List<ExpressionBookResponse> getByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
@@ -95,11 +94,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             books = books.stream()
                     .filter(eb -> ExpressionBook.isDefault(eb))
                     .toList();
-        }
-
-        for (ExpressionBook book : books) {
-            int expressionCount = expressionBookItemRepository.countByIdExpressionBookId(book.getId());
-            System.out.println(expressionCount);
         }
 
         return books.stream()

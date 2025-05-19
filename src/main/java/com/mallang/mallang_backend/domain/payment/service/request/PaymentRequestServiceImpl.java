@@ -5,7 +5,7 @@ import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.plan.entity.PlanPeriod;
 import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
@@ -26,7 +26,6 @@ import static com.mallang.mallang_backend.global.constants.AppConstants.CHARACTE
 import static com.mallang.mallang_backend.global.constants.AppConstants.DATE_FORMATTER;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -45,7 +44,6 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
      * @param simpleRequest 결제 요청 객체를 만들 간단한 정보
      * @return 결제 요청 응답
      */
-    @Transactional
     public PaymentRequest createPaymentRequest(Long memberId,
                                                PaymentSimpleRequest simpleRequest) {
 
@@ -97,7 +95,8 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
      * @param memberId 주문을 생성한 회원의 ID
      * @return 생성된 주문 ID 문자열
      */
-    private String generatedOrderId(Long memberId) {
+    @Override
+    public String generatedOrderId(Long memberId) {
         String orderDate = LocalDate.now().format(DATE_FORMATTER);
         String randomPart = generateRandomString();
         String formattedMemberId = String.format("%05d", memberId); // 5자리 고정

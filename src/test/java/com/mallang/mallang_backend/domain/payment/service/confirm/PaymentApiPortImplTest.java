@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.payment.service.confirm;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPortImpl;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.mockwebserver.MockResponse;
