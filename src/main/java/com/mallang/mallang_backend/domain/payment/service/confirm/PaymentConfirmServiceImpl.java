@@ -10,6 +10,7 @@ import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentFaile
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentMailSendEvent;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
