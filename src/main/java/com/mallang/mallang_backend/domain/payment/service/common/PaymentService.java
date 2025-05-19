@@ -1,4 +1,3 @@
-
 package com.mallang.mallang_backend.domain.payment.service.common;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
@@ -9,11 +8,11 @@ import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleReque
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentApiPort;
 import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentConfirmService;
 import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
