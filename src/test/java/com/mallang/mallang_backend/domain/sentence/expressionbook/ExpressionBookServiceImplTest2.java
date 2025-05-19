@@ -115,7 +115,6 @@ class ExpressionBookServiceImplTest2 {
 
 		Member basicMember = Member.builder()
 			.email("basic@test.com")
-			.password("pw")
 			.nickname("basic")
 			.profileImageUrl(null)
 			.loginPlatform(LoginPlatform.KAKAO)
@@ -534,7 +533,6 @@ class ExpressionBookServiceImplTest2 {
 
 		Member member = Member.builder()
 			.email("user@test.com")
-			.password("pw")
 			.nickname("user")
 			.loginPlatform(LoginPlatform.KAKAO)
 			.language(Language.ENGLISH)
@@ -664,7 +662,6 @@ class ExpressionBookServiceImplTest2 {
 
 		Member mockMember = Member.builder()
 			.email("test@user.com")
-			.password("pw")
 			.nickname("tester")
 			.profileImageUrl(null)
 			.loginPlatform(LoginPlatform.KAKAO)

@@ -59,7 +59,7 @@ public class PaymentRedisService {
                 .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
 
         if (!savedAmount.equals(amount)) {
-            throw new ServiceException(PAYMENT_NOT_FOUND);
+            throw new ServiceException(ORDER_AMOUNT_MISMATCH);
         }
 
         log.info("결제 정보 검증 성공: orderId: {}, amount: {}",
