@@ -76,8 +76,6 @@ class VideoHistoryServiceImplTest {
 			.willReturn(Optional.of(videos1));
 		given(repository.findByMemberAndVideos(member, videos1))
 			.willReturn(Optional.empty());
-		// 삭제 로직이 실행되지 않도록
-		given(repository.countByMember(member)).willReturn(0);
 
 		service.save(MEMBER_ID, VIDEO_ID1);
 
