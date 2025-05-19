@@ -113,7 +113,7 @@ class VideoHistoryServiceImplTest {
 		var h1 = VideoHistoryTestFactory.createVideoHistory(
 			1L, member, VideoHistoryTestFactory.createVideos("v1"), LocalDateTime.now());
 		when(memberRepo.findById(MEMBER_ID)).thenReturn(Optional.of(member));
-		when(historyRepo.findAllByMemberOrderByLastViewedAtDesc(member))
+		when(historyRepo.findTop50ByMemberOrderByLastViewedAtDesc(member))
 			.thenReturn(List.of(h1));
 
 		var list = service.getAllHistories(MEMBER_ID);

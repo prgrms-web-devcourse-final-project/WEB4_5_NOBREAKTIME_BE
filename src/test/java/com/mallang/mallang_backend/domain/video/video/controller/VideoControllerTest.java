@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.mallang.mallang_backend.domain.video.video.VideoTestFactory;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
@@ -35,6 +36,7 @@ import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.config.WebConfig;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.LoginUserArgumentResolver;
+import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
 
 @SpringBootTest(
 	classes = {
@@ -60,11 +62,16 @@ class VideoControllerTest {
 	@MockBean
 	private LoginUserArgumentResolver loginUserArgumentResolver;
 
+	@MockBean
+	private SseEmitterManager sseEmitterManager;
+
 	private CustomUserDetails userDetail;
 	private MockedStatic<YoutubeCategoryId> youtubeCategoryIdMock;
+	private SseEmitter emitter;
 
 	@BeforeEach
 	void setUp() {
+		// 사용자 인증 정보 세팅
 		userDetail = Mockito.mock(CustomUserDetails.class);
 		given(userDetail.getMemberId()).willReturn(1L);
 		given(userDetail.getAuthorities()).willReturn(List.of());
@@ -73,16 +80,21 @@ class VideoControllerTest {
 		);
 		SecurityContextHolder.getContext().setAuthentication(auth);
 
+		// @LoginUser 리졸버 스텁
 		given(loginUserArgumentResolver.supportsParameter(any())).willReturn(true);
 		given(loginUserArgumentResolver.resolveArgument(
 			any(), any(), any(), any()
-		))
-			.willReturn(userDetail);
+		)).willReturn(userDetail);
 
+		// YoutubeCategoryId.of("cat") 스태틱 메서드 스텁
 		youtubeCategoryIdMock = Mockito.mockStatic(YoutubeCategoryId.class);
-		youtubeCategoryIdMock
-			.when(() -> YoutubeCategoryId.of("cat"))
+		youtubeCategoryIdMock.when(() -> YoutubeCategoryId.of("cat"))
 			.thenReturn(YoutubeCategoryId.EDUCATION);
+
+		// SseEmitterManager.createEmitter(...) 가 non-null SseEmitter 반환하도록 스텁
+		emitter = new SseEmitter(0L);
+		given(sseEmitterManager.createEmitter(anyString()))
+			.willReturn(emitter);
 	}
 
 	@AfterEach
@@ -98,12 +110,8 @@ class VideoControllerTest {
 		VideoResponse resp = VideoResponse.from(v, true);
 
 		given(videoService.getVideosForMember(
-			anyString(),   // q
-			anyString(),   // category
-			anyLong(),     // maxResults
-			anyLong()      // memberId
-		))
-			.willReturn(List.of(resp));
+			anyString(), anyString(), anyLong(), anyLong()
+		)).willReturn(List.of(resp));
 
 		// When & Then
 		mockMvc.perform(get("/api/v1/videos/list")
@@ -120,9 +128,11 @@ class VideoControllerTest {
 	@Test
 	@DisplayName("GET /api/v1/videos/{id}/analysis - SSE INIT 이벤트")
 	void testVideoAnalysisInitEvent() throws Exception {
+		// Given
 		willDoNothing().given(videoService)
 			.analyzeWithSseAsync(anyLong(), anyString(), any());
 
+		// When & Then
 		mockMvc.perform(get("/api/v1/videos/XYZ/analysis")
 				.accept(MediaType.TEXT_EVENT_STREAM)
 			)
@@ -130,9 +140,7 @@ class VideoControllerTest {
 			.andExpect(header().string(
 				"Content-Type", MediaType.TEXT_EVENT_STREAM_VALUE
 			))
-			// "event:INIT" 확인
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("event:INIT")))
-			// data 라인만 존재하는지 확인
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("data:")));
 	}
 }
