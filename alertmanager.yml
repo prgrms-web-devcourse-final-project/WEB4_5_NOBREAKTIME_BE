@@ -1,6 +1,5 @@
 global:
   resolve_timeout: 1m   # 실 운영
-  slack_api_url: 'https://hooks.slack.com/services/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'
 
 route:
   receiver: 'slack-notifications'
@@ -12,8 +11,11 @@ route:
 receivers:
   - name: 'slack-notifications'
     slack_configs:
-      - channel: '#웹백엔드-5-04차team-07팀'
+      - api_url: 'https://hooks.slack.com/services/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'
+        channel: '#웹백엔드-5-04차team-07팀'
+        username: '⚠️장무영⚠️'
         send_resolved: true
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
         title: '{{ .CommonAnnotations.summary }}'
         text: '{{ .CommonAnnotations.description }}'
 
