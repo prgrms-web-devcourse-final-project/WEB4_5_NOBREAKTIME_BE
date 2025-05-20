@@ -24,6 +24,7 @@ import com.mallang.mallang_backend.global.resilience4j.code.TestService;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @ActiveProfiles("local")

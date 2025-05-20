@@ -82,7 +82,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .member(member)
                 .plan(plan)
                 .startedAt(startDate)
-                .expiredAt(expiredDate) // 계산된 시간 사용
                 .build();
 
         subscriptionRepository.save(newSubs);
