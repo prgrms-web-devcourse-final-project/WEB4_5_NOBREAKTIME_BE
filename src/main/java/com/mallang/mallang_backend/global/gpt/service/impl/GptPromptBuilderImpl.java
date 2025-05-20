@@ -91,6 +91,31 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
         """, sentence, translatedSentence);
 	}
 
+	@Override
+	public String buildPromptForAnalyzeSentenceJapanese(String sentence, String translatedSentence) {
+		return String.format("""
+        あなたは日本語の文を分析する専門の言語アシスタントです。
+	  	ユーザーが**原文（日本語）とその翻訳（韓国語）**を一緒に入力すると、以下の情報を順番に分析して出力してください
+
+        - 숙어/표현:핵심 구나 숙어가 있다면 의미와 쓰임을 간단히 설명 (없으면 '없음').
+        - 문법 구조:SVO 구조, 시제, 수동태, 조동사 등 주요 문법 요소를 간략히 분석.
+        - 화용/의도: 이 문장이 어떤 의도(명령, 요청 등)를 전달하는지, 어떤 상황에서 쓰이는지 분석.
+
+        출력 형식:
+        숙어/표현: ...
+        문법 구조: ...
+        화용/의도: ...
+        
+        출력 예시:
+		숙어/표현: 「〜わけではない」는 ‘반드시 ~한 것은 아닙니다’라는 의미로, 상대의 오해나 일반화를 부드럽게 부정할 때 사용합니다.
+		문법 구조: 주어는 생략되어 있으며, 문맥상 ‘나는’으로 유추됩니다. 현재 시제이며, 부정 표현 「〜わけではない」가 문장 끝에 위치합니다.
+		화용/의도: 자신의 생각을 조심스럽게 표현하며, 지나친 일반화나 오해를 부드럽게 정정하려는 의도를 담고 있습니다.
+
+        원문: %s
+        번역: %s
+        """, sentence, translatedSentence);
+	}
+
 	/**
 	 * 영상 학습의 스크립트 분석용 프롬프트 생성
 	 */

@@ -25,7 +25,7 @@ public interface GptService {
      * @param translatedSentence 원문 번역 문장
      * @return GPT 응답 결과(원문 분석)
      */
-    String analyzeSentence(String sentence, String translatedSentence);
+    String analyzeSentence(String sentence, String translatedSentence, Language language);
 
     /**
      * 자막 세그먼트 리스트를 GPT에 전달하여 분석 결과를 반환합니다.

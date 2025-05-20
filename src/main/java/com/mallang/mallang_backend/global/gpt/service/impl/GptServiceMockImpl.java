@@ -75,7 +75,7 @@ public class GptServiceMockImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
-	public String analyzeSentence(String sentence, String translatedSentence) {
+	public String analyzeSentence(String sentence, String translatedSentence, Language language) {
 		throw new UnsupportedOperationException();
 	}
 

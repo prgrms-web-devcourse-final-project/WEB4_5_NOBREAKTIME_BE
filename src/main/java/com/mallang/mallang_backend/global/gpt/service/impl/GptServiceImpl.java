@@ -126,12 +126,24 @@ public class GptServiceImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
-	public String analyzeSentence(String sentence, String translatedSentence) {
-		String prompt = gptPromptBuilder.buildPromptForAnalyzeSentence(sentence, translatedSentence);
+	public String analyzeSentence(String sentence, String translatedSentence, Language language) {
+		if (language == ENGLISH) {
+			String prompt = gptPromptBuilder.buildPromptForAnalyzeSentence(sentence, translatedSentence);
+			return getGptSentenceResult(prompt);
+		}
+		if (language == JAPANESE) {
+			String prompt = gptPromptBuilder.buildPromptForAnalyzeSentenceJapanese(sentence, translatedSentence);
+			return getGptSentenceResult(prompt);
+		}
+		throw new ServiceException(LANGUAGE_NOT_CONFIGURED);
+	}
+
+	private String getGptSentenceResult(String prompt) {
 		OpenAiResponse response = callGptApi(prompt);
 		validateResponse(response);
 		return response.getChoices().get(0).getMessage().getContent();
 	}
+
 
 	/**
 	 * 재시도 소진 후 문장 분석 fallback 처리

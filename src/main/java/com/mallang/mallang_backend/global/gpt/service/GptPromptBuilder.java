@@ -7,6 +7,8 @@ public interface GptPromptBuilder {
 
 	String buildPromptForAnalyzeSentence(String sentence, String translatedSentence);
 
+	String buildPromptForAnalyzeSentenceJapanese(String sentence, String translatedSentence);
+
 	String buildPromptForAnalyzeScript(String script);
 
 	String buildPromptForAnalyzeScriptJapanese(String script);
