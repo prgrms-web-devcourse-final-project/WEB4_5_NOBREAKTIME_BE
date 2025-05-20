@@ -1,15 +1,18 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.domain.payment.quartz.*;
+import com.mallang.mallang_backend.domain.payment.quartz.AutowiringSpringBeanJobFactory;
 import com.mallang.mallang_backend.domain.payment.quartz.job.AutoBillingJob;
 import com.mallang.mallang_backend.domain.payment.quartz.job.SubscriptionExpireJob;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.LoggingJobListener;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryJobListener;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryTriggerListener;
+import com.mallang.mallang_backend.global.slack.SlackNotifier;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.quartz.spi.JobFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -30,10 +33,10 @@ public class QuartzConfig {
     @Bean
     public JobDetail subscriptionExpireJobDetail() {
         return JobBuilder.newJob(SubscriptionExpireJob.class)
-                .withIdentity("subscriptionExpireJob", "subscriptionGroup")
+                .withIdentity("subscriptionExpireJob", "DEFAULT")
                 .usingJobData("maxRetry", 3)
-                .usingJobData("currentRetry", 0)
-                .storeDurably()
+                .storeDurably(true)
+                .requestRecovery(true)
                 .build();
     }
 
@@ -45,7 +48,7 @@ public class QuartzConfig {
     @Bean
     public JobDetail autoBillingJobDetail() {
         return JobBuilder.newJob(AutoBillingJob.class)
-                .withIdentity("autoBillingJob", "PaymentGroup")
+                .withIdentity("autoBillingJob")
                 .usingJobData("maxRetry", 3)
                 .storeDurably()
                 .build();
@@ -60,9 +63,9 @@ public class QuartzConfig {
     public Trigger subscriptionExpireTrigger() {
         return TriggerBuilder.newTrigger()
                 .forJob(subscriptionExpireJobDetail())
-                .withIdentity("subscriptionExpireTrigger", "subscriptionGroup")
+                .withIdentity("subscriptionExpireTrigger", "DEFAULT")
                 .usingJobData("currentRetry", 0)
-                .withSchedule(CronScheduleBuilder.cronSchedule(subscriptionStatusCheckCron)) // 매일 00:05 실행
+                .withSchedule(CronScheduleBuilder.cronSchedule(subscriptionStatusCheckCron))
                 .build();
     }
 
@@ -70,29 +73,59 @@ public class QuartzConfig {
     public Trigger autoBillingTrigger() {
         return TriggerBuilder.newTrigger()
                 .forJob(autoBillingJobDetail())
-                .withIdentity("autoBillingTrigger", "PaymentGroup")
+                .withIdentity("autoBillingTrigger")
                 .withSchedule(CronScheduleBuilder.cronSchedule(autoBillingCron)) // 매일 00:00 실행
                 .build();
     }
 
+    @Bean
+    public LoggingJobListener loggingJobListener() {
+        log.info(">>>> loggingJobListener 생성됨 <<<<");
+        return new LoggingJobListener();
+    }
+
+    @Bean
+    public RetryJobListener retryJobListener() {
+        log.info(">>>> retryJobListener 생성됨 <<<<");
+        return new RetryJobListener();
+    }
+
+    @Bean
+    public RetryTriggerListener retryTriggerListener() {
+        log.info(">>>> retryTriggerListener 생성됨 <<<<");
+        return new RetryTriggerListener();
+    }
+
     /**
-     * 커스텀 설정
-     * Job 의존성 주입, 리스너 등록(작업 실행 전/후 로깅, 에러 알림) 등
+     * 스케줄러 생성 후 추가 커스터마이징을 위한 콜백 인터페이스
+     * 전역 리스너(Trigger/JobListener) 설정에 주로 사용
      */
     @Bean
-    public SchedulerFactoryBean schedulerFactoryBean(
-            @Qualifier("quartzDataSource") DataSource quartzDataSource,
-            RetryJobListener retryJobListener,
-            LoggingJobListener loggingJobListener,
-            RetryTriggerListener retryTriggerListener) {
+    public SchedulerFactoryBeanCustomizer schedulerCustomizer() {
+        return schedulerFactoryBean -> {
+            log.info(">>>> 스케줄러 커스터마이저 적용됨 <<<<");
+            schedulerFactoryBean.setGlobalTriggerListeners(retryTriggerListener());
+            schedulerFactoryBean.setGlobalJobListeners(loggingJobListener(), retryJobListener());
+        };
+    }
 
+    @Autowired
+    private DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
+
+    @Bean
+    public SchedulerFactoryBean schedulerFactoryBean() {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
-        factory.setDataSource(quartzDataSource);
-        factory.setJobFactory(new AutowiringSpringBeanJobFactory()); // 커스텀 팩토리 설정
+        factory.setJobFactory(new AutowiringSpringBeanJobFactory());
         factory.setJobDetails(subscriptionExpireJobDetail(), autoBillingJobDetail());
         factory.setTriggers(subscriptionExpireTrigger(), autoBillingTrigger());
-        factory.setGlobalJobListeners(retryJobListener, loggingJobListener); // 글로벌 리스너 등록
-        factory.setGlobalTriggerListeners(retryTriggerListener);
+        factory.setGlobalJobListeners(loggingJobListener(), retryJobListener());
+        factory.setGlobalTriggerListeners(retryTriggerListener());
+        factory.setDataSource(dataSource);
         return factory;
+    }
+
+    @Bean
+    public JobFactory autowiringSpringBeanJobFactory() {
+        return new AutowiringSpringBeanJobFactory();
     }
 }

@@ -59,10 +59,10 @@ public class Payment {
 
     /**
      * 필수 값만 우선 저장
-     * @param memberId      # 회원 ID
-     * @param plan          # 구독
-     * @param orderId       # 거래 ID
      *
+     * @param memberId # 회원 ID
+     * @param plan     # 구독
+     * @param orderId  # 거래 ID
      */
     @Builder
     public Payment(Long memberId,
@@ -115,9 +115,5 @@ public class Payment {
         this.method = method;
         this.paymentKey = paymentKey;
         this.payStatus = PayStatus.AUTO_BILLING_APPROVED;
-    }
-
-    public void updateOrderId(String orderId) {
-        this.orderId = orderId;
     }
 }
