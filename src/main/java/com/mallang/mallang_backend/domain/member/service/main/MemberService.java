@@ -12,19 +12,30 @@ import org.springframework.web.multipart.MultipartFile;
 public interface MemberService {
 
     boolean existsByPlatformId(String platformId);
+
     Long signupByOauth(String platformId, String email, String nickname, String profileImage, LoginPlatform loginPlatform);
+
     Member getMemberByPlatformId (String platformId);
+
     String getRoleName(Long memberId);
+
     Member getMemberById(Long memberId);
+
     void updateLearningLanguage(Long id, Language language);
+
     void withdrawMember(Long memberId);
+
     void scheduleAccountDeletion();
+
     String changeProfile(Long memberId, MultipartFile file);
+
     ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request);
 
     void deleteOldProfileImage(Long memberId);
 
     boolean isNicknameAvailable(String nickname);
+
     void validateEmailNotDuplicated(String email);
+
     UserProfileResponse getUserProfile(Long memberId);
 }
