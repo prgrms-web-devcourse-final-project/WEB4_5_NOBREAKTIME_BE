@@ -59,7 +59,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private JsonNode fetchVideoInfo(String youtubeUrl) throws IOException, InterruptedException {
 		Process infoProcess = processRunner.runProcess(
-			"yt-dlp",
+			"/usr/bin/yt-dlp",
 			"--dump-json",
 			youtubeUrl
 		);
