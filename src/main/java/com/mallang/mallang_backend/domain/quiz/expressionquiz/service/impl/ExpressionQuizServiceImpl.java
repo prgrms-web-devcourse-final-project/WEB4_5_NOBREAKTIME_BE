@@ -136,7 +136,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 
 	private List<String> parseWord(String sentence) {
 		List<String> words = Arrays.stream(sentence.split("\\s+"))
-			.map(w -> w.replaceAll("[\\p{Punct}。、「」（）『』【】《》！？]", ""))
+			.map(w -> w.replaceAll("[\\p{Punct}&&[^'’]。、「」（）『』【】《》！？!?]", ""))
 			.filter(w -> !w.isBlank())
 			.collect(Collectors.toList());
 		Collections.shuffle(words);
