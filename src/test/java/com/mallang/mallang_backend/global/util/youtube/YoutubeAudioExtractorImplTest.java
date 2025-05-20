@@ -1,14 +1,6 @@
 package com.mallang.mallang_backend.global.util.youtube;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +9,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.mallang.mallang_backend.global.exception.ServiceException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import static com.mallang.mallang_backend.global.constants.AppConstants.AUDIO_FILE_PREFIX;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class YoutubeAudioExtractorImplTest {
@@ -50,8 +50,8 @@ class YoutubeAudioExtractorImplTest {
 		)).thenReturn(mockInfoProcess);
 
 		when(processRunner.runProcess(
-			ArgumentMatchers.eq("yt-dlp"), ArgumentMatchers.eq("-x"), ArgumentMatchers.eq("--audio-format"),
-			ArgumentMatchers.eq("mp3"), ArgumentMatchers.eq("-o"), anyString(), anyString()
+			ArgumentMatchers.eq("yt-dlp"), ArgumentMatchers.eq("-f"), ArgumentMatchers.eq("251"),
+			ArgumentMatchers.eq("-o"), anyString(), anyString()
 		)).thenReturn(mockDownloadProcess);
 
 		String youtubeUrl = "https://www.youtube.com/watch?v=test";
@@ -68,9 +68,8 @@ class YoutubeAudioExtractorImplTest {
 
 		verify(processRunner).runProcess(
 			eq("yt-dlp"),
-			eq("-x"),
-			eq("--audio-format"),
-			eq("mp3"),
+			eq("-f"),
+			eq("251"),
 			eq("-o"),
 			anyString(),
 			eq(youtubeUrl)
