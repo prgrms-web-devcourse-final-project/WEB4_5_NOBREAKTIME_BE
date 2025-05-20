@@ -7,6 +7,8 @@ import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +28,7 @@ public class TestController {
 
     private final MemberRepository memberRepository;
     private final TestMonitorService testMonitorService;
+    private static final Logger log = LoggerFactory.getLogger(TestController.class);
 
     @Value("${slack.webhook.url}")
     private String webhookUrl;
@@ -48,7 +51,7 @@ public class TestController {
     /**
      * GPT 서비스 테스트 호출용 API 엔드포인트
      */
-    @GetMapping("/test/gpt")
+    @GetMapping("/api/test-gpt")
     public String testGptService() {
         try {
             testMonitorService.testGptService(); // GPT 서비스 테스트 메서드 호출
@@ -61,7 +64,7 @@ public class TestController {
     /**
      * 슬랙 알람 서비스 테스트 호출용 API 엔드포인트
      */
-    @PostMapping("/send")
+    @PostMapping("/api/test-slackSend")
     public ResponseEntity<String> sendSlackMessage(@RequestParam String message) {
         log.info("[SlackTest] 전송할 메시지: {}", message);
 
@@ -80,7 +83,7 @@ public class TestController {
     /**
      * 슬랙 알람 서비스 2XX외 에러 메시지 전송  test
      */
-    @GetMapping("/api/test/error")
+    @GetMapping("/api/test-error")
     public String triggerInternalServerError() {
         throw new RuntimeException("의도적으로 발생시킨 테스트용 500 오류");
     }
@@ -90,5 +93,11 @@ public class TestController {
     public String test() throws InterruptedException {
         Thread.sleep(200);
         return "ok";
+    }
+
+    @GetMapping("/api/test-sentry")
+    public void testSentry() {
+//        log.error("Sentry 전송 테스트: 강제 예외 발생");
+        throw new RuntimeException("Sentry 강제 예외 전송");
     }
 }

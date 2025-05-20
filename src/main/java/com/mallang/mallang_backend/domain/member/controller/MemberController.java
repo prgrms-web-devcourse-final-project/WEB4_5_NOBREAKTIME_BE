@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.sentry.Sentry;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -172,6 +173,8 @@ public class MemberController {
 	) {
 		tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
 		tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+
+        Sentry.configureScope(scope -> scope.setUser(null));
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",
