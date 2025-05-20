@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.resilience4j.code.TestService;
@@ -38,7 +38,7 @@ class CustomCircuitBreakerConfigTest {
     @Autowired
     private CircuitBreakerRegistry registry;
 
-    @SpyBean
+    @MockitoSpyBean
     private CustomCircuitBreakerConfig.CircuitBreakerEventConsumer customConsumer;
 
     @Test
