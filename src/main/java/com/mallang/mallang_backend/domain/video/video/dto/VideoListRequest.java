@@ -24,6 +24,6 @@ public class VideoListRequest {
 
 	@Schema(description = "최대 조회 개수 (1~100)", defaultValue = "100")
 	@Min(value = 1, message = "maxResults는 최소 1 이상이어야 합니다")
-	@Max(value = 100, message = "maxResults는 최대 100 이하여야 합니다")
-	private long maxResults = 100;
+	@Max(value = 50, message = "maxResults는 최대 50 이하여야 합니다")
+	private long maxResults = 50;
 }

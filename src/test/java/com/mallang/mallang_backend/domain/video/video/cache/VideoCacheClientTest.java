@@ -109,9 +109,7 @@ class VideoCacheClientTest {
 		VideoResponse mapped = Mockito.mock(VideoResponse.class);
 
 		try (MockedStatic<VideoUtils> vs = mockStatic(VideoUtils.class)) {
-			vs.when(() -> VideoUtils.isCreativeCommons(rawVideo)).thenReturn(true);
 			vs.when(() -> VideoUtils.matchesLanguage(rawVideo, "en")).thenReturn(true);
-			vs.when(() -> VideoUtils.isDurationLessThanOrEqualTo20Minutes(rawVideo)).thenReturn(true);
 			vs.when(() -> VideoUtils.toVideoResponse(rawVideo)).thenReturn(mapped);
 
 			CachedVideos result = client.fetchAndCache("bar", "music", "en", 2L);

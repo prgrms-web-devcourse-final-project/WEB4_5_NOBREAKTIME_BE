@@ -57,17 +57,19 @@ public class VideoCacheClient {
 
 			SearchContext ctx = buildSearchContext(q, category, language);
 			List<String> ids = youtubeService.searchVideoIds(
-				ctx.getQuery(), ctx.getRegion(), ctx.getLangKey(),
-				ctx.getCategory(), fetchSize
+				ctx.getQuery(),
+				ctx.getRegion(),
+				ctx.getLangKey(),
+				ctx.getCategory(),
+				fetchSize,
+				ctx.getVideoDuration()
 			);
 
 			List<VideoResponse> list = ids.isEmpty()
 				? List.of()
 				: youtubeService.fetchVideosByIdsAsync(ids)
 				.join().stream()
-				.filter(VideoUtils::isCreativeCommons)
 				.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
-				.filter(v -> VideoUtils.isDurationLessThanOrEqualTo20Minutes(v))
 				.map(VideoUtils::toVideoResponse)
 				.collect(Collectors.toList());
 
@@ -96,7 +98,8 @@ public class VideoCacheClient {
 		String region = defaults.getRegion();
 		String query  = (q != null && !q.isBlank()) ? q : defaults.getQuery();
 		boolean isDefault = (q == null || q.isBlank()) && (category == null || category.isBlank());
+		String videoDuration = defaults.getVideoDuration();
 
-		return new SearchContext(query, region, langKey, category, isDefault);
+		return new SearchContext(query, region, langKey, category, isDefault, videoDuration);
 	}
 }
