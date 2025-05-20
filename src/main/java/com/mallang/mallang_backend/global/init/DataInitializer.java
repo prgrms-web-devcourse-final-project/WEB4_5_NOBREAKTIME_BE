@@ -40,14 +40,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (memberRepository.findById(1L).isPresent()) {
+        if (memberRepository.findById(4L).isPresent()) {
             log.info("데이터 초기화가 이미 진행되었습니다.");
             return;
         }
 
         Member basicUser = createTestUser();
 
-        createToken();
+        String key = createToken();
+        System.out.println("access token: " + key);
 
         setSecurityContext(basicUser, basicUser.getSubscriptionType().getRoleName());
     }
@@ -55,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
     // JWT 생성
     public String createToken() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("memberId", 1L);
+        claims.put("memberId", 4L);
         claims.put("role", "ROLE_STANDARD");
 
         Date start = Date.from(Instant.parse("2025-01-01T00:00:00Z"));
@@ -76,11 +77,11 @@ public class DataInitializer implements CommandLineRunner {
                 .email("google123@gmail.com")
                 .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
-                .language(Language.ENGLISH)
+                .language(Language.JAPANESE)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
-        testUser = memberRepository.save(testUser);
         testUser.updateSubscription(SubscriptionType.STANDARD);
+        testUser = memberRepository.save(testUser);
 
         List<Wordbook> wordbooks = Wordbook.createDefault(testUser);
         wordbookRepository.saveAll(wordbooks);
