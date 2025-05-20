@@ -23,6 +23,7 @@ import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.validation.WordValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -76,7 +78,12 @@ public class WordbookServiceImpl implements WordbookService {
 
         for (AddWordToWordbookRequest dto : request.getWords()) {
             // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-            saveWordIfNotExist(dto.getWord());
+            try {
+                saveWordIfNotExist(dto.getWord());
+            } catch (ServiceException e) {
+                log.warn("단어 저장 실패 : {}", dto.getWord(), e);
+                continue;
+            }
 
             // 단어가 단어장에 저장되어 있지 않을 때만 저장
             if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), dto.getWord()).isEmpty()) {
@@ -338,18 +345,18 @@ public class WordbookServiceImpl implements WordbookService {
                 )).toList();
     }
 
-	@Override
-	public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
-		// 사용자 인증
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    @Override
+    public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
+        // 사용자 인증
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         validateWordbookIdsExist(wordbookIds);
 
         List<WordbookItem> items = findWordbookItems(wordbookIds, member);
 
         return convertToWordResponses(items);
-	}
+    }
 
     private List<WordbookItem> findWordbookItems(List<Long> wordbookIds, Member member) {
 
@@ -366,7 +373,7 @@ public class WordbookServiceImpl implements WordbookService {
             Wordbook wordbook = wordbookRepository.findById(wordbookIds.get(0))
                     .orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
-            if(!wordbook.getMember().getId().equals(member.getId())) {
+            if (!wordbook.getMember().getId().equals(member.getId())) {
                 throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
             }
 

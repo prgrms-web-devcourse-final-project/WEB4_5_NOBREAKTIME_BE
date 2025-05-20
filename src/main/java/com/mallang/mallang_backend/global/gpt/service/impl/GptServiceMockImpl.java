@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.global.gpt.service.impl;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
@@ -18,9 +19,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_API_CALL_FAILED;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.GPT_RESPONSE_EMPTY;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 /**
@@ -44,7 +45,28 @@ public class GptServiceMockImpl implements GptService {
 		validateResponse(response);
 		String gptResult = response.getChoices().get(0).getMessage().getContent();
 		List<Word> generatedWords = parseGptResult(word, gptResult);
-		return generatedWords;
+		return removeInvalidWord(generatedWords);
+	}
+
+	/**
+	 * 예문이 단어의 형태 그대로 나오는지 검증하고, 형태가 다르면 예외가 발생합니다.
+	 * <p>예: 예문이 "He ceases to exist."이고 word가 "cease"인 경우,
+	 *      "cease"는 정확히 일치하지 않으므로 예외가 발생합니다.</p>
+	 * @param generatedWords 검증할 단어 리스트
+	 * @throws ServiceException 예문에 단어가 정확히 포함되지 않은 경우 발생
+	 */
+	private List<Word> removeInvalidWord(List<Word> generatedWords) {
+		List<Word> words = List.copyOf(generatedWords);
+		for (Word word : generatedWords) {
+			String exampleSentence = word.getExampleSentence();
+			String wordText = word.getWord().toLowerCase();
+			// 단어가 예문에 정확히 포함되는지 확인
+			if (!exampleSentence.matches(".*\\b" + Pattern.quote(wordText.toLowerCase()) + "\\b.*")) {
+				// 예문에 포함되지 않으면 제거
+				throw new ServiceException(INVALID_WORD);
+			}
+		}
+		return words;
 	}
 
 	/**
@@ -88,6 +110,7 @@ public class GptServiceMockImpl implements GptService {
 	/**
 	 * OpenAI 영상 분석 Mock Server 호출
 	 */
+	@MonitorExternalApi(name = "openai")
 	private OpenAiResponse callGptApiVideoAnalyze(String prompt) {
 		log.debug("[GptServiceMockImpl] 요청할 프롬프트:\n{}", prompt);
 
@@ -111,6 +134,7 @@ public class GptServiceMockImpl implements GptService {
 	/**
 	 * OpenAI 단어 분석 Mock Server 호출
 	 */
+	@MonitorExternalApi(name = "openai")
 	private OpenAiResponse callGptApiWordAnalyze(String prompt) {
 		log.debug("[GptServiceMockImpl] 요청할 프롬프트:\n{}", prompt);
 

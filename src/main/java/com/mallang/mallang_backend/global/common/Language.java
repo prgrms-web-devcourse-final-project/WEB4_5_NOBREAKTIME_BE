@@ -1,14 +1,14 @@
 package com.mallang.mallang_backend.global.common;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
-import lombok.Getter;
-
 @Getter
 public enum Language {
-    ENGLISH("en-US", "^[a-zA-Z\\\\s]+$"),
-    JAPANESE("ja", "^[\\\\u3040-\\\\u309F\\\\u30A0-\\\\u30FF\\\\uFF66-\\\\uFF9F\\\\u4E00-\\\\u9FFF\\\\s]+$"),
+    ENGLISH("en-US", "^[a-zA-Z\\s]+$"),
+    JAPANESE("ja", "^[\\u3040-\\u309F\\u30A0-\\u30FF\\uFF66-\\uFF9F\\u4E00-\\u9FFF\\s]+$"),
     NONE("none", ""),
     ALL("all", ""); // 프리미엄 회원의 경우
 
