@@ -9,6 +9,8 @@ public interface GptPromptBuilder {
 
 	String buildPromptForAnalyzeScript(String script);
 
+	String buildPromptForAnalyzeScriptJapanese(String script);
+
 	String buildPromptForLevelTestScript(String wordLevel, String expressionLevel, String wordQuizResult, String expressionQuizResult);
 
 }
