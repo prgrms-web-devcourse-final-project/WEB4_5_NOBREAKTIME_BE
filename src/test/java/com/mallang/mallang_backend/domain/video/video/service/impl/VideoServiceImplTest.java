@@ -198,7 +198,7 @@ class VideoServiceImplTest {
 
 		when(transcriptParser.parseTranscriptJson(anyString())).thenReturn(mock(Transcript.class));
 
-		when(gptService.analyzeScript(anyList()))
+		when(gptService.analyzeScript(anyList(), Language.ENGLISH))
 			.thenReturn(List.of(
 				new GptSubtitleResponse(
 					1L,
