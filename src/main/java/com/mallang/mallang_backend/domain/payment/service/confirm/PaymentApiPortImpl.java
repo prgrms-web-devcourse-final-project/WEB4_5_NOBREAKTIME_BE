@@ -68,6 +68,7 @@ public class PaymentApiPortImpl implements PaymentApiPort {
         } catch (WebClientResponseException e) {
             log.error("[{} 실패] orderId: {} | Status: {} | Error: {}",
                     logPrefix, orderId, e.getStatusCode(), e.getResponseBodyAsString());
+            e.getStackTrace();
             throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
         } catch (Exception e) {
             log.error("[시스템 에러] [{}] orderId: {} | Error: {}",
