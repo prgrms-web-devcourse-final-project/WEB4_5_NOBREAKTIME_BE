@@ -163,7 +163,9 @@ public enum ErrorCode {
     LEVEL_PARSE_FAILED("500-1", "level.parse.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 캐시 관련 에러
-    CACHE_LOCK_TIMEOUT("500-6", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR);
+    CACHE_LOCK_TIMEOUT("500-6", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    INVALID_LANGUAGE("400-1", "invalid.language", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티
