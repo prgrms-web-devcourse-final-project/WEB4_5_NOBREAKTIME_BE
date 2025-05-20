@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class TestController {

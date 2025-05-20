@@ -1,7 +1,6 @@
 package com.mallang.mallang_backend.global.config;
 
-
-import com.mallang.mallang_backend.domain.payment.quartz.*;
+import com.mallang.mallang_backend.domain.payment.quartz.AutowiringSpringBeanJobFactory;
 import com.mallang.mallang_backend.domain.payment.quartz.job.AutoBillingJob;
 import com.mallang.mallang_backend.domain.payment.quartz.job.SubscriptionExpireJob;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.LoggingJobListener;
@@ -88,7 +87,7 @@ public class QuartzConfig {
     @Bean
     public RetryJobListener retryJobListener() {
         log.info(">>>> retryJobListener 생성됨 <<<<");
-        return new RetryJobListener(new SlackNotifier());
+        return new RetryJobListener();
     }
 
     @Bean
