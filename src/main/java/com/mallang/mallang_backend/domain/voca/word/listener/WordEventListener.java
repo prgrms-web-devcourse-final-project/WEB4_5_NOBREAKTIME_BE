@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.voca.word.listener;
 
 import com.mallang.mallang_backend.domain.voca.word.event.NewWordSearchedEvent;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
+import com.mallang.mallang_backend.global.common.Language;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,7 +20,8 @@ public class WordEventListener {
 	@TransactionalEventListener
 	public void handleVideoViewed(NewWordSearchedEvent event) {
 		String word = event.getWord();
-		wordService.savedWord(word);
+		Language language = event.getLanguage();
+		wordService.savedWord(word, language);
 		log.debug("[NewWordSearchedEvent] 단어 저장 완료 {}", word);
 	}
 }
