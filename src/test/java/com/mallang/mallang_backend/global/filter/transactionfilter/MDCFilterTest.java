@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.filter;
+package com.mallang.mallang_backend.global.filter.transactionfilter;
 
 import com.mallang.mallang_backend.global.filter.code.TxIdController;
 import lombok.extern.slf4j.Slf4j;
