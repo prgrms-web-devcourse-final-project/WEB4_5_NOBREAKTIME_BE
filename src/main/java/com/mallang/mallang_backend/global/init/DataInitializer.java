@@ -119,7 +119,7 @@ public class DataInitializer implements CommandLineRunner {
                 .email("google123@gmail.com")
                 .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
-                .language(Language.JAPANESE)
+                .language(Language.ENGLISH)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
         testUser.updateSubscription(SubscriptionType.STANDARD);

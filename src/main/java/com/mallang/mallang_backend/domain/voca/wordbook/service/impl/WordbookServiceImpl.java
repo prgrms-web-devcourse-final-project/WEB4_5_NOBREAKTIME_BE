@@ -24,6 +24,7 @@ import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.validation.WordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,7 +97,11 @@ public class WordbookServiceImpl implements WordbookService {
                         .videoId(dto.getVideoId())
                         .build();
 
-                wordbookItemRepository.save(item);
+                try {
+                    wordbookItemRepository.save(item);
+                } catch (DataIntegrityViolationException ex) {
+                    // 이미 다른 트랜잭션이 삽입 완료 → 무시
+                }
             }
         }
     }
@@ -137,8 +142,15 @@ public class WordbookServiceImpl implements WordbookService {
                     .videoId(null)
                     .build();
 
-            wordbookItemRepository.save(item);
+
+            try {
+                wordbookItemRepository.save(item);
+            } catch (DataIntegrityViolationException ex) {
+                // 이미 다른 트랜잭션이 삽입 완료 → 무시
+            }
+            return;
         }
+        throw new ServiceException(DUPLICATE_WORD_SAVED);
     }
 
     /**
