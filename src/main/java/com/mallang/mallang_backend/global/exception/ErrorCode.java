@@ -115,6 +115,8 @@ public enum ErrorCode {
     OAUTH_NETWORK_ERROR("500-1", "oauth.network.error", HttpStatus.INTERNAL_SERVER_ERROR),
     OAUTH_RATE_LIMIT("500-1", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
     PROFILE_NOT_FOUND("404-2", "profile.not.found", HttpStatus.NOT_FOUND),
+    INVALID_EMAIL_FORMAT("400-1", "invalid.email.format", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_REGISTERED("409-1", "email.already.registered", HttpStatus.CONFLICT),
 
     // file upload Errors
     FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
