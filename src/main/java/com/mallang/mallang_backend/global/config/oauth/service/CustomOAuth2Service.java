@@ -51,7 +51,6 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final S3ImageUploader imageUploader;
     private final WithdrawnLogRepository logRepository;
 
-    // 실제 구현 예시: CustomCircuitBreakerConfig - [oauthUserLoginService] 성공 (702ms)
     @Retry(name = "apiRetry", fallbackMethod = "fallbackMethod")
     @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "fallbackMethod")
     @Override
@@ -73,6 +72,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
 
         Map<String, Object> userAttributes = parseUserAttributes(platform, user);
         String platformId = user.getName();
+        log.debug("platformId: {}", platformId);
 
         if (memberService.existsByPlatformId(platformId)) {
             handleExistingMember(platformId);

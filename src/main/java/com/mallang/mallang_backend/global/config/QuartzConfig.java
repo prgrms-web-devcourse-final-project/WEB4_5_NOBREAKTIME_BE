@@ -87,7 +87,7 @@ public class QuartzConfig {
     @Bean
     public RetryJobListener retryJobListener() {
         log.info(">>>> retryJobListener 생성됨 <<<<");
-        return new RetryJobListener();
+        return new RetryJobListener(new SlackNotifier());
     }
 
     @Bean

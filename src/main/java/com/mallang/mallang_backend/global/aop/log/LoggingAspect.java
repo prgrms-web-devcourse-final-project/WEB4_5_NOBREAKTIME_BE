@@ -23,7 +23,7 @@ public class LoggingAspect {
     @Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
     public void allControllers() {}
 
-    @Pointcut("execution(* com.mallang.mallang_backend.domain.payment.quartz..*(..))")
+    @Pointcut("execution(* com.mallang.mallang_backend.domain.payment.quartz.job..*(..))")
     public void paymentScheduler() {}
 
     // @RestController 애노테이션 기반으로 적용
