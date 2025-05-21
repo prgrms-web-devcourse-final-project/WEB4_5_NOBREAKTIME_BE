@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static com.mallang.mallang_backend.global.common.Language.ENGLISH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
@@ -51,7 +52,7 @@ public class GptServiceImplTest {
 		doReturn(mockResponse).when(gptServiceImpl).callGptApi(prompt);
 
 		// 스크립트 분석
-		List<GptSubtitleResponse> result = gptServiceImpl.analyzeScript(segments);
+		List<GptSubtitleResponse> result = gptServiceImpl.analyzeScript(segments, ENGLISH);
 
 		assertThat(result).isNotEmpty();
 		assertThat(result.get(0).getKeywords()).extracting("word").doesNotContain("cease");
@@ -74,7 +75,7 @@ public class GptServiceImplTest {
 
 		// 예문에 "cease"가 정확히 포함되지 않은 경우 예외 발생
 		assertThatThrownBy(() -> {
-			gptServiceImpl.searchWord(word);
+			gptServiceImpl.searchWord(word, ENGLISH);
 		}).isInstanceOf(ServiceException.class);
 	}
 
@@ -93,7 +94,7 @@ public class GptServiceImplTest {
 
 		doReturn(mockResponse).when(gptServiceImpl).callGptApi(prompt);
 
-		List<Word> result = gptServiceImpl.searchWord(word);
+		List<Word> result = gptServiceImpl.searchWord(word, ENGLISH);
 
 		assertThat(result).isNotEmpty();
 		assertThat(result.get(0).getWord()).isEqualTo("ceases");

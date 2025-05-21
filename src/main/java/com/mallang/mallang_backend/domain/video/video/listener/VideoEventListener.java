@@ -26,7 +26,7 @@ public class VideoEventListener {
 	@TransactionalEventListener
 	public void handleVideoViewed(KeywordSavedEvent event) {
 		Keyword keyword = event.getKeyword();
-		wordService.savedWord(keyword.getWord());
+		wordService.savedWord(keyword.getWord(), event.getLanguage());
 		log.debug("[KeywordSavedEvent] 단어 저장 완료 {}", keyword.getWord());
 	}
 

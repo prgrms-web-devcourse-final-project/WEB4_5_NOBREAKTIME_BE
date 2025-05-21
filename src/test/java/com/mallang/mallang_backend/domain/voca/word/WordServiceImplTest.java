@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static com.mallang.mallang_backend.global.common.Language.ENGLISH;
 import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -50,11 +51,11 @@ public class WordServiceImplTest {
         when(wordRepository.findByWord("light")).thenReturn(List.of(word));
 
         // when
-        WordSearchResponse response = wordService.savedWord("light");
+        WordSearchResponse response = wordService.savedWord("light", ENGLISH);
 
         // then
         assertThat(response.getMeanings()).hasSize(1);
-        verify(gptService, never()).searchWord("light");
+        verify(gptService, never()).searchWord("light", ENGLISH);
     }
 
     @Test
@@ -63,10 +64,10 @@ public class WordServiceImplTest {
         // given
         String gptResult = "형용사 | 가벼운 | 1 | This bag is very light. | 이 가방은 매우 가볍다.";
         when(wordRepository.findByWord("light")).thenReturn(List.of());
-        when(gptService.searchWord("light")).thenReturn(parseGptResult("light", gptResult));
+        when(gptService.searchWord("light", ENGLISH)).thenReturn(parseGptResult("light", gptResult));
         when(redisDistributedLock.tryLock(anyString(), anyString(), anyLong())).thenReturn(true);
         // when
-        WordSearchResponse response = wordService.savedWord("light");
+        WordSearchResponse response = wordService.savedWord("light", ENGLISH);
 
         // then
         assertThat(response.getMeanings()).hasSize(1);

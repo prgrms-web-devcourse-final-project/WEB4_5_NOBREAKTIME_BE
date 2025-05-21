@@ -1,9 +1,12 @@
 package com.mallang.mallang_backend.global.common;
 
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_LANGUAGE;
 
 @Getter
 public enum Language {
@@ -18,6 +21,15 @@ public enum Language {
     Language(String languageCode, String pattern) {
         this.languageCode = languageCode;
         this.pattern = pattern;
+    }
+
+    public static Language fromString(String name) {
+        for (Language lang : Language.values()) {
+            if (lang.name().equalsIgnoreCase(name)) {
+                return lang;
+            }
+        }
+        throw new ServiceException(INVALID_LANGUAGE);
     }
 
     /**

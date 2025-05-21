@@ -114,7 +114,7 @@ class ExpressionBookServiceImplTest {
         given(subtitleRepository.findById(subtitle.getId())).willReturn(Optional.of(subtitle));
         given(expressionRepository.findByVideosIdAndSentenceAndSubtitleAt(any(), any(), any())).willReturn(Optional.empty());
         given(expressionBookRepository.findById(expressionBook.getId())).willReturn(Optional.of(expressionBook));
-        given(gptService.analyzeSentence(any(), any())).willReturn("분석결과");
+        given(gptService.analyzeSentence(any(), any(), any())).willReturn("분석결과");
         given(videoRepository.findById(any())).willReturn(Optional.of(mock(Videos.class)));
         given(expressionRepository.save(any())).willReturn(mock(Expression.class));
         given(expressionBookItemRepository.existsById(any(ExpressionBookItemId.class))).willReturn(false);
@@ -156,7 +156,7 @@ class ExpressionBookServiceImplTest {
         given(subtitleRepository.findById(subtitle.getId())).willReturn(Optional.of(subtitle));
         given(expressionRepository.findByVideosIdAndSentenceAndSubtitleAt(any(), any(), any())).willReturn(Optional.empty());
         given(expressionBookRepository.findById(expressionBook.getId())).willReturn(Optional.of(expressionBook));
-        given(gptService.analyzeSentence(any(), any())).willReturn("분석결과");
+        given(gptService.analyzeSentence(any(), any(), any())).willReturn("분석결과");
         given(videoRepository.findById(any())).willReturn(Optional.empty());
         given(memberRepostiroy.findById(member.getId())).willReturn(Optional.of(member));
 
@@ -172,7 +172,7 @@ class ExpressionBookServiceImplTest {
         given(subtitleRepository.findById(subtitle.getId())).willReturn(Optional.of(subtitle));
         given(expressionRepository.findByVideosIdAndSentenceAndSubtitleAt(any(), any(), any())).willReturn(Optional.empty());
         given(expressionBookRepository.findById(expressionBook.getId())).willReturn(Optional.of(expressionBook));
-        given(gptService.analyzeSentence(any(), any())).willReturn("");
+        given(gptService.analyzeSentence(any(), any(), any())).willReturn("");
         given(memberRepostiroy.findById(member.getId())).willReturn(Optional.of(member));
 
         assertThatThrownBy(() -> expressionBookService.save(request, expressionBook.getId(), member.getId()))
