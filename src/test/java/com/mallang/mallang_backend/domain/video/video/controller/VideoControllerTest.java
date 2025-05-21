@@ -56,7 +56,15 @@ class VideoControllerTest {
 
 		// @Login 파라미터용 리졸버 스텁
 		CustomUserDetails userDetail = Mockito.mock(CustomUserDetails.class);
-		given(loginUserArgumentResolver.supportsParameter(any())).willReturn(true);
+		// CustomUserDetails 파라미터에만 true
+		given(loginUserArgumentResolver.supportsParameter(
+			argThat(p -> p != null && p.getParameterType().equals(CustomUserDetails.class))
+		)).willReturn(true);
+
+		// 그 외에는 false
+		given(loginUserArgumentResolver.supportsParameter(
+			argThat(p -> p == null || !p.getParameterType().equals(CustomUserDetails.class))
+		)).willReturn(false);
 		given(loginUserArgumentResolver.resolveArgument(
 			any(), any(), any(), any()
 		)).willReturn(userDetail);
