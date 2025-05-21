@@ -87,7 +87,7 @@ public class PaymentController {
         String roleName = grantedInfo.roleName();
 
         setSecurityContext(memberId, roleName);
-        setNewJwtTokens(response, memberId, roleName);
+        setJwtToken(response, memberId, roleName);
 
         RsData<String> rsp = new RsData<>(
                 "200",
@@ -193,23 +193,24 @@ public class PaymentController {
     }
 
     /**
-     * JWT 토큰 쌍을 생성하고 HTTP 응답에 쿠키로 설정합니다.
-     * <p>
-     * 액세스 토큰은 세션 쿠키로, 리프레시 토큰은 영속 쿠키로 설정됩니다.
+     * jwt 토큰을 헤더, 쿠키에 저장하는 메서드
      *
-     * @param response HTTP 응답 객체
-     * @param memberId 토큰 발급 대상 회원 식별자
-     * @param roleName 권한 정보 (토큰 클레임에 포함)
+     * @param response 응답에 저장하기 위한 파라미터
+     * @param memberId member 고유 값
+     * @param roleName 구독에서 가져온 구독별 권한 설정 값
      */
-    private void setNewJwtTokens(HttpServletResponse response,
-                                 Long memberId,
-                                 String roleName) {
+    private void setJwtToken(HttpServletResponse response,
+                             Long memberId,
+                             String roleName) {
 
-        // 1. 토큰 페어 생성
+        // 1. 토큰 생성 및 redis 저장
         TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
 
-        // 2. 쿠키 설정
+        // 2. 액세스 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(tokenPair.getAccessToken(), response);
+        log.info("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
+
+        // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);
     }
 }

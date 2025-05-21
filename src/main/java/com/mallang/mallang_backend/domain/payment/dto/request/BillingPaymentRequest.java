@@ -13,11 +13,11 @@ import lombok.ToString;
 public class BillingPaymentRequest {
 
     @NotBlank
-    @Schema(description = "고객 식별 키 (빌링 키 발급용)", example = "랜덤한 30글자 이내의 값, 멱등성 토큰과 동일하게 제작")
+    @Schema(description = "고객 식별 키 (빌링 키 발급용)", example = "랜덤한 30글자 이내의 값, af273591-04cd-4526-b6c7-f0e6ac4f4db8")
     private String customerKey;
 
     @NotBlank
-    @Schema(description = "카드 인증 성공 시 발급된 승인 키", example = "auth_9876543210")
+    @Schema(description = "카드 인증 성공 시 발급된 승인 키", example = "bln_7J4Dq9l0Yz")
     private String authKey;
 
     @NotBlank
@@ -28,6 +28,6 @@ public class BillingPaymentRequest {
     @Schema(description = "주문명. 빌링 키 발급 후 결제 요청에 사용", example = "프리미엄 정기 구독")
     private String orderName;
 
-    @Schema(description = "결제 금액. 빌링 키 발급 후 결제 요청에 사용", example = "10000")
+    @Schema(description = "결제 금액. 빌링 키 발급 후 결제 요청에 사용", example = "8500")
     private int amount;
 }

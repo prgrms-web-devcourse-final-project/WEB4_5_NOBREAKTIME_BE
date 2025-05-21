@@ -91,5 +91,4 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);
     }
-
 }
