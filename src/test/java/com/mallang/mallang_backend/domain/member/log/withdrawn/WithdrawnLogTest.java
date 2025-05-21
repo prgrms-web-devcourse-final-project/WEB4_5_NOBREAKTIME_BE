@@ -21,7 +21,6 @@ import static org.mockito.Mockito.*;
 
 @Slf4j
 @SpringBootTest
-@ActiveProfiles("test")
 class WithdrawnLogTest {
 
     @Autowired
@@ -35,7 +34,6 @@ class WithdrawnLogTest {
 
     @MockitoBean
     private SubscriptionService subscriptionService;
-
 
     private Member testMember;
 

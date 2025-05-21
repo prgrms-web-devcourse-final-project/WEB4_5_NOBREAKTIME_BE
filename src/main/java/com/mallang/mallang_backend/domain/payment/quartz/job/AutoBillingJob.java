@@ -2,19 +2,21 @@ package com.mallang.mallang_backend.domain.payment.quartz.job;
 
 import com.mallang.mallang_backend.domain.payment.quartz.service.AutoBillingService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component // 스프링 빈으로 등록 (Job 등록 시 자동으로 등록 됨)
-@RequiredArgsConstructor
 @DisallowConcurrentExecution // 중복 실행 방지
 @PersistJobDataAfterExecution // 영속성
 public class AutoBillingJob implements Job {
 
     private final AutoBillingService autoBillingService;
+
+    public AutoBillingJob(AutoBillingService autoBillingService) {
+        this.autoBillingService = autoBillingService;
+    }
 
     @Override
     @TimeTrace

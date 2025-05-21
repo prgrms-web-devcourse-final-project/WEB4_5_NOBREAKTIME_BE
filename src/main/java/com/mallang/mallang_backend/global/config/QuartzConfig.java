@@ -48,7 +48,7 @@ public class QuartzConfig {
     @Bean
     public JobDetail autoBillingJobDetail() {
         return JobBuilder.newJob(AutoBillingJob.class)
-                .withIdentity("autoBillingJob")
+                .withIdentity("autoBillingJob", "DEFAULT")
                 .usingJobData("maxRetry", 3)
                 .storeDurably()
                 .build();
@@ -73,7 +73,7 @@ public class QuartzConfig {
     public Trigger autoBillingTrigger() {
         return TriggerBuilder.newTrigger()
                 .forJob(autoBillingJobDetail())
-                .withIdentity("autoBillingTrigger")
+                .withIdentity("autoBillingTrigger", "DEFAULT")
                 .withSchedule(CronScheduleBuilder.cronSchedule(autoBillingCron)) // 매일 00:00 실행
                 .build();
     }
@@ -113,19 +113,19 @@ public class QuartzConfig {
     private DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
 
     @Bean
+    public JobFactory autowiringSpringBeanJobFactory() {
+        return new AutowiringSpringBeanJobFactory();
+    }
+
+    @Bean
     public SchedulerFactoryBean schedulerFactoryBean() {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
-        factory.setJobFactory(new AutowiringSpringBeanJobFactory());
+        factory.setJobFactory(autowiringSpringBeanJobFactory());
         factory.setJobDetails(subscriptionExpireJobDetail(), autoBillingJobDetail());
         factory.setTriggers(subscriptionExpireTrigger(), autoBillingTrigger());
         factory.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         factory.setGlobalTriggerListeners(retryTriggerListener());
         factory.setDataSource(dataSource);
         return factory;
-    }
-
-    @Bean
-    public JobFactory autowiringSpringBeanJobFactory() {
-        return new AutowiringSpringBeanJobFactory();
     }
 }

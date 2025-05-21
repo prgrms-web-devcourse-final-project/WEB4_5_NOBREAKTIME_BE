@@ -5,8 +5,6 @@ VALUES ('light', '형용사', '가벼운', 'EASY', 'This bag is very light.', '�
        ('light', '동사', '불을 켜다', 'NORMAL', 'Please light the candles.', '촛불을 켜 주세요.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
        ('light', '동사', '밝게 하다', 'HARD', 'The room is lit by a large window.', '그 방은 큰 창문으로 밝아진다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
        ('light', '형용사', '연한', 'NORMAL', 'She wore a light blue dress.', '그녀는 연한 파란색 드레스를 입었다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
-
 -- BASIC 플랜 (기간 상관없이 동일한 혜택)
 INSERT INTO plan (type, period, amount, description, benefits, created_at, modified_at)
 VALUES ('BASIC', 'MONTHLY', 0, '기본 서비스 플랜',
@@ -189,7 +187,6 @@ INSERT INTO member (
 -- 3번 회원: 네이버 로그인, STANDARD 구독, 탈퇴 처리
 ('user3@naver.com', '네이버유저', 'https://mallang.com/profile3.png', 'NAVER', 'naver-uid-789',
  'ENGLISH', 'STANDARD', 20, 3, 1, 3, '2024-05-14 12:00:00', NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
 INSERT INTO payment (member_id,
                      plan_id,
                      order_id,
@@ -209,7 +206,6 @@ VALUES (1,
         NOW(), -- 결제 승인 시간
         NULL -- 실패 사유 없음
        );
-
 INSERT INTO payment (
     member_id,
     plan_id,
@@ -231,7 +227,6 @@ INSERT INTO payment (
              NOW(),    -- 승인 시간 없음
              'NOT_FOUND_PAYMENT' -- 결제를 찾을 수 없음 (예시)
          );
-
 INSERT INTO payment_history (
     payment_id,
     status,
@@ -243,7 +238,6 @@ INSERT INTO payment_history (
              NOW(),       -- changed_at (현재 시간)
              NULL         -- reason_detail (사유 없음, 필요시 값 입력)
          );
-
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-01-01 00:00:00', '2025-01-31 00:00:00', 'EXPIRED', true);
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-02-01 00:00:00', '2025-03-02 00:00:00', 'EXPIRED', true);
 INSERT INTO subscription (member_id, plan_id, started_at, expired_at, status, is_auto_renew) VALUES (1, 7, '2025-03-02 00:00:00', '2025-04-01 00:00:00', 'EXPIRED', true);
