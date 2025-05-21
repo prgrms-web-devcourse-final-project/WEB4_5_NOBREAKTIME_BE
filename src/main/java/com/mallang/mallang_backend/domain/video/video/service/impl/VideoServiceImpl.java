@@ -30,6 +30,7 @@ import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.clova.ClovaSpeechClient;
 import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
+import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -72,18 +72,13 @@ public class VideoServiceImpl implements VideoService {
 	private final AnalyzeVideoResultFetcher analyzeVideoResultFetcher;
 	private final BookmarkRepository bookmarkRepository;
 	private final VideoQueryService videoQueryService;
+	private final SseEmitterManager sseEmitterManager;
 
 	// 회원 기준 영상 검색 메서드
 	@Override
-	public List<VideoResponse> getVideosForMember(
-		String q,
-		String category,
-		long maxResults,
-		Long memberId
-	) {
+	public List<VideoResponse> getVideosForMember(String q, String category, long maxResults, Long memberId) {
 		// 회원 조회해서 언어 정보 가져오기
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+		Member member = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
 
 		Language lang = member.getLanguage();
 		if (lang == Language.NONE) {
@@ -91,9 +86,7 @@ public class VideoServiceImpl implements VideoService {
 		}
 
 		// 북마크된 videoId 목록 조회
-		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream()
-			.map(bookmark -> bookmark.getVideos().getId())
-			.collect(Collectors.toSet());
+		Set<String> bookmarkedIds = bookmarkRepository.findAllWithVideoByMemberId(memberId).stream().map(bookmark -> bookmark.getVideos().getId()).collect(Collectors.toSet());
 
 		// ISO 코드 추출
 		String language = lang.toCode();
@@ -103,21 +96,12 @@ public class VideoServiceImpl implements VideoService {
 	}
 
 	@Override
-	public List<VideoResponse> getVideosByLanguage(
-		String q,
-		String category,
-		String language,
-		long maxResults,
-		Set<String> bookmarkedIds
-	) {
+	public List<VideoResponse> getVideosByLanguage(String q, String category, String language, long maxResults, Set<String> bookmarkedIds) {
 		// 캐시가 적용된 queryVideos() 호출
-		List<VideoResponse> responses =
-			videoQueryService.queryVideos(q, category, language, maxResults);
+		List<VideoResponse> responses = videoQueryService.queryVideos(q, category, language, maxResults);
 
 		// 북마크 여부 세팅
-		responses.forEach(r ->
-			r.setBookmarked(bookmarkedIds.contains(r.getVideoId()))
-		);
+		responses.forEach(r -> r.setBookmarked(bookmarkedIds.contains(r.getVideoId())));
 
 		return responses;
 	}
@@ -129,25 +113,14 @@ public class VideoServiceImpl implements VideoService {
 	 * @return 조회된 비디오 정보 DTO
 	 */
 	private VideoDetail fetchDetail(String videoId) {
-		List<Video> ytVideos =  youtubeService
-			.fetchVideosByIdsAsync(List.of(videoId))
-			.join();
-		var ytVideo = ytVideos.stream()
-			.findFirst()
-			.orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
+		List<Video> ytVideos = youtubeService.fetchVideosByIdsAsync(List.of(videoId)).join();
+		var ytVideo = ytVideos.stream().findFirst().orElseThrow(() -> new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED));
 
 		// 언어 정보 파싱
 		Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
 
 		// 응답 DTO 생성
-		return new VideoDetail(
-			ytVideo.getId(),
-			ytVideo.getSnippet().getTitle(),
-			ytVideo.getSnippet().getDescription(),
-			ytVideo.getSnippet().getThumbnails().getMedium().getUrl(),
-			ytVideo.getSnippet().getChannelTitle(),
-			lang
-		);
+		return new VideoDetail(ytVideo.getId(), ytVideo.getSnippet().getTitle(), ytVideo.getSnippet().getDescription(), ytVideo.getSnippet().getThumbnails().getMedium().getUrl(), ytVideo.getSnippet().getChannelTitle(), lang);
 	}
 
 	/**
@@ -161,12 +134,7 @@ public class VideoServiceImpl implements VideoService {
 		// DB에 해당 ID가 이미 있으면 필드 업데이트
 		if (videoRepository.existsById(id)) {
 			Videos existing = videoRepository.getReferenceById(id);
-			existing.updateTitleAndThumbnail(
-				dto.getTitle(),
-				dto.getThumbnailUrl(),
-				dto.getChannelTitle(),
-				dto.getLanguage()
-			);
+			existing.updateTitleAndThumbnail(dto.getTitle(), dto.getThumbnailUrl(), dto.getChannelTitle(), dto.getLanguage());
 			return existing;
 		} else {
 			// 없으면 새로 저장
@@ -178,17 +146,13 @@ public class VideoServiceImpl implements VideoService {
 	@Async("analysisExecutor")
 	@Transactional
 	@Override
-	public void analyzeWithSseAsync(Long memberId, String videoId, SseEmitter emitter) {
-		try {
-			AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitter);
-			emitter.send(SseEmitter.event().name("analysisComplete").data(result));
-			emitter.complete();
-		} catch (Exception ex) {
-			emitter.completeWithError(ex);
-		}
+	public void analyzeWithSseAsync(Long memberId, String videoId, String emitterId) {
+		AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitterId);
+		sseEmitterManager.sendTo(emitterId, "analysisComplete", result);
+		sseEmitterManager.removeEmitter(emitterId);
 	}
 
-	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, SseEmitter emitter) throws IOException, InterruptedException {
+	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, String emitterId) {
 		long startTotal = System.nanoTime(); // 전체 시작 시간
 		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
@@ -213,9 +177,7 @@ public class VideoServiceImpl implements VideoService {
 
 		boolean locked = redisDistributedLock.tryLock(lockKey, lockValue, ttlMillis);
 		if (!locked) {
-			emitter.send(SseEmitter.event()
-				.name("lockChecking")
-				.data("동일한 영상의 분석이 진행중입니다..."));
+			sseEmitterManager.sendTo(emitterId, "lockChecking", "동일한 영상의 분석이 진행중입니다...");
 
 			// 락이 사라졌는지 10분간 계속 확인
 			boolean lockAvailable = redisDistributedLock.waitForUnlockThenFetch(lockKey, ttlMillis, 2000L);
@@ -229,11 +191,10 @@ public class VideoServiceImpl implements VideoService {
 			return analyzeVideoResultFetcher.fetchAnalyzedResultAfterWait(videoId);
 		}
 
+		String fileName = null;
 		try {
 			// **락 획득 알림**
-			emitter.send(SseEmitter.event()
-				.name("lockAcquired")
-				.data("Lock acquired, 곧 Audio 추출 시작합니다."));
+			sseEmitterManager.sendTo(emitterId, "lockAcquired","Lock acquired, 곧 Audio 추출 시작합니다.");
 
 			// 3. 영상 정보 저장
 			start = System.nanoTime();
@@ -243,13 +204,11 @@ public class VideoServiceImpl implements VideoService {
 
 			// 4. 음성 추출
 			start = System.nanoTime();
-			String fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
+			fileName = youtubeAudioExtractor.extractAudio(YOUTUBE_VIDEO_BASE_URL + videoId);
 			log.debug("[AnalyzeVideo] 오디오 추출 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// **오디오 추출 완료 알림**
-			emitter.send(SseEmitter.event()
-				.name("audioExtracted")
-				.data("Audio 추출 완료, STT 분석 시작합니다."));
+			sseEmitterManager.sendTo(emitterId, "audioExtracted","Audio 추출 완료, STT 분석 시작합니다.");
 
 			// 5. STT 요청
 			start = System.nanoTime();
@@ -258,9 +217,7 @@ public class VideoServiceImpl implements VideoService {
 			log.debug("[AnalyzeVideo] STT 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// **STT 완료 알림**
-			emitter.send(SseEmitter.event()
-				.name("sttCompleted")
-				.data("STT 완료, GPT 분석 시작합니다."));
+			sseEmitterManager.sendTo(emitterId, "sttCompleted","STT 완료, GPT 분석 시작합니다.");
 
 			// 6. STT 결과 파싱
 			start = System.nanoTime();
@@ -278,16 +235,20 @@ public class VideoServiceImpl implements VideoService {
 			saveSubtitleAndKeyword(video, gptResult);
 			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
-			// 9. 파일 삭제 이벤트
-			start = System.nanoTime();
-			publisher.publishEvent(new VideoAnalyzedEvent(fileName));
-			log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
-
 			return AnalyzeVideoResponse.from(gptResult);
+		} catch (IOException | InterruptedException e) {
+			sseEmitterManager.sendTo(emitterId, "videoAnalysisFailed", "영상 분석에 실패했습니다.");
+			log.warn("영상 분석 실패", e);
+			throw new ServiceException(VIDEO_ANALYSIS_FAILED);
 		} finally {
 			// 락 해제
 			redisDistributedLock.unlock(lockKey, lockValue);
+			// 9. 파일 삭제 이벤트
+			if (fileName != null) {
+				publisher.publishEvent(new VideoAnalyzedEvent(fileName));
+				log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생");
+			}
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
 	}
 
@@ -297,14 +258,7 @@ public class VideoServiceImpl implements VideoService {
 
 		for (GptSubtitleResponse response : gptResult) {
 			// Subtitle 엔티티 생성
-			Subtitle subtitle = Subtitle.builder()
-				.videos(video)
-				.startTime(response.getStartTime())
-				.endTime(response.getEndTime())
-				.originalSentence(response.getOriginal())
-				.translatedSentence(response.getTranscript())
-				.speaker(response.getSpeaker())
-				.build();
+			Subtitle subtitle = Subtitle.builder().videos(video).startTime(response.getStartTime()).endTime(response.getEndTime()).originalSentence(response.getOriginal()).translatedSentence(response.getTranscript()).speaker(response.getSpeaker()).build();
 
 			subtitleList.add(subtitle);
 
@@ -335,10 +289,9 @@ public class VideoServiceImpl implements VideoService {
 	@Override
 	@Transactional
 	public Videos saveVideoIfAbsent(String videoId) {
-		return videoRepository.findById(videoId)
-			.orElseGet(() -> {
-				VideoDetail dto = fetchDetail(videoId);
-				return upsertVideoEntity(dto);
-			});
+		return videoRepository.findById(videoId).orElseGet(() -> {
+			VideoDetail dto = fetchDetail(videoId);
+			return upsertVideoEntity(dto);
+		});
 	}
 }

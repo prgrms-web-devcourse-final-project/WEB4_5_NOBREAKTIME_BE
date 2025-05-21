@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.mallang.mallang_backend.domain.video.youtube.dto.YoutubeCategoryId;
+import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
