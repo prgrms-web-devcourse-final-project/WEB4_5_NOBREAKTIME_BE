@@ -1,4 +1,3 @@
-// ───── YoutubeService.java ─────
 package com.mallang.mallang_backend.domain.video.youtube.service;
 
 import java.io.IOException;
@@ -30,11 +29,13 @@ public class YoutubeService {
 
 	private final YoutubeApiClient rawService;
 
-	// Youtube API 비동기 호출을 위한 Executor
 	@Qualifier("youtubeApiExecutor")
 	private final Executor youtubeApiExecutor;
 
-	// 검색: 키워드 기반으로 videoId만 가져오기
+	/**
+	 * 검색: 키워드 기반으로 videoId만 가져오기
+	 * @param videoDuration "short" | "medium" | "long"
+	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchVideoIds")
 	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackSearchVideoIds")
 	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE, fallbackMethod = "fallbackSearchVideoIds")
@@ -43,15 +44,18 @@ public class YoutubeService {
 		String regionCode,
 		String relevanceLanguage,
 		String categoryId,
-		long desiredCount
+		long desiredCount,
+		String videoDuration
 	) throws IOException {
 		List<String> allVideoIds = new ArrayList<>();
 		String nextPageToken = null;
 
 		do {
 			long max = Math.min(desiredCount - allVideoIds.size(), 50);
+			// videoDuration 파라미터를 rawService.searchOnce() 에도 전달
 			SearchListResponse resp = rawService.searchOnce(
-				query, regionCode, relevanceLanguage, categoryId, nextPageToken, max
+				query, regionCode, relevanceLanguage,
+				categoryId, nextPageToken, max, videoDuration
 			);
 			resp.getItems().stream()
 				.map(item -> item.getId().getVideoId())
@@ -66,7 +70,6 @@ public class YoutubeService {
 
 	/**
 	 * 상세조회: videoId 리스트로 Video 정보 가져오기 (비동기)
-	 * - 50개씩 chunk로 분할하고, CompletableFuture로 병렬 호출
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackFetchVideosByIds")
 	@CircuitBreaker(name = "youtubeService", fallbackMethod = "fallbackFetchVideosByIds")
@@ -97,8 +100,13 @@ public class YoutubeService {
 	 * searchVideoIds() 최대 재시도 후에도 실패 시 호출
 	 */
 	public List<String> fallbackSearchVideoIds(
-		String query, String regionCode, String relevanceLanguage, String categoryId,
-		long desiredCount, Throwable t
+		String query,
+		String regionCode,
+		String relevanceLanguage,
+		String categoryId,
+		long desiredCount,
+		String videoDuration,       // ← 추가
+		Throwable t
 	) {
 		throw new ServiceException(ErrorCode.API_ERROR);
 	}
@@ -107,7 +115,8 @@ public class YoutubeService {
 	 * fetchVideosByIdsAsync() 최대 재시도 후에도 실패 시 호출
 	 */
 	public CompletableFuture<List<Video>> fallbackFetchVideosByIds(
-		List<String> videoIds, Throwable t
+		List<String> videoIds,
+		Throwable t
 	) {
 		CompletableFuture<List<Video>> failed = new CompletableFuture<>();
 		failed.completeExceptionally(new ServiceException(ErrorCode.API_ERROR));
