@@ -61,9 +61,10 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private JsonNode fetchVideoInfo(String youtubeUrl) throws IOException, InterruptedException {
 		Process infoProcess = processRunner.runProcess(
-			"yt-dlp",
-			"--dump-json",
-			youtubeUrl
+				"yt-dlp",
+				"--cookies", "cookie.txt",
+				"--dump-json",
+				youtubeUrl
 		);
 
 		String jsonOutput = readProcessOutput(infoProcess);
@@ -87,11 +88,11 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private void runAudioExtraction(String youtubeUrl, String outputPath) throws IOException, InterruptedException {
 		Process process = processRunner.runProcess(
-			"yt-dlp",
-			"--cookies", "cookie.txt",  // 쿠키 파일 경로
-			"-f", "251",                // 오디오 전용 최고 품질
-			"-o", outputPath,
-			youtubeUrl
+				"yt-dlp",
+				"--cookies", "cookie.txt",  // 쿠키 파일 경로
+				"-f", "251",                // 오디오 전용 최고 품질
+				"-o", outputPath,
+				youtubeUrl
 		);
 
 		logProcessOutput(process);
