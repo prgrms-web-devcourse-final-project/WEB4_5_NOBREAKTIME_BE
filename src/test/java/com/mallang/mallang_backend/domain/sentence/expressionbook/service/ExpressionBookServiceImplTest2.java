@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.sentence.expressionbook;
+package com.mallang.mallang_backend.domain.sentence.expressionbook.service;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;

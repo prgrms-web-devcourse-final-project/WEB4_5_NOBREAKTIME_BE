@@ -78,6 +78,8 @@ public enum ErrorCode {
     WORDBOOK_ITEM_NOT_FOUND("404-1", "wordbook.item.not.found", HttpStatus.NOT_FOUND),
     LANGUAGE_IS_NONE("400-1", "language.is.none", HttpStatus.BAD_REQUEST),
     NO_PERMISSION("403-1", "no.permission", HttpStatus.FORBIDDEN),
+    // 단어장에 중복 단어 불가
+    DUPLICATE_WORD_SAVED("400-2", "duplicate.word.saved", HttpStatus.BAD_REQUEST),
 
     // Parse Errors
     INVALID_ATTRIBUTE_MAP("400-2", "invalid.attribute.map", HttpStatus.BAD_REQUEST),
