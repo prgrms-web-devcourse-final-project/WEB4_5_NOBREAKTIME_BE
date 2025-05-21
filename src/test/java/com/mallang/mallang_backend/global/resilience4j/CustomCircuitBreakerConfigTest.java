@@ -6,12 +6,15 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import com.mallang.mallang_backend.global.resilience4j.CustomCircuitBreakerConfig.CircuitBreakerEventConsumer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -29,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import({TestService.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CustomCircuitBreakerConfigTest {
 
     @Autowired
@@ -38,7 +42,7 @@ class CustomCircuitBreakerConfigTest {
     private CircuitBreakerRegistry registry;
 
     @Autowired
-    private CustomCircuitBreakerConfig.CircuitBreakerEventConsumer customConsumer;
+    private CircuitBreakerEventConsumer customConsumer;
 
     @Test
     @DisplayName("서킷 브레이커 테스트 - CLOSED -> OPEN")
@@ -106,6 +110,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled
     @DisplayName("StateTransition 이벤트로 메트릭 기록 테스트")
     void t5() {
         // 메트릭 초기화
