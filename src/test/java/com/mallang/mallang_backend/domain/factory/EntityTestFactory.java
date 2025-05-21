@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.subscription;
+package com.mallang.mallang_backend.domain.factory;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -44,11 +44,11 @@ public class EntityTestFactory {
      */
     public static Subscription createSubscription(Member member,
                                                   Plan plan,
-                                                  LocalDateTime expiredAt) {
+                                                  LocalDateTime startedAt) {
 
         return Subscription.builder()
                 .plan(plan)
-                .startedAt(expiredAt.minusMonths(1))
+                .startedAt(startedAt)
                 .member(member)
                 .build();
     }

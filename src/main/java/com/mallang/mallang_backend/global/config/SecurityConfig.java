@@ -96,7 +96,7 @@ public class SecurityConfig {
         // 허용할 오리진 설정
         configuration.setAllowedOrigins(Arrays.asList(
                 "https://cdpn.io",
-                "https://*.mallang.site",
+                "https://www.mallang.site",
                 "http://localhost:3000",
                 "https://www.app4.qwas.shop",
                 "https://login.aleph.kr"));

@@ -1,0 +1,72 @@
+CREATE TABLE WORD (
+                      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+                      WORD VARCHAR(100) NOT NULL,
+                      POS VARCHAR(20) NOT NULL,
+                      MEANING VARCHAR(255) NOT NULL,
+                      DIFFICULTY VARCHAR(20) NOT NULL,
+                      EXAMPLE_SENTENCE VARCHAR(255) NOT NULL,
+                      TRANSLATED_SENTENCE VARCHAR(255) NOT NULL,
+                      CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      MODIFIED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE plan (
+                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                      type VARCHAR(30) NOT NULL,
+                      period VARCHAR(30) NOT NULL,
+                      amount INT NOT NULL,
+                      description VARCHAR(255) NOT NULL,
+                      benefits TEXT NOT NULL,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE member (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        email VARCHAR(100) NOT NULL UNIQUE,
+                        nickname VARCHAR(50) NOT NULL,
+                        profile_image_url VARCHAR(255),
+                        login_platform VARCHAR(20) NOT NULL,
+                        platform_id VARCHAR(100) NOT NULL,
+                        language VARCHAR(50) NOT NULL,
+                        subscription_type VARCHAR(20) NOT NULL,
+                        word_goal INT,
+                        video_goal INT,
+                        word_level INT,
+                        expression_level INT,
+                        withdrawal_date TIMESTAMP,
+                        measured_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE payment (
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         member_id BIGINT NOT NULL,
+                         plan_id BIGINT NOT NULL,
+                         order_id VARCHAR(100) NOT NULL UNIQUE,
+                         payment_key VARCHAR(100) NOT NULL UNIQUE,
+                         total_amount INT NOT NULL,
+                         pay_status VARCHAR(20) NOT NULL,
+                         method VARCHAR(20) NOT NULL,
+                         approved_at TIMESTAMP,
+                         failure_reason VARCHAR(255),
+                         CONSTRAINT fk_payment_member FOREIGN KEY (member_id) REFERENCES member(id),
+                         CONSTRAINT fk_payment_plan FOREIGN KEY (plan_id) REFERENCES plan(id)
+);
+CREATE TABLE payment_history (
+                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                 payment_id BIGINT NOT NULL,
+                                 status VARCHAR(30) NOT NULL,
+                                 changed_at TIMESTAMP NOT NULL,
+                                 reason_detail VARCHAR(255),
+                                 CONSTRAINT fk_payment_history_payment FOREIGN KEY (payment_id) REFERENCES payment(id)
+);
+CREATE TABLE subscription (
+                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                              member_id BIGINT NOT NULL,
+                              plan_id BIGINT NOT NULL,
+                              started_at TIMESTAMP NOT NULL,
+                              expired_at TIMESTAMP NOT NULL,
+                              status VARCHAR(20) NOT NULL,
+                              is_auto_renew BOOLEAN NOT NULL,
+                              CONSTRAINT fk_subscription_member FOREIGN KEY (member_id) REFERENCES member(id),
+                              CONSTRAINT fk_subscription_plan FOREIGN KEY (plan_id) REFERENCES plan(id)
+);
