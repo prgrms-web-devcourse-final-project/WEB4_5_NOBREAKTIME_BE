@@ -36,6 +36,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -152,7 +153,11 @@ class VideoServiceImplTest {
 	@DisplayName("유튜브 ID로 영상을 분석할 수 있다")
 	void analyzeVideo_newVideo() throws IOException, InterruptedException {
 		// given
-		Long memberId = 1L;
+		Member member = Member.builder()
+			.language(Language.ENGLISH)
+			.build();
+		ReflectionTestUtils.setField(member, "id", 1L);
+
 		String videoId = "test_video_id";
 		String audioFile = "test_audio.mp3";
 
@@ -198,7 +203,9 @@ class VideoServiceImplTest {
 
 		when(transcriptParser.parseTranscriptJson(anyString())).thenReturn(mock(Transcript.class));
 
-		when(gptService.analyzeScript(anyList()))
+		when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+
+		when(gptService.analyzeScript(anyList(), any()))
 			.thenReturn(List.of(
 				new GptSubtitleResponse(
 					1L,
@@ -219,7 +226,7 @@ class VideoServiceImplTest {
 		AnalyzeVideoResponse response = invokeMethod(
 			videoService,
 			"analyzeVideo",    // 메서드 이름
-			memberId,
+			member.getId(),
 			videoId,
 			emitterId
 		);

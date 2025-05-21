@@ -21,7 +21,7 @@ import com.mallang.mallang_backend.global.resilience4j.code.TestService;
 
 @SpringBootTest
 @ActiveProfiles("local")
-class CustomBulkheadConfigQueueingTest {
+class CustomBulkheadConfigTest {
 
 	@Autowired
 	private TestService testService;

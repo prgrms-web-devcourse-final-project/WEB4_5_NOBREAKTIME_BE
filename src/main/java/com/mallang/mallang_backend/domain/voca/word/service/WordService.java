@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.voca.word.service;
 
 import com.mallang.mallang_backend.domain.voca.word.dto.WordSearchResponse;
+import com.mallang.mallang_backend.global.common.Language;
 
 public interface WordService {
 
@@ -10,7 +11,7 @@ public interface WordService {
      * @param word 저장할 단어
      * @return WordSavedResponse
      */
-    WordSearchResponse savedWord(String word);
+    WordSearchResponse savedWord(String word, Language language);
 
     /**
      * 단어를 검색하여 품사/해석/난이도 목록을 반환합니다.

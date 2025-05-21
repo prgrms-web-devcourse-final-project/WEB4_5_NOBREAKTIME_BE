@@ -17,6 +17,7 @@ import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.Exp
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.entity.ExpressionBookItemId;
 import com.mallang.mallang_backend.domain.sentence.expressionbookitem.repository.ExpressionBookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.util.japanese.JapaneseSplitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.mallang.mallang_backend.global.common.Language.ENGLISH;
+import static com.mallang.mallang_backend.global.common.Language.JAPANESE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
@@ -48,11 +51,24 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 			throw new ServiceException(EXPRESSIONBOOK_IS_EMPTY);
 		}
 
-		// 문제 생성
-		List<ExpressionQuizItem> quizzes = items.stream()
-			.map(this::convertToQuizDto)
-			.filter(Objects::nonNull)
-			.collect(Collectors.toCollection(ArrayList::new));
+		List<ExpressionQuizItem> quizzes = new ArrayList<>();
+
+		if (expressionBook.getLanguage() == ENGLISH) {
+			// 문제 생성
+			quizzes = items.stream()
+				.map(this::convertToQuizDto)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toCollection(ArrayList::new));
+		}
+
+		if (expressionBook.getLanguage() == JAPANESE) {
+			// 문제 생성
+			quizzes = items.stream()
+				.map(this::convertToQuizDtoJapanese)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toCollection(ArrayList::new));
+		}
+
 
 		Collections.shuffle(quizzes);
 
@@ -71,12 +87,36 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		return response;
 	}
 
+	/**
+	 * 일본어 표현 문장을 단어별 띄어쓰기로 구분
+	 * @param item
+	 * @return
+	 */
+	private ExpressionQuizItem convertToQuizDtoJapanese(ExpressionBookItem item) {
+		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
+			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
+
+		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
+			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+		String splitSentence = JapaneseSplitter.splitJapanese(expression.getSentence());
+		return new ExpressionQuizItem(
+			expression.getId(),
+			expressionBook.getId(),
+			createQuestion(splitSentence),
+			splitSentence,
+			parseWord(splitSentence),
+			expression.getDescription()
+		);
+	}
+
 	private ExpressionQuizItem convertToQuizDto(ExpressionBookItem item) {
 		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
 			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
 
 		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
 			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
 		return new ExpressionQuizItem(
 			expression.getId(),
 			expressionBook.getId(),
@@ -87,16 +127,17 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		);
 	}
 
-	private String createQuestion(String sentence) {
+	private static String createQuestion(String sentence) {
 		// 알파벳, 숫자(\w+)를 {}로 치환, 문장부호는 유지
 		return Arrays.stream(sentence.split("\\s+"))
-			.map(token -> token.replaceAll("[\\w'’]+", "{}"))
+			.map(token -> token.replaceAll("[\\p{L}\\p{N}'’ー々]+", "{}"))
 			.collect(Collectors.joining(" "));
 	}
 
 	private List<String> parseWord(String sentence) {
 		List<String> words = Arrays.stream(sentence.split("\\s+"))
-			.map(w -> w.replaceAll("[\\p{Punct}&&[^'’]]", "")) // ' 와 ’는 유지
+			.map(w -> w.replaceAll("[\\p{Punct}&&[^'’]。、「」（）『』【】《》！？!?]", ""))
+			.filter(w -> !w.isBlank())
 			.collect(Collectors.toList());
 		Collections.shuffle(words);
 		return words;

@@ -1,10 +1,11 @@
 package com.mallang.mallang_backend.domain.video.youtube.config;
 
-import lombok.Data;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Map;
+import lombok.Data;
 
 @Data
 @Configuration
@@ -17,5 +18,6 @@ public class VideoSearchProperties {
     public static class SearchDefault {
         private String query;
         private String region;
+        private String videoDuration;
     }
 }

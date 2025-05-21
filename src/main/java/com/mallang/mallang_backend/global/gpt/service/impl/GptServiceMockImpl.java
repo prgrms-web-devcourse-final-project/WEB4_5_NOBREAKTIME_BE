@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.Message;
@@ -39,7 +40,7 @@ public class GptServiceMockImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
 	@Override
-	public List<Word> searchWord(String word)  {
+	public List<Word> searchWord(String word, Language language)  {
 		String prompt = gptPromptBuilder.buildPromptforSearchWord(word);
 		OpenAiResponse response = callGptApiWordAnalyze(prompt);
 		validateResponse(response);
@@ -74,7 +75,7 @@ public class GptServiceMockImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
-	public String analyzeSentence(String sentence, String translatedSentence) {
+	public String analyzeSentence(String sentence, String translatedSentence, Language language) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -83,7 +84,7 @@ public class GptServiceMockImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
-	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments) {
+	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments, Language language) {
 		// prompt 생성
 		String script = GptScriptProcessor.prepareScriptInputText(segments);
 		String prompt = gptPromptBuilder.buildPromptForAnalyzeScript(script);
