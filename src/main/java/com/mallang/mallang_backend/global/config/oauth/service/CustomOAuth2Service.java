@@ -54,8 +54,8 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final WithdrawnLogRepository logRepository;
 
     // 실제 구현 예시: CustomCircuitBreakerConfig - [oauthUserLoginService] 성공 (702ms)
-    @Retry(name = "apiRetry", fallbackMethod = "fallbackMethod")
-    @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "fallbackMethod")
+    @Retry(name = "oauthAccessRetry", fallbackMethod = "Oauth2fallbackMethod")
+    @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "Oauth2fallbackMethod")
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         String provider = userRequest.getClientRegistration().getRegistrationId();
@@ -74,7 +74,9 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
                                                 OAuth2User user) {
 
         Map<String, Object> userAttributes = parseUserAttributes(platform, user);
-        String platformId = user.getName();
+        String platformId = (String) userAttributes.get("platformId");// 플랫폼 ID 필드 추출
+
+        log.info("platformId: {}", platformId);
 
         if (memberService.existsByPlatformId(platformId)) {
             handleExistingMember(platformId);
@@ -149,12 +151,14 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         // 30일 이내 탈퇴 이력이 존재하면 예외 발생
         validateWithdrawnLogNotRejoinable(platformId);
 
-        String email = (String) userAttributes.get("email");
-        String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
-        String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
+        // 이미 존재하는 이메일인지 검증
+        String email = validateEmailJoinable(userAttributes);
 
         // 닉네임 중복 방지 로직 적용
+        String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
         String nickname = generateUniqueNickname(originalNickname);
+
+        String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
 
         log.debug("사용자 platformId: {}, email: {}, nickname: {}, profileImage: {}",
                 platformId, email, nickname, profileImage);
@@ -169,6 +173,29 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
                 s3ProfileImageUrl,
                 platform
         );
+    }
+
+    /**
+     * 주어진 사용자 속성에서 이메일을 추출하여, 이미 가입된 이메일인지 검증합니다.
+     * 이미 존재하는 이메일일 경우 ServiceException을 발생시킵니다.
+     *
+     * @param userAttributes 사용자 속성 맵 (email 키 필수)
+     * @return 검증된 이메일 문자열
+     * @throws ServiceException 이미 등록된 이메일일 경우 발생
+     */
+    private String validateEmailJoinable(Map<String, Object> userAttributes) {
+        String email = (String) userAttributes.get("email");
+
+        if (email == null || email.isBlank()) {
+            log.warn("이메일 정보가 누락되었습니다. userAttributes: {}", userAttributes);
+            throw new ServiceException(INVALID_EMAIL_FORMAT);
+        }
+
+        if (memberRepository.existsByEmail(email)) {
+            log.warn("이미 존재하는 이메일: {}", email);
+            throw new ServiceException(EMAIL_ALREADY_REGISTERED);
+        }
+        return email;
     }
 
     /**
@@ -235,7 +262,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         return RandomStringGenerator.generate(2);
     }
 
-    private OAuth2User fallbackMethod(OAuth2UserRequest userRequest,
+    private OAuth2User Oauth2fallbackMethod(OAuth2UserRequest userRequest,
                                       Exception e) {
 
         if (e instanceof ResourceAccessException) {
