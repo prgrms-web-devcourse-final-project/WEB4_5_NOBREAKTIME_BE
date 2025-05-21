@@ -125,8 +125,6 @@ public class PaymentService {
         payment.updateFailInfo(errorCode);
     }
 
-    // ============ 프라이빗 메서드 =========== //
-
     /**
      * 주문 ID에 해당하는 결제의 상태를 변경하고, 결제 상태 변경 이벤트를 발행합니다.
      *

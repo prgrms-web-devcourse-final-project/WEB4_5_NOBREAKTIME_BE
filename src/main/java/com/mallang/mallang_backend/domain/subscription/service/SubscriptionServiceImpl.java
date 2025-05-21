@@ -72,7 +72,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // 현재 시간을 Clock 기반으로 생성
         LocalDateTime startDate = LocalDateTime.now(clock);
-        LocalDateTime expiredDate = startDate.plusMonths(plan.getPeriod().getMonths());
 
         Member member = findMemberOrThrow(memberId);
         SubscriptionType preType = member.getSubscriptionType();
@@ -145,13 +144,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Transactional
     @Retry(name = "dataSaveInstance", fallbackMethod = "updateSubscriptionStatusFallback")
     public void updateSubscriptionStatus() {
+        log.info("[구독만료조회] 구독만료 조회 시작 (ID 값만) | @Async: {} | @Scheduled: {}",
+                Thread.currentThread().getName(), LocalDateTime.now());
         // 최신 ACTIVE 구독, 어제까지의 만료일자를 가진 구독만 조회
         List<Long> activeSubscriptionIds = queryRepository.findActiveSubWithMember();
 
         if (!activeSubscriptionIds.isEmpty()) {
             long updatedCount = queryRepository.bulkUpdateStatus(activeSubscriptionIds);
             log.info("[구독만료성공] {}건 처리 완료", updatedCount);
+            return;
         }
+
+        log.info("[구독만료] 만료할 구독이 없습니다.");
     }
 
     public void updateSubscriptionStatusFallback(Exception e) {
