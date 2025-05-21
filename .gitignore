@@ -51,3 +51,4 @@ uploads
 ## properties
 application-secret.yml
 application.yml
+logs/**
