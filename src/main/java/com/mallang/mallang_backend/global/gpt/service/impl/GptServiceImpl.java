@@ -116,7 +116,7 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 단어 검색 fallback 처리
 	 */
-	private String fallbackSearchWord(String word, Throwable t) {
+	private List<Word> fallbackSearchWord(String word, Language language, Throwable t) {
 		log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
 		throw new ServiceException(API_ERROR);
 	}
@@ -148,15 +148,15 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 문장 분석 fallback 처리
 	 */
-	private String fallbackAnalyzeSentence(String sentence, String translatedSentence, Throwable t) {
+	private String fallbackAnalyzeSentence(String sentence, String translatedSentence, Language language, Throwable t) {
 		log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
 		throw new ServiceException(API_ERROR);
 	}
 
 	/**
-	 * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeSentence 호출
+	 * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeScript 호출
 	 */
-	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
+	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeScript")
 	@Override
 	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments, Language language) {
 		// prompt 생성
@@ -263,7 +263,7 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 스크립트(대본) 분석 fallback 처리
 	 */
-	private String fallbackAnalyzeScript(List<TranscriptSegment> segments, Throwable t) {
+	private List<GptSubtitleResponse> fallbackAnalyzeScript(List<TranscriptSegment> segments, Language language, Throwable t) {
 		log.error("[GptService] analyzeScript fallback 처리, 예외: {}", t.getMessage());
 		throw new ServiceException(API_ERROR);
 	}
