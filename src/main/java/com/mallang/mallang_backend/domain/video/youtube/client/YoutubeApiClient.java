@@ -31,7 +31,8 @@ public class YoutubeApiClient {
 		String relevanceLanguage,
 		String categoryId,
 		String pageToken,
-		long maxResults
+		long maxResults,
+		String videoDuration
 	) throws IOException {
 		YouTube.Search.List req = youtubeClient.getClient().search()
 			.list(List.of("id"))
@@ -42,6 +43,7 @@ public class YoutubeApiClient {
 			.setRelevanceLanguage(relevanceLanguage)
 			.setRegionCode(regionCode)
 			.setMaxResults(maxResults)
+			.setVideoDuration(videoDuration)
 			.setKey(apiKey);
 
 		if (categoryId != null && !categoryId.isBlank()) {

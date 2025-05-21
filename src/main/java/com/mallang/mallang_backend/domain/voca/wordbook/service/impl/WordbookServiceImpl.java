@@ -79,7 +79,7 @@ public class WordbookServiceImpl implements WordbookService {
         for (AddWordToWordbookRequest dto : request.getWords()) {
             // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
             try {
-                saveWordIfNotExist(dto.getWord());
+                saveWordIfNotExist(dto.getWord(), member.getLanguage());
             } catch (ServiceException e) {
                 log.warn("단어 저장 실패 : {}", dto.getWord(), e);
                 continue;
@@ -124,7 +124,7 @@ public class WordbookServiceImpl implements WordbookService {
         }
 
         // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-        saveWordIfNotExist(word);
+        saveWordIfNotExist(word, member.getLanguage());
 
         // 단어가 단어장에 저장되어 있지 않을 때만 저장
         if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), word).isEmpty()) {
@@ -146,7 +146,7 @@ public class WordbookServiceImpl implements WordbookService {
      *
      * @param word 저장되어야 하는 단어
      */
-    private void saveWordIfNotExist(String word) {
+    private void saveWordIfNotExist(String word, Language language) {
         List<Word> words = wordRepository.findByWord(word); // DB 조회
         if (words.isEmpty()) {
             // 락 획득 시도
@@ -171,7 +171,7 @@ public class WordbookServiceImpl implements WordbookService {
             }
 
             try {
-                List<Word> generatedWords = gptService.searchWord(word); // DB에 없으면 GPT 호출
+                List<Word> generatedWords = gptService.searchWord(word, language); // DB에 없으면 GPT 호출
                 wordRepository.saveAll(generatedWords);
 
             } finally {

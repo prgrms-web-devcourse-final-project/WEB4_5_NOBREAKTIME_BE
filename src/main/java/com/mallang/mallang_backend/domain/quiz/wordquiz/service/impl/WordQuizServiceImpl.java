@@ -52,6 +52,11 @@ public class WordQuizServiceImpl implements WordQuizService {
 		Wordbook wordbook = wordbookRepository.findByIdAndMember(wordbookId, member)
 			.orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
+		// 회원이 선택한 단어장이 회원의 현재 설정된 언어와 동일한지 확인
+		if (wordbook.getLanguage() != member.getLanguage()) {
+			throw new ServiceException(LANGUAGE_MISMATCH);
+		}
+
 		List<WordbookItem> items = wordbookItemRepository.findAllByWordbook(wordbook);
 		if (items.isEmpty()) {
 			throw new ServiceException(WORDBOOK_IS_EMPTY);
@@ -116,7 +121,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 	private String createQuestion(String word, String original) {
 		// 정답 단어를 {}로 대체
 		// (?i) 플래그로 대소문자 무시, \b로 단어 경계 매칭
-		String regex = "(?i)\\b" + Pattern.quote(word) + "\\b";
+		String regex = "(?i)" + Pattern.quote(word);
 		return original.replaceAll(regex, "{}");
 	}
 
@@ -150,7 +155,7 @@ public class WordQuizServiceImpl implements WordQuizService {
 		int goal = member.getWordGoal();
 
 		// 1. 퀴즈 대상 단어 수집
-		List<WordbookItem> newWords = wordbookRepository.findAllByMember(member).stream()
+		List<WordbookItem> newWords = wordbookRepository.findAllByMemberAndLanguage(member, member.getLanguage()).stream()
 			.flatMap(wb -> wordbookItemRepository.findAllByWordbookAndWordStatus(wb, WordStatus.NEW).stream())
 			.collect(Collectors.toList());
 		List<WordbookItem> reviewWords = wordbookItemRepository.findReviewTargetWords(member, LocalDateTime.now());

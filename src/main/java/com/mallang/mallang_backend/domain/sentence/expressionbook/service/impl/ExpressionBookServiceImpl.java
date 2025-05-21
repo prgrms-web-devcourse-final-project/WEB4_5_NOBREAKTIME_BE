@@ -279,7 +279,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         LocalTime subtitleAt = LocalTime.parse(subtitle.getStartTime(), formatter);
 
-        Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
+        Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt, member.getLanguage());
 
         ExpressionBookItemId itemId = new ExpressionBookItemId(expression.getId(), expressionBook.getId());
         if (!expressionBookItemRepository.existsById(itemId)) {
@@ -287,11 +287,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         }
     }
 
-    private Expression getOrCreateExpression(String videoId, String sentence, String description, LocalTime subtitleAt) {
+    private Expression getOrCreateExpression(String videoId, String sentence, String description, LocalTime subtitleAt, Language language) {
         return expressionRepository
                 .findByVideosIdAndSentenceAndSubtitleAt(videoId, sentence, subtitleAt)
                 .orElseGet(() -> {
-                    String gptResult = gptService.analyzeSentence(sentence, description);
+                    String gptResult = gptService.analyzeSentence(sentence, description, language);
                     if (gptResult == null || gptResult.isBlank()) {
                         throw new ServiceException(GPT_RESPONSE_EMPTY);
                     }

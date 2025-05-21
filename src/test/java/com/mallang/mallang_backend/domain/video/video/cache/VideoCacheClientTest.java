@@ -43,9 +43,11 @@ class VideoCacheClientTest {
 
 	@BeforeEach
 	void setUp() {
+		// 기본 defaults 맵 설정
 		enDefault = new SearchDefault();
 		enDefault.setRegion("US");
 		enDefault.setQuery("defaultQuery");
+		enDefault.setVideoDuration("medium");
 
 		Map<String, SearchDefault> defaultsMap = Map.of("en", enDefault);
 		when(youtubeSearchProperties.getDefaults()).thenReturn(defaultsMap);
@@ -56,25 +58,31 @@ class VideoCacheClientTest {
 	@Test
 	@DisplayName("buildSearchContext: q, category, language 모두 null 이면 defaults 사용")
 	void buildSearchContext_defaults() throws IOException {
-		when(youtubeService.searchVideoIds(anyString(), anyString(), anyString(), any(), anyLong()))
-			.thenReturn(Collections.emptyList());
+		// searchVideoIds 호출 스텁: 마지막 videoDuration 은 anyString()
+		when(youtubeService.searchVideoIds(
+			anyString(), anyString(), anyString(), any(), anyLong(), anyString()
+		)).thenReturn(Collections.emptyList());
 
+		// category, q, language 모두 null
 		client.fetchAndCache(null, null, null, 1L);
 
+		// 기본 defaults 에서 query="defaultQuery", region="US", langKey="en", videoDuration="medium" 이 넘어가야 함
 		verify(youtubeService).searchVideoIds(
 			eq("defaultQuery"), // query
-			eq("US"),            // region
-			eq("en"),            // langKey
-			isNull(),            // category
-			eq(1L)               // fetchSize
+			eq("US"),           // region
+			eq("en"),           // langKey
+			isNull(),           // category
+			eq(1L),             // fetchSize
+			eq("medium")        // videoDuration
 		);
 	}
 
 	@Test
 	@DisplayName("fetchAndCache: 검색된 ID 없으면 빈 responses 반환")
 	void fetchAndCache_emptyIds() throws IOException {
-		when(youtubeService.searchVideoIds("foo", "US", "en", null, 10L))
-			.thenReturn(Collections.emptyList());
+		when(youtubeService.searchVideoIds(
+			eq("foo"), eq("US"), eq("en"), isNull(), eq(10L), eq("medium")
+		)).thenReturn(Collections.emptyList());
 
 		CachedVideos result = client.fetchAndCache("foo", null, "en", 10L);
 
@@ -86,8 +94,15 @@ class VideoCacheClientTest {
 	@Test
 	@DisplayName("fetchAndCache: IOException 발생 시 ServiceException")
 	void fetchAndCache_ioException() throws IOException {
-		when(youtubeService.searchVideoIds(anyString(), anyString(), anyString(), any(), anyLong()))
-			.thenThrow(new IOException("fail"));
+		// 모든 파라미터 매칭 → IOException 던지기
+		when(youtubeService.searchVideoIds(
+			anyString(),    // q
+			anyString(),    // region
+			anyString(),    // langKey
+			any(),          // category
+			anyLong(),      // fetchSize
+			any()           // videoDuration (nullable)
+		)).thenThrow(new IOException("fail"));
 
 		ServiceException ex = assertThrows(ServiceException.class, () ->
 			client.fetchAndCache("q", "cat", "en", 5L)
@@ -99,19 +114,20 @@ class VideoCacheClientTest {
 	@DisplayName("fetchAndCache: IDs 가 있으면 VideoUtils 필터 후 toVideoResponse 변환")
 	void fetchAndCache_withResults() throws IOException {
 		List<String> ids = List.of("i1", "i2");
-		when(youtubeService.searchVideoIds("bar", "US", "en", "music", 2L))
-			.thenReturn(ids);
+		// first call: searchVideoIds
+		when(youtubeService.searchVideoIds(
+			eq("bar"), eq("US"), eq("en"), eq("music"), eq(2L), eq("medium")
+		)).thenReturn(ids);
 
+		// fetchVideosByIdsAsync 호출 스텁
 		Video rawVideo = new Video();
 		CompletableFuture<List<Video>> rawFuture = CompletableFuture.completedFuture(List.of(rawVideo));
 		when(youtubeService.fetchVideosByIdsAsync(ids)).thenReturn(rawFuture);
 
+		// VideoUtils static 메서드 스텁
 		VideoResponse mapped = Mockito.mock(VideoResponse.class);
-
 		try (MockedStatic<VideoUtils> vs = mockStatic(VideoUtils.class)) {
-			vs.when(() -> VideoUtils.isCreativeCommons(rawVideo)).thenReturn(true);
 			vs.when(() -> VideoUtils.matchesLanguage(rawVideo, "en")).thenReturn(true);
-			vs.when(() -> VideoUtils.isDurationLessThanOrEqualTo20Minutes(rawVideo)).thenReturn(true);
 			vs.when(() -> VideoUtils.toVideoResponse(rawVideo)).thenReturn(mapped);
 
 			CachedVideos result = client.fetchAndCache("bar", "music", "en", 2L);

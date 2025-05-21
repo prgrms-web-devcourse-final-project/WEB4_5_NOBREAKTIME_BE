@@ -57,6 +57,7 @@ class YoutubeApiClientTest {
 		when(searchListRequest.setKey(any())).thenReturn(searchListRequest);            // <- 여기를 any() 로
 		when(searchListRequest.setVideoCategoryId(anyString())).thenReturn(searchListRequest);
 		when(searchListRequest.setPageToken(anyString())).thenReturn(searchListRequest);
+		when(searchListRequest.setVideoDuration(anyString())).thenReturn(searchListRequest);
 
 		// --- fetchOnce() stubbing ---
 		when(youTube.videos()).thenReturn(youTubeVideos);
@@ -79,7 +80,7 @@ class YoutubeApiClientTest {
 		when(searchListRequest.execute()).thenReturn(dummy);
 
 		var result = apiClient.searchOnce(
-			"query", "KR", "ko", null, null, 5L
+			"query", "KR", "ko", null, null, 5L, "medium"
 		);
 
 		assertSame(dummy, result);
@@ -94,7 +95,7 @@ class YoutubeApiClientTest {
 		when(searchListRequest.execute()).thenReturn(dummy);
 
 		var result = apiClient.searchOnce(
-			"query", "US", "en", "15", "tok123", 10L
+			"query", "US", "en", "15", "tok123", 10L, "medium"
 		);
 
 		assertSame(dummy, result);

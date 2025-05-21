@@ -9,4 +9,5 @@ public class SearchContext {
 	String langKey;
 	String category;
 	boolean defaultSearch;
+	String videoDuration;
 }

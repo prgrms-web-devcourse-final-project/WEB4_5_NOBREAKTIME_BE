@@ -62,37 +62,37 @@ class YoutubeServiceTest {
 	@Test
 	@DisplayName("searchVideoIds: 단일 페이지에서 ID 조회 성공")
 	void searchVideoIds_singlePage() throws IOException {
-		when(rawService.searchOnce("q", "US", "en", "10", null, 3L))
+		when(rawService.searchOnce("q", "US", "en", "10", null, 3L, "medium"))
 			.thenReturn(makeSearchResp(List.of("a", "b"), null));
 
-		List<String> result = service.searchVideoIds("q","US","en","10", 3L);
+		List<String> result = service.searchVideoIds("q","US","en","10", 3L, "medium");
 
 		assertEquals(List.of("a","b"), result);
-		verify(rawService).searchOnce("q","US","en","10", null, 3L);
+		verify(rawService).searchOnce("q","US","en","10", null, 3L, "medium");
 	}
 
 	@Test
 	@DisplayName("searchVideoIds: 여러 페이지에서 원하는 개수만큼 조회 성공")
 	void searchVideoIds_multiPage() throws IOException {
-		when(rawService.searchOnce("q","US","en","10", null, 3L))
+		when(rawService.searchOnce("q","US","en","10", null, 3L, "medium"))
 			.thenReturn(makeSearchResp(List.of("a","b"), "tok"));
-		when(rawService.searchOnce("q","US","en","10", "tok", 1L))
+		when(rawService.searchOnce("q","US","en","10", "tok", 1L, "medium"))
 			.thenReturn(makeSearchResp(List.of("c","d"), null));
 
-		List<String> result = service.searchVideoIds("q","US","en","10", 3L);
+		List<String> result = service.searchVideoIds("q","US","en","10", 3L, "medium");
 
 		assertEquals(List.of("a","b","c"), result);
-		verify(rawService, times(2)).searchOnce(anyString(), anyString(), anyString(), anyString(), any(), anyLong());
+		verify(rawService, times(2)).searchOnce(anyString(), anyString(), anyString(), anyString(), any(), anyLong(), anyString());
 	}
 
 	@Test
 	@DisplayName("searchVideoIds: IOException 발생 시 그대로 던져짐")
 	void searchVideoIds_ioExceptionPropagates() throws IOException {
-		when(rawService.searchOnce(anyString(), anyString(), anyString(), anyString(), any(), anyLong()))
+		when(rawService.searchOnce(anyString(), anyString(), anyString(), anyString(), any(), anyLong(), anyString()))
 			.thenThrow(new IOException("network error"));
 
 		assertThrows(IOException.class, () ->
-			service.searchVideoIds("q","US","en","10", 1L)
+			service.searchVideoIds("q","US","en","10", 1L, "medium")
 		);
 	}
 
@@ -134,7 +134,7 @@ class YoutubeServiceTest {
 	@DisplayName("fallbackSearchVideoIds: ServiceException 발생")
 	void fallbackSearchVideoIds_throwsServiceException() {
 		ServiceException ex = assertThrows(ServiceException.class, () ->
-			service.fallbackSearchVideoIds("q","US","en","10", 5L, new Throwable())
+			service.fallbackSearchVideoIds("q","US","en","10", 5L, "medium", new Throwable())
 		);
 		assertEquals(ErrorCode.API_ERROR, ex.getErrorCode());
 	}

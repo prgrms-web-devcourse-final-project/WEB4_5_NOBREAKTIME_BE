@@ -7,6 +7,7 @@ import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.event.NewWordSearchedEvent;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.WordService;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
@@ -38,7 +39,7 @@ public class WordServiceImpl implements WordService {
 
 	@Override
 	@Transactional
-	public WordSearchResponse savedWord(String word) {
+	public WordSearchResponse savedWord(String word, Language language) {
 		List<Word> words = wordRepository.findByWord(word); // DB 조회
 		if (!words.isEmpty()) {
 			return new WordSearchResponse(convertToResponse(words));    // DB에 존재하면 변환하여 반환
@@ -67,7 +68,7 @@ public class WordServiceImpl implements WordService {
 		}
 
 		try {
-			List<Word> generatedWords = gptService.searchWord(word); // DB에 없으면 GPT 호출
+			List<Word> generatedWords = gptService.searchWord(word, language); // DB에 없으면 GPT 호출
 			wordRepository.saveAll(generatedWords);
 			return new WordSearchResponse(convertToResponse(generatedWords)); // 변환 후 반환
 		} finally {
@@ -86,13 +87,14 @@ public class WordServiceImpl implements WordService {
 	@Override
 	public WordSearchResponse searchWord(String word, Long memberId) {
 		List<Word> words = wordRepository.findByWord(word);
-		if (words.isEmpty()) {
-			publisher.publishEvent(new NewWordSearchedEvent(word));
-			throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
-		}
 
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+
+		if (words.isEmpty()) {
+			publisher.publishEvent(new NewWordSearchedEvent(word, member.getLanguage()));
+			throw new ServiceException(ErrorCode.WORD_NOT_FOUND);
+		}
 
 		// 단어가 설정한 언어와 맞는지 검증
 		if (!WordValidator.isLanguageMatch(word, member.getLanguage())) {

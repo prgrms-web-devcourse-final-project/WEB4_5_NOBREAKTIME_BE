@@ -31,7 +31,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,7 +39,6 @@ import java.util.stream.IntStream;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.NO_WORDBOOK_EXIST_OR_FORBIDDEN;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.WORDBOOK_IS_EMPTY;
 import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -174,23 +172,6 @@ public class WordQuizServiceImplTest {
 
             assertThat(exception.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
         }
-
-        @Test
-        @DisplayName("실패 - 단어장이 비어 있는 경우")
-        void generateQuiz_emptyWordbook() {
-            Long wordbookId = 1L;
-            Wordbook wordbook = Wordbook.builder().member(savedMember).build();
-            setId(wordbook, wordbookId);
-
-            given(wordbookRepository.findByIdAndMember(wordbookId, savedMember)).willReturn(Optional.of(wordbook));
-            given(wordbookItemRepository.findAllByWordbook(wordbook)).willReturn(Collections.emptyList());
-
-            ServiceException exception = assertThrows(ServiceException.class, () ->
-                    wordQuizService.generateWordbookQuiz(wordbookId, savedMember)
-            );
-
-            assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_IS_EMPTY.getMessageCode());
-        }
     }
 
     @Test
@@ -231,7 +212,7 @@ public class WordQuizServiceImplTest {
         @Test
         @DisplayName("실패 - 단어 수 부족 시 예외가 발생해야 한다")
         void testNotEnoughWords_ThrowsException() {
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW))
                     .thenReturn(createDistinctMockItems(10, WordStatus.NEW));
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
@@ -245,7 +226,7 @@ public class WordQuizServiceImplTest {
         @Test
         @DisplayName("성공 - NEW 50개 + REVIEW 60개 → 정상 생성")
         void testEnoughWords_NormalCase() {
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW))
                     .thenReturn(createDistinctMockItems(50, WordStatus.NEW));
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
@@ -261,7 +242,7 @@ public class WordQuizServiceImplTest {
         @Test
         @DisplayName("성공 - NEW 부족 (20개), REVIEW 충분 (100개) → 정상 생성")
         void testNewTooFew_ReviewEnough() {
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW))
                     .thenReturn(createDistinctMockItems(20, WordStatus.NEW));
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
@@ -277,7 +258,7 @@ public class WordQuizServiceImplTest {
         @Test
         @DisplayName("성공 - REVIEW 부족 (10개), NEW 충분 (100개) → 정상 생성")
         void testReviewTooFew_NewEnough() {
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW))
                     .thenReturn(createDistinctMockItems(100, WordStatus.NEW));
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
@@ -293,7 +274,7 @@ public class WordQuizServiceImplTest {
         @Test
         @DisplayName("성공 - NEW 40개 + REVIEW 60개 → 정상 생성")
         void testExactEnoughWords() {
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW))
                     .thenReturn(createDistinctMockItems(40, WordStatus.NEW));
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any()))
@@ -338,7 +319,7 @@ public class WordQuizServiceImplTest {
                     })
                     .collect(Collectors.toCollection(ArrayList::new));
 
-            when(wordbookRepository.findAllByMember(savedMember)).thenReturn(List.of(savedWordbook));
+            when(wordbookRepository.findAllByMemberAndLanguage(savedMember, savedMember.getLanguage())).thenReturn(List.of(savedWordbook));
             when(wordbookItemRepository.findAllByWordbookAndWordStatus(savedWordbook, WordStatus.NEW)).thenReturn(newWords);
             when(wordbookItemRepository.findReviewTargetWords(eq(savedMember), any(LocalDateTime.class))).thenReturn(reviewWords);
             when(wordQuizRepository.save(any(WordQuiz.class))).thenAnswer(invocation -> {

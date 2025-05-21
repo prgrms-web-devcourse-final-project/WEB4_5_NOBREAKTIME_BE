@@ -25,4 +25,8 @@ public class ChangeInfoRequest {
     @NotBlank(message = "이메일을 입력해 주세요.")
     @Email(message = "올바른 이메일 형식이 아닙니다.")
     private String email;
+
+    @Schema(description = "회원 언어", example = "ENGLISH")
+    @NotBlank(message = "언어 선택을 입력해주세요.")
+    private String language;
 }
