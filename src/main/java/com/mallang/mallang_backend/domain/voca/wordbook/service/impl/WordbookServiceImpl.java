@@ -65,7 +65,7 @@ public class WordbookServiceImpl implements WordbookService {
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         // 추가 단어장 사용 권한이 없으면 추가 단어장에 단어 추가 실패
-        if (!member.canUseAdditaional() && Wordbook.isDefault(wordbook)) {
+        if (!member.canUseAdditaional() && !Wordbook.isDefault(wordbook)) {
             throw new ServiceException(NO_PERMISSION);
         }
 
