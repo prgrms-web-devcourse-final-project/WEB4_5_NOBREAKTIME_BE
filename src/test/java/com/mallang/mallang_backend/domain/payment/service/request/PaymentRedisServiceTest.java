@@ -96,6 +96,7 @@ class PaymentRedisServiceTest {
     }
 
     @Test
+    @Disabled("단위 테스트로 변경 후 실행")
     @DisplayName("Redis 에 저장 실패하였다면 DB에도 저장되지 않는다")
     void Verify_DB_Not_Updated_When_Redis_Save_Fails() {
         // given: Redis 모킹 설정

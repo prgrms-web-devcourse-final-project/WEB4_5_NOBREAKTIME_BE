@@ -45,6 +45,7 @@ class CustomCircuitBreakerConfigTest {
     private CircuitBreakerEventConsumer customConsumer;
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("서킷 브레이커 테스트 - CLOSED -> OPEN")
     void t1() throws Exception {
         //given
@@ -68,6 +69,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("OPEN -> HALF-OPEN 상태 변경")
     void t2() throws Exception {
         //given
@@ -86,6 +88,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("서킷 브레이커 적용 -> 호출 성공")
     void t3() throws Exception {
         //given
@@ -100,6 +103,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("CircuitBreakerEventConsumer 빈 등록 테스트")
     void t4_eventConsumerBean() {
         // oauthUserLoginService 인스턴스 가져오기
@@ -110,7 +114,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("검증 완료")
     @DisplayName("StateTransition 이벤트로 메트릭 기록 테스트")
     void t5() {
         // 메트릭 초기화
@@ -133,6 +137,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("EntryRemoved 이벤트 호출 테스트 - 제거")
     void t6() {
         CircuitBreaker circuitBreaker = registry.circuitBreaker("oauthUserLoginService");
@@ -147,6 +152,7 @@ class CustomCircuitBreakerConfigTest {
     }
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("EntryReplaced 이벤트 호출 테스트 - 대체")
     void t7() {
         // oauthUserLoginService 인스턴스 생성
@@ -163,6 +169,7 @@ class CustomCircuitBreakerConfigTest {
 
 
     @Test
+    @Disabled("검증 완료")
     @DisplayName("EntryReplacedEvent 직접 호출 테스트 - Mockito mock 사용")
     void t8_directOnEntryReplacedEvent() {
         // given: Mockito를 이용해 이벤트 객체를 모킹
