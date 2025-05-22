@@ -1,6 +1,15 @@
 package com.mallang.mallang_backend.global.util.youtube;
 
-import com.mallang.mallang_backend.global.exception.ServiceException;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,16 +17,9 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.AUDIO_FILE_PREFIX;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 @ExtendWith(MockitoExtension.class)
 class YoutubeAudioExtractorImplTest {
@@ -27,6 +29,20 @@ class YoutubeAudioExtractorImplTest {
 
 	@InjectMocks
 	private YoutubeAudioExtractorImpl youtubeAudioExtractor;
+
+	@BeforeEach
+	void setUp() {
+		ReflectionTestUtils.setField(
+			youtubeAudioExtractor,
+			"infoCmd",
+			"yt-dlp --dump-json"
+		);
+		ReflectionTestUtils.setField(
+			youtubeAudioExtractor,
+			"extractCmd",
+			"yt-dlp -f 251 -o"
+		);
+	}
 
 	@Test
 	@DisplayName("성공 - 유튜브 링크로 음성 파일을 추출할 수 있다")

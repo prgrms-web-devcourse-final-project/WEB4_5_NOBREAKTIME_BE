@@ -1,23 +1,29 @@
 package com.mallang.mallang_backend.global.util.youtube;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -26,6 +32,12 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private final ProcessRunner processRunner;
 	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	@Value("${youtube.extractor.info-cmd}")
+	private String infoCmd;
+
+	@Value("${youtube.extractor.extract-cmd}")
+	private String extractCmd;
 
 	@Bulkhead(name = "audioExtraction", fallbackMethod = "extractFallback")
 	@Override
@@ -58,12 +70,10 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	}
 
 	private JsonNode fetchVideoInfo(String youtubeUrl) throws IOException, InterruptedException {
-		Process infoProcess = processRunner.runProcess(
-			"yt-dlp",
-			"--dump-json",
-			youtubeUrl
-		);
+		List<String> cmd = new ArrayList<>(Arrays.asList(infoCmd.split("\\s+")));
+		cmd.add(youtubeUrl);
 
+		Process infoProcess = processRunner.runProcess(cmd.toArray(new String[0]));
 		String jsonOutput = readProcessOutput(infoProcess);
 		int exitCode = infoProcess.waitFor();
 		if (exitCode != 0) {
@@ -84,13 +94,11 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	}
 
 	private void runAudioExtraction(String youtubeUrl, String outputPath) throws IOException, InterruptedException {
-		Process process = processRunner.runProcess(
-			"yt-dlp",
-			"-f", "251",
-			"-o", outputPath,
-			youtubeUrl
-		);
+		List<String> cmd = new ArrayList<>(Arrays.asList(extractCmd.split("\\s+")));
+		cmd.add(outputPath);
+		cmd.add(youtubeUrl);
 
+		Process process = processRunner.runProcess(cmd.toArray(new String[0]));
 		logProcessOutput(process);
 
 		int exitCode = process.waitFor();
