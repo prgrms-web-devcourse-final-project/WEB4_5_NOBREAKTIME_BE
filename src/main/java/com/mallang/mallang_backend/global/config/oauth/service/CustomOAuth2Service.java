@@ -53,7 +53,6 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final S3ImageUploader imageUploader;
     private final WithdrawnLogRepository logRepository;
 
-    // 실제 구현 예시: CustomCircuitBreakerConfig - [oauthUserLoginService] 성공 (702ms)
     @Retry(name = "oauthAccessRetry", fallbackMethod = "Oauth2fallbackMethod")
     @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "Oauth2fallbackMethod")
     @Override

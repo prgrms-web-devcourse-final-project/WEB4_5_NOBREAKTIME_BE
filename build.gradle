@@ -120,6 +120,16 @@ dependencies {
 	// mail
 	implementation 'org.springframework.boot:spring-boot-starter-mail:3.4.5'
 	testImplementation 'com.icegreen:greenmail-junit5:2.0.1'
+
+	// Quartz 스케줄링
+	implementation 'org.springframework.boot:spring-boot-starter-quartz:3.4.5'
+
+	// Sentry
+	implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.9.0'
+	implementation 'io.sentry:sentry-logback:7.9.0'
+
+	// 일본어 분리 Kuromiji
+	implementation 'com.atilika.kuromoji:kuromoji-ipadic:0.9.0'
 }
 
 tasks.named('test') {

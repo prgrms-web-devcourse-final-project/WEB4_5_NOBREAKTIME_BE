@@ -20,7 +20,7 @@ public class AppConstants {
     /**
      * 음성 파일 타입
      */
-    public static final String AUDIO_FILE_EXTENSION = ".mp3";
+    public static final String AUDIO_FILE_EXTENSION = ".webm";
     /**
      * 파일 위치 (현재 프로젝트 디렉토리)
      */

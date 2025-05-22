@@ -1,14 +1,17 @@
 package com.mallang.mallang_backend.global.common;
 
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_LANGUAGE;
+
 @Getter
 public enum Language {
-    ENGLISH("en-US", "^[a-zA-Z\\\\s]+$"),
-    JAPANESE("ja", "^[\\\\u3040-\\\\u309F\\\\u30A0-\\\\u30FF\\\\uFF66-\\\\uFF9F\\\\u4E00-\\\\u9FFF\\\\s]+$"),
+    ENGLISH("en-US", "^[a-zA-Z\\s]+$"),
+    JAPANESE("ja", "^[\\u3040-\\u309F\\u30A0-\\u30FF\\uFF66-\\uFF9F\\u4E00-\\u9FFF\\s]+$"),
     NONE("none", ""),
     ALL("all", ""); // 프리미엄 회원의 경우
 
@@ -18,6 +21,15 @@ public enum Language {
     Language(String languageCode, String pattern) {
         this.languageCode = languageCode;
         this.pattern = pattern;
+    }
+
+    public static Language fromString(String name) {
+        for (Language lang : Language.values()) {
+            if (lang.name().equalsIgnoreCase(name)) {
+                return lang;
+            }
+        }
+        throw new ServiceException(INVALID_LANGUAGE);
     }
 
     /**

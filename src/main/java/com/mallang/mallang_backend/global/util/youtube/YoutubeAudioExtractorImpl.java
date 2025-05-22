@@ -1,7 +1,14 @@
 package com.mallang.mallang_backend.global.util.youtube;
 
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,17 +16,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Component
 @Slf4j
@@ -61,10 +59,9 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private JsonNode fetchVideoInfo(String youtubeUrl) throws IOException, InterruptedException {
 		Process infoProcess = processRunner.runProcess(
-				"yt-dlp",
-				"--cookies", "cookie.txt",
-				"--dump-json",
-				youtubeUrl
+			"yt-dlp",
+			"--dump-json",
+			youtubeUrl
 		);
 
 		String jsonOutput = readProcessOutput(infoProcess);
@@ -88,11 +85,10 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 
 	private void runAudioExtraction(String youtubeUrl, String outputPath) throws IOException, InterruptedException {
 		Process process = processRunner.runProcess(
-				"yt-dlp",
-				"--cookies", "cookie.txt",  // 쿠키 파일 경로
-				"-f", "251",                // 오디오 전용 최고 품질
-				"-o", outputPath,
-				youtubeUrl
+			"yt-dlp",
+			"-f", "251",
+			"-o", outputPath,
+			youtubeUrl
 		);
 
 		logProcessOutput(process);
