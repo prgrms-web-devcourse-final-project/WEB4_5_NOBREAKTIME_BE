@@ -7,6 +7,8 @@ import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequ
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
+import com.mallang.mallang_backend.domain.payment.service.process.PaymentFacade;
+import com.mallang.mallang_backend.domain.payment.service.process.complete.CompletePayServiceImpl.MemberGrantedInfo;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
@@ -33,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.domain.payment.service.common.PaymentService.MemberGrantedInfo;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
@@ -44,6 +45,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentFacade paymentFacade;
     private final JwtService jwtService;
     private final TokenService tokenService;
 
@@ -81,13 +83,13 @@ public class PaymentController {
             HttpServletResponse response
     ) {
 
-        MemberGrantedInfo grantedInfo = paymentService.processPaymentAndUpdateSubscription(request);
+        MemberGrantedInfo grantedInfo = paymentFacade.executePayment(request);
 
         Long memberId = grantedInfo.memberId();
-        String roleName = grantedInfo.roleName();
+        String roleName = grantedInfo.type().getRoleName();
 
         setSecurityContext(memberId, roleName);
-        setNewJwtTokens(response, memberId, roleName);
+        setJwtToken(response, memberId, roleName);
 
         RsData<String> rsp = new RsData<>(
                 "200",
@@ -201,15 +203,18 @@ public class PaymentController {
      * @param memberId 토큰 발급 대상 회원 식별자
      * @param roleName 권한 정보 (토큰 클레임에 포함)
      */
-    private void setNewJwtTokens(HttpServletResponse response,
-                                 Long memberId,
-                                 String roleName) {
+    private void setJwtToken(HttpServletResponse response,
+                             Long memberId,
+                             String roleName) {
 
-        // 1. 토큰 페어 생성
+        // 1. 토큰 생성
         TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
 
-        // 2. 쿠키 설정
+        // 2. 액세스 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(tokenPair.getAccessToken(), response);
+        log.info("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
+
+        // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);
     }
 }

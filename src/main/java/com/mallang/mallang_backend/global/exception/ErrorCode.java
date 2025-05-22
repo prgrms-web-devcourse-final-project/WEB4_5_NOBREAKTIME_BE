@@ -152,6 +152,9 @@ public enum ErrorCode {
     MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
     ORDER_AMOUNT_MISMATCH("422-1", "order.amount.mismatch", HttpStatus.UNPROCESSABLE_ENTITY),
+    PAYMENT_PROCESSING_PREPARED_FAILED("500-5", "payment.processing.prepared.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_PROCESSING_RESULT_SAVED_FAILED("500-6", "payment.processing.result.saved.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    NOT_FOUND_MEMBER_GRANTED_INFO("404-7", "not.found.member.granted.info", HttpStatus.NOT_FOUND),
 
     // 스케줄링 오류
     INVALID_CRON_EXPRESSION_EXCEPTION_CODE("400-7", "invalid.cron.expression", HttpStatus.BAD_REQUEST),

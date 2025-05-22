@@ -5,7 +5,7 @@ import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequ
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 
 public interface PaymentApiPort {
-
+    // 일반 결제 요청
     PaymentResponse callTossPaymentAPI(PaymentApproveRequest request);
 
     // 빌링 키 추출
