@@ -103,7 +103,7 @@ jobs:
           script: |
             docker image prune -a -f
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
-            docker compose -f -e YT_EMAIL=${{ secrets.YT_EMAIL }} -e YT_PASSWORD=${{ secrets.YT_PASSWORD }} docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
+            YT_EMAIL=${{ secrets.YT_EMAIL }} YT_PASSWORD=${{ secrets.YT_PASSWORD }} docker compose -f docker-compose-green.yml up -d
 
       - name: Check deploy server
         uses: jtalk/url-health-check-action@v3
