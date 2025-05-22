@@ -15,9 +15,6 @@ FROM eclipse-temurin:21-jre-jammy
 ENV PROFILES=${PROFILES}
 ENV ENV=${ENV}
 
-# 쿠키 저장 경로
-ENV YT_COOKIES_PATH="/tmp/cookies.txt"
-
 # 시스템 패키지 및 헤드리스 크롬, Python/Selenium, yt-dlp(nightly) 설치
 RUN apt-get update && \
     apt-get install -y \
