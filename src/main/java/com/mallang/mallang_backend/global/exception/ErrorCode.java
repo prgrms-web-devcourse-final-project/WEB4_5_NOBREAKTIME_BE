@@ -155,6 +155,7 @@ public enum ErrorCode {
     PAYMENT_PROCESSING_PREPARED_FAILED("500-5", "payment.processing.prepared.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_PROCESSING_RESULT_SAVED_FAILED("500-6", "payment.processing.result.saved.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     NOT_FOUND_MEMBER_GRANTED_INFO("404-7", "not.found.member.granted.info", HttpStatus.NOT_FOUND),
+    REDIS_CONNECTION_FAILED("500-7", "redis.connection.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 스케줄링 오류
     INVALID_CRON_EXPRESSION_EXCEPTION_CODE("400-7", "invalid.cron.expression", HttpStatus.BAD_REQUEST),
