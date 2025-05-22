@@ -9,7 +9,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.IDEM_KEY_PREFIX;
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
@@ -21,6 +23,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class PaymentRedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    AtomicInteger retryCount = new AtomicInteger(0);
 
     /**
      * 주문 ID와 금액을 Redis 에 저장합니다.
@@ -99,15 +102,24 @@ public class PaymentRedisService {
         log.info("멱등성 토큰 키 저장 성공: {}", idempotencyKey);
     }
 
-    private void fallbackMethod(String orderId,
+    public void fallbackMethod(String orderId,
                                   int amount,
-                                  Exception e
-    ) {
-        if (e instanceof QueryTimeoutException) {
-            log.error("결제 요청 중 오류 발생: {}", e.getMessage(), e);
-            throw new ServiceException(CONNECTION_FAIL, e);
+                                  Throwable t) {
+
+        if (t instanceof QueryTimeoutException) {
+            log.error(
+                    "Redis 타임아웃 발생: {}",
+                    Map.of(
+                            "type", "REDIS_TIMEOUT",
+                            "orderId", orderId,
+                            "error", t.getMessage(),
+                            "retryCount", retryCount.incrementAndGet()
+                    ),
+                    t
+            );
         }
-        throw new ServiceException(PAYMENT_CONFLICT, e);
+        log.error("Redis 연결 실패: orderId: {}, amount: {}", orderId, amount, t.getCause());
+        throw new ServiceException(REDIS_CONNECTION_FAILED, t.getCause());
     }
 
     // 자동 결제 실패 시 해당 내용을 삭제하고 재시도 할 수 있도록 함
