@@ -6,6 +6,8 @@ import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequ
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.request.IssueBillingKeyRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.IssueBillingKeyResponse;
+import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
+import com.mallang.mallang_backend.domain.payment.service.process.error.HandleErrorService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -19,7 +21,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.util.Objects;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.API_ERROR;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_CONFIRM_FAIL;
 
 /**
  * Toss Payments API 연동을 처리하는 서비스 구현체입니다.
@@ -34,6 +35,7 @@ public class PaymentApiPortImpl implements PaymentApiPort {
 
     private final WebClient tossPaymentsSingleWebClient;
     private final WebClient tossPaymentsBillingWebClient;
+    private final HandleErrorService errorService;
     private final PaymentRedisService redisService;
     // private final MeterRegistry meterRegistry; -> 이후 추가
 
@@ -49,31 +51,22 @@ public class PaymentApiPortImpl implements PaymentApiPort {
             String logPrefix,
             String orderId
     ) {
-        try {
-            R response = webClient.post()
-                    .uri(uri)
-                    .header("Content-Type", "application/json")
-                    .headers(headers -> {
-                        if (idempotencyKey != null) {
-                            headers.add("Idempotency-Key", idempotencyKey);
-                        }
-                    })
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(responseType)
-                    .block();
+        R response = webClient.post()
+                .uri(uri)
+                .header("Content-Type", "application/json")
+                .headers(headers -> {
+                    if (idempotencyKey != null) {
+                        headers.add("Idempotency-Key", idempotencyKey);
+                    }
+                })
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(responseType)
+                .block();
 
-            log.info("[{} 성공] orderId: {}", logPrefix, orderId);
-            return response;
-        } catch (WebClientResponseException e) {
-            log.error("[{} 실패] orderId: {} | Status: {} | Error: {}",
-                    logPrefix, orderId, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
-        } catch (Exception e) {
-            log.error("[시스템 에러] [{}] orderId: {} | Error: {}",
-                    logPrefix, orderId, e.getMessage(), e);
-            throw new ServiceException(API_ERROR, e);
-        }
+        log.info("[{} 성공] orderId: {}", logPrefix, orderId);
+        return response;
+
     }
 
     // ========== 결제 승인 요청 ==========
@@ -86,6 +79,9 @@ public class PaymentApiPortImpl implements PaymentApiPort {
      * @throws ServiceException API 호출 실패 시 발생
      */
     @Override
+    // Retry -> Circuit Breaker 순서로 적용
+    @Retry(name = "processPayment", fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = "processPayment", fallbackMethod = "circuitBreakerFallback")
     public PaymentResponse callTossPaymentAPI(PaymentApproveRequest approveRequest) {
         String idempotencyKey = approveRequest.getPaymentKey();
         PaymentApproveRequest request = buildPaymentRequest(
@@ -103,6 +99,21 @@ public class PaymentApiPortImpl implements PaymentApiPort {
                 "결제 승인",
                 approveRequest.getOrderId()
         );
+    }
+
+    public PaymentResponse retryFallback(PaymentApproveRequest request,
+                                         Throwable t) {
+
+        log.error("[모든 재시도 실패] orderId: {} | Error: {}",
+                request.getOrderId(), t.getMessage(), t);
+        errorService.handleApiFallback(request.getOrderId()); // 보상 트랜잭션
+        throw new ServiceException(API_ERROR, t);
+    }
+
+    public PaymentResponse circuitBreakerFallback(PaymentRequest request,
+                                                  Throwable t) {
+        log.error("[결제 시스템 서킷 OPEN]: {}", t.getMessage());
+        throw new ServiceException(API_ERROR, t);
     }
 
     /**
@@ -153,7 +164,7 @@ public class PaymentApiPortImpl implements PaymentApiPort {
             name = "autoPaymentService",
             fallbackMethod = "payWithBillingKeyFallback"
     )
-    @Retry(name = "autoPaymentService", fallbackMethod = "payWithBillingKeyFallback")
+    @Retry(name = "processPayment", fallbackMethod = "payWithBillingKeyFallback")
     public BillingPaymentResponse payWithBillingKey(String billingKey,
                                                     String customerKey,
                                                     String orderId,
