@@ -1,19 +1,16 @@
 package com.mallang.mallang_backend.domain.payment.quartz.job;
 
-import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.config.QuartzConfig;
+import com.mallang.mallang_backend.global.util.job.JobDataUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +46,8 @@ public class JobDataMapTest {
         JobDataMap updatedData = scheduler.getJobDetail(jobKey).getJobDataMap();
 
         //then
-        int currentRetry = SubscriptionExpireJob.JobDataUtils.getIntValue(initialData, "currentRetry", 0);
-        int updatedRetry = SubscriptionExpireJob.JobDataUtils.getIntValue(updatedData, "currentRetry", 0);
+        int currentRetry = JobDataUtils.getIntValue(initialData, "currentRetry", 0);
+        int updatedRetry = JobDataUtils.getIntValue(updatedData, "currentRetry", 0);
 
         log.info("Initial Data: {}", currentRetry);
         log.info("Updated Data: {}", updatedRetry);

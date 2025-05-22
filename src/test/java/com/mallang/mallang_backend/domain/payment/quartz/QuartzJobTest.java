@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 컨텍스트 재생성
 class QuartzJobTest {
 
     @MockitoBean
@@ -32,7 +34,6 @@ class QuartzJobTest {
 
     @MockitoBean
     private SubscriptionService subscriptionService;
-
 
     @Autowired
     private RetryJobListener JobListener;
@@ -76,7 +77,6 @@ class QuartzJobTest {
     }
 
     @Test
-    @Disabled("단독 실행 시에 실행 가능함")
     @DisplayName("Job 실패 시 재시도 로그 확인")
     void testRetryLogging(CapturedOutput output) {
         // given: Job 실행 후 예외 발생 시뮬레이션

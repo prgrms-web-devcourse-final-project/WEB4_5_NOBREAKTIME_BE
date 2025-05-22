@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.entity.SubscriptionStatus;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
 import com.mallang.mallang_backend.global.config.QuartzConfig;
+import com.mallang.mallang_backend.global.util.job.JobDataUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -158,8 +159,8 @@ public class QuartzAutoJobIntegrationTest {
         scheduler.triggerJob(jobKey);
         JobDataMap updatedData = scheduler.getJobDetail(jobKey).getJobDataMap();
 
-        int currentRetry = SubscriptionExpireJob.JobDataUtils.getIntValue(initialData, "currentRetry", 0);
-        int updatedRetry = SubscriptionExpireJob.JobDataUtils.getIntValue(updatedData, "currentRetry", 0);
+        int currentRetry = JobDataUtils.getIntValue(initialData, "currentRetry", 0);
+        int updatedRetry = JobDataUtils.getIntValue(updatedData, "currentRetry", 0);
         // Then: 값 변경 확인
         log.info("Initial Data: {}", currentRetry);
         log.info("Updated Data: {}", updatedRetry);
