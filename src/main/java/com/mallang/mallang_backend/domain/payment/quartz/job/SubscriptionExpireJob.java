@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.payment.quartz.job;
 
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
+import com.mallang.mallang_backend.global.util.job.JobDataUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
@@ -48,22 +49,6 @@ public class SubscriptionExpireJob implements Job {
                     currentRetry, maxRetry, e);
 
             throw new JobExecutionException(e, false); // Listener 로 예외 전파
-        }
-    }
-
-    public class JobDataUtils {
-        public static int getIntValue(JobDataMap dataMap, String key, int defaultValue) {
-            Object value = dataMap.get(key);
-            if (value instanceof Number) {
-                return ((Number) value).intValue();
-            } else if (value instanceof String) {
-                try {
-                    return Integer.parseInt((String) value);
-                } catch (NumberFormatException e) {
-                    return defaultValue;
-                }
-            }
-            return defaultValue;
         }
     }
 }
