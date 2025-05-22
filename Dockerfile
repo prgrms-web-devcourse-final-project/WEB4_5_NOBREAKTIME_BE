@@ -21,9 +21,12 @@ ENV YT_COOKIES_PATH="/tmp/cookies.txt"
 # 시스템 패키지 및 헤드리스 크롬, Python/Selenium, yt-dlp(nightly) 설치
 RUN apt-get update && \
     apt-get install -y \
+      wget \
       python3 python3-pip \
-      chromium \
       curl ffmpeg && \
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
+    rm google-chrome-stable_current_amd64.deb && \
     pip3 install selenium webdriver-manager && \
     curl -L https://github.com/yt-dlp/yt-dlp-master-builds/releases/latest/download/yt-dlp \
          -o /usr/local/bin/yt-dlp && \
