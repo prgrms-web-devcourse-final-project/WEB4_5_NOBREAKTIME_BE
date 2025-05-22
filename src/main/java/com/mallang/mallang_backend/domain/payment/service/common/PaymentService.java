@@ -1,16 +1,12 @@
 package com.mallang.mallang_backend.domain.payment.service.common;
 
-import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
-import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentConfirmService;
 import com.mallang.mallang_backend.domain.payment.event.dto.PaymentUpdatedEvent;
-import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
 import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
@@ -31,45 +27,11 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final ApplicationEventPublisher publisher;
-    private final PaymentRedisService redisService;
-    private final PaymentConfirmService paymentConfirmService;
     private final PaymentApiPort paymentApiPort;
     private final SubscriptionService subscriptionService;
     private final PaymentRequestService paymentRequestService;
 
     // ============== 기본 결제 로직 =================== //
-    @Transactional // 보상 처리 로직이 필요함
-    public MemberGrantedInfo processPaymentAndUpdateSubscription(PaymentApproveRequest request) {
-        try {
-            // 1. 멱등성 키 검증 및 저장 (트랜잭션 내)
-            redisService.checkAndSaveIdempotencyKey(request.getIdempotencyKey());
-
-            // 2. 결제 요청 값이 정확한지 검증 (Redis 체크)
-            redisService.checkOrderIdAndAmount(request.getOrderId(), request.getAmount());
-
-            // 3. 결제 상태 IN_PROGRESS로 업데이트 (트랜잭션 내)
-            Payment payment = paymentRepository.findByOrderId(request.getOrderId())
-                    .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
-
-            updatePaymentStatus(request.getOrderId(), PayStatus.IN_PROGRESS);
-
-            // 4. 외부 결제 승인 API 호출 (트랜잭션 밖)
-            PaymentResponse response = paymentApiPort.callTossPaymentAPI(request);
-
-            // 5. 결제 결과 처리 (트랜잭션 내)
-            paymentConfirmService.processPaymentResult(request.getOrderId(), response);
-
-            // 5. 멤버 권한 정보 조회 (트랜잭션 내)
-            return new MemberGrantedInfo(
-                    payment.getMemberId(),
-                    payment.getPlan().getType().getRoleName()
-            );
-        } catch (Exception e) {
-            log.error("[결제 실패] orderId: {}", request.getOrderId());
-            // 결제 실패 시 결제 상태 변경
-            throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
-        }
-    }
 
     @Transactional
     public PaymentRequest createPaymentRequest(Long memberId,
@@ -122,7 +84,7 @@ public class PaymentService {
         payment.updateStatus(PayStatus.ABORTED);
 
         // 3. 결제 상태 업데이트 (에러 코드)
-        payment.updateFailInfo(errorCode);
+        payment.updateFailureInfo(errorCode);
     }
 
     /**
@@ -174,17 +136,8 @@ public class PaymentService {
      * @return 결제 정보
      * @throws ServiceException 결제 정보가 없을 경우
      */
-    private Payment findByOrderIdThrows(String orderId) {
+    public Payment findByOrderIdThrows(String orderId) {
         return paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
-    }
-
-    /**
-     * 회원 ID와 권한 이름 정보를 담는 레코드입니다.
-     *
-     * @param memberId 회원 ID
-     * @param roleName 권한 이름
-     */
-    public record MemberGrantedInfo(Long memberId, String roleName) {
     }
 }
