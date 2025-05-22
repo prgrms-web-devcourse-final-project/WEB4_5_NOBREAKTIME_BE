@@ -33,10 +33,10 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 	private final ProcessRunner processRunner;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	@Value("${youtube.extractor.info-cmd:yt-dlp --dump-json}")
+	@Value("${youtube.extractor.info-cmd}")
 	private String infoCmd;
 
-	@Value("${youtube.extractor.extract-cmd:yt-dlp -f 251 -o}")
+	@Value("${youtube.extractor.extract-cmd}")
 	private String extractCmd;
 
 	@Bulkhead(name = "audioExtraction", fallbackMethod = "extractFallback")
