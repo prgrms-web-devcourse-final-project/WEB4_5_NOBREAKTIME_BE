@@ -118,7 +118,6 @@ public class MemberServiceImpl implements MemberService {
         Member member = Member.builder()
                 .platformId(platformId) // null 불가능
                 .email(email) // null 가능
-                .password(null)
                 .nickname(nickname)
                 .loginPlatform(loginPlatform)
                 .language(NONE)
@@ -174,9 +173,10 @@ public class MemberServiceImpl implements MemberService {
         if (isNicknameAvailable(request.getNickname())) {
             member.updateNickname(request.getNickname());
             member.updateEmail(request.getEmail());
+            member.updateLearningLanguage(Language.fromString(request.getLanguage()));
         }
 
-        return new ChangeInfoResponse(request.getNickname(), request.getEmail());
+        return new ChangeInfoResponse(request.getNickname(), request.getEmail(), request.getLanguage());
     }
 
     /**

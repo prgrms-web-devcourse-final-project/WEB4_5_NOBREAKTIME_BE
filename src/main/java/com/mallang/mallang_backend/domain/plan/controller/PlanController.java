@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.plan.dto.PlanResponse;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,12 +21,17 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/plans")
 @RequiredArgsConstructor
+@Tag(name = "구독 플랜", description = "구독 플랜 관련 API")
 public class PlanController {
 
     private final PlanRepository planRepository;
     private final ObjectMapper objectMapper;
 
     @GetMapping
+    @Operation(
+            summary = "구독 플랜 목록 조회",
+            description = "사용 가능한 모든 구독 플랜 정보를 반환합니다."
+    )
     public List<PlanResponse> getAllPlans() {
         return planRepository.findAll().stream()
                 .map(this::convertToPlanResponse)

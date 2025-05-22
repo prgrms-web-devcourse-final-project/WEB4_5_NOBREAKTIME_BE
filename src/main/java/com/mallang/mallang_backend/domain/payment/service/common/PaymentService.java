@@ -1,4 +1,3 @@
-
 package com.mallang.mallang_backend.domain.payment.service.common;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
@@ -8,12 +7,12 @@ import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentApiPort;
 import com.mallang.mallang_backend.domain.payment.service.confirm.PaymentConfirmService;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRequestService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
@@ -125,8 +124,6 @@ public class PaymentService {
         // 3. 결제 상태 업데이트 (에러 코드)
         payment.updateFailInfo(errorCode);
     }
-
-    // ============ 프라이빗 메서드 =========== //
 
     /**
      * 주문 ID에 해당하는 결제의 상태를 변경하고, 결제 상태 변경 이벤트를 발행합니다.

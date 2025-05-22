@@ -1,13 +1,20 @@
 package com.mallang.mallang_backend.domain.video.video.controller;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-
-import com.mallang.mallang_backend.domain.video.youtube.dto.YoutubeCategoryId;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoListRequest;
+import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
+import com.mallang.mallang_backend.domain.video.video.service.VideoService;
+import com.mallang.mallang_backend.domain.video.youtube.YoutubeCategoryId;
+import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,20 +25,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.mallang.mallang_backend.domain.video.video.dto.VideoListRequest;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.video.service.VideoService;
-import com.mallang.mallang_backend.global.dto.RsData;
-import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
-import com.mallang.mallang_backend.global.filter.login.Login;
-import com.mallang.mallang_backend.global.swagger.PossibleErrors;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Video", description = "영상 분석 및 조회 관련 API")
 @Validated

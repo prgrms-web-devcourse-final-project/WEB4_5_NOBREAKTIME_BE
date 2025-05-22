@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
 
 @Slf4j
 @Service
@@ -153,6 +153,8 @@ public class VideoServiceImpl implements VideoService {
 	}
 
 	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, String emitterId) {
+		Member member = memberRepository.findById(memberId).orElseThrow(() -> new ServiceException(ErrorCode.MEMBER_NOT_FOUND));
+
 		long startTotal = System.nanoTime(); // 전체 시작 시간
 		log.debug("[AnalyzeVideo] 시작 - videoId: {}", videoId);
 
@@ -227,12 +229,12 @@ public class VideoServiceImpl implements VideoService {
 
 			// 7. GPT 분석
 			start = System.nanoTime();
-			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments);
+			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
 			start = System.nanoTime();
-			saveSubtitleAndKeyword(video, gptResult);
+			saveSubtitleAndKeyword(video, gptResult, member.getLanguage());
 			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
@@ -252,7 +254,7 @@ public class VideoServiceImpl implements VideoService {
 		}
 	}
 
-	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult) {
+	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult, Language language) {
 		List<Subtitle> subtitleList = new ArrayList<>();
 		List<Keyword> keywordList = new ArrayList<>();
 
@@ -283,7 +285,7 @@ public class VideoServiceImpl implements VideoService {
 		keywordRepository.saveAll(keywordList);
 
 		// 비동기로 핵심단어들 gpt 사용하여 단어DB에 저장
-		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k)));
+		keywordList.forEach(k -> publisher.publishEvent(new KeywordSavedEvent(k, language)));
 	}
 
 	@Override

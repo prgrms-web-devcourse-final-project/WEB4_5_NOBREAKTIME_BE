@@ -13,6 +13,13 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+    name = "wordbook_item",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_wordbook_word",
+        columnNames = {"wordbook_id", "word"}
+    )
+)
 public class WordbookItem extends BaseTime {
 
     @Id

@@ -23,6 +23,8 @@ import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.validation.WordValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -62,7 +65,7 @@ public class WordbookServiceImpl implements WordbookService {
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         // 추가 단어장 사용 권한이 없으면 추가 단어장에 단어 추가 실패
-        if (!member.canUseAdditaional() && Wordbook.isDefault(wordbook)) {
+        if (!member.canUseAdditaional() && !Wordbook.isDefault(wordbook)) {
             throw new ServiceException(NO_PERMISSION);
         }
 
@@ -76,7 +79,12 @@ public class WordbookServiceImpl implements WordbookService {
 
         for (AddWordToWordbookRequest dto : request.getWords()) {
             // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-            saveWordIfNotExist(dto.getWord());
+            try {
+                saveWordIfNotExist(dto.getWord(), member.getLanguage());
+            } catch (ServiceException e) {
+                log.warn("단어 저장 실패 : {}", dto.getWord(), e);
+                continue;
+            }
 
             // 단어가 단어장에 저장되어 있지 않을 때만 저장
             if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), dto.getWord()).isEmpty()) {
@@ -89,7 +97,11 @@ public class WordbookServiceImpl implements WordbookService {
                         .videoId(dto.getVideoId())
                         .build();
 
-                wordbookItemRepository.save(item);
+                try {
+                    wordbookItemRepository.save(item);
+                } catch (DataIntegrityViolationException ex) {
+                    // 이미 다른 트랜잭션이 삽입 완료 → 무시
+                }
             }
         }
     }
@@ -117,7 +129,7 @@ public class WordbookServiceImpl implements WordbookService {
         }
 
         // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
-        saveWordIfNotExist(word);
+        saveWordIfNotExist(word, member.getLanguage());
 
         // 단어가 단어장에 저장되어 있지 않을 때만 저장
         if (wordbookItemRepository.findByWordbookIdAndWord(wordbook.getId(), word).isEmpty()) {
@@ -130,8 +142,15 @@ public class WordbookServiceImpl implements WordbookService {
                     .videoId(null)
                     .build();
 
-            wordbookItemRepository.save(item);
+
+            try {
+                wordbookItemRepository.save(item);
+            } catch (DataIntegrityViolationException ex) {
+                // 이미 다른 트랜잭션이 삽입 완료 → 무시
+            }
+            return;
         }
+        throw new ServiceException(DUPLICATE_WORD_SAVED);
     }
 
     /**
@@ -139,7 +158,7 @@ public class WordbookServiceImpl implements WordbookService {
      *
      * @param word 저장되어야 하는 단어
      */
-    private void saveWordIfNotExist(String word) {
+    private void saveWordIfNotExist(String word, Language language) {
         List<Word> words = wordRepository.findByWord(word); // DB 조회
         if (words.isEmpty()) {
             // 락 획득 시도
@@ -164,7 +183,7 @@ public class WordbookServiceImpl implements WordbookService {
             }
 
             try {
-                List<Word> generatedWords = gptService.searchWord(word); // DB에 없으면 GPT 호출
+                List<Word> generatedWords = gptService.searchWord(word, language); // DB에 없으면 GPT 호출
                 wordRepository.saveAll(generatedWords);
 
             } finally {
@@ -186,6 +205,10 @@ public class WordbookServiceImpl implements WordbookService {
 
         if (request.getName().equals(DEFAULT_WORDBOOK_NAME)) {
             throw new ServiceException(WORDBOOK_CREATE_DEFAULT_FORBIDDEN);
+        }
+
+        if (wordbookRepository.existsByMemberAndName(member, request.getName())) {
+            throw new ServiceException(DUPLICATE_WORDBOOK_NAME);
         }
 
         Wordbook wordbook = Wordbook.builder()
@@ -259,8 +282,7 @@ public class WordbookServiceImpl implements WordbookService {
     // 단어장에서 단어 삭제
     @Transactional
     @Override
-    public void
-    deleteWords(WordDeleteRequest request, Long memberId) {
+    public void deleteWords(WordDeleteRequest request, Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
@@ -335,18 +357,18 @@ public class WordbookServiceImpl implements WordbookService {
                 )).toList();
     }
 
-	@Override
-	public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
-		// 사용자 인증
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    @Override
+    public List<WordResponse> getWordbookItems(List<Long> wordbookIds, Long memberId) {
+        // 사용자 인증
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         validateWordbookIdsExist(wordbookIds);
 
         List<WordbookItem> items = findWordbookItems(wordbookIds, member);
 
         return convertToWordResponses(items);
-	}
+    }
 
     private List<WordbookItem> findWordbookItems(List<Long> wordbookIds, Member member) {
 
@@ -363,7 +385,7 @@ public class WordbookServiceImpl implements WordbookService {
             Wordbook wordbook = wordbookRepository.findById(wordbookIds.get(0))
                     .orElseThrow(() -> new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN));
 
-            if(!wordbook.getMember().getId().equals(member.getId())) {
+            if (!wordbook.getMember().getId().equals(member.getId())) {
                 throw new ServiceException(NO_WORDBOOK_EXIST_OR_FORBIDDEN);
             }
 

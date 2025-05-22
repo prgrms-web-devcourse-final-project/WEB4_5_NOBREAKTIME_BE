@@ -17,5 +17,6 @@ public class VideoSearchProperties {
     public static class SearchDefault {
         private String query;
         private String region;
+        private String videoDuration;
     }
 }

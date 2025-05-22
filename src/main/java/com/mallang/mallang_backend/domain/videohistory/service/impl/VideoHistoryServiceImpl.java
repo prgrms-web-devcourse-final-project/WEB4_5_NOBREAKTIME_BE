@@ -13,8 +13,7 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import static com.mallang.mallang_backend.global.constants.AppConstants.*;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
@@ -48,34 +47,7 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 						.build()
 				)
 			);
-
-		// 초과 기록이 있으면 삭제
-		removeExcessHistories(member);
 	}
-
-	/**
-	 * 회원별 기록이 MAX_HISTORY_PER_MEMBER 를 초과하면
-	 * 오래된 것부터 삭제
-	 */
-	private void removeExcessHistories(Member member) {
-		long total = videoHistoryRepository.countByMember(member);
-		if (total <= MAX_HISTORY_PER_MEMBER) {
-			return;
-		}
-
-		int excess = (int)(total - MAX_HISTORY_PER_MEMBER);
-
-		// 전체를 오래된 순으로 조회
-		List<VideoHistory> allHistoriesAsc =
-			videoHistoryRepository.findAllByMemberOrderByLastViewedAtAsc(member);
-
-		// 초과 개수만큼 오래된 것만 잘라내기
-		List<VideoHistory> toDelete = allHistoriesAsc.subList(0, excess);
-
-		// 일괄 삭제
-		videoHistoryRepository.deleteAllInBatch(toDelete);
-	}
-
 
 	/** 최근 5개 조회 */
 	@Override
@@ -100,7 +72,7 @@ public class VideoHistoryServiceImpl implements VideoHistoryService {
 			.orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
 		return videoHistoryRepository
-			.findAllByMemberOrderByLastViewedAtDesc(member)
+			.findTop50ByMemberOrderByLastViewedAtDesc(member)
 			.stream()
 			.map(VideoHistoryResponse::from)
 			.toList();

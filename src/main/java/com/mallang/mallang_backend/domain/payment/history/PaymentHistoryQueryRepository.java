@@ -5,7 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import static com.mallang.mallang_backend.domain.payment.history.QPaymentHistory.*;
+import static com.mallang.mallang_backend.domain.payment.history.QPaymentHistory.paymentHistory;
 
 @Repository
 @RequiredArgsConstructor

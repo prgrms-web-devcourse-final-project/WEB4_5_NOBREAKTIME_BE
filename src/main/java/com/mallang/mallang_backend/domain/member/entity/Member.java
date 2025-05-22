@@ -28,9 +28,6 @@ public class Member extends BaseTime {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column
-    private String password;
-
     @Column(nullable = false, unique = true)
     private String nickname;
 
@@ -73,7 +70,6 @@ public class Member extends BaseTime {
     public Member(
             String platformId,
             String email,
-            String password,
             String nickname,
             String profileImageUrl,
             LoginPlatform loginPlatform,
@@ -81,7 +77,6 @@ public class Member extends BaseTime {
     ) {
         this.platformId = platformId;
         this.email = email;
-        this.password = password;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
         this.loginPlatform = loginPlatform;
@@ -91,7 +86,7 @@ public class Member extends BaseTime {
 
     /**
      * 이메일을 업데이트합니다.
-     *
+     * <p>
      * 기존 이메일과 새 이메일이 다를 때만 업데이트합니다.
      * 같은 닉네임일 경우 아무런 동작을 하지 않습니다.
      * null 상태에서도 새로운 이메일 등록이 가능합니다.
@@ -107,7 +102,7 @@ public class Member extends BaseTime {
 
     /**
      * 닉네임을 업데이트합니다.
-     *
+     * <p>
      * 기존 닉네임과 새 닉네임이 다를 경우에만 업데이트합니다.
      * 같은 닉네임일 경우 아무런 동작을 하지 않습니다.
      *
@@ -126,9 +121,10 @@ public class Member extends BaseTime {
 
     // 구독 플랜 업데이트 -> 변경 내역이 같이 않을 때에만 업데이트 할 수 있도록
     public void updateSubscription(SubscriptionType subscriptionType) {
-        if (this.subscriptionType != subscriptionType) {
-            this.subscriptionType = subscriptionType;
+        if (this.subscriptionType == subscriptionType) {
+            return;
         }
+        this.subscriptionType = subscriptionType;
     }
 
     public void updateWordGoal(int wordGoal) {
@@ -179,6 +175,7 @@ public class Member extends BaseTime {
 
     /**
      * 추가 단어장, 표현함을 사용할 수 있는지 여부를 검사한다.
+     *
      * @return 추가 단어장, 표현함을 사용할 수 있는지 여부
      */
     public boolean canUseAdditaional() {

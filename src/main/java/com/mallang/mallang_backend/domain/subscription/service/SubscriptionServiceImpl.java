@@ -3,13 +3,13 @@ package com.mallang.mallang_backend.domain.subscription.service;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
 import com.mallang.mallang_backend.domain.plan.entity.Plan;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.entity.SubscriptionStatus;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionQueryRepository;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.SUBSCRIPTION_NOT_FOUND;
@@ -32,7 +31,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionQueryRepository queryRepository;
-    private final PaymentRepository paymentRepository;
 
     /**
      * member 에 접근해서 구독 정보를 가져 오기
@@ -75,7 +73,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // 현재 시간을 Clock 기반으로 생성
         LocalDateTime startDate = LocalDateTime.now(clock);
-        LocalDateTime expiredDate = startDate.plusMonths(plan.getPeriod().getMonths());
 
         Member member = findMemberOrThrow(memberId);
         SubscriptionType preType = member.getSubscriptionType();
@@ -85,7 +82,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .member(member)
                 .plan(plan)
                 .startedAt(startDate)
-                .expiredAt(expiredDate) // 계산된 시간 사용
                 .build();
 
         subscriptionRepository.save(newSubs);
@@ -145,38 +141,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 memberId, beforeType, SubscriptionType.BASIC);
     }
 
-    // TODO 변경 필요 -> 자동으로 변경이 되고 결제가 되도록 스케줄링 할 것
-    @Transactional
-    public void updateSubscriptionStatus(Long memberId,
-                                         Clock clock
-    ) {
-        Member member = findMemberOrThrow(memberId);
-
-        // 최신 구독만 조회
-        Optional<Subscription> optionalSubscription = queryRepository.findLatestByMember(member);
-        optionalSubscription.ifPresent(subscription -> {
-            // 만료 시간이 현재보다 이전일 때 상태 변경
-            if (subscription.getExpiredAt().isBefore(LocalDateTime.now(clock))) {
-                subscription.updateStatus(SubscriptionStatus.EXPIRED);
-            }
-        });
-    }
-
-    // 구독 갱신 해지 시, 빌링 키와 고객 키를 삭제 + 취소 상태로 변경
-    // TODO 자독 구독 갱신 이벤트 -> 페이먼트 객체에서 빌링 키가 있는 회원을 한정으로 실행 혹은 AutoRenew 로 판단
     @Override
     @Transactional
+    @Retry(name = "dataSaveInstance", fallbackMethod = "updateSubscriptionStatusFallback")
+    public void updateSubscriptionStatus() {
+        log.info("[구독만료조회] 구독만료 조회 시작 (ID 값만) | @Async: {} | @Scheduled: {}",
+                Thread.currentThread().getName(), LocalDateTime.now());
+        // 최신 ACTIVE 구독, 어제까지의 만료일자를 가진 구독만 조회
+        List<Long> activeSubscriptionIds = queryRepository.findActiveSubWithMember();
+
+        if (!activeSubscriptionIds.isEmpty()) {
+            long updatedCount = queryRepository.bulkUpdateStatus(activeSubscriptionIds);
+            log.info("[구독만료성공] {}건 처리 완료", updatedCount);
+            return;
+        }
+
+        log.info("[구독만료] 만료할 구독이 없습니다.");
+    }
+
+    public void updateSubscriptionStatusFallback(Exception e) {
+        // 1. 에러 로깅
+        log.error("[구독만료실패] {}", e.getMessage(), e);
+
+        // 2. 알람 시스템 연동
+
+        // 3. 예외를 다시 던져 스케줄러/모니터링 시스템이 인지하도록
+        throw new ServiceException(SUBSCRIPTION_STATUS_UPDATE_FAILED, e);
+    }
+
+    // TODO 다시 가져올 것
+    @Override
     public void cancelSubscription(Long memberId) {
         Member member = findMemberOrThrow(memberId);
 
-        // 최신 한 건 조회
-        Subscription subscription = queryRepository.findLatestByMember(member).orElseThrow(
-                () -> new ServiceException(SUBSCRIPTION_NOT_FOUND));
-
-        subscription.updateStatus(SubscriptionStatus.CANCELED);
-        subscription.updateAutoRenew(false); // 자동 결제 여부 초기화
-
-        // TODO 구독 만료일을 조회하고, 만료일까지는 상태가 변경되어서는 안 됨 -> 이 또한 스케줄링으로 처리
+        member.updateSubscription(SubscriptionType.BASIC);
     }
 
     /**

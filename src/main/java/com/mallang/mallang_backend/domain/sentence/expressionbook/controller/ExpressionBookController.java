@@ -140,21 +140,23 @@ public class ExpressionBookController {
     }
 
     /**
-     * 특정 표현함의 표현 목록 조회
+     * 여러 표현함의 표현 목록 조회
      *
+     * @param expressionBookIds 표현함 ID 리스트
      * @param userDetails      로그인한 사용자 정보
      * @return 표현 목록을 담은 응답 객체
      */
-    @Operation(summary = "전체 표현 목록 조회", description = "모든 표현함의 표현들을 등록 날짜 기준으로 정렬하여 조회합니다.")
+    @Operation(summary = "여러 표현함의 표현 목록 조회", description = "체크된 여러 표현함의 표현들을 등록 날짜 기준으로 정렬하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "표현함의 표현 목록 조회에 성공했습니다.")
-    @PossibleErrors({MEMBER_NOT_FOUND})
+    @PossibleErrors({MEMBER_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, EXPRESSION_NOT_FOUND})
     @GetMapping("/view")
     public ResponseEntity<RsData<List<ExpressionResponse>>> getExpressionsByBook(
+        @RequestParam(required = false) List<Long> expressionBookIds,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
-        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(memberId);
+        List<ExpressionResponse> response = expressionBookService.getExpressionsByBook(expressionBookIds, memberId);
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(new RsData<>(
@@ -178,7 +180,7 @@ public class ExpressionBookController {
     @PostMapping("/{expressionBookId}/expressions")
     public ResponseEntity<RsData<?>> saveExpression(
         @PathVariable("expressionBookId") Long expressionBookId,
-        @RequestBody ExpressionSaveRequest request,
+        @RequestBody @Valid ExpressionSaveRequest request,
         @Login CustomUserDetails userDetails
     ) {
         Long memberId = userDetails.getMemberId();
@@ -202,7 +204,7 @@ public class ExpressionBookController {
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK})
     @PostMapping("/expressions/delete")
     public ResponseEntity<RsData<Void>> deleteExpressionsFromBook(
-        @RequestBody DeleteExpressionsRequest request,
+        @RequestBody @Valid DeleteExpressionsRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {
@@ -230,7 +232,7 @@ public class ExpressionBookController {
     @PossibleErrors({EXPRESSION_BOOK_NOT_FOUND, FORBIDDEN_EXPRESSION_BOOK, NO_EXPRESSIONBOOK_CREATE_PERMISSION})
     @PatchMapping("/expressions/move")
     public ResponseEntity<RsData<Void>> moveExpressionsBetweenBooks(
-        @RequestBody MoveExpressionsRequest request,
+        @RequestBody @Valid MoveExpressionsRequest request,
         @Parameter(hidden = true)
         @Login CustomUserDetails userDetails
     ) {

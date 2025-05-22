@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.payment.service.confirm;
+package com.mallang.mallang_backend.domain.payment.thirdparty;
 
 import com.mallang.mallang_backend.domain.payment.dto.approve.BillingApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.BillingPaymentResponse;

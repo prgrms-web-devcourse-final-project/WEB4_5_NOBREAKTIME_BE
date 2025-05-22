@@ -49,13 +49,14 @@ public class Subscription {
     @Builder
     public Subscription(Member member,
                         Plan plan,
-                        LocalDateTime startedAt,
-                        LocalDateTime expiredAt
+                        LocalDateTime startedAt
     ) {
         this.member = member;
         this.plan = plan;
         this.startedAt = startedAt;
-        this.expiredAt = expiredAt;
+        this.expiredAt = startedAt
+                .plusMonths(plan.getPeriod().getMonths())
+                .minusDays(1); // 구독 만료일 하루 전 날
         this.isAutoRenew = false;
     }
 

@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -83,7 +84,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    @Transactional
     public List<ExpressionBookResponse> getByMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
@@ -94,11 +94,6 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
             books = books.stream()
                     .filter(eb -> ExpressionBook.isDefault(eb))
                     .toList();
-        }
-
-        for (ExpressionBook book : books) {
-            int expressionCount = expressionBookItemRepository.countByIdExpressionBookId(book.getId());
-            System.out.println(expressionCount);
         }
 
         return books.stream()
@@ -161,38 +156,97 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
     }
 
     @Override
-    public List<ExpressionResponse> getExpressionsByBook(Long memberId) {
+    public List<ExpressionResponse> getExpressionsByBook(List<Long> expressionBookIds, Long memberId) {
         // 사용자 인증
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
-        // 전체 표현함 아이템 조회
-        List<ExpressionBook> allBooks = expressionBookRepository.findAllByMemberIdAndLanguage(memberId, member.getLanguage());
-        List<Long> allBookIds = allBooks.stream()
-                .map(ExpressionBook::getId)
-                .toList();
-        List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookIdIn(allBookIds);
+        validateExpressionBookIdsExist(expressionBookIds);
 
-        // 표현 ID 한 번에 추출
+        List<ExpressionBookItem> items = findExpressionBookItems(expressionBookIds, member);
+
+        return convertToExpressionResponses(items);
+    }
+
+    private List<ExpressionBookItem> findExpressionBookItems(List<Long> expressionBookIds, Member member) {
+
+        // 기본 표현함 조회 - 표현함 ID가 비어있거나 null인 경우
+        if (expressionBookIds == null || expressionBookIds.isEmpty()) {
+            ExpressionBook defaultBook = expressionBookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_EXPRESSION_BOOK_NAME, member.getLanguage())
+                    .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+            return expressionBookItemRepository.findAllById_ExpressionBookIdOrderByCreatedAtDesc(defaultBook.getId());
+        }
+
+        // 단일 표현함 조회 - 표현함 Id가 1개인 경우
+        if (expressionBookIds.size() == 1) {
+            ExpressionBook expressionBook = expressionBookRepository.findById(expressionBookIds.get(0))
+                    .orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
+
+            if (!expressionBook.getMember().getId().equals(member.getId())) {
+                throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+            }
+
+            return expressionBookItemRepository.findAllById_ExpressionBookIdOrderByCreatedAtDesc(expressionBook.getId());
+        }
+
+        // 여러 표현함 조회 - 표현함 Id가 2개 이상인 경우
+        List<ExpressionBook> expressionBooks = expressionBookRepository.findAllById(expressionBookIds);
+
+        // 표현함 소유자 확인
+        if (expressionBooks.stream().anyMatch(eb -> !eb.getMember().getId().equals(member.getId()))) {
+            throw new ServiceException(FORBIDDEN_EXPRESSION_BOOK);
+        }
+
+        return expressionBookItemRepository.findAllById_ExpressionBookIdInOrderByCreatedAtDesc(expressionBookIds);
+    }
+
+    private List<ExpressionResponse> convertToExpressionResponses(List<ExpressionBookItem> items) {
+
+        // 표현 ID만 추출하여 리스트로 변환 (중복 포함)
         List<Long> expressionIds = items.stream()
-                .map(i -> i.getId().getExpressionId())
-                .distinct()
+                .map(item -> item.getId().getExpressionId())
                 .toList();
 
-        // 표현 엔티티 한 번에 조회
+        // 한 번에 Expression 조회
         Map<Long, Expression> expressionMap = expressionRepository.findAllById(expressionIds).stream()
                 .collect(Collectors.toMap(Expression::getId, Function.identity()));
 
-        // 표현함 아이템 추가순 기준으로 최신 정렬
+        // ExpressionResponse 리스트로 변환
         return items.stream()
-                .filter(item -> expressionMap.containsKey(item.getId().getExpressionId()))
-                .sorted(Comparator.comparing(ExpressionBookItem::getCreatedAt).reversed())
-                .map(item -> ExpressionResponse.from(
-                        expressionMap.get(item.getId().getExpressionId()),
-                        item.getCreatedAt(),
-                        item.getId().getExpressionBookId()
-                ))
+                .map(item -> {
+                    Expression expression = expressionMap.get(item.getId().getExpressionId());
+                    if (expression == null) {
+                        throw new ServiceException(EXPRESSION_NOT_FOUND);
+                    }
+
+                    return ExpressionResponse.from(
+                            expression,
+                            item.getCreatedAt(),
+                            item.getId().getExpressionBookId()
+                    );
+                })
                 .toList();
+    }
+
+    private void validateExpressionBookIdsExist(List<Long> requestedIds) {
+        // 표현함 ID가 비어있거나 null인 경우
+        if (requestedIds == null || requestedIds.isEmpty()) {
+            return; // 기본 표현함 케이스는 통과
+        }
+
+        // 실제 존재하는 ID 조회
+        Set<Long> existingIdSet = expressionBookRepository.findAllById(requestedIds).stream()
+                .map(ExpressionBook::getId)
+                .collect(Collectors.toSet());
+
+        List<Long> invalidIds = requestedIds.stream()
+                .filter(id -> !existingIdSet.contains(id))
+                .toList();
+
+        if (!invalidIds.isEmpty()) {
+            throw new ServiceException(EXPRESSION_BOOK_NOT_FOUND);
+        }
     }
 
     @Override
@@ -225,7 +279,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         LocalTime subtitleAt = LocalTime.parse(subtitle.getStartTime(), formatter);
 
-        Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt);
+        Expression expression = getOrCreateExpression(videoId, sentence, description, subtitleAt, member.getLanguage());
 
         ExpressionBookItemId itemId = new ExpressionBookItemId(expression.getId(), expressionBook.getId());
         if (!expressionBookItemRepository.existsById(itemId)) {
@@ -233,11 +287,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         }
     }
 
-    private Expression getOrCreateExpression(String videoId, String sentence, String description, LocalTime subtitleAt) {
+    private Expression getOrCreateExpression(String videoId, String sentence, String description, LocalTime subtitleAt, Language language) {
         return expressionRepository
                 .findByVideosIdAndSentenceAndSubtitleAt(videoId, sentence, subtitleAt)
                 .orElseGet(() -> {
-                    String gptResult = gptService.analyzeSentence(sentence, description);
+                    String gptResult = gptService.analyzeSentence(sentence, description, language);
                     if (gptResult == null || gptResult.isBlank()) {
                         throw new ServiceException(GPT_RESPONSE_EMPTY);
                     }

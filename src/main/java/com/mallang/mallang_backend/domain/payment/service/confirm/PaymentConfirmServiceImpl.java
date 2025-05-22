@@ -5,13 +5,13 @@ import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequ
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentFailedEvent;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentMailSendEvent;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentFailedEvent;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentMailSendEvent;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.payment.thirdparty.PaymentApiPort;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +21,12 @@ import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_CONFLICT;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.PAYMENT_NOT_FOUND;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
  * 결제 승인 및 결과 처리 서비스 구현체입니다.
@@ -202,12 +204,18 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
         }
     }
 
+    /**
+     * 구독 일자 기준
+     * 3월 15일 4시 구독 -> 4월 14일 4시에 결제 시작 (구독 자체는 14일까지 사용이 가능)
+     * 구독 만료는 15일, 15일부터 새로운 구독 사용 가능
+     */
     private void renewalSubscription(Payment payment) {
-        // 오늘 날짜 기준 +1일 후의 00:00을 Clock 으로 생성 (구독 갱신은 하루 후)
-        ZoneId zone = ZoneId.systemDefault(); // 또는 ZoneId.of("Asia/Seoul")
-        LocalDate tomorrow = LocalDate.now(zone).plusDays(1);
-        ZonedDateTime tomorrowStart = tomorrow.atStartOfDay(zone);
-        Clock tomorrowClock = Clock.fixed(tomorrowStart.toInstant(), zone);
+        // 오늘 날짜 기준 +1일 후를 기준으로 Clock 으로 생성 (구독 갱신은 하루 후)
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime localDateTime = LocalDateTime.now(zone).plusDays(1);
+
+        // LocalDateTime → ZonedDateTime → Instant 변환
+        Clock tomorrowClock = Clock.fixed(localDateTime.atZone(zone).toInstant(), zone);
 
         subscriptionService.updateSubscriptionInfo(
                 payment.getMemberId(),
@@ -218,7 +226,6 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
         subscriptionService.updateIsAutoRenew(payment.getMemberId());
     }
 
-    // 아예 밖에서 해결할 수도 있고 아니면 여기서 처리해도 되고 근데 그냥 밖에서 처리하는 게 편할 듯
     public void retryDbSaveFallback(BillingPaymentResponse response,
                                     Exception e) {
         if (e instanceof PessimisticLockingFailureException) {
@@ -226,6 +233,6 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
         }
         // TODO 보상 로직을 생각할 것
         log.error("DB 저장 실패: {}", e.getMessage());
-        throw new ServiceException(ErrorCode.PAYMENT_CONFIRM_FAIL, e);
+        throw new ServiceException(PAYMENT_CONFIRM_FAIL, e);
     }
 }

@@ -1,6 +1,5 @@
 package com.mallang.mallang_backend.domain.payment.service.request;
 
-import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +59,7 @@ public class PaymentRedisService {
                 .orElseThrow(() -> new ServiceException(PAYMENT_NOT_FOUND));
 
         if (!savedAmount.equals(amount)) {
-            throw new ServiceException(PAYMENT_NOT_FOUND);
+            throw new ServiceException(ORDER_AMOUNT_MISMATCH);
         }
 
         log.info("결제 정보 검증 성공: orderId: {}, amount: {}",

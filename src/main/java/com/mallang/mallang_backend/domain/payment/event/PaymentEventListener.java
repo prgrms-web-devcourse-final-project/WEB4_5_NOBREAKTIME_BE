@@ -1,17 +1,17 @@
-package com.mallang.mallang_backend.domain.payment.service.event;
+package com.mallang.mallang_backend.domain.payment.event;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentFailedEvent;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentMailSendEvent;
+import com.mallang.mallang_backend.domain.payment.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.domain.payment.history.PaymentHistory;
 import com.mallang.mallang_backend.domain.payment.history.PaymentHistoryQueryRepository;
 import com.mallang.mallang_backend.domain.payment.history.PaymentHistoryRepository;
 import com.mallang.mallang_backend.domain.payment.mail.MailSender;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentFailedEvent;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentMailSendEvent;
-import com.mallang.mallang_backend.domain.payment.service.event.dto.PaymentUpdatedEvent;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
