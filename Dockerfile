@@ -4,14 +4,19 @@ WORKDIR /workspace
 COPY . .
 RUN ./gradlew clean bootJar
 
-# --- Runtime stage ---
-FROM eclipse-temurin:21-jre-jammy
-
 # 빌드 시점 변수 선언
 ARG PROFILES=local
 ARG ENV=blue
+
+# --- Runtime stage ---
+FROM eclipse-temurin:21-jre-jammy
+
+# 런타임 시점 변수
 ENV PROFILES=${PROFILES}
 ENV ENV=${ENV}
+
+# 쿠키 저장 경로
+ENV YT_COOKIES_PATH="/tmp/cookies.txt"
 
 # 시스템 패키지 및 헤드리스 크롬, Python/Selenium, yt-dlp(nightly) 설치
 RUN apt-get update && \
