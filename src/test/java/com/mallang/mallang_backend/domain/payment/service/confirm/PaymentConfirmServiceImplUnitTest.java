@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.payment.service.confirm;
 
+import com.mallang.mallang_backend.domain.payment.dto.approve.Failure;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
 import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentResponse;
 import com.mallang.mallang_backend.domain.payment.dto.approve.Receipt;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,4 +73,44 @@ class PaymentConfirmServiceImplUnitTest {
         verify(paymentApiPort).callTossPaymentAPI(request);
     }
 
+    @Test
+    @DisplayName("실패한 경우 - 결제 내역이 제대로 업데이트되는지 확인")
+    void t2() throws Exception {
+        //given
+        String paymentKey = UUID.randomUUID().toString();
+        String orderId = UUID.randomUUID().toString();
+        String orderName = "스탠다드 1년 구독";
+        String approvedAt = LocalDateTime.now().toString();
+        int amount = 43200;
+        String method = "간편결제";
+        Receipt receipt = new Receipt("http://test.com");
+
+        PaymentApproveRequest request = PaymentApproveRequest.builder()
+                .idempotencyKey(paymentKey)
+                .amount(amount)
+                .orderId(orderId)
+                .paymentKey(paymentKey)
+                .build();
+
+        PaymentResponse expected = PaymentResponse.builder()
+                .paymentKey(paymentKey)
+                .approvedAt(approvedAt)
+                .status("ABORTED") // 거절
+                .receipt(receipt)
+                .totalAmount(amount)
+                .orderId(orderId)
+                .orderName(orderName)
+                .method(method)
+                .failure(new Failure("ERROR", "테스트 결제 실패"))
+                .build();
+
+        //when
+        when(paymentApiPort.callTossPaymentAPI(any())).thenReturn(expected);
+        PaymentResponse result = paymentConfirmService.sendApproveRequest(request);
+
+        // then
+        assertThat(result).isEqualTo(expected);
+        verify(redisService).checkOrderIdAndAmount(any(),anyInt());
+        verify(paymentApiPort).callTossPaymentAPI(request);
+    }
 }

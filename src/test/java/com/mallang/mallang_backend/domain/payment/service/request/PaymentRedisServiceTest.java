@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.ORDER_ID_PREFIX;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -49,7 +50,7 @@ class PaymentRedisServiceTest {
     @DisplayName("Redis 정상 저장 시 재시도 없이 성공")
     void saveDataToRedis_updateSuccessInfo() {
         // Given
-        String orderId = "order_456";
+        String orderId = UUID.randomUUID().toString();
         int amount = 10000;
 
         // When & Then
@@ -60,7 +61,7 @@ class PaymentRedisServiceTest {
                 .doesNotThrowAnyException();
 
         // Verify
-        verify(valueOperations, times(1)).set(eq(ORDER_ID_PREFIX + "order_456"),
+        verify(valueOperations, times(1)).set(eq(ORDER_ID_PREFIX + orderId),
                 eq("10000"), any(Duration.class));
     }
 
@@ -68,12 +69,13 @@ class PaymentRedisServiceTest {
     @DisplayName("Redis 타임아웃 발생 시 4회 재시도 후 폴백 실행")
     void saveDataToRedis_RetryOnTimeout() {
         // Given
+        String orderId = UUID.randomUUID().toString();
         doThrow(new QueryTimeoutException("Connection timeout"))
                 .when(valueOperations).set(anyString(), anyString(), any(Duration.class));
 
         // When & Then
         assertThatThrownBy(() -> paymentRedisService.saveDataToRedis(
-                ORDER_ID_PREFIX + "order_456", 10000))
+                ORDER_ID_PREFIX + orderId, 10000))
                 .isInstanceOf(ServiceException.class);
 
         // Verify: 1초기 시도 + 4회 재시도 = 총 5회 호출
