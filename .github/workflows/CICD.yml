@@ -103,7 +103,7 @@ jobs:
           script: |
             docker image prune -a -f
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mallang-server:latest
-            docker compose -f docker-compose-${TARGET_UPSTREAM}.yml up -d
+            docker compose -f docker-compose-${{env.TARGET_UPSTREAM}}.yml up -d
 
       - name: Check deploy server
         uses: jtalk/url-health-check-action@v3
