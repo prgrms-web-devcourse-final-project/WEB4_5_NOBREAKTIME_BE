@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @Slf4j
+@ActiveProfiles("local")
 @SpringBootTest
 class WithdrawnLogTest {
 

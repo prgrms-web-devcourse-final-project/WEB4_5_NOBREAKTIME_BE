@@ -104,7 +104,7 @@ class PaymentConfirmServiceImplTest {
                 .build();
 
         PaymentResponse response = paymentConfirmService.sendApproveRequest(request);
-        paymentConfirmService.processPaymentResult(request.getOrderId(), response);
+        paymentConfirmService.processPaymentResult(response);
         // 상위 메서드에서 트랜잭션을 걸어서 이제는 저장이 안 됨
 
         log.info("response: {}", response); // response: PaymentSuccessResponse(orderId=250513-E4jnf-00001, orderName=스탠다드 1년 구독, status=DONE, approvedAt=2025-05-13T18:59:04+09:00, method=간편결제)
