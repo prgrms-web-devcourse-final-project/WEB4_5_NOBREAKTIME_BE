@@ -30,19 +30,30 @@ public class PaymentRedisService {
      * @param orderId 주문 ID
      * @param amount  결제 금액
      */
-    // TODO 동시 요청 시 값을 덮어 쓸 가능성이 있음 LOCK 적용
     @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
     public void saveDataToRedis(String orderId,
                                 int amount
     ) {
         String orderKey = ORDER_ID_PREFIX + orderId;
-        redisTemplate.opsForValue().set(
-                orderKey,
-                String.valueOf(amount),
-                Duration.ofHours(24));
+
+        Boolean success = redisTemplate.opsForValue()
+                .setIfAbsent(orderKey, String.valueOf(amount), Duration.ofHours(24));
+
+        if (!Boolean.TRUE.equals(success)) {
+            log.error("이미 존재하는 주문 ID: {}", orderId);
+            throw new ServiceException(PAYMENT_CONFLICT);
+        }
+
+        log.info("결제 정보 저장 성공: orderId: {}, amount: {}",
+                orderId, amount);
     }
 
-    // redis 에서 저장된 주문 ID와 결제 금액이 일치하는지 확인
+    /**
+     * redis 에서 저장된 주문 ID와 결제 금액이 일치하는지 확인 (결제 승인 전)
+     *
+     * 일반적으로 동시성 문제가 발생할 것이라고 보여지진 않음
+     * 이 값을 기반으로 결제 정보를 update 해야 하는 것 -> 여기서 문제가 발생할 수도 있을 것 같다
+     */
     @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
     public void checkOrderIdAndAmount(String orderId,
                                       int amount
@@ -50,6 +61,7 @@ public class PaymentRedisService {
 
         String redisKey = ORDER_ID_PREFIX + orderId;
         Object value = redisTemplate.opsForValue().get(redisKey);
+
         log.debug("결제 정보 검증 시작: orderId: {}, amount: {}, value: {}",
                 orderId, amount, value);
 
@@ -66,19 +78,24 @@ public class PaymentRedisService {
                 orderId, amount);
     }
 
+    /**
+     * hasKey → set: Race Condition 위반 (둘 다 키 없음으로 확인할 것임)
+     * setIfAbsent: 키가 없으면 저장, 이미 있으면 저장하지 않음 (원자적 실행)
+     * → 여러 요청이 동시에 들어와도, 오직 하나의 요청만 true를 받고 나머지는 false를 받음
+     */
+    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
     public void checkAndSaveIdempotencyKey(String idempotencyKey
     ) {
         String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;
 
-        if (redisTemplate.hasKey(redisIdemKey)) {
-            log.warn("동일 주문에 대한 중복 결제 전송 - Key: {}", redisIdemKey);
+        Boolean success = redisTemplate.opsForValue()
+                .setIfAbsent(redisIdemKey, "processed", Duration.ofHours(24));
+
+        if (!Boolean.TRUE.equals(success)) {
+            log.error("동일 주문에 대한 중복 결제 전송 - Key: {}", redisIdemKey);
             throw new ServiceException(PAYMENT_CONFLICT);
         }
 
-        redisTemplate.opsForValue().set(
-                redisIdemKey,
-                "processed",
-                Duration.ofHours(24));
         log.info("멱등성 토큰 키 저장 성공: {}", idempotencyKey);
     }
 
