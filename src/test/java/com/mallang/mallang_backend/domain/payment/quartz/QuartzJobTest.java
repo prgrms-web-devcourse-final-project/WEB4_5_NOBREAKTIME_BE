@@ -88,7 +88,7 @@ class QuartzJobTest {
         // then: 로그 검증
         assertThat(output.getOut())
                 .contains("Job 재시도 시도: 1/3회")
-                .contains("subscriptionExpireJob 재시도 중 예외 발생")
-                .contains("재시도 트리거 생성: subscriptionExpireTrigger-RETRY-1");
+                .contains("[재시도] Job: DEFAULT.subscriptionExpireJob 재시도 트리거 생성: subscriptionExpireTrigger-RETRY-1")
+                .contains("[재시도] 새로운 JobDataMap: {currentRetry=1}");
     }
 }
