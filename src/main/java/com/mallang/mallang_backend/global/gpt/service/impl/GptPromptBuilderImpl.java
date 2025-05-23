@@ -11,7 +11,7 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
 	 * 단어 검색용 프롬프트 생성
 	 */
 	@Override
-	public String buildPromptforSearchWord(String word) {
+	public String buildPromptForSearchWord(String word) {
 		return String.format("""
             당신은 영어 단어를 분석하는 도우미입니다.
             사용자가 단어 하나를 입력하면, 그 단어가 가질 수 있는 모든 품사와 해석을 제시하세요.
@@ -41,7 +41,7 @@ public class GptPromptBuilderImpl implements GptPromptBuilder {
 	 * 단어 검색용 프롬프트 생성
 	 */
 	@Override
-	public String buildPromptforSearchWordJapanese(String word) {
+	public String buildPromptForSearchWordJapanese(String word) {
 		return String.format("""
 			あなたは日本語の単語を分析するアシスタントです。
 			ユーザーが単語を一つ入力すると、その単語が持つすべての品詞と意味を提示してください。

@@ -13,9 +13,9 @@ class GptPromptBuilderImplTest {
 
     @Test
     @DisplayName("단어 검색 프롬프트가 지정 형식으로 생성된다")
-    void buildPromptforSearchWordTest() {
+    void buildPromptForSearchWordTest() {
         String word = "run";
-        String result = builder.buildPromptforSearchWord(word);
+        String result = builder.buildPromptForSearchWord(word);
         assertThat(result).contains("입력된 단어", word);
         assertThat(result).contains("품사", "해석", "예문");
     }
