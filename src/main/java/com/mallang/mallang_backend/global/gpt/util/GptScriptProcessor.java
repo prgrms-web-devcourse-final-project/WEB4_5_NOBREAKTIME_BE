@@ -1,11 +1,5 @@
 package com.mallang.mallang_backend.global.gpt.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
@@ -13,8 +7,13 @@ import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
 import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
-
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -52,7 +51,7 @@ public class GptScriptProcessor {
 
         for(int i = 0; i < blocks.length ; i++){
             String block = blocks[i].strip();
-            if(block.isBlank()) continue;
+            if(block.isBlank() || block.strip().startsWith("```")) continue;
 
             String[] parts = block.split("\\|");
             if (parts.length < 2) {
@@ -108,14 +107,13 @@ public class GptScriptProcessor {
         String[] lines = gptResult.split("\\R"); // 결과를 줄 단위로 분리
 
         for (String line : lines) {
-            if (line.isBlank()) continue;   // 빈 줄은 무시
+            if (line.isBlank() || line.strip().startsWith("```")) continue; // 빈 줄과 백틱은 무시
 
             String[] parts = line.split("\\|"); // 한 줄을 '|' 기준으로 나누기
             if (parts.length != 5) {
                 // 품사|뜻|난이도 형식이 아닌 경우
-                System.out.println("[단어 저장 실패]");
-                System.out.println("word = " + word);
-                System.out.println("gptResult = \n" + gptResult);
+                System.out.println("[단어 저장 실패] word = " + word);
+                System.out.println("실패한 line = " + line);
                 throw new ServiceException(ErrorCode.WORD_PARSE_FAILED);
             }
 
