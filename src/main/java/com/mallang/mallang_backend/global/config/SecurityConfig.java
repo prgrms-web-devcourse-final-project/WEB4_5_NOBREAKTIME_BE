@@ -21,8 +21,8 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
+import com.mallang.mallang_backend.domain.member.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.domain.member.oauth.service.CustomOAuth2Service;
 
 import lombok.RequiredArgsConstructor;
 
