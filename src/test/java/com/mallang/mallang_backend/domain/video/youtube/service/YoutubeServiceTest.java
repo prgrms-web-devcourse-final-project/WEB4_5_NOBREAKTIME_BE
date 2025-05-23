@@ -18,12 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.cache.RedisCacheManager;
 
 import com.google.api.services.youtube.model.ResourceId;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
+import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheRetryService;
 import com.mallang.mallang_backend.domain.video.youtube.client.YoutubeApiClient;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -31,8 +33,9 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 @ExtendWith(MockitoExtension.class)
 class YoutubeServiceTest {
 
-	@Mock
-	private YoutubeApiClient rawService;
+	@Mock private YoutubeApiClient rawService;
+	@Mock private RedisCacheManager cacheManager;
+	@Mock private VideoCacheRetryService cacheRetryService;
 
 	private final Executor directExecutor = Runnable::run;
 
@@ -40,7 +43,7 @@ class YoutubeServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new YoutubeService(rawService, directExecutor);
+		service = new YoutubeService(rawService, directExecutor, cacheManager, cacheRetryService);
 	}
 
 	private SearchListResponse makeSearchResp(List<String> ids, String nextPageToken) {
@@ -133,8 +136,12 @@ class YoutubeServiceTest {
 	@Test
 	@DisplayName("fallbackSearchVideoIds: ServiceException 발생")
 	void fallbackSearchVideoIds_throwsServiceException() {
+		// 캐시 조회 시 API_ERROR 예외를 던지도록 설정
+		when(cacheRetryService.getCachedVideos(anyString()))
+			.thenThrow(new ServiceException(ErrorCode.API_ERROR));
+
 		ServiceException ex = assertThrows(ServiceException.class, () ->
-			service.fallbackSearchVideoIds("q","US","en","10", 5L, "medium", new Throwable())
+			service.fallbackSearchVideoIds("q", "US", "en", "10", 5L, "medium", new Throwable())
 		);
 		assertEquals(ErrorCode.API_ERROR, ex.getErrorCode());
 	}
