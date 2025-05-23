@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.config.oauth.service;
+package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
@@ -7,15 +7,17 @@ import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLogRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
-import com.mallang.mallang_backend.global.config.oauth.processor.OAuth2UserProcessor;
+import com.mallang.mallang_backend.domain.member.oauth.processor.OAuth2UserProcessor;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.exception.custom.RetryableException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -26,10 +28,15 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 
+import javax.net.ssl.SSLHandshakeException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +58,8 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final S3ImageUploader imageUploader;
     private final WithdrawnLogRepository logRepository;
 
-    @Retry(name = "apiRetry", fallbackMethod = "fallbackMethod")
-    @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "fallbackMethod")
+    @Retry(name = "oauthUserLoginService", fallbackMethod = "retryFallbackMethod")
+    @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "circuitBreakerFallbackMethod")
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         String provider = userRequest.getClientRegistration().getRegistrationId();
@@ -129,6 +136,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     }
 
     // 추후 서비스 로직 분리 필요
+
     /**
      * 신규 회원을 등록합니다.
      *
@@ -174,7 +182,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
      * @param platformId 플랫폼 고유 아이디
      * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우
      */
-    private void validateWithdrawnLogNotRejoinable(String platformId) {
+    public void validateWithdrawnLogNotRejoinable(String platformId) {
 
         if (logRepository.existsByOriginalPlatformId(platformId)) {
 
@@ -182,7 +190,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
             LocalDateTime rejoinAvailableAt = withdrawnLog.getCreatedAt().plusDays(30); // 가입 가능 날짜
 
             if (rejoinAvailableAt.isAfter(LocalDateTime.now())) {
-                log.warn("아직 가입할 수 없는 회원: {}", platformId);
+                log.error("아직 가입할 수 없는 회원: {}", platformId);
                 throw new ServiceException(CANNOT_SIGNUP_WITH_THIS_ID);
             }
         }
@@ -224,27 +232,64 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         throw new ServiceException(NICKNAME_GENERATION_FAILED);
     }
 
-    private OAuth2User fallbackMethod(OAuth2UserRequest userRequest,
-                                      Exception e) {
+    public OAuth2User retryFallbackMethod(OAuth2UserRequest userRequest,
+                                          Throwable t
+    ) {
+        handleErrorLogs(t);
+        // log.warn(Arrays.toString(t.getStackTrace()));
+        throw new RetryableException("시스템 오류 발생, 재시도 카운트 포함", t);
+    }
 
-        if (e instanceof ResourceAccessException) {
-            log.error("OAuth 서버 연결 실패: {}", e.getMessage());
-            throw new ServiceException(OAUTH_NETWORK_ERROR, e);
-        } else if (e instanceof HttpClientErrorException.TooManyRequests) {
-            handleTooManyRequests((HttpClientErrorException) e);
-        } else if (e instanceof OAuth2AuthenticationException) {
-            handleOAuthException((OAuth2AuthenticationException) e);
-        } else if (e instanceof CallNotPermittedException) {
-            log.warn("서킷 브레이커 활성화 - 30초간 호출 차단");
-            throw new ServiceException(API_BLOCK, e);
+    private void handleErrorLogs(Throwable throwable
+    ) {
+        if (throwable instanceof ConnectException) {
+            log.error("OAuth2 로그인 실패 - 소셜 서버 연결 불가: {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof SocketTimeoutException) {
+            log.error("OAuth2 로그인 실패 - 소셜 서버 응답 시간 초과: {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof SSLHandshakeException) {
+            log.error("OAuth2 로그인 실패 - SSL 인증서 오류: {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof HttpServerErrorException) {
+            log.error("OAuth2 로그인 실패 - 소셜 서버 내부 오류(5xx): {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof ResourceAccessException) {
+            log.error("OAuth2 로그인 실패 - 리소스 접근 실패: {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof HttpClientErrorException.TooManyRequests) {
+            log.error("OAuth2 로그인 실패 - 요청 횟수 초과(429): {}",
+                    throwable.getMessage());
+        } else if (throwable instanceof TransientDataAccessException) {
+            log.error("OAuth2 로그인 실패 - 일시적 DB 오류: {}",
+                    throwable.getMessage());
+        } else {
+            log.error("OAuth2 로그인 실패 - 알 수 없는 오류: {}",
+                    throwable.getMessage());
         }
-        throw new ServiceException(API_ERROR, e);
+    }
+
+    public OAuth2User circuitBreakerFallbackMethod(OAuth2UserRequest userRequest,
+                                                   Throwable t) {
+
+        if (t instanceof ResourceAccessException) {
+            log.error("OAuth 서버 연결 실패: {}", t.getMessage());
+            throw new ServiceException(OAUTH_NETWORK_ERROR, t);
+        } else if (t instanceof HttpClientErrorException.TooManyRequests) {
+            handleTooManyRequests((HttpClientErrorException) t);
+        } else if (t instanceof OAuth2AuthenticationException) {
+            handleOAuthException((OAuth2AuthenticationException) t);
+        } else if (t instanceof CallNotPermittedException) {
+            log.error("서킷 브레이커 활성화 - 30초간 호출 차단");
+            throw new ServiceException(API_BLOCK, t);
+        }
+        throw new ServiceException(API_ERROR, t);
     }
 
     private void handleTooManyRequests(HttpClientErrorException e) {
         HttpHeaders headers = e.getResponseHeaders();
         String retryAfter = headers != null ? headers.getFirst("Retry-After") : "60";
-        log.warn("API 호출 제한 - 재시도까지 {}초 남음", retryAfter);
+        log.error("API 호출 제한 - 재시도까지 {}초 남음", retryAfter);
         throw new ServiceException(ErrorCode.OAUTH_RATE_LIMIT);
     }
 

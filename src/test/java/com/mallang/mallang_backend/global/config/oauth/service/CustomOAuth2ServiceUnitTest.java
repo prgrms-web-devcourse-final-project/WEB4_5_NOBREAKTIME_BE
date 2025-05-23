@@ -3,14 +3,20 @@ package com.mallang.mallang_backend.global.config.oauth.service;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLogRepository;
+import com.mallang.mallang_backend.domain.member.oauth.service.CustomOAuth2Service;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.init.factory.EntityTestFactory;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -24,15 +30,25 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(MockitoExtension.class)
-class CustomOAuth2ServiceTest {
+class CustomOAuth2ServiceUnitTest {
+
+    @Mock
+    MemberService memberService;
+
+    @Mock
+    S3ImageUploader uploader;
+
+    @Mock
+    WithdrawnLogRepository logRepository;
+
+    @InjectMocks
+    CustomOAuth2Service service;
+
 
     @Test
     @DisplayName("탈퇴 후 30일 미만이면 ServiceException 발생")
     void registerNewMember_within30daysWithdrawn_throwsException() {
         // given
-        MemberService memberService = Mockito.mock(MemberService.class);
-        WithdrawnLogRepository logRepository = Mockito.mock(WithdrawnLogRepository.class);
-        S3ImageUploader uploader = Mockito.mock(S3ImageUploader.class);
 
         CustomOAuth2Service service = new CustomOAuth2Service(
                 memberService,
