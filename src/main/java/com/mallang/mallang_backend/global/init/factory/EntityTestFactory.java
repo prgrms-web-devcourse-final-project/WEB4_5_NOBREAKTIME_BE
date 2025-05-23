@@ -3,6 +3,8 @@ package com.mallang.mallang_backend.global.init.factory;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLogRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.payment.entity.Payment;
 import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
@@ -31,13 +33,14 @@ public class EntityTestFactory {
     private final PlanRepository planRepository;
     private final PaymentRepository paymentRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final WithdrawnLogRepository withdrawnLogRepository;
 
     // =============== member entity ============== //
     public static Member createMember() {
         String uuid = UUID.randomUUID().toString();
         return Member.builder()
-                .email(uuid + "@test.com")
                 .language(Language.ENGLISH)
+                .email(uuid + "@test.com")
                 .loginPlatform(LoginPlatform.KAKAO)
                 .nickname(uuid)
                 .platformId(uuid)
@@ -125,5 +128,29 @@ public class EntityTestFactory {
                                           LocalDateTime startedAt) {
         Subscription subscription = createSubscription(member, plan, startedAt);
         return subscriptionRepository.save(subscription);
+    }
+
+    public static WithdrawnLog createWithdrawnLog(Member member, Clock clock) {
+        String uuid = UUID.randomUUID().toString();
+
+        return WithdrawnLog.builder()
+                .originalPlatformId(member.getPlatformId())
+                .memberId(member.getId())
+                .uuid(uuid)
+                .clock(clock)
+                .build();
+    }
+
+    public WithdrawnLog saveWithdrawnLog(Member member, Clock clock) {
+        String uuid = UUID.randomUUID().toString();
+
+        WithdrawnLog withdrawnLog = WithdrawnLog.builder()
+                .originalPlatformId(member.getPlatformId())
+                .memberId(member.getId())
+                .uuid(uuid)
+                .build();
+
+        member.markAsWithdrawn(uuid);
+        return withdrawnLogRepository.save(withdrawnLog);
     }
 }

@@ -3,7 +3,6 @@ package com.mallang.mallang_backend.domain.payment.quartz;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionQueryRepository;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.resilience4j.CustomRetryConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -26,7 +24,6 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
-@Import(CustomRetryConfig.class)
 public class SubscriptionServiceTest {
 
     @Autowired
@@ -66,7 +63,7 @@ public class SubscriptionServiceTest {
 
         //then: Fallback 검증
         assertThat(exception.getErrorCode()).isEqualTo(SUBSCRIPTION_STATUS_UPDATE_FAILED);
-        assertThat(output.getOut()).doesNotContain("[Retry]");
+        assertThat(output.getOut()).contains("무시된 예외 발생");
         assertThat(output.getOut()).contains("[구독만료실패] error");
     }
 
@@ -109,7 +106,7 @@ public class SubscriptionServiceTest {
         verify(subscriptionQueryRepository, never()).bulkUpdateStatus(anyList());
 
         assertThat(output.getOut()).contains("[구독만료실패] 네트워크 장애");
-        assertThat(output.getOut()).contains("[Retry][dataSaveInstance][txId=N/A] exhausted after 3 attempts");
+        assertThat(output.getOut()).contains("3번 시도 후 최종 실패 - 발생 예외 목록:");
     }
 }
 

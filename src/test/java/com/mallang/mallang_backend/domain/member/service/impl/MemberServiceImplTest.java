@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.member.service.impl;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import com.mallang.mallang_backend.domain.member.oauth.service.OAuthLoginService;
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
@@ -39,6 +40,9 @@ class MemberServiceImplTest {
     @Autowired
     private MemberService memberService;
 
+    @Autowired
+    OAuthLoginService oAuthLoginService;
+
     // 공통 초기화 데이터
     private Member createMember1() {
         memberRepository.deleteAll();
@@ -68,7 +72,7 @@ class MemberServiceImplTest {
     @DisplayName("소셜 로그인 성공 케이스")
     void signupByOauth_Success() {
         // Given
-        Long memberId = memberService.signupByOauth(
+        Long memberId = oAuthLoginService.signupByOauth(
                 "23123412A",
                 "oauth@example.com",
                 "oauthUser",

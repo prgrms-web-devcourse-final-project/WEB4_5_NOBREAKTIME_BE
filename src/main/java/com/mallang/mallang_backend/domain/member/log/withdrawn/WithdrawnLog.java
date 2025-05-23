@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 /**
@@ -37,9 +38,14 @@ public class WithdrawnLog {
     @Builder
     private WithdrawnLog(Long memberId,
                          String originalPlatformId,
-                         String uuid) {
+                         String uuid,
+                         Clock clock) {
         this.memberId = memberId;
         this.originalPlatformId = originalPlatformId;
         this.uuid = uuid;
+        if (clock == null) {
+            clock = Clock.systemDefaultZone();
+        }
+        this.createdAt = LocalDateTime.now(clock);
     }
 }

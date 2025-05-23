@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.config.oauth;
+package com.mallang.mallang_backend.domain.member.oauth;
 
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
