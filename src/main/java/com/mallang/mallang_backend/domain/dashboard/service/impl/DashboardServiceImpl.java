@@ -1,25 +1,6 @@
 package com.mallang.mallang_backend.domain.dashboard.service.impl;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.mallang.mallang_backend.domain.dashboard.dto.AchievementDetail;
-import com.mallang.mallang_backend.domain.dashboard.dto.DailyGoal;
-import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistory;
-import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistoryResponse;
-import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
-import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
-import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
-import com.mallang.mallang_backend.domain.dashboard.dto.UpdateGoalRequest;
+import com.mallang.mallang_backend.domain.dashboard.dto.*;
 import com.mallang.mallang_backend.domain.dashboard.service.DashboardService;
 import com.mallang.mallang_backend.domain.member.entity.Level;
 import com.mallang.mallang_backend.domain.member.entity.Member;
@@ -42,8 +23,19 @@ import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.LEVEL_NOT_MEASURABLE;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Service
 @Transactional(readOnly = true)
@@ -108,12 +100,12 @@ public class DashboardServiceImpl implements DashboardService {
 
 	// 레벨 측정 가능한지 확인
 	private boolean checkMeasurable(Member member) {
-		// 마지막 측정 이후 100개 이상의 문제를 풀었을 때 측정 가능
+		// 마지막 측정 이후 20개 이상의 문제를 풀었을 때 측정 가능
 		int wordQuizResultCount = wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(
 			member, member.getMeasuredAt());
 		int expressionQuizResultCount = expressionQuizResultRepository.countByExpressionQuiz_MemberAndCreatedAtAfter(
 			member, member.getMeasuredAt());
-		return 100 <= wordQuizResultCount + expressionQuizResultCount;
+		return 20 <= wordQuizResultCount + expressionQuizResultCount;
 	}
 
 	@Override
