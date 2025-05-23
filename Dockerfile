@@ -14,9 +14,6 @@ FROM eclipse-temurin:21-jre-jammy
 # 런타임 시점 변수
 ENV PROFILES=${PROFILES}
 ENV ENV=${ENV}
-ENV YT_EMAIL=${YT_EMAIL}
-ENV YT_PASSWORD=${YT_PASSWORD}
-ENV YT_COOKIES_PATH=${YT_COOKIES_PATH}
 
 # 시스템 패키지 및 헤드리스 크롬, Python/Selenium, yt-dlp(nightly) 설치
 RUN apt-get update && \
