@@ -32,6 +32,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
@@ -479,7 +480,7 @@ class ExpressionBookServiceImplTest2 {
 		setId(member, memberId);
 
 		ExpressionBook defaultBook = ExpressionBook.builder()
-				.name("기본 표현함")
+				.name(DEFAULT_EXPRESSION_BOOK_NAME)
 				.language(Language.ENGLISH)
 				.member(member)
 				.build();
@@ -501,7 +502,7 @@ class ExpressionBookServiceImplTest2 {
 
 		// mocking
 		given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
-		given(expressionBookRepository.findByMemberAndNameAndLanguage(member, "기본 표현함", Language.ENGLISH))
+		given(expressionBookRepository.findByMemberAndNameAndLanguage(member, DEFAULT_EXPRESSION_BOOK_NAME, Language.ENGLISH))
 				.willReturn(Optional.of(defaultBook));
 		given(expressionBookItemRepository.findAllById_ExpressionBookIdOrderByCreatedAtDesc(defaultBookId))
 				.willReturn(List.of(item));
@@ -582,7 +583,7 @@ class ExpressionBookServiceImplTest2 {
 		// then
 		assertFalse(defaults.isEmpty());
 		for (ExpressionBook book : defaults) {
-			assertEquals("기본 표현함", book.getName());
+			assertEquals(DEFAULT_EXPRESSION_BOOK_NAME, book.getName());
 			assertEquals(member, book.getMember());
 			assertNotEquals(Language.NONE, book.getLanguage());
 		}
@@ -606,7 +607,7 @@ class ExpressionBookServiceImplTest2 {
 
 		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
-		ExpressionBookRequest request = new ExpressionBookRequest("기본 표현함");
+		ExpressionBookRequest request = new ExpressionBookRequest(DEFAULT_EXPRESSION_BOOK_NAME);
 
 		// expect
 		ServiceException ex = assertThrows(ServiceException.class,
@@ -635,7 +636,7 @@ class ExpressionBookServiceImplTest2 {
 		idField.set(member, memberId);
 
 		ExpressionBook defaultBook = ExpressionBook.builder()
-			.name("기본 표현함")
+			.name(DEFAULT_EXPRESSION_BOOK_NAME)
 			.language(Language.ENGLISH)
 			.member(member)
 			.build();
