@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.global.config;
 
-import com.mallang.mallang_backend.global.config.oauth.CustomOAuth2SuccessHandler;
-import com.mallang.mallang_backend.global.config.oauth.service.CustomOAuth2Service;
+import com.mallang.mallang_backend.domain.member.oauth.CustomOAuth2SuccessHandler;
+import com.mallang.mallang_backend.domain.member.oauth.service.CustomOAuth2Service;
 import com.mallang.mallang_backend.global.filter.userfilter.AccessTokenFilter;
 import com.mallang.mallang_backend.global.filter.userfilter.RefreshTokenFilter;
 import lombok.RequiredArgsConstructor;

@@ -15,7 +15,7 @@ public enum ErrorCode {
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     NOT_CHANGED("400-9", "not.changed", HttpStatus.BAD_REQUEST),
     LANGUAGE_ALREADY_SET("410-9", "language.already.set", HttpStatus.CONFLICT),
-    CANNOT_SIGNUP_WITH_THIS_ID("409-2", "cannot.signup.with.this.id", HttpStatus.UNAUTHORIZED),
+    CANNOT_SIGNUP_WITH_THIS_ID("409-2", "cannot.signup.with.this.id", HttpStatus.CONFLICT),
     NICKNAME_GENERATION_FAILED("500-1", "nickname.generation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Token Errors
@@ -117,8 +117,7 @@ public enum ErrorCode {
     OAUTH_NETWORK_ERROR("500-1", "oauth.network.error", HttpStatus.INTERNAL_SERVER_ERROR),
     OAUTH_RATE_LIMIT("500-1", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
     PROFILE_NOT_FOUND("404-2", "profile.not.found", HttpStatus.NOT_FOUND),
-    INVALID_EMAIL_FORMAT("400-1", "invalid.email.format", HttpStatus.BAD_REQUEST),
-    EMAIL_ALREADY_REGISTERED("409-1", "email.already.registered", HttpStatus.CONFLICT),
+    OAUTH_LOGIN_FAILED("500-2", "oauth.login.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // file upload Errors
     FILE_UPLOAD_FAILED("500-7", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -154,6 +153,10 @@ public enum ErrorCode {
     MISSING_BILLING_KEY("404-6", "missing.billing.key", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATE("400-6", "invalid.payment.state", HttpStatus.BAD_REQUEST),
     ORDER_AMOUNT_MISMATCH("422-1", "order.amount.mismatch", HttpStatus.UNPROCESSABLE_ENTITY),
+    PAYMENT_PROCESSING_PREPARED_FAILED("500-5", "payment.processing.prepared.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_PROCESSING_RESULT_SAVED_FAILED("500-6", "payment.processing.result.saved.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    NOT_FOUND_MEMBER_GRANTED_INFO("404-7", "not.found.member.granted.info", HttpStatus.NOT_FOUND),
+    REDIS_CONNECTION_FAILED("500-7", "redis.connection.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 스케줄링 오류
     INVALID_CRON_EXPRESSION_EXCEPTION_CODE("400-7", "invalid.cron.expression", HttpStatus.BAD_REQUEST),

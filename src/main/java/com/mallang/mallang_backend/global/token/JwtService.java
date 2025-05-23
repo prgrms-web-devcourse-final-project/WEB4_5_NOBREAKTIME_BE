@@ -63,7 +63,7 @@ public class JwtService {
                                     HttpServletResponse response) {
 
         Cookie cookie = new Cookie(ACCESS_TOKEN, token);
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(true);      // 자바스크립트 접근 차단 (XSS 방지)
         cookie.setPath("/");           // 전체 사이트에서 접근 가능
         cookie.setSecure(true);        // HTTPS 통신 시에만 전송
         cookie.setAttribute("SameSite", "None"); // SameSite=None 속성 직접 추가
@@ -77,6 +77,7 @@ public class JwtService {
 
         Cookie cookie = new Cookie(REFRESH_TOKEN, token);
         cookie.setPath("/");                // 전체 사이트에서 접근 가능
+        cookie.setHttpOnly(true);
         cookie.setSecure(true);             // HTTPS 통신 시에만 전송
         cookie.setHttpOnly(true);           // 자바스크립트 접근 불가 (XSS 방지)
 

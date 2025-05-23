@@ -58,12 +58,12 @@ public class GptServiceImpl implements GptService {
 	public List<Word> searchWord(String word, Language language) {
 		String prompt;
 		if (language == ENGLISH) {
-			prompt = gptPromptBuilder.buildPromptforSearchWord(word);
+			prompt = gptPromptBuilder.buildPromptForSearchWord(word);
 			return removeInvalidWord(getGptWordResult(prompt, word));
 		}
 
 		if (language == JAPANESE) {
-			prompt = gptPromptBuilder.buildPromptforSearchWordJapanese(word);
+			prompt = gptPromptBuilder.buildPromptForSearchWordJapanese(word);
 			return removeInvalidWordJapanese(getGptWordResult(prompt, word));
 		}
 

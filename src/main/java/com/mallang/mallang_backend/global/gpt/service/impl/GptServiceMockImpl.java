@@ -41,7 +41,7 @@ public class GptServiceMockImpl implements GptService {
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
 	@Override
 	public List<Word> searchWord(String word, Language language)  {
-		String prompt = gptPromptBuilder.buildPromptforSearchWord(word);
+		String prompt = gptPromptBuilder.buildPromptForSearchWord(word);
 		OpenAiResponse response = callGptApiWordAnalyze(prompt);
 		validateResponse(response);
 		String gptResult = response.getChoices().get(0).getMessage().getContent();

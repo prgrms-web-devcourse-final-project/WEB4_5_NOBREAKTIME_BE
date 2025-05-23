@@ -28,4 +28,5 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(sentryUserInterceptor)
                 .addPathPatterns("/**");
     }
+
 }

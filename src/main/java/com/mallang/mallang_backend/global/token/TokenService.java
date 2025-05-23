@@ -84,6 +84,8 @@ public class TokenService {
         String key = REFRESH_TOKEN_PREFIX + memberId;
 
         redisTemplate.opsForValue().set(key, refreshToken, refreshExpiration, TimeUnit.MILLISECONDS);
+
+        // TODO 토큰값을 DB 에 저장하는 로직 추가, redis 에서 삭제 -> 이후 DB 반영
     }
 
     /**
