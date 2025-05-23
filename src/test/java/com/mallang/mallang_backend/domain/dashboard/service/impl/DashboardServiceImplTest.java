@@ -1,27 +1,6 @@
 package com.mallang.mallang_backend.domain.dashboard.service.impl;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import com.mallang.mallang_backend.domain.dashboard.dto.DailyGoal;
-import com.mallang.mallang_backend.domain.dashboard.dto.LearningHistoryResponse;
-import com.mallang.mallang_backend.domain.dashboard.dto.LevelStatus;
-import com.mallang.mallang_backend.domain.dashboard.dto.StatisticResponse;
+import com.mallang.mallang_backend.domain.dashboard.dto.*;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.expressionquiz.entity.ExpressionQuiz;
@@ -32,11 +11,35 @@ import com.mallang.mallang_backend.domain.quiz.wordquiz.entity.WordQuiz;
 import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizResult;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
+import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
+import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.service.GptService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.LEVEL_NOT_MEASURABLE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DashBoardServiceImplTest {
@@ -61,6 +64,12 @@ class DashBoardServiceImplTest {
 
 	@Mock
 	private WordbookItemRepository wordbookItemRepository;
+
+	@Mock
+	private WordRepository wordRepository;
+
+	@Mock
+	private GptService gptService;
 
 	@InjectMocks
 	private DashboardServiceImpl dashboardServiceImpl;
@@ -154,6 +163,71 @@ class DashBoardServiceImplTest {
 		assertEquals(1, response.getToday().getVideoCount());
 		assertEquals(0, response.getToday().getAddedWordCount());
 	}
+
+	@Test
+	@DisplayName("목표를 성공적으로 업데이트할 수 있다")
+	void updateGoal_success() {
+		Long memberId = 1L;
+		UpdateGoalRequest request = new UpdateGoalRequest(7, 10);
+
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+		dashboardServiceImpl.updateGoal(request, memberId);
+
+		verify(memberRepository).save(member);
+		assertEquals(7, member.getVideoGoal());
+		assertEquals(10, member.getWordGoal());
+	}
+
+	@Test
+	@DisplayName("레벨 측정 불가능한 경우 예외가 발생한다")
+	void checkLevel_notMeasurable() {
+		Long memberId = 1L;
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
+				.thenReturn(30);
+		when(expressionQuizResultRepository.countByExpressionQuiz_MemberAndCreatedAtAfter(eq(member), any()))
+				.thenReturn(20); // 총 50 < 100
+
+		ServiceException exception = assertThrows(ServiceException.class, () -> {
+			dashboardServiceImpl.checkLevel(memberId);
+		});
+
+		assertEquals(LEVEL_NOT_MEASURABLE, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("측정 가능한 경우 레벨 측정이 성공적으로 수행된다")
+	void checkLevel_success() {
+		Long memberId = 1L;
+		member.updateMeasuredAt(LocalDateTime.now().minusDays(7));
+
+		WordQuizResult wordResult = mock(WordQuizResult.class);
+		when(wordResult.getWordbookItem()).thenReturn(mock(WordbookItem.class));
+		when(wordResult.getWordbookItem().getWord()).thenReturn("apple");
+		when(wordResult.getIsCorrect()).thenReturn(true);
+
+		ExpressionQuizResult expressionResult = mock(ExpressionQuizResult.class);
+		when(expressionResult.getExpression()).thenReturn(mock(Expression.class));
+		when(expressionResult.getExpression().getSentence()).thenReturn("How are you?");
+		when(expressionResult.getIsCorrect()).thenReturn(false);
+
+		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any())).thenReturn(60);
+		when(expressionQuizResultRepository.countByExpressionQuiz_MemberAndCreatedAtAfter(eq(member), any())).thenReturn(50);
+		when(wordQuizResultRepository.findTop100ByWordQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(eq(member), any())).thenReturn(List.of(wordResult));
+		when(expressionQuizResultRepository.findTop100ByExpressionQuiz_MemberAndCreatedAtAfterOrderByCreatedAtDesc(eq(member), any())).thenReturn(List.of(expressionResult));
+		when(wordRepository.findFirstByWordOrderByIdAsc("apple")).thenReturn(Optional.of(
+				new Word("apple", "noun", "사과", Difficulty.EASY, "This is an apple.", "이것은 사과입니다.")));
+		when(gptService.checkLevel(anyString(), anyString(), anyString(), anyString())).thenReturn(new LevelCheckResponse("C", "C"));
+
+		LevelCheckResponse response = dashboardServiceImpl.checkLevel(memberId);
+		assertNotNull(response);
+		assertEquals("C", response.getWordLevel());
+		assertEquals("C", response.getExpressionLevel());
+	}
+
+
 
 	private WordQuiz createWordQuiz(LocalDate date, long timeInSec) {
 		WordQuiz quiz = WordQuiz.builder()

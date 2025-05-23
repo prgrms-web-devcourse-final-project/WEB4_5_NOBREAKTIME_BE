@@ -25,11 +25,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
 import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.STANDARD;
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
@@ -96,6 +98,7 @@ class WordbookServiceImplTest {
         // Word
         savedWord = Word.builder()
                 .word("apple")
+                .difficulty(Difficulty.EASY)
                 .build();
         setId(savedWord, 200L);
     }
@@ -142,6 +145,82 @@ class WordbookServiceImplTest {
 
         then(wordbookItemRepository).should().save(any(WordbookItem.class));
     }
+
+    @Test
+    @DisplayName("추가 단어장에 단어 추가 실패 - 스탠다드 미만 회원")
+    void addWords_noPermission() {
+        Member basicMember = Member.builder().language(Language.ENGLISH).build();
+        basicMember.updateSubscription(BASIC);
+        setId(basicMember, 1L);
+
+        Wordbook additionalWordbook = Wordbook.builder().name("추가 단어장").member(basicMember).build();
+        setId(additionalWordbook, 2L);
+
+        AddWordToWordbookRequest dto = new AddWordToWordbookRequest();
+        dto.setWord("apple");
+        AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
+        request.setWords(List.of(dto));
+
+        given(wordbookRepository.findByIdAndMemberId(2L, 1L)).willReturn(Optional.of(additionalWordbook));
+        given(memberRepository.findById(1L)).willReturn(Optional.of(basicMember));
+
+        ServiceException ex = assertThrows(ServiceException.class, () ->
+                wordbookService.addWords(2L, request, 1L));
+
+        assertThat(ex.getMessageCode()).isEqualTo(NO_PERMISSION.getMessageCode());
+    }
+
+    @Test
+    @DisplayName("추가 단어장에 단어 추가 실패 - 언어 불일치")
+    void addWords_languageMismatch() {
+        Member member = Member.builder().language(Language.ENGLISH).build();
+        member.updateSubscription(STANDARD);
+        setId(member, 1L);
+
+        Wordbook wordbook = Wordbook.builder().name("추가 단어장").member(member).build();
+        setId(wordbook, 2L);
+
+        AddWordToWordbookRequest dto = new AddWordToWordbookRequest();
+        dto.setWord("한글단어"); // 영어 설정인데 한글 단어 추가
+        AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
+        request.setWords(List.of(dto));
+
+        given(wordbookRepository.findByIdAndMemberId(2L, 1L)).willReturn(Optional.of(wordbook));
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        ServiceException ex = assertThrows(ServiceException.class, () ->
+                wordbookService.addWords(2L, request, 1L));
+
+        assertThat(ex.getMessageCode()).isEqualTo(LANGUAGE_MISMATCH.getMessageCode());
+    }
+
+    @Test
+    @DisplayName("단어 저장 중 중복 에러 발생시 예외 던짐")
+    void addWordCustom_duplicateKeyError() {
+        Member member = Member.builder().language(Language.ENGLISH).build();
+        member.updateSubscription(STANDARD);
+        setId(member, 1L);
+
+        Wordbook wordbook = Wordbook.builder().name("추가 단어장").member(member).build();
+        setId(wordbook, 2L);
+
+        AddWordRequest request = new AddWordRequest();
+        request.setWord("apple");
+
+        Word word = Word.builder().word("apple").build();
+        setId(word, 10L);
+
+        given(wordbookRepository.findByIdAndMemberId(2L, 1L)).willReturn(Optional.of(wordbook));
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+        given(wordRepository.findByWord("apple")).willReturn(List.of(word));
+        given(wordbookItemRepository.findByWordbookIdAndWord(2L, "apple")).willReturn(Optional.empty());
+        willThrow(DataIntegrityViolationException.class).given(wordbookItemRepository).save(any());
+
+        wordbookService.addWordCustom(2L, request, 1L);
+
+        then(wordbookItemRepository).should().save(any());
+    }
+
 
     @Nested
     @DisplayName("추가 단어장 생성")
@@ -202,6 +281,25 @@ class WordbookServiceImplTest {
             );
 
             assertThat(exception.getMessageCode()).isEqualTo(LANGUAGE_IS_NONE.getMessageCode());
+        }
+
+        @Test
+        @DisplayName("단어장 생성 실패 - 단어장 이름 중복")
+        void createWordbook_duplicateName() {
+            Member member = Member.builder().language(Language.ENGLISH).build();
+            member.updateSubscription(STANDARD);
+            setId(member, 1L);
+
+            WordbookCreateRequest request = new WordbookCreateRequest();
+            request.setName("My Book");
+
+            given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+            given(wordbookRepository.existsByMemberAndName(member, "My Book")).willReturn(true);
+
+            ServiceException ex = assertThrows(ServiceException.class, () ->
+                    wordbookService.createWordbook(request, 1L));
+
+            assertThat(ex.getMessageCode()).isEqualTo(DUPLICATE_WORDBOOK_NAME.getMessageCode());
         }
     }
 
@@ -593,6 +691,75 @@ class WordbookServiceImplTest {
 
             assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
         }
+
+        @Test
+        @DisplayName("단어장 단어 다건 삭제 성공")
+        void deleteWords_bulkSuccess() {
+            Wordbook wordbook = Wordbook.builder()
+                    .name(DEFAULT_WORDBOOK_NAME)
+                    .language(Language.ENGLISH)
+                    .member(savedMember)
+                    .build();
+            setId(wordbook, 1L);
+
+            WordbookItem item1 = WordbookItem.builder()
+                    .wordbook(wordbook)
+                    .word("apple")
+                    .build();
+            setId(item1, 100L);
+
+            WordbookItem item2 = WordbookItem.builder()
+                    .wordbook(wordbook)
+                    .word("banana")
+                    .build();
+            setId(item2, 101L);
+
+            WordDeleteRequest request = new WordDeleteRequest();
+            WordDeleteItem word1 = new WordDeleteItem();
+            word1.setWordbookId(1L);
+            word1.setWord("apple");
+            WordDeleteItem word2 = new WordDeleteItem();
+            word2.setWordbookId(1L);
+            word2.setWord("banana");
+            request.setWords(List.of(word1, word2));
+
+            given(memberRepository.findById(savedMember.getId())).willReturn(Optional.of(savedMember));
+            given(wordbookRepository.findByIdAndMemberId(1L, 1L)).willReturn(Optional.of(wordbook));
+            given(wordbookItemRepository.findByWordbookAndWord(wordbook, "apple")).willReturn(Optional.of(item1));
+            given(wordbookItemRepository.findByWordbookAndWord(wordbook, "banana")).willReturn(Optional.of(item2));
+
+            wordbookService.deleteWords(request, savedMember.getId());
+
+            then(wordbookItemRepository).should().delete(item1);
+            then(wordbookItemRepository).should().delete(item2);
+        }
+
+        @Test
+        @DisplayName("단어장 단어 삭제 실패 - 단어 없음")
+        void deleteWords_wordNotFound_singleFailure() {
+            Wordbook wordbook = Wordbook.builder()
+                    .name(DEFAULT_WORDBOOK_NAME)
+                    .language(Language.ENGLISH)
+                    .member(savedMember)
+                    .build();
+            setId(wordbook, 1L);
+
+            WordDeleteRequest request = new WordDeleteRequest();
+            WordDeleteItem unknown = new WordDeleteItem();
+            unknown.setWordbookId(1L);
+            unknown.setWord("unknown");
+            request.setWords(List.of(unknown));
+
+            given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+            given(wordbookRepository.findByIdAndMemberId(1L, 1L)).willReturn(Optional.of(wordbook));
+            given(wordbookItemRepository.findByWordbookAndWord(wordbook, "unknown")).willReturn(Optional.empty());
+
+            ServiceException exception = assertThrows(ServiceException.class, () ->
+                    wordbookService.deleteWords(request, 1L)
+            );
+
+            assertThat(exception.getMessageCode()).isEqualTo(WORDBOOK_ITEM_NOT_FOUND.getMessageCode());
+        }
     }
 
     @Nested
@@ -755,4 +922,187 @@ class WordbookServiceImplTest {
         assertThat(result.get(0).getName()).isEqualTo("My First Book");
         assertThat(result.get(1).getName()).isEqualTo("TOEIC Book");
     }
+
+    @Test
+    @DisplayName("단어장 목록 조회 - 스탠다드 미만 회원은 기본 단어장만")
+    void getWordbooks_basicUserOnlyDefault() {
+        Member member = Member.builder().language(Language.ENGLISH).build();
+        member.updateSubscription(BASIC);
+        setId(member, 1L);
+
+        Wordbook defaultBook = Wordbook.builder().name(DEFAULT_WORDBOOK_NAME).member(member).language(Language.ENGLISH).build();
+        setId(defaultBook, 1L);
+
+        Wordbook extraBook = Wordbook.builder().name("추가 단어장").member(member).language(Language.ENGLISH).build();
+        setId(extraBook, 2L);
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+        given(wordbookRepository.findAllByMemberIdAndLanguage(1L, Language.ENGLISH)).willReturn(List.of(defaultBook, extraBook));
+
+        List<WordbookResponse> result = wordbookService.getWordbooks(1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo(DEFAULT_WORDBOOK_NAME);
+    }
+
+    @Test
+    @DisplayName("기본 단어장 - 단어장 ID가 null인 경우")
+    void getWordbookItems_defaultWordbook() {
+        WordbookItem item = WordbookItem.builder()
+                .wordbook(savedDefaultWordBook)
+                .word("apple")
+                .subtitleId(1L)
+                .videoId("v1")
+                .build();
+        setId(item, 101L);
+
+        Subtitle subtitle = Subtitle.builder()
+                .originalSentence("original")
+                .translatedSentence("translated")
+                .build();
+        setId(subtitle, 1L);
+
+        Videos video = Videos.builder()
+                .id("v1")
+                .videoTitle("title")
+                .language(Language.ENGLISH)
+                .build();
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+        given(wordbookRepository.findByMemberAndNameAndLanguage(savedMember, DEFAULT_WORDBOOK_NAME, Language.ENGLISH)).willReturn(Optional.of(savedDefaultWordBook));
+        given(wordbookItemRepository.findAllByWordbookOrderByCreatedAtDesc(savedDefaultWordBook)).willReturn(List.of(item));
+        given(wordRepository.findByWordIn(List.of("apple"))).willReturn(List.of(savedWord));
+        given(subtitleRepository.findByIdIn(List.of(1L))).willReturn(List.of(subtitle));
+        given(videoRepository.findByIdIn(List.of("v1"))).willReturn(List.of(video));
+
+        List<WordResponse> result = wordbookService.getWordbookItems(null, 1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getWord()).isEqualTo("apple");
+    }
+
+    @Test
+    @DisplayName("다중 단어장 - 일부 접근 불가 단어장 존재")
+    void getWordbookItems_multipleWordbooks_withInvalidOwnership() {
+        Wordbook ownedBook = Wordbook.builder().member(savedMember).build();
+        setId(ownedBook, 1L);
+
+        Member otherMember = Member.builder().language(Language.ENGLISH).build();
+        setId(otherMember, 99L);
+
+        Wordbook forbiddenBook = Wordbook.builder().member(otherMember).build();
+        setId(forbiddenBook, 2L);
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+        given(wordbookRepository.findAllById(List.of(1L, 2L))).willReturn(List.of(ownedBook, forbiddenBook));
+
+        ServiceException ex = assertThrows(ServiceException.class, () ->
+                wordbookService.getWordbookItems(List.of(1L, 2L), 1L));
+
+        assertThat(ex.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 단어장 ID 요청 시 예외")
+    void getWordbookItems_validateWordbookIdsExist_fail() {
+        // given
+        setId(savedWordbook, 1L); // 존재하는 단어장
+        List<Long> requestedIds = List.of(1L, 2L); // 2L은 존재하지 않음
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+        given(wordbookRepository.findAllById(requestedIds)).willReturn(List.of(savedWordbook)); // 2L은 없음
+
+        // when & then
+        ServiceException ex = assertThrows(ServiceException.class, () ->
+                wordbookService.getWordbookItems(requestedIds, 1L));
+
+        assertThat(ex.getMessageCode()).isEqualTo(NO_WORDBOOK_EXIST_OR_FORBIDDEN.getMessageCode());
+    }
+
+    @Test
+    @DisplayName("정상 단일 단어장 조회")
+    void getWordbookItems_singleWordbook_success() {
+        Wordbook book = Wordbook.builder()
+                .member(savedMember)
+                .build();
+        setId(book, 10L);
+
+        WordbookItem item = WordbookItem.builder()
+                .wordbook(book)
+                .word("apple")
+                .subtitleId(1L)
+                .videoId("v1")
+                .build();
+        setId(item, 101L);
+
+        Subtitle subtitle = Subtitle.builder()
+                .originalSentence("original")
+                .translatedSentence("translated")
+                .build();
+        setId(subtitle, 1L);
+
+        Videos video = Videos.builder()
+                .id("v1")
+                .videoTitle("title")
+                .language(Language.ENGLISH)
+                .build();
+
+        // 필수 mock: validateWordbookIdsExist() 내부에서 호출됨
+        given(wordbookRepository.findAllById(List.of(10L))).willReturn(List.of(book));
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+        given(wordbookRepository.findById(10L)).willReturn(Optional.of(book));
+        given(wordbookItemRepository.findAllByWordbookOrderByCreatedAtDesc(book)).willReturn(List.of(item));
+        given(wordRepository.findByWordIn(List.of("apple"))).willReturn(List.of(savedWord));
+        given(subtitleRepository.findByIdIn(List.of(1L))).willReturn(List.of(subtitle));
+        given(videoRepository.findByIdIn(List.of("v1"))).willReturn(List.of(video));
+
+        List<WordResponse> result = wordbookService.getWordbookItems(List.of(10L), 1L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getWord()).isEqualTo("apple");
+    }
+
+    @Test
+    @DisplayName("다중 단어장 - 정상 조회")
+    void getWordbookItems_multipleWordbooks_success() {
+        Wordbook book1 = Wordbook.builder().member(savedMember).build();
+        Wordbook book2 = Wordbook.builder().member(savedMember).build();
+        setId(book1, 1L);
+        setId(book2, 2L);
+
+        WordbookItem item1 = WordbookItem.builder().wordbook(book1).word("apple").subtitleId(101L).videoId("v1").build();
+        WordbookItem item2 = WordbookItem.builder().wordbook(book2).word("banana").subtitleId(102L).videoId("v2").build();
+        setId(item1, 101L);
+        setId(item2, 102L);
+
+        setField(item1, "createdAt", java.time.LocalDateTime.now().minusDays(1));
+        setField(item2, "createdAt", java.time.LocalDateTime.now());
+
+        Word word1 = Word.builder().word("apple").difficulty(Difficulty.EASY).build();
+        Word word2 = Word.builder().word("banana").difficulty(Difficulty.NORMAL).build();
+
+        Subtitle subtitle1 = Subtitle.builder().originalSentence("s1").translatedSentence("t1").build();
+        Subtitle subtitle2 = Subtitle.builder().originalSentence("s2").translatedSentence("t2").build();
+        setId(subtitle1, 101L);
+        setId(subtitle2, 102L);
+
+        Videos video1 = Videos.builder().id("v1").videoTitle("video1").language(Language.ENGLISH).build();
+        Videos video2 = Videos.builder().id("v2").videoTitle("video2").language(Language.ENGLISH).build();
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(savedMember));
+        given(wordbookRepository.findAllById(List.of(1L, 2L))).willReturn(List.of(book1, book2));
+        given(wordbookItemRepository.findAllByWordbookIdInOrderByCreatedAtDesc(List.of(1L, 2L)))
+                .willReturn(List.of(item1, item2));
+        given(wordRepository.findByWordIn(List.of("apple", "banana"))).willReturn(List.of(word1, word2));
+        given(subtitleRepository.findByIdIn(List.of(101L, 102L))).willReturn(List.of(subtitle1, subtitle2));
+        given(videoRepository.findByIdIn(List.of("v1", "v2"))).willReturn(List.of(video1, video2));
+
+        List<WordResponse> result = wordbookService.getWordbookItems(List.of(1L, 2L), 1L);
+
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting("word").containsExactlyInAnyOrder("apple", "banana");
+    }
+
+
 }
