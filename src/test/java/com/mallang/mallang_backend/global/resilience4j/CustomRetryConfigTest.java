@@ -38,7 +38,7 @@ class CustomRetryConfigTest {
 	}
 
 	@Test
-	@DisplayName("retryTestMethod: 최대 5번 호출되고 마지막에 ServiceException")
+	@DisplayName("retryTestMethod: 무시된 예외는 재시도 하지 않음")
 	void retryTestMethod_retriesUpToMaxAttempts() {
 
 		ServiceException ex = assertThrows(ServiceException.class, () ->
@@ -46,8 +46,8 @@ class CustomRetryConfigTest {
 		);
 		assertNotNull(ex);
 
-		assertEquals(5, testService.getRetryCounter(),
-			"retryTestMethod 는 max-attempts(5) 만큼 호출되어야 합니다");
+		assertEquals(1, testService.getRetryCounter(),
+			"retryTestMethod 는 max-attempts(1) 만큼 호출되어야 합니다 -> 최초 호출");
 	}
 
 	@Test

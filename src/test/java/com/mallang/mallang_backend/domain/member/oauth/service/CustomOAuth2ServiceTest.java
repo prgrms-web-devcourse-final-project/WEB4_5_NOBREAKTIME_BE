@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 class CustomOAuth2ServiceTest {
 
     @MockitoSpyBean
-    CustomOAuth2Service customOAuth2Service;
+    ExternalOAuth2UserService externalService;
 
     /**
      * CircuitBreaker → Retry → (실제 메서드 실행)
@@ -37,18 +37,18 @@ class CustomOAuth2ServiceTest {
     void t1(CapturedOutput out) throws Exception {
         //given
         Mockito.doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "테스트 용도 에러"))
-                .when(customOAuth2Service)
+                .when(externalService)
                 .loadUser(any(OAuth2UserRequest.class));
 
         //when
         OAuth2UserRequest fakeRequest = Mockito.mock(OAuth2UserRequest.class);
 
         //then 실제 호출: 예외 발생
-        assertThatThrownBy(() -> customOAuth2Service.loadUser(fakeRequest))
-                .isInstanceOf(RetryableException.class); // 위와 같은 예외는 재시도 로직에서 실행하는 예외임
+        assertThatThrownBy(() -> externalService.loadUser(fakeRequest))
+                .isInstanceOf(RetryableException.class); // 위와 같은 예외는 서킷 브레이커가 변경해서 던져줄 것
 
-        assertThat(out.getOut()).contains("[oauthUserLoginService] CircuitBreaker 에러 발생")
-                .contains("[Retry][oauthUserLoginService][txId=N/A] 1번째 시도 실패 - 예외: RetryableException (500 테스트 용도 에러) - 다음 시도 대기시간: 500ms")
-                .contains("[Fallback][oauthUserLoginService][txId=N/A] 5번 시도 후 최종 실패 - 발생 예외 목록:");
+        assertThat(out.getOut()).contains("[서킷 브레이커] OAuth2 로그인 실패 - 소셜 서버 내부 오류(5xx)")
+                .contains("[oauthUserLoginService][txId=N/A] 1번째 시도 실패 - 예외: RetryableException (500 테스트 용도 에러) - 다음 시도 대기시간: 500ms")
+                .contains("[oauthUserLoginService][txId=N/A] 5번 시도 후 최종 실패 - 발생 예외 목록:");
     }
 }
