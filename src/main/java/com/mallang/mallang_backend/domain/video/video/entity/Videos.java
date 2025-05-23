@@ -1,16 +1,24 @@
 package com.mallang.mallang_backend.domain.video.video.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.entity.BaseTime;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
@@ -34,6 +42,9 @@ public class Videos extends BaseTime {
     @Column(nullable = false)
     private Language language;
 
+    @Column(nullable = false)
+    private String duration;
+
     @OneToMany(mappedBy = "videos", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Subtitle> subtitles = new ArrayList<>();
 
@@ -43,13 +54,15 @@ public class Videos extends BaseTime {
         String videoTitle,
         String thumbnailImageUrl,
         String channelTitle,
-        Language language
+        Language language,
+        String duration
     ) {
         this.id = id;
         this.videoTitle = videoTitle;
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;
         this.language = language;
+        this.duration = duration;
     }
 
     /**
