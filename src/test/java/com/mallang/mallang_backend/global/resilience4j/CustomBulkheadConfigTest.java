@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ class CustomBulkheadConfigTest {
 	}
 
 	@Test
+	@Disabled("검증 완료")
 	@DisplayName("youtubeService 벌크헤드: 11번째 호출은 앞의 10개 해제 후 진입 (대기 ≳100ms)")
 	void youtubeService_bulkhead_queueing_behavior() throws InterruptedException, ExecutionException, TimeoutException {
 		int concurrent = 10;

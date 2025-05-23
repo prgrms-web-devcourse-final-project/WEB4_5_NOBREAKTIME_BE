@@ -42,7 +42,7 @@ public class VideoCacheRetryService {
 	 * 재시도 전부 실패했을 때 호출
 	 */
 	private CachedVideos fallbackGetCachedVideos(String key, Throwable t) {
-		log.error("[videoCacheRetry] 캐시 조회 실패 key={}", key, t);
+		log.error("[videoCacheRetry] 캐시 조회 실패 key={} errorMessage={}", key, t.getMessage(), t);
 		return new CachedVideos(0, List.of());
 	}
 }

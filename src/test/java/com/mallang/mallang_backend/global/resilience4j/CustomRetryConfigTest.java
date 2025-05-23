@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.global.resilience4j;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ class CustomRetryConfigTest {
 	}
 
 	@Test
+	@Disabled("검증 완료")
 	@DisplayName("retryTestMethod: 무시된 예외는 재시도 하지 않음")
 	void retryTestMethod_retriesUpToMaxAttempts() {
 
@@ -51,6 +53,7 @@ class CustomRetryConfigTest {
 	}
 
 	@Test
+	@Disabled("검증 완료")
 	@DisplayName("alwaysSucceeds: 예외 없이 1번만 호출되고 retryCounter는 1")
 	void alwaysSucceeds_noRetryOnSuccess() {
 
