@@ -1,5 +1,18 @@
 package com.mallang.mallang_backend.domain.bookmark.controller;
 
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.mallang.mallang_backend.domain.bookmark.service.BookmarkService;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
@@ -7,18 +20,12 @@ import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Tag(name = "Bookmark", description = "영상 북마크 관련 API")
 @RestController
@@ -104,7 +111,7 @@ public class BookmarkController {
                         "200",
                         "북마크 목록 조회 성공",
                         bookmarks.stream()
-                                .map(video -> VideoResponse.from(video, true))
+                                .map(video -> VideoResponse.from(video, true, video.getDuration()))
                                 .toList()
                 ));
     }

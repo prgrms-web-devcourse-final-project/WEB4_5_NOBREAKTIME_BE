@@ -90,7 +90,7 @@ class VideoControllerTest {
 	void testGetVideoList() throws Exception {
 		// given
 		Videos v = VideoTestFactory.create("vid2", "제목2", Language.ENGLISH);
-		VideoResponse resp = VideoResponse.from(v, true);
+		VideoResponse resp = VideoResponse.from(v, true, "P10M");
 		given(videoService.getVideosForMember(
 			anyString(),           // q
 			anyString(),           // categoryId

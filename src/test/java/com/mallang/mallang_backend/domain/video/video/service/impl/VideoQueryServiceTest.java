@@ -33,9 +33,9 @@ class VideoQueryServiceTest {
 	@Test
 	@DisplayName("queryVideos: 리스트 셔플 및 maxResults 제한 확인")
 	void queryVideos_shufflesAndLimitsSize() throws IOException {
-		VideoResponse a = new VideoResponse("A", "t", "d", "u", false);
-		VideoResponse b = new VideoResponse("B", "t", "d", "u", false);
-		VideoResponse c = new VideoResponse("C", "t", "d", "u", false);
+		VideoResponse a = new VideoResponse("A", "t", "d", "u", false, "P10M");
+		VideoResponse b = new VideoResponse("B", "t", "d", "u", false, "P10M");
+		VideoResponse c = new VideoResponse("C", "t", "d", "u", false, "P10M");
 		when(cacheService.getFullVideoList("", "", "", 2L))
 			.thenReturn(List.of(a, b, c));
 

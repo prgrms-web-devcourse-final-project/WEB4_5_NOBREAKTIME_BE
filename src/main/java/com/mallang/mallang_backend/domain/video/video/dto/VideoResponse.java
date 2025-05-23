@@ -16,14 +16,16 @@ public class VideoResponse {
     private String description;
     private String thumbnailUrl;
     private boolean isBookmarked;
+    private String duration;
 
-    public static VideoResponse from(Videos video, boolean isBookmarked) {
+    public static VideoResponse from(Videos video, boolean isBookmarked, String duration) {
         return new VideoResponse(
                 video.getId(),
                 video.getVideoTitle(),
                 "", // 필요 시 채널 설명
                 video.getThumbnailImageUrl(),
-                isBookmarked
+                isBookmarked,
+                duration
         );
     }
 }
