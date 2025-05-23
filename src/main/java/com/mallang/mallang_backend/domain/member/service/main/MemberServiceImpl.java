@@ -3,16 +3,13 @@ package com.mallang.mallang_backend.domain.member.service.main;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.profile.MemberProfileService;
 import com.mallang.mallang_backend.domain.member.service.valid.MemberValidationService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
-import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
@@ -23,9 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
-import static com.mallang.mallang_backend.global.common.Language.NONE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 /**
@@ -73,11 +67,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public boolean existsByPlatformId(String platformId) {
-        return validationService.existsByPlatformId(platformId);
-    }
-
-    @Override
     @Transactional
     public void withdrawMember(Long memberId) {
         withdrawalService.withdrawMember(memberId);
@@ -105,35 +94,6 @@ public class MemberServiceImpl implements MemberService {
     public Member getMemberByPlatformId(String platformId) {
         return memberRepository.findByPlatformId(platformId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-    // 소셜 로그인 회원 멤버 가입
-    @Transactional
-    public Long signupByOauth(String platformId,
-                              String email,
-                              String nickname,
-                              String profileImage,
-                              LoginPlatform loginPlatform) {
-
-        Member member = Member.builder()
-                .platformId(platformId) // null 불가능
-                .email(email) // null 가능
-                .nickname(nickname)
-                .loginPlatform(loginPlatform)
-                .language(NONE)
-                .profileImageUrl(profileImage).build();
-
-        Member savedMember = memberRepository.save(member);
-
-        // 회원가입 시 언어별 기본 단어장 생성
-        List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
-        wordbookRepository.saveAll(defaultWordbooks);
-
-        // 회원가입 시 언어별 기본 표현함 생성
-        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
-        expressionBookRepository.saveAll(defaultBooks);
-
-        return savedMember.getId();
     }
 
     /**

@@ -4,16 +4,11 @@ package com.mallang.mallang_backend.domain.member.service.main;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberService {
-
-    boolean existsByPlatformId(String platformId);
-
-    Long signupByOauth(String platformId, String email, String nickname, String profileImage, LoginPlatform loginPlatform);
 
     Member getMemberByPlatformId (String platformId);
 

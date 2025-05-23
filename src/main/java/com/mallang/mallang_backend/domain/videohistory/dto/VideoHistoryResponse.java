@@ -18,6 +18,7 @@ public class VideoHistoryResponse {
     private String title;
     private String thumbnailUrl;
     private LocalDateTime lastViewedAt;
+    private String duration;
 
     public static VideoHistoryResponse from(VideoHistory history) {
         Videos video = history.getVideos();
@@ -25,7 +26,8 @@ public class VideoHistoryResponse {
             video.getId(),
             video.getVideoTitle(),
             video.getThumbnailImageUrl(),
-            history.getLastViewedAt()
+            history.getLastViewedAt(),
+            video.getDuration()
         );
     }
 }

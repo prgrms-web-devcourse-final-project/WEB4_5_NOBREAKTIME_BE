@@ -90,11 +90,10 @@ public class Payment {
         this.payStatus = PayStatus.DONE;
     }
 
-    public void updateFailInfo(String reason
-    ) {
+    public void updateFailureInfo(String reason) {
         this.failureReason = reason;
+        this.payStatus = PayStatus.FAILED;
     }
-
 
     public void updateStatus(PayStatus status) {
         this.payStatus = status;

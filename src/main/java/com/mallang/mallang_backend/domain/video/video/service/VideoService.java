@@ -8,19 +8,19 @@ import java.util.List;
 import java.util.Set;
 
 public interface VideoService {
-	List<VideoResponse> getVideosByLanguage(
-			String q,
-			String category,
-			String language,
-			long maxResults,
-			Set<String> bookmarkedIds
-	);
+    List<VideoResponse> getVideosByLanguage(
+        String q,
+        String category,
+        String language,
+        long maxResults,
+		Set<String> bookmarkedIds
+    );
 
 	List<VideoResponse> getVideosForMember(
-			String q,
-			String category,
-			long maxResults,
-			Long memberId
+		String q,
+		String category,
+		long maxResults,
+		Long memberId
 	);
 
 	/**

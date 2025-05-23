@@ -30,7 +30,8 @@ public class VideoCacheClient {
 	 */
 	@Cacheable(
 		cacheNames = "videoListCache",
-		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)"
+		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)",
+		unless = "#result != null && #result.responses.isEmpty()"
 	)
 	public CachedVideos loadCached(
 		String q, String category, String language, long fetchSize

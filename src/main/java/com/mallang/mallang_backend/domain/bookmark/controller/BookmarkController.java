@@ -104,7 +104,7 @@ public class BookmarkController {
                         "200",
                         "북마크 목록 조회 성공",
                         bookmarks.stream()
-                                .map(video -> VideoResponse.from(video, true))
+                                .map(video -> VideoResponse.from(video, true, video.getDuration()))
                                 .toList()
                 ));
     }

@@ -9,8 +9,7 @@ public interface PaymentConfirmService {
     PaymentResponse sendApproveRequest(PaymentApproveRequest request);
 
     // 결제 응답을 DB에 저장
-    void processPaymentResult(String orderId,
-                              PaymentResponse result);
+    void processPaymentResult(PaymentResponse result);
 
     //  자동 결제 프로세스
     void processAutoBillingPaymentResult(BillingPaymentResponse response);

@@ -39,15 +39,4 @@ public class MemberValidationServiceImpl implements MemberValidationService {
     public boolean isNicknameAvailable(String nickname) {
         return !memberRepository.existsByNickname(nickname);
     }
-
-    /**
-     * 플랫폼 ID로 회원 존재 여부를 확인합니다.
-     *
-     * @param platformId 확인할 플랫폼 ID
-     * @return 회원이 존재할 경우 true, 존재하지 않을 경우 false
-     */
-    @Override
-    public boolean existsByPlatformId(String platformId) {
-        return memberRepository.findByPlatformId(platformId).isPresent();
-    }
 }

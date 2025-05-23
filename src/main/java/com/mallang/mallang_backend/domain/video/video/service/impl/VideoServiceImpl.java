@@ -121,7 +121,7 @@ public class VideoServiceImpl implements VideoService {
 		Language lang = Language.fromCode(ytVideo.getSnippet().getDefaultAudioLanguage());
 
 		// 응답 DTO 생성
-		return new VideoDetail(ytVideo.getId(), ytVideo.getSnippet().getTitle(), ytVideo.getSnippet().getDescription(), ytVideo.getSnippet().getThumbnails().getMedium().getUrl(), ytVideo.getSnippet().getChannelTitle(), lang);
+		return new VideoDetail(ytVideo.getId(), ytVideo.getSnippet().getTitle(), ytVideo.getSnippet().getDescription(), ytVideo.getSnippet().getThumbnails().getMedium().getUrl(), ytVideo.getSnippet().getChannelTitle(), lang, ytVideo.getContentDetails().getDuration());
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class VideoServiceImpl implements VideoService {
 		// DB에 해당 ID가 이미 있으면 필드 업데이트
 		if (videoRepository.existsById(id)) {
 			Videos existing = videoRepository.getReferenceById(id);
-			existing.updateTitleAndThumbnail(dto.getTitle(), dto.getThumbnailUrl(), dto.getChannelTitle(), dto.getLanguage());
+			existing.updateTitleAndThumbnail(dto.getTitle(), dto.getThumbnailUrl(), dto.getChannelTitle(), dto.getLanguage(), dto.getDuration());
 			return existing;
 		} else {
 			// 없으면 새로 저장

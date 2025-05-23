@@ -34,6 +34,9 @@ public class Videos extends BaseTime {
     @Column(nullable = false)
     private Language language;
 
+    @Column(nullable = false)
+    private String duration;
+
     @OneToMany(mappedBy = "videos", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Subtitle> subtitles = new ArrayList<>();
 
@@ -43,13 +46,15 @@ public class Videos extends BaseTime {
         String videoTitle,
         String thumbnailImageUrl,
         String channelTitle,
-        Language language
+        Language language,
+        String duration
     ) {
         this.id = id;
         this.videoTitle = videoTitle;
         this.thumbnailImageUrl = thumbnailImageUrl;
         this.channelTitle = channelTitle;
         this.language = language;
+        this.duration = duration;
     }
 
     /**
@@ -59,11 +64,13 @@ public class Videos extends BaseTime {
         String newTitle,
         String newThumbnailUrl,
         String newChannelTitle,
-        Language newLanguage
+        Language newLanguage,
+        String newDuration
     ) {
         this.videoTitle = newTitle;
         this.thumbnailImageUrl = newThumbnailUrl;
         this.channelTitle = newChannelTitle;
         this.language = newLanguage;
+        this.duration = newDuration;
     }
 }

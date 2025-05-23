@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.domain.payment.quartz.listener;
 
-import com.mallang.mallang_backend.domain.payment.quartz.job.SubscriptionExpireJob.JobDataUtils;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.slack.SlackNotifier;
+import com.mallang.mallang_backend.global.util.job.JobDataUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Value;

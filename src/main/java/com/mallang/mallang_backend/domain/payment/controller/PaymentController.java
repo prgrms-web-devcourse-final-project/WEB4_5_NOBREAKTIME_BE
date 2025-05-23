@@ -7,6 +7,8 @@ import com.mallang.mallang_backend.domain.payment.dto.request.BillingPaymentRequ
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleRequest;
 import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
+import com.mallang.mallang_backend.domain.payment.service.process.PaymentFacade;
+import com.mallang.mallang_backend.domain.payment.service.process.complete.CompletePayServiceImpl.MemberGrantedInfo;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
@@ -33,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.mallang.mallang_backend.domain.payment.service.common.PaymentService.MemberGrantedInfo;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
@@ -44,6 +45,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentFacade paymentFacade;
     private final JwtService jwtService;
     private final TokenService tokenService;
 
@@ -81,10 +83,10 @@ public class PaymentController {
             HttpServletResponse response
     ) {
 
-        MemberGrantedInfo grantedInfo = paymentService.processPaymentAndUpdateSubscription(request);
+        MemberGrantedInfo grantedInfo = paymentFacade.executePayment(request);
 
         Long memberId = grantedInfo.memberId();
-        String roleName = grantedInfo.roleName();
+        String roleName = grantedInfo.type().getRoleName();
 
         setSecurityContext(memberId, roleName);
         setJwtToken(response, memberId, roleName);
@@ -193,17 +195,19 @@ public class PaymentController {
     }
 
     /**
-     * jwt 토큰을 헤더, 쿠키에 저장하는 메서드
+     * JWT 토큰 쌍을 생성하고 HTTP 응답에 쿠키로 설정합니다.
+     * <p>
+     * 액세스 토큰은 세션 쿠키로, 리프레시 토큰은 영속 쿠키로 설정됩니다.
      *
-     * @param response 응답에 저장하기 위한 파라미터
-     * @param memberId member 고유 값
-     * @param roleName 구독에서 가져온 구독별 권한 설정 값
+     * @param response HTTP 응답 객체
+     * @param memberId 토큰 발급 대상 회원 식별자
+     * @param roleName 권한 정보 (토큰 클레임에 포함)
      */
     private void setJwtToken(HttpServletResponse response,
                              Long memberId,
                              String roleName) {
 
-        // 1. 토큰 생성 및 redis 저장
+        // 1. 토큰 생성
         TokenPair tokenPair = tokenService.createTokenPair(memberId, roleName);
 
         // 2. 액세스 토큰 쿠키에 설정

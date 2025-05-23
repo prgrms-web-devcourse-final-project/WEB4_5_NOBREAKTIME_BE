@@ -18,6 +18,7 @@ public class VideoDetail {
 	private String thumbnailUrl;
 	private String channelTitle;
 	private Language language;
+	private String duration;
 
 	public static Videos toEntity(VideoDetail dto) {
 		return Videos.builder()
@@ -26,6 +27,7 @@ public class VideoDetail {
 			.thumbnailImageUrl(dto.getThumbnailUrl())
 			.channelTitle(dto.getChannelTitle())
 			.language(dto.getLanguage())
+			.duration(dto.getDuration())
 			.build();
 	}
 }

@@ -78,7 +78,7 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
                                             String paymentKey,
                                             String code,
                                             String message) {
-        payment.updateFailInfo(message);
+        payment.updateFailureInfo(message);
         publisher.publishEvent(new PaymentFailedEvent(
                 payment.getId(),
                 code,
@@ -113,13 +113,12 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
     /**
      * 결제 결과를 처리하여 결제 상태를 업데이트합니다.
      *
-     * @param orderId 주문 ID
      * @param result  결제 승인 응답 정보
      * @throws ServiceException 결제 정보가 존재하지 않을 경우 예외 발생
      */
     // 반환된 값을 가지고 결제 결과를 업데이트
-    public void processPaymentResult(String orderId, PaymentResponse result) {
-        Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow(
+    public void processPaymentResult(PaymentResponse result) {
+        Payment payment = paymentRepository.findByOrderId(result.getOrderId()).orElseThrow(
                 () -> new ServiceException(PAYMENT_NOT_FOUND));
 
         if (result.getStatus().equals("DONE")) {
@@ -144,7 +143,7 @@ public class PaymentConfirmServiceImpl implements PaymentConfirmService {
                     result.getReceipt().getUrl()
             ); // 결제 성공
         } else {
-            payment.updateFailInfo(
+            payment.updateFailureInfo(
                     result.getFailure().getMessage()
             ); // DB 업데이트
             handleCommonFailureActions(

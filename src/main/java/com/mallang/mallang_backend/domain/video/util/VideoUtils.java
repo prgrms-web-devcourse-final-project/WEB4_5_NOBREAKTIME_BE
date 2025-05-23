@@ -12,25 +12,6 @@ public final class VideoUtils {
 
 	// 인스턴스화 방지
 	private VideoUtils() {}
-	//
-	// /**
-	//  * 영상 길이가 20분 이하인지 체크
-	//  */
-	// public static boolean isDurationLessThanOrEqualTo20Minutes(Video video) {
-	// 	String durationStr = video.getContentDetails().getDuration();
-	// 	Duration duration = DurationMapper.parseDuration(durationStr);
-	// 	return duration != null && duration.toMinutes() <= 20;
-	// }
-
-	// /**
-	//  * 크리에이티브 커먼즈 라이선스인지 확인
-	//  */
-	// public static boolean isCreativeCommons(Video video) {
-	// 	return Optional.ofNullable(video.getStatus())
-	// 		.map(status -> CC_LICENSE.equals(status.getLicense()))
-	// 		.orElse(false);
-	// }
-
 	/**
 	 * 영상의 기본 오디오 언어가 지정한 언어와 일치하는지 확인
 	 */
@@ -50,6 +31,7 @@ public final class VideoUtils {
 		dto.setTitle(snip.getTitle());
 		dto.setDescription(snip.getDescription());
 		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
+		dto.setDuration(video.getContentDetails().getDuration());
 		return dto;
 	}
 
@@ -65,19 +47,8 @@ public final class VideoUtils {
 		dto.setDescription(snip.getDescription());
 		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
 		dto.setBookmarked(isBookmarked);
+		dto.setDuration(video.getContentDetails().getDuration());
 		return dto;
 	}
-
-	// /**
-	//  * 기본 검색(defaultSearch)일 때 리스트를 섞어서 반환
-	//  */
-	// public static List<VideoResponse> shuffleIfDefault(List<VideoResponse> list, boolean isDefault) {
-	// 	if (!isDefault) {
-	// 		return list;
-	// 	}
-	// 	List<VideoResponse> copy = new ArrayList<>(list);
-	// 	Collections.shuffle(copy);
-	// 	return copy;
-	// }
 }
 
