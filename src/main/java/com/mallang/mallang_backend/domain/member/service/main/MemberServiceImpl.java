@@ -73,11 +73,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public boolean existsByPlatformId(String platformId) {
-        return validationService.existsByPlatformId(platformId);
-    }
-
-    @Override
     @Transactional
     public void withdrawMember(Long memberId) {
         withdrawalService.withdrawMember(memberId);
@@ -105,35 +100,6 @@ public class MemberServiceImpl implements MemberService {
     public Member getMemberByPlatformId(String platformId) {
         return memberRepository.findByPlatformId(platformId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-    // 소셜 로그인 회원 멤버 가입
-    @Transactional
-    public Long signupByOauth(String platformId,
-                              String email,
-                              String nickname,
-                              String profileImage,
-                              LoginPlatform loginPlatform) {
-
-        Member member = Member.builder()
-                .platformId(platformId) // null 불가능
-                .email(email) // null 가능
-                .nickname(nickname)
-                .loginPlatform(loginPlatform)
-                .language(NONE)
-                .profileImageUrl(profileImage).build();
-
-        Member savedMember = memberRepository.save(member);
-
-        // 회원가입 시 언어별 기본 단어장 생성
-        List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
-        wordbookRepository.saveAll(defaultWordbooks);
-
-        // 회원가입 시 언어별 기본 표현함 생성
-        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
-        expressionBookRepository.saveAll(defaultBooks);
-
-        return savedMember.getId();
     }
 
     /**

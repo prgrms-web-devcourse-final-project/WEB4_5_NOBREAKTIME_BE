@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.config.oauth.service;
+package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import java.security.SecureRandom;
 

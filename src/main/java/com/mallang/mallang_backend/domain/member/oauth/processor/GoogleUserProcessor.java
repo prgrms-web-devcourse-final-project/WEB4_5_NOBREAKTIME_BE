@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.config.oauth.processor;
+package com.mallang.mallang_backend.domain.member.oauth.processor;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import lombok.extern.slf4j.Slf4j;
