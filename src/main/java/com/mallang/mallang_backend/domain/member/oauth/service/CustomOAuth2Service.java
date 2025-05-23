@@ -58,7 +58,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final S3ImageUploader imageUploader;
     private final WithdrawnLogRepository logRepository;
 
-    @Retry(name = "oauthUserLoginService", fallbackMethod = "retryFallbackMethod")
+    @Retry(name = "oauthUserLoginService")
     @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "circuitBreakerFallbackMethod")
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -232,58 +232,32 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
         throw new ServiceException(NICKNAME_GENERATION_FAILED);
     }
 
-    public OAuth2User retryFallbackMethod(OAuth2UserRequest userRequest,
-                                          Throwable t
+    public OAuth2User circuitBreakerFallbackMethod(OAuth2UserRequest userRequest,
+                                                   Throwable t
     ) {
         handleErrorLogs(t);
-        // log.warn(Arrays.toString(t.getStackTrace()));
-        throw new RetryableException("시스템 오류 발생, 재시도 카운트 포함", t);
+        throw new RetryableException(t.getMessage(), t);
     }
 
     private void handleErrorLogs(Throwable throwable
     ) {
         if (throwable instanceof ConnectException) {
-            log.error("OAuth2 로그인 실패 - 소셜 서버 연결 불가: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 소셜 서버 연결 불가", throwable.getCause());
         } else if (throwable instanceof SocketTimeoutException) {
-            log.error("OAuth2 로그인 실패 - 소셜 서버 응답 시간 초과: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 소셜 서버 응답 시간 초과", throwable.getCause());
         } else if (throwable instanceof SSLHandshakeException) {
-            log.error("OAuth2 로그인 실패 - SSL 인증서 오류: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - SSL 인증서 오류", throwable.getCause());
         } else if (throwable instanceof HttpServerErrorException) {
-            log.error("OAuth2 로그인 실패 - 소셜 서버 내부 오류(5xx): {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 소셜 서버 내부 오류(5xx)", throwable.getCause());
         } else if (throwable instanceof ResourceAccessException) {
-            log.error("OAuth2 로그인 실패 - 리소스 접근 실패: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 리소스 접근 실패", throwable.getCause());
         } else if (throwable instanceof HttpClientErrorException.TooManyRequests) {
-            log.error("OAuth2 로그인 실패 - 요청 횟수 초과(429): {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 요청 횟수 초과(429)", throwable.getCause());
         } else if (throwable instanceof TransientDataAccessException) {
-            log.error("OAuth2 로그인 실패 - 일시적 DB 오류: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 일시적 DB 오류", throwable.getCause());
         } else {
-            log.error("OAuth2 로그인 실패 - 알 수 없는 오류: {}",
-                    throwable.getMessage());
+            log.error("[서킷 브레이커] OAuth2 로그인 실패 - 알 수 없는 오류", throwable.getCause());
         }
-    }
-
-    public OAuth2User circuitBreakerFallbackMethod(OAuth2UserRequest userRequest,
-                                                   Throwable t) {
-
-        if (t instanceof ResourceAccessException) {
-            log.error("OAuth 서버 연결 실패: {}", t.getMessage());
-            throw new ServiceException(OAUTH_NETWORK_ERROR, t);
-        } else if (t instanceof HttpClientErrorException.TooManyRequests) {
-            handleTooManyRequests((HttpClientErrorException) t);
-        } else if (t instanceof OAuth2AuthenticationException) {
-            handleOAuthException((OAuth2AuthenticationException) t);
-        } else if (t instanceof CallNotPermittedException) {
-            log.error("서킷 브레이커 활성화 - 30초간 호출 차단");
-            throw new ServiceException(API_BLOCK, t);
-        }
-        throw new ServiceException(API_ERROR, t);
     }
 
     private void handleTooManyRequests(HttpClientErrorException e) {
