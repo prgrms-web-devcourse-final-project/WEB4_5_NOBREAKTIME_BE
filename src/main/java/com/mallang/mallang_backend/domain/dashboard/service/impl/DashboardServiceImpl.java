@@ -224,7 +224,7 @@ public class DashboardServiceImpl implements DashboardService {
 		String wordQuizResultString = getWordsFromResults(wordQuizResults);
 
 		// 표현 퀴즈 결과 데이터
-		String expressionResultString = getExpresionsFromResults(expressionQuizResults);
+		String expressionResultString = getExpressionsFromResults(expressionQuizResults);
 
 		// OpenAI 결과 파싱
 		String wordLevel = member.getWordLevel().toString();
@@ -261,7 +261,7 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	// 표현 퀴즈 결과에서 표현 가져오는 메서드
-	private String getExpresionsFromResults(List<ExpressionQuizResult> expressionQuizResults) {
+	private String getExpressionsFromResults(List<ExpressionQuizResult> expressionQuizResults) {
 		return expressionQuizResults.stream()
 			.map(result -> {
 				Expression expression = result.getExpression();

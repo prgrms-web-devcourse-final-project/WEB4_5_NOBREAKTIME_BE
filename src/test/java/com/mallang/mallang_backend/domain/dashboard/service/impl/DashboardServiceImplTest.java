@@ -185,9 +185,9 @@ class DashBoardServiceImplTest {
 		Long memberId = 1L;
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
-				.thenReturn(30);
+				.thenReturn(10);
 		when(expressionQuizResultRepository.countByExpressionQuiz_MemberAndCreatedAtAfter(eq(member), any()))
-				.thenReturn(20); // 총 50 < 100
+				.thenReturn(8); // 총 50 < 100
 
 		ServiceException exception = assertThrows(ServiceException.class, () -> {
 			dashboardServiceImpl.checkLevel(memberId);

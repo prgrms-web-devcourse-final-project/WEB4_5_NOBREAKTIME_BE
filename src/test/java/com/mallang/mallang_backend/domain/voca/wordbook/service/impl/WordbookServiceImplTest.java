@@ -253,7 +253,7 @@ class WordbookServiceImplTest {
         @DisplayName("실패 - \"기본\" 단어장은 생성할 수 없다")
         void createWordbook_failIfNameIsDefault() {
             WordbookCreateRequest request = new WordbookCreateRequest();
-            request.setName("기본 단어장");
+            request.setName(DEFAULT_WORDBOOK_NAME);
 
             savedMember.updateSubscription(STANDARD);
 
