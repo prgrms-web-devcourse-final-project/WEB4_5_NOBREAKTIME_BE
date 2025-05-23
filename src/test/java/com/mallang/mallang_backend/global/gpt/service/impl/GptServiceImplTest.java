@@ -64,7 +64,7 @@ public class GptServiceImplTest {
 		String word = "cease";
 		String prompt = "some prompt";
 
-		when(gptPromptBuilder.buildPromptforSearchWord(word)).thenReturn(prompt);
+		when(gptPromptBuilder.buildPromptForSearchWord(word)).thenReturn(prompt);
 
 		OpenAiResponse mockResponse = new OpenAiResponse();
 		mockResponse.setChoices(List.of(
@@ -85,7 +85,7 @@ public class GptServiceImplTest {
 		String word = "ceases";
 		String prompt = "some prompt";
 
-		when(gptPromptBuilder.buildPromptforSearchWord(word)).thenReturn(prompt);
+		when(gptPromptBuilder.buildPromptForSearchWord(word)).thenReturn(prompt);
 
 		OpenAiResponse mockResponse = new OpenAiResponse();
 		mockResponse.setChoices(List.of(
