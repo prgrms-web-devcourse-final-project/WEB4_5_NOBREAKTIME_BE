@@ -216,6 +216,9 @@ dependencies {
 
 	// 일본어 분리 Kuromiji
 	implementation 'com.atilika.kuromoji:kuromoji-ipadic:0.9.0'
+
+	// slack 알림 연동
+	implementation 'com.slack.api:slack-api-client:1.45.3'
 }
 
 tasks.named('test') {
