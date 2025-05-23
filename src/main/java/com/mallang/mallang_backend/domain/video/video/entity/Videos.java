@@ -72,11 +72,13 @@ public class Videos extends BaseTime {
         String newTitle,
         String newThumbnailUrl,
         String newChannelTitle,
-        Language newLanguage
+        Language newLanguage,
+        String newDuration
     ) {
         this.videoTitle = newTitle;
         this.thumbnailImageUrl = newThumbnailUrl;
         this.channelTitle = newChannelTitle;
         this.language = newLanguage;
+        this.duration = newDuration;
     }
 }

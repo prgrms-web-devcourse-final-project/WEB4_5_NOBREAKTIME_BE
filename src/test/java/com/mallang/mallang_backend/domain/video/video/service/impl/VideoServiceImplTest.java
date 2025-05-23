@@ -1,8 +1,32 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import com.google.api.services.youtube.model.Thumbnail;
 import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoContentDetails;
 import com.google.api.services.youtube.model.VideoSnippet;
 import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
@@ -31,25 +55,6 @@ import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.invokeMethod;
 
 
 class VideoServiceImplTest {
@@ -166,10 +171,17 @@ class VideoServiceImplTest {
 			.thumbnailImageUrl("thumbnail_url")
 			.channelTitle("Test Channel")
 			.language(Language.ENGLISH)
+			.duration("PT10M")
 			.build();
 
 		when(videoRepository.existsById(videoId)).thenReturn(false);
 		when(videoRepository.save(any(Videos.class))).thenReturn(videoEntity);
+
+		VideoContentDetails contentDetails = new VideoContentDetails();
+		contentDetails.setDuration("PT10M");
+
+		Thumbnail thumb = new Thumbnail().setUrl("http://example.com/thumb.jpg");
+		ThumbnailDetails thumbDetails = new ThumbnailDetails().setMedium(thumb);
 
 		// Mock Thumbnail
 		Thumbnail thumbnail = new Thumbnail();
@@ -184,13 +196,13 @@ class VideoServiceImplTest {
 			.setDescription("테스트 설명")
 			.setChannelTitle("테스트 채널")
 			.setDefaultAudioLanguage("en")
-			.setThumbnails(thumbnailDetails);
+			.setThumbnails(thumbDetails);
 
 		// Mock Video
 		Video video = new Video()
 			.setId(videoId)
-			.setSnippet(snippet);
-
+			.setSnippet(snippet)
+			.setContentDetails(contentDetails);
 		// youtubeService Mock 설정
 		when(youtubeService.fetchVideosByIdsAsync(List.of(videoId)))
 			.thenReturn(CompletableFuture.completedFuture(List.of(video)));
