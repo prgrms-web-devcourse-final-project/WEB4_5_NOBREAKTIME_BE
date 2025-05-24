@@ -25,7 +25,6 @@ import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
-import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheRetryService;
 import com.mallang.mallang_backend.domain.video.youtube.client.YoutubeApiClient;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -35,7 +34,6 @@ class YoutubeServiceTest {
 
 	@Mock private YoutubeApiClient rawService;
 	@Mock private RedisCacheManager cacheManager;
-	@Mock private VideoCacheRetryService cacheRetryService;
 
 	private final Executor directExecutor = Runnable::run;
 
@@ -43,7 +41,7 @@ class YoutubeServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new YoutubeService(rawService, directExecutor, cacheManager, cacheRetryService);
+		service = new YoutubeService(rawService, directExecutor, cacheManager);
 	}
 
 	private SearchListResponse makeSearchResp(List<String> ids, String nextPageToken) {
@@ -131,31 +129,5 @@ class YoutubeServiceTest {
 		);
 		assertTrue(ex.getCause() instanceof ServiceException);
 		assertEquals(ErrorCode.API_ERROR, ((ServiceException)ex.getCause()).getErrorCode());
-	}
-
-	@Test
-	@DisplayName("fallbackSearchVideoIds: ServiceException 발생")
-	void fallbackSearchVideoIds_throwsServiceException() {
-		// 캐시 조회 시 API_ERROR 예외를 던지도록 설정
-		when(cacheRetryService.getCachedVideos(anyString()))
-			.thenThrow(new ServiceException(ErrorCode.API_ERROR));
-
-		ServiceException ex = assertThrows(ServiceException.class, () ->
-			service.fallbackSearchVideoIds("q", "US", "en", "10", 5L, "medium", new Throwable())
-		);
-		assertEquals(ErrorCode.API_ERROR, ex.getErrorCode());
-	}
-
-	@Test
-	@DisplayName("fallbackFetchVideosByIds: 빈 리스트를 반환하며 정상 완료됨")
-	void fallbackFetchVideosByIds_returnsEmptyList() throws Exception {
-		CompletableFuture<List<Video>> future =
-			service.fallbackFetchVideosByIds(List.of("1","2"), new Throwable());
-
-		// 예외 없이 정상 완료되어야 함
-		assertFalse(future.isCompletedExceptionally());
-		List<Video> result = future.get();  // should not throw
-		assertNotNull(result, "결과는 null이 아니어야 합니다");
-		assertTrue(result.isEmpty(), "결과 리스트는 비어 있어야 합니다");
 	}
 }

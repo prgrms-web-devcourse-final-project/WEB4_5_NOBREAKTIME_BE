@@ -20,6 +20,7 @@ import org.springframework.cache.CacheManager;
 
 import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
+import com.mallang.mallang_backend.domain.video.video.cache.service.VideoCacheService;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
+import com.mallang.mallang_backend.global.slack.SlackNotification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class CacheSchedulerService {
 	 * @param fetchSize 가져올 최대 동영상 수
 	 * @return 갱신된 캐시 항목 개수
 	 */
+	@SlackNotification(title = "캐시 갱신", message = "현재 캐시 갱신 스케줄링이 실행 준비 중입니다.")
 	public int refreshCache(
 		String q,
 		String category,

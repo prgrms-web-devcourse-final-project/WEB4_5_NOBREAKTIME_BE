@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.mallang.mallang_backend.domain.video.video.cache.service.VideoCacheService;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 
 @ExtendWith(MockitoExtension.class)
