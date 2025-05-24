@@ -33,15 +33,15 @@ class YoutubeApiClientTest {
 	@Mock private YouTube.Videos.List videoListRequest;
 
 	private YoutubeApiClient apiClient;
-	private MockedStatic<YouTubeClient> youTubeClientStatic;
+	private MockedStatic<YoutubeClient> youTubeClientStatic;
 
 	@BeforeEach
 	void setUp() throws IOException {
 		// static mock for YouTubeClient.getClient()
-		youTubeClientStatic = mockStatic(YouTubeClient.class);
-		youTubeClientStatic.when(YouTubeClient::getClient).thenReturn(youTube);
+		youTubeClientStatic = mockStatic(YoutubeClient.class);
+		youTubeClientStatic.when(YoutubeClient::getClient).thenReturn(youTube);
 
-		apiClient = new YoutubeApiClient(new YouTubeClient());
+		apiClient = new YoutubeApiClient(new YoutubeClient());
 
 		// --- searchOnce() stubbing ---
 		when(youTube.search()).thenReturn(youTubeSearch);

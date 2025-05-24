@@ -7,7 +7,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.youtube.YouTube;
 
 @Component
-public class YouTubeClient {
+public class YoutubeClient {
 
 	// Youtube API 클라이언트 생성
 	public static YouTube getClient() {

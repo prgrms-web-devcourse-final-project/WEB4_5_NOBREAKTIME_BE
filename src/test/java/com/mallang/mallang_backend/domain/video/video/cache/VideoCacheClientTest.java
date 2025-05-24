@@ -21,10 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
+import com.mallang.mallang_backend.domain.video.video.cache.client.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties.SearchDefault;
+import com.mallang.mallang_backend.domain.video.youtube.config.YoutubeSearchProperties;
+import com.mallang.mallang_backend.domain.video.youtube.config.YoutubeSearchProperties.SearchDefault;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -36,7 +37,7 @@ class VideoCacheClientTest {
 	private YoutubeService youtubeService;
 
 	@Mock
-	private VideoSearchProperties youtubeSearchProperties;
+	private YoutubeSearchProperties youtubeSearchProperties;
 
 	private VideoCacheClient client;
 	private SearchDefault enDefault;

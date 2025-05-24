@@ -8,7 +8,7 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.mallang.mallang_backend.domain.video.cache.CacheSchedulerService;
+import com.mallang.mallang_backend.domain.video.video.cache.quartz.service.CacheSchedulerService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.slack.SlackNotification;
 
