@@ -21,7 +21,10 @@ public class AutoBillingJob implements Job {
 
     @Override
     @TimeTrace
-    @SlackNotification(title = "자동 결제", message = "현재 자동 결제 스케줄링이 실행 준비 중입니다.")
+    @SlackNotification(
+            title = "자동 결제",
+            message = "현재 자동 결제 스케줄링이 실행 준비 중입니다."
+    )
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap dataMap = context.getMergedJobDataMap();
         int currentRetry = context.getTrigger()
