@@ -13,6 +13,17 @@ import java.sql.SQLTransientConnectionException;
 
 public interface MemberWithdrawalService {
     void withdrawMember(Long memberId);
+
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 3000),
+            include = {TransientDataAccessException.class, SQLTransientConnectionException.class},
+            exclude = {IllegalArgumentException.class, DataIntegrityViolationException.class}
+    )
+    @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void scheduleAccountDeletion();
+
     boolean existsByOriginalPlatformId(String platformId);
 
     WithdrawnLog findByOriginalPlatformId(String platformId);
