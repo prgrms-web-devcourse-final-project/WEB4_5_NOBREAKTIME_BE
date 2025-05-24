@@ -6,6 +6,7 @@ import com.mallang.mallang_backend.domain.payment.quartz.job.SubscriptionExpireJ
 import com.mallang.mallang_backend.domain.payment.quartz.listener.LoggingJobListener;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryJobListener;
 import com.mallang.mallang_backend.domain.payment.quartz.listener.RetryTriggerListener;
+import com.mallang.mallang_backend.domain.video.video.cache.quartz.job.CacheSchedulerJob;
 import com.mallang.mallang_backend.global.slack.SlackNotifier;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -19,6 +20,8 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 import javax.sql.DataSource;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.CACHE_SCHEDULER_FETCH_SIZE;
+
 @Slf4j
 @Configuration
 public class QuartzConfig {
@@ -26,9 +29,13 @@ public class QuartzConfig {
     @Value("${quartz.cron.subscription-status-check}")
     private String subscriptionStatusCheckCron;
 
-
     @Value("${quartz.cron.auto-billing}")
     private String autoBillingCron;
+
+    @Value("${quartz.cron.cache-scheduler}")
+    private String cacheSchedulerCron;
+
+
 
     @Bean
     public JobDetail subscriptionExpireJobDetail() {
@@ -54,6 +61,32 @@ public class QuartzConfig {
                 .build();
     }
 
+    @Bean
+    public JobDetail cacheSchedulerJobDetailEn() {
+        return JobBuilder.newJob(CacheSchedulerJob.class)
+            .withIdentity("cacheSchedulerJobEn", "VIDEO_CACHE")
+            .usingJobData("q", "")
+            .usingJobData("category", "")
+            .usingJobData("language", "en")
+            .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
+            .storeDurably()
+            .requestRecovery(true)
+            .build();
+    }
+
+    @Bean
+    public JobDetail cacheSchedulerJobDetailJp() {
+        return JobBuilder.newJob(CacheSchedulerJob.class)
+            .withIdentity("cacheSchedulerJobJp", "VIDEO_CACHE")
+            .usingJobData("q", "")
+            .usingJobData("category", "")
+            .usingJobData("language", "jp")
+            .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
+            .storeDurably()
+            .requestRecovery(true)
+            .build();
+    }
+
     /**
      * Trigger의 JobDataMap: 트리거(실행 단위)마다 독립적인 값을 저장
      * 재시도 카운트(currentRetry)처럼 실행마다 바뀌는 값을 저장하는 데 적합
@@ -76,6 +109,24 @@ public class QuartzConfig {
                 .withIdentity("autoBillingTrigger", "DEFAULT")
                 .withSchedule(CronScheduleBuilder.cronSchedule(autoBillingCron)) // 매일 00:00 실행
                 .build();
+    }
+
+    @Bean
+    public Trigger cacheSchedulerTriggerEn() {
+        return TriggerBuilder.newTrigger()
+            .forJob(cacheSchedulerJobDetailEn())
+            .withIdentity("cacheSchedulerTriggerEn", "VIDEO_CACHE")
+            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .build();
+    }
+
+    @Bean
+    public Trigger cacheSchedulerTriggerJp() {
+        return TriggerBuilder.newTrigger()
+            .forJob(cacheSchedulerJobDetailJp())
+            .withIdentity("cacheSchedulerTriggerJp", "VIDEO_CACHE")
+            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .build();
     }
 
     @Bean
@@ -121,8 +172,8 @@ public class QuartzConfig {
     public SchedulerFactoryBean schedulerFactoryBean() {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
         factory.setJobFactory(autowiringSpringBeanJobFactory());
-        factory.setJobDetails(subscriptionExpireJobDetail(), autoBillingJobDetail());
-        factory.setTriggers(subscriptionExpireTrigger(), autoBillingTrigger());
+        factory.setJobDetails(subscriptionExpireJobDetail(), autoBillingJobDetail(), cacheSchedulerJobDetailEn(), cacheSchedulerJobDetailJp());
+        factory.setTriggers(subscriptionExpireTrigger(), autoBillingTrigger(), cacheSchedulerTriggerEn(), cacheSchedulerTriggerJp());
         factory.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         factory.setGlobalTriggerListeners(retryTriggerListener());
         factory.setDataSource(dataSource);

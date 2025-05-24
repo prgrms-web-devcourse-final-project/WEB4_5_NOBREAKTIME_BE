@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.member.dto;
 
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.global.common.Language;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,9 +28,43 @@ public class UserProfileResponse {
     @Schema(description = "구독 정보")
     private SubscriptionType subscriptionType;
 
-    @Schema(description = "언어 설정 정보", example = "ENGLISH")
+    @Schema(description = "기본 언어 설정 정보", example = "ENGLISH")
     private Language language;
+
+    @Schema(description = "사용 가능한 언어 설정 정보", example = "ENGLISH, JAPANESE")
+    private List<Language> availableLanguages;
 
     @Schema(description = "구독 내역")
     private List<SubscriptionResponse> subscriptions;
+
+    /**
+     * Member 엔티티로부터 프로필 응답을 생성하는 팩토리 메서드
+     *
+     * @param member 프로필 정보를 가져올 회원 엔티티
+     * @param availableLanguages 선택 가능한 언어 목록
+     * @param subscriptions 구독 정보 목록
+     * @return 완성된 UserProfileResponse 인스턴스
+     *
+     * @example
+     * UserProfileResponse.fromMember(
+     *     member,
+     *     languages,
+     *     subscriptions
+     * )
+     */
+    public static UserProfileResponse fromMember(
+            Member member,
+            List<Language> availableLanguages,
+            List<SubscriptionResponse> subscriptions
+    ) {
+        return UserProfileResponse.builder()
+                .nickname(member.getNickname())
+                .email(member.getEmail())
+                .profileImage(member.getProfileImageUrl())
+                .subscriptionType(member.getSubscriptionType())
+                .language(member.getLanguage().getDefault())
+                .availableLanguages(availableLanguages)
+                .subscriptions(subscriptions)
+                .build();
+    }
 }

@@ -1,13 +1,15 @@
 package com.mallang.mallang_backend.global.common;
 
-import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_LANGUAGE;
-
+/**
+ * [주의] ALL은 실제 언어가 아닌 권한 설정용 특수 값입니다.
+ * 프리미엄 회원에게만 할당될 수 있습니다.
+ */
 @Getter
 public enum Language {
     ENGLISH("en-US", "^[a-zA-Z\\s]+$"),
@@ -23,13 +25,26 @@ public enum Language {
         this.pattern = pattern;
     }
 
-    public static Language fromString(String name) {
-        for (Language lang : Language.values()) {
-            if (lang.name().equalsIgnoreCase(name)) {
-                return lang;
-            }
+    /**
+     * ALL일 경우 ENGLISH, JAPANESE 모두 반환
+     * 그 외에는 자기 자신만 반환
+     */
+    public List<Language> getAvailableLanguages() {
+        if (this == ALL) {
+            return List.of(ENGLISH, JAPANESE);
         }
-        throw new ServiceException(INVALID_LANGUAGE);
+        if (this == NONE) {
+            return List.of();
+        }
+        return List.of(this);
+    }
+
+    /**
+     * ALL일 경우 ENGLISH, 그 외에는 자기 자신 반환
+     */
+    public Language getDefault() {
+        List<Language> available = getAvailableLanguages();
+        return available.isEmpty() ? null : available.get(0);
     }
 
     /**
@@ -68,9 +83,16 @@ public enum Language {
         return parts[0].toLowerCase();
     }
 
+    /**
+     * ALL일 경우 ENGLISH, JAPANESE 둘 다 매칭 허용
+     */
     public boolean matches(String word) {
-        if (this == NONE || this == ALL) {
+        if (this == NONE) {
             return false;
+        }
+        if (this == ALL) {
+            // ENGLISH 또는 JAPANESE 중 하나라도 매칭되면 true
+            return ENGLISH.matches(word) || JAPANESE.matches(word);
         }
         Pattern compile = Pattern.compile(pattern);
         return compile.matcher(word).matches();

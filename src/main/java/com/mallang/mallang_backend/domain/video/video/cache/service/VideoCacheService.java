@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.domain.video.video.service.impl;
+package com.mallang.mallang_backend.domain.video.video.cache.service;
 
 import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;

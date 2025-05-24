@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.resilience4j;
 
+import com.mallang.mallang_backend.global.slack.SlackNotifier;
 import io.github.resilience4j.core.registry.EntryAddedEvent;
 import io.github.resilience4j.core.registry.EntryRemovedEvent;
 import io.github.resilience4j.core.registry.EntryReplacedEvent;
@@ -26,6 +27,11 @@ public class CustomRetryConfigV2 {
 
     // 재시도 중 발생한 예외 추적
     private final ThreadLocal<List<Throwable>> retryExceptions = ThreadLocal.withInitial(ArrayList::new);
+    private final SlackNotifier slackNotifier;
+
+    public CustomRetryConfigV2(SlackNotifier slackNotifier) {
+        this.slackNotifier = slackNotifier;
+    }
 
     /**
      * Retry 이벤트 소비자 빈 등록
@@ -138,6 +144,34 @@ public class CustomRetryConfigV2 {
                 txId != null ? txId : "N/A",
                 event.getNumberOfRetryAttempts(),
                 errorDetails);
+
+        // Slack 알림 전송 (키바나 링크 변경 필요)
+        String kibanaBaseUrl = "https://kibana.example.com/app/discover#/?_a=(query:(language:lucene,query:'transactionId:%s'))";
+        String kibanaLink = txId != null
+                ? String.format(kibanaBaseUrl, txId)
+                : "트랜잭션 ID 없음";
+
+        String slackMessage = String.format(
+                     "\n -  *서비스 이름*: `%s`\n" +
+                        "-  *트랜잭션 ID*: `%s`\n" +
+                        "-  *키바나에서 바로 보기*: <%s|로그 검색하기>\n" +
+                        "-  *재시도 시도 횟수*: `%d`\n" +
+                        "-  *마지막 예외*: `%s: %s`\n" +
+                        "-  *누적 예외 목록:*\n```%s```\n" +
+                        "⚠️ 신속한 확인이 필요합니다.",
+                name,
+                txId != null ? txId : "N/A",
+                txId != null ? kibanaLink : "트랜잭션 ID 없음",
+                event.getNumberOfRetryAttempts(),
+                event.getLastThrowable().getClass().getSimpleName(),
+                event.getLastThrowable().getMessage(),
+                String.join("\n", errorDetails)
+        );
+
+        slackNotifier.sendSlackNotification(
+                "[Fallback] 재시도 중 최종 실패 발생",
+                slackMessage
+        );
 
         // 스레드 로컬 데이터 정리
         retryExceptions.remove();

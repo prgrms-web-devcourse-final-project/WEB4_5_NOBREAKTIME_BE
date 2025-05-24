@@ -3,9 +3,6 @@ package com.mallang.mallang_backend.domain.video.youtube.service;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
-import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
-import com.mallang.mallang_backend.domain.video.video.cache.service.VideoCacheRetryService;
-import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.youtube.client.YoutubeApiClient;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -14,6 +11,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Service;
@@ -25,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class YoutubeService {
@@ -36,12 +35,11 @@ public class YoutubeService {
 
 	private static final String CACHE_NAME = "videoListCache";
 	private final RedisCacheManager cacheManager;
-	private final VideoCacheRetryService videoCacheRetryService;
 
 	/**
 	 * 검색: 키워드 기반으로 videoId만 가져오기
 	 */
-	@Retry(name = "videoSearch", fallbackMethod = "fallbackSearchVideoIds")
+	@Retry(name = "videoSearch")
 	@CircuitBreaker(name = "youtubeService")
 	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE)
 	public List<String> searchVideoIds(
@@ -76,7 +74,7 @@ public class YoutubeService {
 	/**
 	 * 상세조회: videoId 리스트로 Video 정보 가져오기 (비동기)
 	 */
-	@Retry(name = "videoSearch", fallbackMethod = "fallbackFetchVideosByIds")
+	@Retry(name = "videoSearch")
 	@CircuitBreaker(name = "youtubeService")
 	@Bulkhead(name = "youtubeService", type = Bulkhead.Type.SEMAPHORE)
 	@TimeLimiter(name = "youtubeService")
@@ -96,47 +94,8 @@ public class YoutubeService {
 				}
 				return results;
 			} catch (IOException e) {
-				throw new ServiceException(ErrorCode.API_ERROR);
+				throw new ServiceException(ErrorCode.API_ERROR, e);
 			}
 		}, youtubeApiExecutor);
-	}
-
-	/**
-	 * searchVideoIds() 최대 재시도 후에도 실패 시 호출
-	 */
-	public List<String> fallbackSearchVideoIds(
-		String query,
-		String regionCode,
-		String relevanceLanguage,
-		String categoryId,
-		long desiredCount,
-		String videoDuration,
-		Throwable t
-	) {
-		// 캐시 키 생성
-		String key = String.format("%s|%s|%s",
-			query == null ? "" : query,
-			categoryId == null ? "" : categoryId,
-			relevanceLanguage
-		);
-
-		CachedVideos cached = videoCacheRetryService.getCachedVideos(key);
-
-		return cached.getResponses().stream()
-			.map(VideoResponse::getVideoId)
-			.limit(desiredCount)
-			.collect(Collectors.toList());
-	}
-
-	/**
-	 * fetchVideosByIdsAsync() 최대 재시도 후에도 실패 시 호출
-	 */
-	public CompletableFuture<List<Video>> fallbackFetchVideosByIds(
-		List<String> videoIds,
-		Throwable t
-	) {
-		CompletableFuture<List<Video>> failed = new CompletableFuture<>();
-		failed.completeExceptionally(new ServiceException(ErrorCode.API_ERROR));
-		return failed;
 	}
 }

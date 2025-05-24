@@ -102,4 +102,9 @@ public class AppConstants {
 	 */
 	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
 	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
+
+	/**
+	 * 동영상 가져올 갯수
+	 */
+	public static final long CACHE_SCHEDULER_FETCH_SIZE = 300L;
 }

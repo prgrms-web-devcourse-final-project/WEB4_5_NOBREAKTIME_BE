@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import com.mallang.mallang_backend.domain.video.video.cache.service.VideoCacheService;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import lombok.RequiredArgsConstructor;

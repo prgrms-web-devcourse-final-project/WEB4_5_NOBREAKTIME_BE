@@ -2,11 +2,13 @@ package com.mallang.mallang_backend.domain.member.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
+import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Getter
@@ -31,4 +33,24 @@ public class SubscriptionResponse {
 
     @Schema(description = "취소 가능 여부, 이게 true 이면 구독 갱신 중지가 가능합니다.", example = "true", allowableValues = {"true", "false"})
     private Boolean isPossibleToCancel;
+
+    /**
+     * Subscription 엔티티로부터 SubscriptionResponse를 생성하는 팩토리 메서드입니다.
+     *
+     * @param subscription 변환할 구독 엔티티
+     * @param clock 취소 가능 여부 계산에 사용할 Clock 인스턴스
+     * @return SubscriptionResponse 인스턴스
+     *
+     * @throws NullPointerException subscription이 null인 경우
+     */
+    public static SubscriptionResponse fromSubscription(Subscription subscription,
+                                            Clock clock) {
+        return SubscriptionResponse.builder()
+                .amount(subscription.getPlan().getAmount())
+                .planName(subscription.getPlan().getType())
+                .startedAt(subscription.getStartedAt())
+                .expiredAt(subscription.getExpiredAt())
+                .isPossibleToCancel(subscription.isPossibleToCancel(clock))
+                .build();
+    }
 }

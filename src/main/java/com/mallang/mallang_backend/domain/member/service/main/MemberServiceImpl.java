@@ -8,9 +8,7 @@ import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.profile.MemberProfileService;
 import com.mallang.mallang_backend.domain.member.service.valid.MemberValidationService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
-import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
-import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -32,9 +30,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-    private final WordbookRepository wordbookRepository;
-    private final ExpressionBookRepository expressionBookRepository;
-
     private final MemberProfileService profileService;
     private final MemberWithdrawalService withdrawalService;
     private final MemberValidationService validationService;
@@ -57,24 +52,9 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public void validateEmailNotDuplicated(String email) {
-        validationService.validateEmailNotDuplicated(email);
-    }
-
-    @Override
-    public String getRoleName(Long memberId) {
-        return subscriptionService.getRoleName(memberId);
-    }
-
-    @Override
     @Transactional
     public void withdrawMember(Long memberId) {
         withdrawalService.withdrawMember(memberId);
-    }
-
-    @Override
-    public void scheduleAccountDeletion() {
-        withdrawalService.scheduleAccountDeletion();
     }
 
     @Override
@@ -126,17 +106,25 @@ public class MemberServiceImpl implements MemberService {
      */
     @Override
     @Transactional
-    public ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request) {
+    public ChangeInfoResponse changeInformation(Long memberId,
+                                                ChangeInfoRequest request
+    ) {
         Member member = findMemberOrThrow(memberId);
-        validateEmailNotDuplicated(request.getEmail());
 
+        // 닉네임 변경
         if (isNicknameAvailable(request.getNickname())) {
             member.updateNickname(request.getNickname());
-            member.updateEmail(request.getEmail());
-            member.updateLearningLanguage(Language.fromString(request.getLanguage()));
         }
 
-        return new ChangeInfoResponse(request.getNickname(), request.getEmail(), request.getLanguage());
+        // 언어 설정 변경
+        if (member.getLanguage() != request.getLanguage()) {
+            member.updateLanguage(request.getLanguage());
+        }
+
+        return new ChangeInfoResponse(
+                request.getNickname(),
+                request.getLanguage()
+        );
     }
 
     /**

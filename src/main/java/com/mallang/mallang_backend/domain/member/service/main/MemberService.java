@@ -12,15 +12,11 @@ public interface MemberService {
 
     Member getMemberByPlatformId (String platformId);
 
-    String getRoleName(Long memberId);
-
     Member getMemberById(Long memberId);
 
     void updateLearningLanguage(Long id, Language language);
 
     void withdrawMember(Long memberId);
-
-    void scheduleAccountDeletion();
 
     String changeProfile(Long memberId, MultipartFile file);
 
@@ -29,8 +25,6 @@ public interface MemberService {
     void deleteOldProfileImage(Long memberId);
 
     boolean isNicknameAvailable(String nickname);
-
-    void validateEmailNotDuplicated(String email);
 
     UserProfileResponse getUserProfile(Long memberId);
 }

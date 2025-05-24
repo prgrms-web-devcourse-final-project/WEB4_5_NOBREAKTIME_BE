@@ -22,8 +22,8 @@ public class VideoListRequest {
 	@Schema(description = "유튜브 카테고리 ID", required = false)
 	private String category;
 
-	@Schema(description = "최대 조회 개수 (1~50)", defaultValue = "50")
+	@Schema(description = "최대 조회 개수 (1~300)", defaultValue = "1000")
 	@Min(value = 1, message = "maxResults는 최소 1 이상이어야 합니다")
-	@Max(value = 50, message = "maxResults는 최대 50 이하여야 합니다")
-	private long maxResults = 50;
+	@Max(value = 300, message = "maxResults는 최대 300 이하여야 합니다")
+	private long maxResults = 100;
 }

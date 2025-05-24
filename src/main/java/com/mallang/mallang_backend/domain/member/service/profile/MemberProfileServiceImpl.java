@@ -8,6 +8,7 @@ import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mallang.mallang_backend.domain.member.dto.SubscriptionResponse.fromSubscription;
+import static com.mallang.mallang_backend.domain.member.dto.UserProfileResponse.fromMember;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Service
@@ -46,32 +49,17 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 
         List<SubscriptionResponse> subscriptionResponses = toSubscriptionResponses(subscriptions);
 
-        return UserProfileResponse.builder()
-                .nickname(member.getNickname())
-                .email(member.getEmail())
-                .profileImage(member.getProfileImageUrl())
-                .subscriptionType(member.getSubscriptionType())
-                .language(member.getLanguage())
-                .subscriptions(subscriptionResponses)
-                .build();
+        Language language = member.getLanguage();
+        List<Language> availableLanguages = language.getAvailableLanguages();
+
+        return fromMember(member, availableLanguages, subscriptionResponses);
     }
 
     // 구독 리스트를 DTO 리스트로 변환하는 메서드
     private List<SubscriptionResponse> toSubscriptionResponses(List<Subscription> subscriptions) {
         return subscriptions.stream()
-                .map(this::toSubscriptionResponse)
+                .map(subscription -> fromSubscription(subscription, Clock.systemDefaultZone()))
                 .toList();
-    }
-
-    // 구독 엔티티를 DTO로 변환하는 메서드
-    private SubscriptionResponse toSubscriptionResponse(Subscription subscription) {
-        return SubscriptionResponse.builder()
-                .amount(subscription.getPlan().getAmount())
-                .planName(subscription.getPlan().getType())
-                .startedAt(subscription.getStartedAt())
-                .expiredAt(subscription.getExpiredAt())
-                .isPossibleToCancel(subscription.isPossibleToCancel(Clock.systemDefaultZone()))
-                .build();
     }
 
     /**
