@@ -44,7 +44,7 @@ public enum Language {
      */
     public Language getDefault() {
         List<Language> available = getAvailableLanguages();
-        return available.isEmpty() ? null : available.get(0);
+        return available.isEmpty() ? NONE : available.get(0);
     }
 
     /**

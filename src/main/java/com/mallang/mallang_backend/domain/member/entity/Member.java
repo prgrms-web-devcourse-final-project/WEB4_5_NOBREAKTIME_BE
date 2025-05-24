@@ -119,10 +119,6 @@ public class Member extends BaseTime {
         this.videoGoal = videoGoal;
     }
 
-    public void updateWithdrawalDate(LocalDateTime withdrawalDate) {
-        this.withdrawalDate = withdrawalDate;
-    }
-
     public void updateMeasuredAt(LocalDateTime measuredAt) {
         this.measuredAt = measuredAt;
     }
