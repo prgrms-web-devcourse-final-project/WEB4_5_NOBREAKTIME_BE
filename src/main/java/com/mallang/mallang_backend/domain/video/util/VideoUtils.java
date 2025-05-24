@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.video.util;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import com.google.api.services.youtube.model.Video;
@@ -22,6 +23,22 @@ public final class VideoUtils {
 	}
 
 	/**
+	 * ISO-8601 기간 문자열을 H:mm:ss 또는 mm:ss 형태로 포맷
+	 */
+	private static String formatDuration(String isoDuration) {
+		Duration d = Duration.parse(isoDuration);
+		long seconds = d.getSeconds();
+		long hours = seconds / 3600;
+		long minutes = (seconds % 3600) / 60;
+		long secs = seconds % 60;
+		if (hours > 0) {
+			return String.format("%d:%02d:%02d", hours, minutes, secs);
+		} else {
+			return String.format("%02d:%02d", minutes, secs);
+		}
+	}
+
+	/**
 	 * VideoResponse DTO로 매핑 (Setter 사용)
 	 */
 	public static VideoResponse toVideoResponse(Video video) {
@@ -31,23 +48,7 @@ public final class VideoUtils {
 		dto.setTitle(snip.getTitle());
 		dto.setDescription(snip.getDescription());
 		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
-		dto.setDuration(video.getContentDetails().getDuration());
-		return dto;
-	}
-
-	/**
-	 * VideoResponse DTO로 매핑 (Setter 사용)
-	 * 북마크 여부 추가
-	 */
-	public static VideoResponse toVideoResponse(Video video, boolean isBookmarked) {
-		var snip = video.getSnippet();
-		VideoResponse dto = new VideoResponse();
-		dto.setVideoId(video.getId());
-		dto.setTitle(snip.getTitle());
-		dto.setDescription(snip.getDescription());
-		dto.setThumbnailUrl(snip.getThumbnails().getMedium().getUrl());
-		dto.setBookmarked(isBookmarked);
-		dto.setDuration(video.getContentDetails().getDuration());
+		dto.setDuration(formatDuration(video.getContentDetails().getDuration()));
 		return dto;
 	}
 }
