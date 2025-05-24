@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.payment.quartz.job;
 
 import com.mallang.mallang_backend.domain.payment.quartz.service.AutoBillingService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
+import com.mallang.mallang_backend.global.slack.SlackNotification;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ public class AutoBillingJob implements Job {
 
     @Override
     @TimeTrace
+    @SlackNotification(title = "자동 결제", message = "현재 자동 결제 스케줄링이 실행 준비 중입니다.")
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap dataMap = context.getMergedJobDataMap();
         int currentRetry = context.getTrigger()

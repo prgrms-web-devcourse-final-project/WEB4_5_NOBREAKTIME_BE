@@ -1,31 +1,38 @@
 package com.mallang.mallang_backend.global.slack;
 
+import com.slack.api.Slack;
+import com.slack.api.webhook.Payload;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
 @Component
 public class SlackNotifier {
 
-    @Value("${slack.webhook.url}")
+    @Value("${custom.slack.webhook.url}")
     private String slackWebhookUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final Slack slack = Slack.getInstance();
+
+    public void sendSlackNotification(String message) {
+        try {
+            Payload payload = Payload.builder().text(message).build();
+            slack.send(slackWebhookUrl, payload);
+        } catch (IOException e) {
+            throw new RuntimeException("슬랙 메시지 전송 실패", e);
+        }
+    }
 
     public void sendSlackNotification(String title, String message) {
-        Map<String, Object> payload = new HashMap<>();
-
-        payload.put("blocks", Arrays.asList(
-                Map.of("type", "section", "text", Map.of("type", "mrkdwn", "text", "*" + title + "*")),
-                Map.of("type", "section", "text", Map.of("type", "mrkdwn", "text", message))
-        ));
-        payload.put("username", "SpringBot");
-        payload.put("icon_emoji", ":bell:");
-
-        restTemplate.postForEntity(slackWebhookUrl, payload, String.class);
+        try {
+            String formattedMessage = ":bell: *[" + title + "]*\n" + message;
+            Payload payload = Payload.builder()
+                    .text(formattedMessage)
+                    .build();
+            slack.send(slackWebhookUrl, payload);
+        } catch (IOException e) {
+            throw new RuntimeException("슬랙 메시지 전송 실패", e);
+        }
     }
 }
