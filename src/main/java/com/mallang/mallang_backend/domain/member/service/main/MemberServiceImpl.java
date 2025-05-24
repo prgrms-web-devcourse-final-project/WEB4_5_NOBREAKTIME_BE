@@ -38,9 +38,6 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-    private final WordbookRepository wordbookRepository;
-    private final ExpressionBookRepository expressionBookRepository;
-
     private final MemberProfileService profileService;
     private final MemberWithdrawalService withdrawalService;
     private final MemberValidationService validationService;
@@ -60,11 +57,6 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public boolean isNicknameAvailable(String nickname) {
         return validationService.isNicknameAvailable(nickname);
-    }
-
-    @Override
-    public void validateEmailNotDuplicated(String email) {
-        validationService.validateEmailNotDuplicated(email);
     }
 
     @Override
@@ -132,17 +124,25 @@ public class MemberServiceImpl implements MemberService {
      */
     @Override
     @Transactional
-    public ChangeInfoResponse changeInformation(Long memberId, ChangeInfoRequest request) {
+    public ChangeInfoResponse changeInformation(Long memberId,
+                                                ChangeInfoRequest request
+    ) {
         Member member = findMemberOrThrow(memberId);
-        validateEmailNotDuplicated(request.getEmail());
 
+        // 닉네임 변경
         if (isNicknameAvailable(request.getNickname())) {
             member.updateNickname(request.getNickname());
-            member.updateEmail(request.getEmail());
-            member.updateLearningLanguage(Language.fromString(request.getLanguage()));
         }
 
-        return new ChangeInfoResponse(request.getNickname(), request.getEmail(), request.getLanguage());
+        // 언어 설정 변경
+        if (member.getLanguage() != request.getLanguage()) {
+            member.updateLanguage(request.getLanguage());
+        }
+
+        return new ChangeInfoResponse(
+                request.getNickname(),
+                request.getLanguage()
+        );
     }
 
     /**

@@ -4,7 +4,6 @@ package com.mallang.mallang_backend.domain.member.service.main;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,8 +29,6 @@ public interface MemberService {
     void deleteOldProfileImage(Long memberId);
 
     boolean isNicknameAvailable(String nickname);
-
-    void validateEmailNotDuplicated(String email);
 
     UserProfileResponse getUserProfile(Long memberId);
 }
