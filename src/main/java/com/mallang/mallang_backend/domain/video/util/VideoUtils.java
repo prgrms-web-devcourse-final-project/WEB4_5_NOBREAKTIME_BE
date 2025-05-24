@@ -25,7 +25,7 @@ public final class VideoUtils {
 	/**
 	 * ISO-8601 기간 문자열을 H:mm:ss 또는 mm:ss 형태로 포맷
 	 */
-	private static String formatDuration(String isoDuration) {
+	public static String formatDuration(String isoDuration) {
 		Duration d = Duration.parse(isoDuration);
 		long seconds = d.getSeconds();
 		long hours = seconds / 3600;

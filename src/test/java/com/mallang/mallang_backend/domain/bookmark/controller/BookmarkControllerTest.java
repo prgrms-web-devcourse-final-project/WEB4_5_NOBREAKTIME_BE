@@ -1,9 +1,12 @@
 package com.mallang.mallang_backend.domain.bookmark.controller;
 
-import com.mallang.mallang_backend.domain.bookmark.service.BookmarkService;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,13 +24,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.mallang.mallang_backend.domain.bookmark.service.BookmarkService;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 
 @ActiveProfiles("local")
 @AutoConfigureMockMvc(addFilters = false)
@@ -89,30 +89,35 @@ class BookmarkControllerTest {
     @Test
     @DisplayName("북마크 영상 전체 조회")
     void getAllBookmarks() throws Exception {
-        Videos video1 = Videos.builder()
-                .id("video123")
-                .videoTitle("Title1")
-                .thumbnailImageUrl("thumb1.jpg")
-                .channelTitle("채널1")
-                .language(Language.ENGLISH)
-                .build();
+        Videos video1 = spy(Videos.builder()
+            .id("video123")
+            .videoTitle("Title1")
+            .thumbnailImageUrl("thumb1.jpg")
+            .channelTitle("채널1")
+            .language(Language.ENGLISH)
+            .build());
+        doReturn("PT2M5S").when(video1).getDuration(); // 2분5초 → "02:05"
 
-        Videos video2 = Videos.builder()
-                .id("video456")
-                .videoTitle("Title2")
-                .thumbnailImageUrl("thumb2.jpg")
-                .channelTitle("채널2")
-                .language(Language.ENGLISH)
-                .build();
+        Videos video2 = spy(Videos.builder()
+            .id("video456")
+            .videoTitle("Title2")
+            .thumbnailImageUrl("thumb2.jpg")
+            .channelTitle("채널2")
+            .language(Language.ENGLISH)
+            .build());
+        doReturn("PT1H2M3S").when(video2).getDuration(); // 1시간2분3초 → "1:02:03"
 
-        when(bookmarkService.getBookmarks(any())).thenReturn(List.of(video1, video2));
+        given(bookmarkService.getBookmarks(anyLong()))
+            .willReturn(List.of(video1, video2));
 
         mockMvc.perform(get("/api/v1/bookmarks")
-                        .requestAttr("user", user))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.msg").value("북마크 목록 조회 성공"))
-                .andExpect(jsonPath("$.data.length()", org.hamcrest.Matchers.is(2)));
+                .requestAttr("user", user)
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.length()").value(2))
+            // duration이 포맷된 값을 갖는지 검증
+            .andExpect(jsonPath("$.data[0].duration").value("02:05"))
+            .andExpect(jsonPath("$.data[1].duration").value("1:02:03"));
     }
 
     @TestConfiguration

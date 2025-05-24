@@ -1,6 +1,8 @@
 package com.mallang.mallang_backend.domain.video.video.dto;
 
+import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,14 +20,15 @@ public class VideoResponse {
     private boolean isBookmarked;
     private String duration;
 
-    public static VideoResponse from(Videos video, boolean isBookmarked, String duration) {
+    public static VideoResponse from(Videos video, boolean isBookmarked, String isoDuration) {
+        String formattedDuration = VideoUtils.formatDuration(isoDuration);
         return new VideoResponse(
                 video.getId(),
                 video.getVideoTitle(),
                 "", // 필요 시 채널 설명
                 video.getThumbnailImageUrl(),
                 isBookmarked,
-                duration
+                formattedDuration
         );
     }
 }
