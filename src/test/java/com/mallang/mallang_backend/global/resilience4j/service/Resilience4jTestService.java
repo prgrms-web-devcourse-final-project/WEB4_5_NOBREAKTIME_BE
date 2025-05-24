@@ -1,4 +1,4 @@
-package com.mallang.mallang_backend.global.resilience4j.code;
+package com.mallang.mallang_backend.global.resilience4j.service;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class TestService {
+public class Resilience4jTestService {
 
     // ── 서킷 브레이커 테스트용 카운터 ────────────────────────────────────
     private int cbCounter = 1;

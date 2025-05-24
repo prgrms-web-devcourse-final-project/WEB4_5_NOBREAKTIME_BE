@@ -18,7 +18,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.resilience4j.code.TestService;
+import com.mallang.mallang_backend.global.resilience4j.service.Resilience4jTestService;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -31,12 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @ActiveProfiles("local")
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({TestService.class})
+@Import({Resilience4jTestService.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CustomCircuitBreakerConfigTest {
 
     @Autowired
-    private TestService testService;
+    private Resilience4jTestService resilience4jTestService;
 
     @Autowired
     private CircuitBreakerRegistry registry;
@@ -57,7 +57,7 @@ class CustomCircuitBreakerConfigTest {
 
         //when
         for (int i = 0; i < 21; i++) {
-            assertThrows(ServiceException.class, () -> testService.testMethod());
+            assertThrows(ServiceException.class, () -> resilience4jTestService.testMethod());
         }
 
         //then
@@ -65,7 +65,7 @@ class CustomCircuitBreakerConfigTest {
         log.info("circuitBreaker state: {}", circuitBreaker.getState());
 
         // 요청이 거부됨을 확인할 수 있음
-        assertThrows(ServiceException.class, () -> testService.testMethod());
+        assertThrows(ServiceException.class, () -> resilience4jTestService.testMethod());
     }
 
     @Test
@@ -82,7 +82,7 @@ class CustomCircuitBreakerConfigTest {
         //then
         Thread.sleep(30000); // 30초 후
 
-        assertThrows(ServiceException.class, () -> testService.testMethod());
+        assertThrows(ServiceException.class, () -> resilience4jTestService.testMethod());
         assertThat(circuitBreaker.getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);
         log.info("circuitBreaker state: {}", circuitBreaker.getState());
     }
@@ -95,7 +95,7 @@ class CustomCircuitBreakerConfigTest {
         CircuitBreaker circuitBreaker = registry.circuitBreaker("oauthUserLoginService");
 
         //when: 정상 비즈니스 로직 실행
-        circuitBreaker.executeRunnable(() -> testService.successMethod());
+        circuitBreaker.executeRunnable(() -> resilience4jTestService.successMethod());
 
         //then
         assertThat(circuitBreaker.getState()).isNotEqualTo(CircuitBreaker.State.OPEN);

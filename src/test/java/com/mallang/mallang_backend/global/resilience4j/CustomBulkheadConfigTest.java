@@ -18,18 +18,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.mallang.mallang_backend.global.resilience4j.code.TestService;
+import com.mallang.mallang_backend.global.resilience4j.service.Resilience4jTestService;
 
 @SpringBootTest
 @ActiveProfiles("local")
 class CustomBulkheadConfigTest {
 
 	@Autowired
-	private TestService testService;
+	private Resilience4jTestService resilience4jTestService;
 
 	@BeforeEach
 	void setUp() {
-		testService.resetBulkheadCounters();
+		resilience4jTestService.resetBulkheadCounters();
 	}
 
 	@Test
@@ -47,7 +47,7 @@ class CustomBulkheadConfigTest {
 				try {
 					readyLatch.countDown();
 					startLatch.await();
-					testService.bulkheadTestMethod();
+					resilience4jTestService.bulkheadTestMethod();
 				} catch (Exception ignore) {
 				}
 			});
@@ -61,7 +61,7 @@ class CustomBulkheadConfigTest {
 		Future<Long> waiter = exec.submit(() -> {
 			long t0 = System.nanoTime();
 			try {
-				testService.bulkheadTestMethod();
+				resilience4jTestService.bulkheadTestMethod();
 			} catch (Exception ignore) {
 			}
 			long t1 = System.nanoTime();
@@ -78,7 +78,7 @@ class CustomBulkheadConfigTest {
 			.as("11번째 호출 대기 시간")
 			.isGreaterThanOrEqualTo(100);
 
-		assertThat(testService.getPermittedCount())
+		assertThat(resilience4jTestService.getPermittedCount())
 			.as("허용된 전체 호출 수")
 			.isGreaterThanOrEqualTo(11);
 	}

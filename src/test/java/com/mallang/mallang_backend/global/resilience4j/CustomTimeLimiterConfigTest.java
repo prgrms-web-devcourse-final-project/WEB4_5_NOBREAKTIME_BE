@@ -20,7 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.mallang.mallang_backend.global.exception.message.MessageService;
-import com.mallang.mallang_backend.global.resilience4j.code.TestService;
+import com.mallang.mallang_backend.global.resilience4j.service.Resilience4jTestService;
 
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
@@ -30,11 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 @ActiveProfiles("local")
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({TestService.class})
+@Import({Resilience4jTestService.class})
 class CustomTimeLimiterConfigTest {
 
 	@Autowired
-	private TestService testService;
+	private Resilience4jTestService resilience4jTestService;
 
 	@Autowired
 	private TimeLimiterRegistry timeLimiterRegistry;
@@ -50,7 +50,7 @@ class CustomTimeLimiterConfigTest {
 			.anyMatch(tl -> tl.getName().equals("youtubeService"));
 
 		// when
-		String result = testService.timeoutSuccessMethod()
+		String result = resilience4jTestService.timeoutSuccessMethod()
 			.toCompletableFuture()
 			.get(100, TimeUnit.MILLISECONDS);
 
@@ -65,7 +65,7 @@ class CustomTimeLimiterConfigTest {
 	void timeoutTestMethod_throwsTimeout() {
 		// when & then
 		ExecutionException ex = assertThrows(ExecutionException.class, () ->
-			testService.timeoutTestMethod()
+			resilience4jTestService.timeoutTestMethod()
 				.toCompletableFuture()
 				.get(1, TimeUnit.MINUTES)
 		);

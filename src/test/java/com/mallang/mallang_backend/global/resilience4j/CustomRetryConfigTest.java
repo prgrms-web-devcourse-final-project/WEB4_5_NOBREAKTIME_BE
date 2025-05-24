@@ -12,18 +12,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.resilience4j.code.TestService;
+import com.mallang.mallang_backend.global.resilience4j.service.Resilience4jTestService;
 
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 
 @ActiveProfiles("local")
 @SpringBootTest
-@Import(TestService.class)
+@Import(Resilience4jTestService.class)
 class CustomRetryConfigTest {
 
 	@Autowired
-	private TestService testService;
+	private Resilience4jTestService resilience4jTestService;
 
 	@Autowired
 	private RetryRegistry retryRegistry;
@@ -33,8 +33,8 @@ class CustomRetryConfigTest {
 	@BeforeEach
 	void setUp() {
 		retry = retryRegistry.retry("apiRetry");
-		testService.resetRetryCounter();
-		assertEquals(0, testService.getRetryCounter(),
+		resilience4jTestService.resetRetryCounter();
+		assertEquals(0, resilience4jTestService.getRetryCounter(),
 			"테스트 전에는 호출 카운터가 0이어야 합니다");
 	}
 
@@ -44,11 +44,11 @@ class CustomRetryConfigTest {
 	void retryTestMethod_retriesUpToMaxAttempts() {
 
 		ServiceException ex = assertThrows(ServiceException.class, () ->
-			testService.retryTestMethod()
+			resilience4jTestService.retryTestMethod()
 		);
 		assertNotNull(ex);
 
-		assertEquals(1, testService.getRetryCounter(),
+		assertEquals(1, resilience4jTestService.getRetryCounter(),
 			"retryTestMethod 는 max-attempts(1) 만큼 호출되어야 합니다 -> 최초 호출");
 	}
 
@@ -58,10 +58,10 @@ class CustomRetryConfigTest {
 	void alwaysSucceeds_noRetryOnSuccess() {
 
 		assertDoesNotThrow(() ->
-			retry.executeRunnable(testService::retrySuccessMethod)
+			retry.executeRunnable(resilience4jTestService::retrySuccessMethod)
 		);
 
-		assertEquals(0, testService.getRetryCounter(),
+		assertEquals(0, resilience4jTestService.getRetryCounter(),
 			"alwaysSucceeds 는 호출 카운터 증가 없이 성공해야 합니다");
 	}
 }
