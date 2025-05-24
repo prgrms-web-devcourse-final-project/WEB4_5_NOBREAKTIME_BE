@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.mallang.mallang_backend.domain.video.cache.CacheSchedulerService;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
+import com.mallang.mallang_backend.global.slack.SlackNotification;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +24,8 @@ public class CacheSchedulerJob implements Job {
 	private CacheSchedulerService cacheSchedulerService;
 
 	@Override
+	@TimeTrace
+	@SlackNotification(title = "검색 캐싱", message = "현재 캐시 스케줄링이 실행 준비 중입니다.")
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		var dataMap = context.getMergedJobDataMap();
 		String q         = dataMap.getString("q");
