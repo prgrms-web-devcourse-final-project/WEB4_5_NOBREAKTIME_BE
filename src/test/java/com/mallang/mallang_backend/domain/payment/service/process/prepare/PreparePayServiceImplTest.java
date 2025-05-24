@@ -1,19 +1,15 @@
 package com.mallang.mallang_backend.domain.payment.service.process.prepare;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
-import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
-import com.mallang.mallang_backend.domain.payment.entity.Payment;
-import com.mallang.mallang_backend.domain.payment.repository.PaymentQueryRepository;
-import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
-import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
-import com.mallang.mallang_backend.domain.plan.entity.Plan;
-import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
-import com.mallang.mallang_backend.global.config.QueryDslConfig;
-import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.init.factory.EntityTestFactory;
-import lombok.extern.slf4j.Slf4j;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.UUID;
+
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,13 +25,20 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.payment.dto.approve.PaymentApproveRequest;
+import com.mallang.mallang_backend.domain.payment.entity.PayStatus;
+import com.mallang.mallang_backend.domain.payment.entity.Payment;
+import com.mallang.mallang_backend.domain.payment.repository.PaymentQueryRepository;
+import com.mallang.mallang_backend.domain.payment.repository.PaymentRepository;
+import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
+import com.mallang.mallang_backend.domain.plan.entity.Plan;
+import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
+import com.mallang.mallang_backend.global.config.QueryDslConfig;
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.init.factory.EntityTestFactory;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ORDER_AMOUNT_MISMATCH;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SpringBootTest
@@ -142,6 +145,7 @@ class PreparePayServiceImplTest {
     }
 
     @Test
+    @Disabled("슬랙에 알람이 감...")
     @Transactional
     @DisplayName("예외 경우 테스트 - fallbackMethod 동작 확인")
     void t3(CapturedOutput out) throws Exception {
