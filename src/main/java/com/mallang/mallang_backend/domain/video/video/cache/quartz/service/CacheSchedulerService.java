@@ -1,6 +1,6 @@
-package com.mallang.mallang_backend.domain.video.video.cache.service;
+package com.mallang.mallang_backend.domain.video.video.cache.quartz.service;
 
-import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
+import com.mallang.mallang_backend.domain.video.video.cache.client.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.global.slack.SlackNotification;
 import lombok.RequiredArgsConstructor;

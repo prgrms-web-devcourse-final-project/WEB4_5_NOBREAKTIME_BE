@@ -19,7 +19,7 @@ public class YoutubeApiClient {
 	@Value("${youtube.api.key}")
 	private String apiKey;
 
-	private final YouTubeClient youtubeClient;
+	private final YoutubeClient youtubeClient;
 
 	// 검색: 키워드 기반으로 videoId만 가져오기 (한 페이지 분량)
 	@MonitorExternalApi(name = "youtube")

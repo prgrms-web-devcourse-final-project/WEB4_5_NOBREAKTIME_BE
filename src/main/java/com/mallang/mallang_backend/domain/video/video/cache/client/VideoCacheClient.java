@@ -1,10 +1,10 @@
-package com.mallang.mallang_backend.domain.video.video.cache;
+package com.mallang.mallang_backend.domain.video.video.cache.client;
 
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.SearchContext;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
-import com.mallang.mallang_backend.domain.video.youtube.config.VideoSearchProperties;
+import com.mallang.mallang_backend.domain.video.youtube.config.YoutubeSearchProperties;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class VideoCacheClient {
 	private final YoutubeService youtubeService;
-	private final VideoSearchProperties youtubeSearchProperties;
+	private final YoutubeSearchProperties youtubeSearchProperties;
 
 	/**
 	 * 캐시에서 조회하고 MISS 시 fetchAndCache 호출
