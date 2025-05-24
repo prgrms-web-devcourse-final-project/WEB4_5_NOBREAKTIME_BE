@@ -26,7 +26,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class YoutubeService {
@@ -137,8 +139,8 @@ public class YoutubeService {
 		List<String> videoIds,
 		Throwable t
 	) {
-		CompletableFuture<List<Video>> failed = new CompletableFuture<>();
-		failed.completeExceptionally(new ServiceException(ErrorCode.API_ERROR));
-		return failed;
+		// 에러 로그를 남기고 빈 리스트로 복구
+		log.error("[YouTubeService] fetchVideosByIdsAsync 실패 – 빈 리스트 반환", t);
+		return CompletableFuture.completedFuture(List.of());
 	}
 }

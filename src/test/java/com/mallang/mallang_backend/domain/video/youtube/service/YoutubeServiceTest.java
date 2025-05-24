@@ -147,14 +147,15 @@ class YoutubeServiceTest {
 	}
 
 	@Test
-	@DisplayName("fallbackFetchVideosByIds: CompletableFuture가 예외 상태로 완료됨")
-	void fallbackFetchVideosByIds_completesExceptionally() {
+	@DisplayName("fallbackFetchVideosByIds: 빈 리스트를 반환하며 정상 완료됨")
+	void fallbackFetchVideosByIds_returnsEmptyList() throws Exception {
 		CompletableFuture<List<Video>> future =
 			service.fallbackFetchVideosByIds(List.of("1","2"), new Throwable());
 
-		assertTrue(future.isCompletedExceptionally());
-		ExecutionException ex = assertThrows(ExecutionException.class, future::get);
-		assertTrue(ex.getCause() instanceof ServiceException);
-		assertEquals(ErrorCode.API_ERROR, ((ServiceException)ex.getCause()).getErrorCode());
+		// 예외 없이 정상 완료되어야 함
+		assertFalse(future.isCompletedExceptionally());
+		List<Video> result = future.get();  // should not throw
+		assertNotNull(result, "결과는 null이 아니어야 합니다");
+		assertTrue(result.isEmpty(), "결과 리스트는 비어 있어야 합니다");
 	}
 }

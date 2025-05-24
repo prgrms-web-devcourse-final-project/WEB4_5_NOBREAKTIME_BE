@@ -61,11 +61,11 @@
 | 이름 | 프로필 | 주요 역할 |
 |:----:|:------:|:---------|
 | 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>PO (Product Owner)</li><li>프로젝트 일정 관리 및 팀 협업 조율</li><li>프론트와 백엔드 팀 사이 소통<li>기술 문서화</li><li>OpenAI 모듈을 활용한 문제 제작/번역/사전/문법 분석/레벨 분석 기능 개발</li></ul> |
-| 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
-| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>카카오 소셜 로그인 구현</li></ul> |
-| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
-| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
-| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
+| 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>영상 내 테스트 퀴즈 프로세스 구현</li></ul> |
+| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>TossPayment API를 활용한 결제 시스템 구현</li><li>구글 / 카카오 / 네이버 소셜 로그인 구현</li></ul><li>TossPayment API를 활용한 결제 시스템 구현</li> |
+| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
+| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>표현 퀴즈 프로세스 구현</li><li>프론트엔드 코드 관리</li></ul> |
+| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
 
 <br/>
 
@@ -105,6 +105,14 @@
 <div> 
     <img src="https://img.shields.io/badge/ChatGPT%20API-412991?style=for-the-badge&logo=openai&logoColor=white"/> 
     <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Naver-03C75A?style=for-the-badge&logo=naver&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Kakao-FFCD00?style=for-the-badge&logo=kakao&logoColor=black"/>
+    <img src="https://img.shields.io/badge/Google-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Toss-0064FF?style=for-the-badge&logo=toss&logoColor=white"/>
+    <img src="https://img.shields.io/badge/CLOVA-03C75A?style=for-the-badge&logo=naver&logoColor=white"/>
+    <img src="https://img.shields.io/badge/yt--dlp-FFEE00?style=for-the-badge&logo=data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0iI0ZGRUUwMCI+CiAgPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNTAiIC8+CiAgPHBvbHlnb24gcG9pbnRzPSI0MCwzMCA3MCw1MCA0MCw3MCIgZmlsbD0iIzAwMDAwMCIgLz4KPC9zdmc+Cg=="/>
+
+  
 </div>
 
 ### Deployment&Infra
@@ -118,6 +126,14 @@
 </div>
 
 ### Monitoring
+<div>
+  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Logstash-005571?style=for-the-badge&logo=logstash&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Kibana-005571?style=for-the-badge&logo=kibana&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white"/>
+</div>
 
 ### Version management and collaboration tools
 <div> 

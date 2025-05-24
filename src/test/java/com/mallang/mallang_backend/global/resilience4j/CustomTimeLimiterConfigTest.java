@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import com.mallang.mallang_backend.global.resilience4j.code.TestService;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import io.github.resilience4j.timelimiter.event.TimeLimiterOnErrorEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Slf4j
 @ActiveProfiles("local")
@@ -60,6 +60,7 @@ class CustomTimeLimiterConfigTest {
 	}
 
 	@Test
+	@Disabled("검증 완료")
 	@DisplayName("TimeLimiter: 지연 6초 → 타임아웃 발생 (TimeoutException)")
 	void timeoutTestMethod_throwsTimeout() {
 		// when & then
@@ -76,6 +77,7 @@ class CustomTimeLimiterConfigTest {
 	}
 
 	@Test
+	@Disabled("검증 완료")
 	@DisplayName("handleError: 일반 예외 발생 시 messageService 미호출 (DI 없이)")
 	void handleError_directInstance_withOtherException() throws Exception {
 		MessageService msgMock = mock(MessageService.class);

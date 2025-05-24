@@ -32,7 +32,12 @@ public class VideoCacheClient {
 	 */
 	@Cacheable(
 		cacheNames = "videoListCache",
-		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)",
+		key = "T(String).format(" +
+			"  '%s|%s|%s', " +
+			"  (#q        == null ? '' : #q), " +
+			"  (#category == null ? '' : #category), " +
+			"  #language" +
+			")",
 		unless = "#result != null && #result.responses.isEmpty()"
 	)
 	public CachedVideos loadCached(
@@ -47,14 +52,22 @@ public class VideoCacheClient {
 	 */
 	@CachePut(
 		cacheNames = "videoListCache",
-		key = "T(String).format(\"%s|%s|%s\", #q, #category, #language)"
+		key = "T(String).format(" +
+			"  '%s|%s|%s', " +
+			"  (#q        == null ? '' : #q), " +
+			"  (#category == null ? '' : #category), " +
+			"  #language" +
+			")"
 	)
 	public CachedVideos fetchAndCache(
 		String q, String category, String language, long fetchSize
 	) {
+		String safeQ       = (q == null)        ? "" : q;
+		String safeCategory= (category == null) ? "" : category;
+
 		try {
 			log.info("[CACHE PUT] fetchAndCache q={} category={} language={} fetchSize={}",
-				q, category, language, fetchSize);
+				safeQ, safeCategory, language, fetchSize);
 
 			SearchContext ctx = buildSearchContext(q, category, language);
 			List<String> ids = youtubeService.searchVideoIds(
@@ -78,7 +91,7 @@ public class VideoCacheClient {
 
 		} catch (IOException e) {
 			log.error("[ERROR] fetchAndCache failed q={} category={} language={} fetchSize={}",
-				q, category, language, fetchSize, e);
+				safeQ, safeCategory, language, fetchSize, e);
 			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED, e);
 		}
 	}
@@ -96,9 +109,9 @@ public class VideoCacheClient {
 		var defaultsMap = youtubeSearchProperties.getDefaults();
 		var defaults    = defaultsMap.getOrDefault(langKey, defaultsMap.get("en"));
 
-		String region = defaults.getRegion();
-		String query  = (q != null && !q.isBlank()) ? q : defaults.getQuery();
-		boolean isDefault = (q == null || q.isBlank()) && (category == null || category.isBlank());
+		String region        = defaults.getRegion();
+		String query         = (q != null && !q.isBlank())      ? q             : defaults.getQuery();
+		boolean isDefault    = (q == null || q.isBlank()) && (category == null || category.isBlank());
 		String videoDuration = defaults.getVideoDuration();
 
 		return new SearchContext(query, region, langKey, category, isDefault, videoDuration);
