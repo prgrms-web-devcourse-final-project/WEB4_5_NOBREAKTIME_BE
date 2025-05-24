@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.payment.quartz;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionQueryRepository;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,6 +69,7 @@ public class SubscriptionServiceTest {
     }
 
     @Test
+    @Disabled("슬랙에 알람이 감...")
     @DisplayName("Retry - 재시도 허용 예외 발생 시 제대로 진행되는지 테스트 / 성공")
     void updateSubscriptionStatusRetry(CapturedOutput output) throws Exception {
         //given: Mock 설정 -> 처음 2번은 실패, 3번째 성공
@@ -90,6 +92,7 @@ public class SubscriptionServiceTest {
     }
 
     @Test
+    @Disabled("슬랙에 알람이 감...")
     @DisplayName("Fallback - 재시도 허용 예외 발생 시 제대로 진행되는지 테스트 / 실패")
     void updateSubscriptionStatusRetryFail(CapturedOutput output) throws Exception {
         //given: Mock 설정 -> 3번 다 실패
