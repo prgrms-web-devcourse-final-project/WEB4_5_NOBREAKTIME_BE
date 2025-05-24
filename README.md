@@ -60,12 +60,12 @@
 
 | 이름 | 프로필 | 주요 역할 |
 |:----:|:------:|:---------|
-| 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>PO (Product Owner)</li><li>프로젝트 일정 관리 및 팀 협업 조율</li><li>프론트와 백엔드 팀 사이 소통<li>기술 문서화</li><li>OpenAI 모듈을 활용한 문제 제작/번역/사전/문법 분석/레벨 분석 기능 개발</li></ul> |
-| 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>영상 내 테스트 퀴즈 프로세스 구현</li></ul> |
-| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>TossPayment API를 활용한 결제 시스템 구현</li><li>구글 / 카카오 / 네이버 소셜 로그인 구현</li></ul><li>TossPayment API를 활용한 결제 시스템 구현</li> |
-| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
-| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>표현 퀴즈 프로세스 구현</li><li>프론트엔드 코드 관리</li></ul> |
-| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
+| 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>PO (Product Owner)</li><li>프로젝트 일정 관리 및 프론트/백엔드 팀 협업 조율</li><li>프론트엔드 코드 관리<li>기술 문서화</li><li>OpenAI 모듈을 활용한 문제 제작/번역/사전/문법 분석/레벨 분석 기능 개발</li></ul> |
+| 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>영상 내 퀴즈 프로세스 구현</li></ul> |
+| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>TossPayment API를 활용한 결제 시스템 구현</li><li>구글 / 카카오 / 네이버 소셜 로그인 구현</li><li>TossPayment API를 활용한 결제 시스템 구현</li></ul> |
+| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어장 및 단어, 표현, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
+| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>표현함 기능 구현</li><li>프론트엔드 코드 관리</li></ul> |
+| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>단어장 및 단어, 표현, 대시보드 통합 랜덤 퀴즈 프로세스 구현</li><li>일본어 학습 기능 구현</li></ul> |
 
 <br/>
 
