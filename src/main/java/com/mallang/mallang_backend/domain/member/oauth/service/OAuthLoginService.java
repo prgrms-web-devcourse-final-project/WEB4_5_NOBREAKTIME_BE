@@ -147,7 +147,7 @@ public class OAuthLoginService {
         );
     }
 
-    public Long signupByOauth(String platformId,
+    private Long signupByOauth(String platformId,
                               String email,
                               String nickname,
                               String profileImage,
@@ -180,7 +180,7 @@ public class OAuthLoginService {
      * @param platformId 플랫폼 고유 아이디
      * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우
      */
-    public void validateWithdrawnLogNotRejoinable(String platformId) {
+    private void validateWithdrawnLogNotRejoinable(String platformId) {
 
         if (logRepository.existsByOriginalPlatformId(platformId)) {
 
