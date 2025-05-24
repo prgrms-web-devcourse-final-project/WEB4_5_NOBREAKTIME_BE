@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.member.oauth.service;
 import com.mallang.mallang_backend.global.exception.custom.RetryableException;
 import com.mallang.mallang_backend.global.resilience4j.CustomCircuitBreakerConfig;
 import com.mallang.mallang_backend.global.resilience4j.CustomRetryConfigV2;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,7 @@ class CustomOAuth2ServiceTest {
      * CircuitBreaker → Retry → (실제 메서드 실행)
      */
     @Test
+    @Disabled("슬랙 알림이 울려서...")
     @DisplayName("loadUser → 서킷 브레이커 호출 이후 retry 시도")
     void t1(CapturedOutput out) throws Exception {
         //given

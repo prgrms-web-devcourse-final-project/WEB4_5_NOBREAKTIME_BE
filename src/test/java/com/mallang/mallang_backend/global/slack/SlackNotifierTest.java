@@ -16,7 +16,7 @@ class SlackNotifierTest {
     @Disabled
     @DisplayName("실제 슬랙 알림 전송 테스트")
     void t1() throws Exception {
-        notifier.sendSlackNotification("이름 바꿈",
-                "\n 말랑이 귀엽죠");
+        notifier.sendSlackNotification("",
+                "\n ");
     }
 }
