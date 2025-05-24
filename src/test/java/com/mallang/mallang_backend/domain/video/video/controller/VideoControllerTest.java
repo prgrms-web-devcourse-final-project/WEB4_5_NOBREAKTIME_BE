@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -90,7 +91,7 @@ class VideoControllerTest {
 	void testGetVideoList() throws Exception {
 		// given
 		Videos v = VideoTestFactory.create("vid2", "제목2", Language.ENGLISH);
-		VideoResponse resp = VideoResponse.from(v, true, "P10M");
+		VideoResponse resp = VideoResponse.from(v, true, "PT10M");
 		given(videoService.getVideosForMember(
 			anyString(),           // q
 			anyString(),           // categoryId
@@ -103,11 +104,12 @@ class VideoControllerTest {
 				.param("q", "q")
 				.param("category", "cat")
 				.param("maxResults", "3")
-				.accept("application/json")
+				.accept(MediaType.APPLICATION_JSON)
 			)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data[0].videoId").value("vid2"))
-			.andExpect(jsonPath("$.data[0].bookmarked").value(true));
+			.andExpect(jsonPath("$.data[0].bookmarked").value(true))
+			.andExpect(jsonPath("$.data[0].duration").value("10:00"));
 	}
 
 	@Test

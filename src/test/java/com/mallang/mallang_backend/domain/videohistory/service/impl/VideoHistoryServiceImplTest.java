@@ -91,33 +91,37 @@ class VideoHistoryServiceImplTest {
 	@DisplayName("getRecentHistories: 정상 조회")
 	void getRecentHistories_success() {
 		var member = VideoHistoryTestFactory.createMember(MEMBER_ID);
+		var videos = spy(VideoHistoryTestFactory.createVideos("v1"));
+		doReturn("PT2M3S").when(videos).getDuration();
 		var h1 = VideoHistoryTestFactory.createVideoHistory(
-			1L, member, VideoHistoryTestFactory.createVideos("v1"), LocalDateTime.now());
-		var h2 = VideoHistoryTestFactory.createVideoHistory(
-			2L, member, VideoHistoryTestFactory.createVideos("v2"), LocalDateTime.now());
+			1L, member, videos, LocalDateTime.now());
 
 		when(memberRepo.findById(MEMBER_ID)).thenReturn(Optional.of(member));
 		when(historyRepo.findTop5ByMemberOrderByLastViewedAtDesc(member))
-			.thenReturn(List.of(h1, h2));
+			.thenReturn(List.of(h1));
 
 		var list = service.getRecentHistories(MEMBER_ID);
-		assertEquals(2, list.size());
+		assertEquals(1, list.size());
 		assertEquals("v1", list.get(0).getVideoId());
-		assertEquals("v2", list.get(1).getVideoId());
+		assertEquals("02:03", list.get(0).getDuration());
 	}
 
 	@Test
 	@DisplayName("getAllHistories: 정상 조회")
 	void getAllHistories_success() {
 		var member = VideoHistoryTestFactory.createMember(MEMBER_ID);
-		var h1 = VideoHistoryTestFactory.createVideoHistory(
-			1L, member, VideoHistoryTestFactory.createVideos("v1"), LocalDateTime.now());
+		var videos = spy(VideoHistoryTestFactory.createVideos("v2"));
+		doReturn("PT1H2M3S").when(videos).getDuration();
+		var h2 = VideoHistoryTestFactory.createVideoHistory(
+			6L, member, videos, LocalDateTime.now());
+
 		when(memberRepo.findById(MEMBER_ID)).thenReturn(Optional.of(member));
 		when(historyRepo.findTop50ByMemberOrderByLastViewedAtDesc(member))
-			.thenReturn(List.of(h1));
+			.thenReturn(List.of(h2));
 
 		var list = service.getAllHistories(MEMBER_ID);
 		assertEquals(1, list.size());
-		assertEquals("v1", list.get(0).getVideoId());
+		assertEquals("v2", list.get(0).getVideoId());
+		assertEquals("1:02:03", list.get(0).getDuration());
 	}
 }

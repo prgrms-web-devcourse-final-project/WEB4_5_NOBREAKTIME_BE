@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.videohistory.dto;
 
 import java.time.LocalDateTime;
 
+import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 
@@ -23,12 +24,13 @@ public class VideoHistoryResponse {
 
     public static VideoHistoryResponse from(VideoHistory history) {
         Videos video = history.getVideos();
+        String formattedDuration = VideoUtils.formatDuration(video.getDuration());
         return new VideoHistoryResponse(
             video.getId(),
             video.getVideoTitle(),
             video.getThumbnailImageUrl(),
             history.getLastViewedAt(),
-            video.getDuration()
+            formattedDuration
         );
     }
 }
