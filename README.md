@@ -62,10 +62,10 @@
 |:----:|:------:|:---------|
 | 문권이 | <img src="https://avatars.githubusercontent.com/u/102517739?v=4" alt="문권이" width="100"> | <ul><li>PO (Product Owner)</li><li>프로젝트 일정 관리 및 팀 협업 조율</li><li>프론트와 백엔드 팀 사이 소통<li>기술 문서화</li><li>OpenAI 모듈을 활용한 문제 제작/번역/사전/문법 분석/레벨 분석 기능 개발</li></ul> |
 | 장무영 | <img src="https://avatars.githubusercontent.com/u/136911104?v=4" alt="장무영" width="100"> | <ul><li>백엔드 팀장 (BE 리딩 및 기술 문서 작성)</li><li>백엔드 전반 기술 검토 및 품질 관리</li><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
-| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>카카오 소셜 로그인 구현</li></ul> |
-| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
-| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li></ul> |
-| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li></ul> |
+| 최지선 | <img src="https://avatars.githubusercontent.com/u/192316487?v=4" alt="최지선" width="100"> | <ul><li>AWS 인프라 및 서버 관리</li><li>GitHub Actions 기반 CI/CD 구축 및 운영</li><li>TossPayment API를 활용한 결제 시스템 구현</li><li>구글 / 카카오 / 네이버 소셜 로그인 구현</li></ul> |
+| 엄현수 | <img src="https://avatars.githubusercontent.com/u/55376152?v=4" alt="엄현수" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>일본어 학습 기능 구현</li></ul> |
+| 서세훈 | <img src="https://avatars.githubusercontent.com/u/113406474?v=4" alt="서세훈" width="100"> | <ul><li>유튜브 Data API를 활용한 영상 조회/선택/히스토리 기능 구현</li><li>프론트엔드 코드 관리</li></ul> |
+| 신동우 | <img src="https://avatars.githubusercontent.com/u/58596222?v=4" alt="신동우" width="100"> | <ul><li>Clova Speech API를 활용한 음성 추출 및 자막 변환 모듈 개발</li><li>일본어 학습 기능 구현</li></ul> |
 
 <br/>
 
@@ -75,31 +75,86 @@
 
 # 🛠️ Tech
 ## 기술 스택
-### 언어
-- JAVA   23
 
-### 프레임워크 및 라이브러리
-- Spring   3.4.2
-- Spring  Security
+### 프론트엔드
+<div> 
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white"/>
+</div>
+
+### 백엔드
+<div> 
+  <img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=java&logoColor=white"/>
+  <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black"/>
+</div>
+
+### Database
+<div> 
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"/>
+</div>
+
+### IDLE&Tool
+<div> 
+  <img src="https://img.shields.io/badge/IntelliJ%20IDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white"/>
+</div>
+
+### OPEN API
+<div> 
+    <img src="https://img.shields.io/badge/ChatGPT%20API-412991?style=for-the-badge&logo=openai&logoColor=white"/> 
+    <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Naver-03C75A?style=for-the-badge&logo=naver&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Kakao-FFCD00?style=for-the-badge&logo=kakao&logoColor=black"/>
+    <img src="https://img.shields.io/badge/Google-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Toss-0064FF?style=for-the-badge&logo=toss&logoColor=white"/>
+    <img src="https://img.shields.io/badge/CLOVA-03C75A?style=for-the-badge&logo=naver&logoColor=white"/>
   
-### IED 및 개발 도구
-- IntelliJ IDEA
+</div>
 
-### 버전 관리 및 협업 도구
-- Git
-- GitHub
-- Slack
-- Notion
-- Discord
+### Deployment&Infra
+<div> 
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"/>
+  <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white"/>
+  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white"/>
+  <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white"/>
+</div>
+
+### Monitoring
+<div>
+  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Logstash-005571?style=for-the-badge&logo=logstash&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Kibana-005571?style=for-the-badge&logo=kibana&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white"/>
+</div>
+
+### Version management and collaboration tools
+<div> 
+  <img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)"/>
+  <img src="https://img.shields.io/badge/Zep-6001D2?style=for-the-badge&logo=Zep&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Google%20Meet-00897B?style=for-the-badge&logo=googlemeet&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white"/>
+</div>
+
 
 ## UML
 ![image](https://github.com/user-attachments/assets/6cb60bd5-c59f-45b6-9f31-8db06a0f3575)
 
 ## ERD
+<-- 추가 예정 -->
 
 ## System Architecture
+<-- 추가 예정 -->
 
 ## Flow Chart
+<-- 추가 예정 -->
 [🗃️ Flow Chart]()
 
 ## 🏷️  브랜치 전략
