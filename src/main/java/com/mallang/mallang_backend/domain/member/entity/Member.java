@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_ALREADY_WITHDRAWN;
 
@@ -83,21 +82,7 @@ public class Member extends BaseTime {
         this.measuredAt = LocalDateTime.now();
     }
 
-    /**
-     * 이메일을 업데이트합니다.
-     * <p>
-     * 기존 이메일과 새 이메일이 다를 때만 업데이트합니다.
-     * 같은 닉네임일 경우 아무런 동작을 하지 않습니다.
-     * null 상태에서도 새로운 이메일 등록이 가능합니다.
-     * - 카카오 회원의 경우 최초 등록일 수 있습니다.
-     *
-     * @param email 새로 설정할 이메일 주소
-     */
-    public void updateEmail(String email) {
-        if (!Objects.equals(this.email, email)) {
-            this.email = email;
-        }
-    }
+    // =========== 기본 업데이트 =========== //
 
     /**
      * 닉네임을 업데이트합니다.
@@ -150,27 +135,15 @@ public class Member extends BaseTime {
         this.expressionLevel = expressionLevel;
     }
 
-    // 회원 탈퇴 후 마스킹 처리
-    public void markAsWithdrawn(String uuid) {
-        if (this.withdrawalDate != null) {
-            throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
-        }
-        this.withdrawalDate = LocalDateTime.now();
-        maskSensitiveData(uuid);
-    }
-
-    private void maskSensitiveData(String uuid) {
-        this.platformId = "withdrawn_" + this.id + " " + uuid + " " + LocalDateTime.now();
-        this.nickname = uuid; // 고유 랜덤 코드
-        this.email = "withdrawn_" + this.id + uuid + " " + LocalDateTime.now();
-        this.profileImageUrl = null;
-        this.loginPlatform = LoginPlatform.NONE;
-        this.subscriptionType = SubscriptionType.NONE;
-    }
-
     public void updateProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
+
+    public void updateLanguage(Language language) {
+        this.language = language;
+    }
+
+    // =========== 커스텀 비즈니스 로직 =========== //
 
     /**
      * 추가 단어장, 표현함을 사용할 수 있는지 여부를 검사한다.
@@ -179,5 +152,77 @@ public class Member extends BaseTime {
      */
     public boolean canUseAdditaional() {
         return subscriptionType != SubscriptionType.BASIC;
+    }
+
+    /**
+     * 구독 타입과 언어를 업데이트하는 메서드입니다.
+     * <p>
+     * 구독 타입이 변경될 때, PREMIUM 타입으로 변경 시 언어를 ALL로 설정합니다.
+     * 동일한 타입으로 변경 요청 시 아무 동작도 하지 않습니다.
+     *
+     * @param newType 변경할 구독 타입
+     */
+    public void updateSubTypeAndLanguage(SubscriptionType newType) {
+        // 변경 사항이 없으면 바로 반환
+        if (this.subscriptionType == newType) {
+            return;
+        }
+
+        // PREMIUM으로 변경 시 언어를 ALL로 설정
+        if (newType == SubscriptionType.PREMIUM) {
+            this.language = Language.ALL;
+        }
+
+        // 구독 타입 변경
+        this.subscriptionType = newType;
+    }
+
+    /**
+     * 회원 탈퇴 처리 및 개인정보 마스킹을 수행합니다.
+     * <p>
+     * 최초 1회만 실행 가능하며, 탈퇴 시 다음 작업이 수행됩니다:
+     * <ul>
+     *   <li>탈퇴 일시 기록</li>
+     *   <li>식별 정보 마스킹 처리</li>
+     *   <li>구독 정보 초기화</li>
+     * </ul>
+     *
+     * @param uuid 시스템에서 생성한 고유 식별자(마스킹 시 사용)
+     * @throws ServiceException 이미 탈퇴 처리된 회원인 경우 발생(MEMBER_ALREADY_WITHDRAWN)
+     */
+    public void markAsWithdrawn(String uuid) {
+        // 중복 탈퇴 요청 검증
+        if (this.withdrawalDate != null) {
+            throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
+        }
+
+        this.withdrawalDate = LocalDateTime.now();
+        maskSensitiveInformation(uuid);
+    }
+
+    /**
+     * 개인 식별 정보를 마스킹 처리하는 내부 메서드
+     * <p>
+     * 다음 필드를 변경합니다:
+     * <ul>
+     *   <li>platformId: "withdrawn_[id]_[uuid]_[timestamp]" 형식</li>
+     *   <li>nickname: UUID 값으로 대체</li>
+     *   <li>email: "withdrawn_[id]_[uuid]_[timestamp]" 형식</li>
+     *   <li>프로필 이미지 URL 삭제</li>
+     *   <li>로그인 플랫폼 정보 초기화</li>
+     *   <li>구독 타입 초기화</li>
+     * </ul>
+     *
+     * @param uuid 마스킹에 사용할 고유 식별자
+     */
+    private void maskSensitiveInformation(String uuid) {
+        final String timestampSuffix = LocalDateTime.now().toString();
+
+        this.platformId = String.format("withdrawn_%s_%s_%s", this.id, uuid, timestampSuffix);
+        this.nickname = uuid; // 재가입 방지를 위한 고유 코드 부여
+        this.email = String.format("withdrawn_%s_%s_%s", this.id, uuid, timestampSuffix);
+        this.profileImageUrl = null;
+        this.loginPlatform = LoginPlatform.NONE;
+        this.subscriptionType = SubscriptionType.NONE;
     }
 }

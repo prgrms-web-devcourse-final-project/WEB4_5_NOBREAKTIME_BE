@@ -8,6 +8,7 @@ import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.entity.SubscriptionStatus;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionQueryRepository;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +75,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LocalDateTime startDate = LocalDateTime.now(clock);
 
         Member member = findMemberOrThrow(memberId);
-        SubscriptionType preType = member.getSubscriptionType();
-        member.updateSubscription(plan.getType());
+        SubscriptionType type = member.getSubscriptionType();
+
+        member.updateSubTypeAndLanguage(plan.getType());
 
         Subscription newSubs = Subscription.builder()
                 .member(member)
@@ -86,7 +88,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionRepository.save(newSubs);
 
         log.info("[결제변경이력] 사용자 ID:{}|구독등급:{}→{}|변경기간:{}~{}",
-                memberId, preType, member.getSubscriptionType(),
+                memberId, type, member.getSubscriptionType(),
                 newSubs.getStartedAt(), newSubs.getExpiredAt());
     }
 

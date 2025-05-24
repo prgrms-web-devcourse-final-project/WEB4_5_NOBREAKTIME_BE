@@ -48,14 +48,13 @@ public class DataInitializer implements CommandLineRunner {
     private final PlanRepository planRepository;
     private final SubscriptionRepository subscriptionRepository;
 
-
     @Override
     public void run(String... args) throws Exception {
 
         Member basicUser = createTestUser();
 
         String key = createToken();
-        System.out.println("access token: " + key);
+        log.info(">>>>>>>>>>>>>>>> access token: {}", key);
 
         setSecurityContext(basicUser, basicUser.getSubscriptionType().getRoleName());
 
@@ -119,10 +118,10 @@ public class DataInitializer implements CommandLineRunner {
                 .email("google123@gmail.com")
                 .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
-                .language(Language.ENGLISH)
+                .language(Language.ALL)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
-        testUser.updateSubscription(SubscriptionType.STANDARD);
+        testUser.updateSubTypeAndLanguage(SubscriptionType.PREMIUM);
         testUser = memberRepository.save(testUser);
 
         List<Wordbook> wordbooks = Wordbook.createDefault(testUser);
@@ -130,11 +129,6 @@ public class DataInitializer implements CommandLineRunner {
 
         List<ExpressionBook> expressionBooks = ExpressionBook.createDefault(testUser);
         expressionBookRepository.saveAll(expressionBooks);
-
-        /* 프리미엄 유저가 필요할 때 -> 하단의 리턴을 주석처리 후 사용
-        memberRepository.save(testUser);
-        testUser.updateSubscription(Subscription.PREMIUM);
-        return testUser;*/
 
         return testUser;
     }

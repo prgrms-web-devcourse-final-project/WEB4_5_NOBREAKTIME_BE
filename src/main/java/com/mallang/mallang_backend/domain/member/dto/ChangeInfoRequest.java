@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.domain.member.dto;
 
+import com.mallang.mallang_backend.global.common.Language;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,12 +22,7 @@ public class ChangeInfoRequest {
     @Size(min = 1, max = 10, message = "닉네임은 1자 이상 10자 이하로 입력해 주세요.")
     private String nickname;
 
-    @Schema(description = "회원 이메일", example = "user@example.com")
-    @NotBlank(message = "이메일을 입력해 주세요.")
-    @Email(message = "올바른 이메일 형식이 아닙니다.")
-    private String email;
-
     @Schema(description = "회원 언어", example = "ENGLISH")
     @NotBlank(message = "언어 선택을 입력해주세요.")
-    private String language;
+    private Language language;
 }
