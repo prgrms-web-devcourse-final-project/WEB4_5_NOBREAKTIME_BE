@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.cache.CacheManager;
 
-import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
+import com.mallang.mallang_backend.domain.video.video.cache.client.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.cache.service.VideoCacheService;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;

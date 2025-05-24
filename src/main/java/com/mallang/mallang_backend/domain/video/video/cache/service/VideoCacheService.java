@@ -9,7 +9,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
-import com.mallang.mallang_backend.domain.video.video.cache.VideoCacheClient;
+import com.mallang.mallang_backend.domain.video.video.cache.client.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.global.exception.ErrorCode;

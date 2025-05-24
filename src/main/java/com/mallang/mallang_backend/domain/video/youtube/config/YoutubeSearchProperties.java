@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "youtube.search") // yml 파일에서 "youtube.search" 하위 값을 읽어와서 매핑
-public class VideoSearchProperties {
+public class YoutubeSearchProperties {
     private Map<String, SearchDefault> defaults;
 
     // 언어 코드(en, ja, zh) 별로 SearchDefault 객체를 매핑
