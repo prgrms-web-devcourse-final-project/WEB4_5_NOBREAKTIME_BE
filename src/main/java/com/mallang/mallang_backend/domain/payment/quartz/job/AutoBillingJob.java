@@ -3,6 +3,7 @@ package com.mallang.mallang_backend.domain.payment.quartz.job;
 import com.mallang.mallang_backend.domain.payment.quartz.service.AutoBillingService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.slack.SlackNotification;
+import com.mallang.mallang_backend.global.util.job.JobDataUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
@@ -27,9 +28,7 @@ public class AutoBillingJob implements Job {
     )
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap dataMap = context.getMergedJobDataMap();
-        int currentRetry = context.getTrigger()
-                .getJobDataMap()
-                .getInt("currentRetry");
+        int currentRetry = JobDataUtils.getIntValue(dataMap, "currentRetry", 0);
 
         log.info("[최근 {} 재시도 횟수]: {}", context.getJobDetail().getKey(), currentRetry);
         try {
