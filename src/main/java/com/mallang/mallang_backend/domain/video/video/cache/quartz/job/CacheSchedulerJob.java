@@ -1,8 +1,10 @@
 package com.mallang.mallang_backend.domain.video.video.cache.quartz.job;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@DisallowConcurrentExecution // 중복 실행 방지
+@PersistJobDataAfterExecution // 영속성
 public class CacheSchedulerJob implements Job {
 
 	@Autowired
