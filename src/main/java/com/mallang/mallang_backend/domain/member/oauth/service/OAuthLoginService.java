@@ -109,9 +109,6 @@ public class OAuthLoginService {
         // 필수 속성 추출
         String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
 
-        // 30일 이내 탈퇴 이력이 존재하면 예외 발생
-        validateWithdrawnLogNotRejoinable(platformId);
-
         String email = (String) userAttributes.get("email");
         String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
         String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
@@ -132,26 +129,6 @@ public class OAuthLoginService {
                 s3ProfileImageUrl,
                 platform
         );
-    }
-
-    /**
-     * 30일 이내 탈퇴 이력이 있는 경우 가입을 제한합니다.
-     *
-     * @param platformId 플랫폼 고유 아이디
-     * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우
-     */
-    private void validateWithdrawnLogNotRejoinable(String platformId) {
-
-        if (withdrawalService.existsByOriginalPlatformId(platformId)) {
-
-            WithdrawnLog withdrawnLog = withdrawalService.findByOriginalPlatformId(platformId);
-            LocalDateTime rejoinAvailableAt = withdrawnLog.getCreatedAt().plusDays(30); // 가입 가능 날짜
-
-            if (rejoinAvailableAt.isAfter(LocalDateTime.now())) {
-                log.error("아직 가입할 수 없는 회원: {}", platformId);
-                throw new ServiceException(CANNOT_SIGNUP_WITH_THIS_ID);
-            }
-        }
     }
 
     /**

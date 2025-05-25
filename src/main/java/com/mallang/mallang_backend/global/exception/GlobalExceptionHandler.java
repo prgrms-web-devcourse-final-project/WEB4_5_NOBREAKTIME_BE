@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleServiceException(ServiceException e,
                                                                 HttpServletRequest request) {
         String message = messageService.getMessage(e.getErrorCode().getMessageCode());
-        log.warn("ServiceException 발생 - URI: {} | code: {} | message: {}",
+        log.error("ServiceException 발생 - URI: {} | code: {} | message: {}",
                 request.getRequestURI(),
                 e.getErrorCode().getCode(),
                 message);
@@ -118,7 +118,6 @@ public class GlobalExceptionHandler {
      * @return ErrorResponse 기본 에러 메시지
      */
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
         log.error(" 예외 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
 
@@ -145,6 +144,4 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
     }
-
-
 }

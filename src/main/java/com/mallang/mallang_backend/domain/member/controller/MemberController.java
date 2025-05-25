@@ -3,9 +3,12 @@ package com.mallang.mallang_backend.domain.member.controller;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
+import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
@@ -24,13 +27,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
+@Slf4j
 @Tag(name = "Member", description = "회원 정보 관련 API")
 @RestController
 @RequestMapping("/api/v1/members")
@@ -39,6 +47,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final TokenService tokenService;
+    private final MemberWithdrawalService withdrawalService;
 
     /**
      * @param userDetails 로그인 사용자 정보
@@ -67,11 +76,14 @@ public class MemberController {
     @PossibleErrors(MEMBER_NOT_FOUND)
     @GetMapping("/me")
     public ResponseEntity<RsData<UserProfileResponse>> getMyProfile(
-            @Parameter(hidden = true)
-            @Login CustomUserDetails userDetails
+            @Parameter(hidden = true) @Login CustomUserDetails userDetails,
+            HttpServletResponse response
     ) {
 
         Long memberId = userDetails.getMemberId();
+        String platformId = memberService.findIdForPlatformId(userDetails.getMemberId());
+        validateWithdrawnLogNotRejoinable(platformId, response, memberId);
+
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
 
         return ResponseEntity.ok(new RsData<>(
@@ -156,8 +168,7 @@ public class MemberController {
             @Parameter(hidden = true)
             @Login CustomUserDetails userDetails
     ) {
-        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
-        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+        expiredCookies(response, userDetails.getMemberId());
 
         Sentry.configureScope(scope -> scope.setUser(null));
 
@@ -184,12 +195,44 @@ public class MemberController {
         memberService.withdrawMember(memberId);
         memberService.deleteOldProfileImage(memberId);
 
-        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
-        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, userDetails.getMemberId());
+        expiredCookies(response, userDetails.getMemberId());
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
                 "회원 탈퇴가 완료되었습니다."
         ));
+    }
+
+    /**
+     * 탈퇴 이력이 있는 회원의 재가입 가능 여부를 검증합니다.
+     * 재가입 가능일 이전일 시 회원 정보를 삭제하고 예외를 발생시킵니다.
+     *
+     * @param platformId 플랫폼 식별자
+     * @param response   HTTP 응답 객체
+     * @param memberId   회원 PK
+     */
+    private void validateWithdrawnLogNotRejoinable(String platformId, HttpServletResponse response, Long memberId) {
+        // 탈퇴 이력이 없으면 바로 리턴
+        if (!withdrawalService.existsByOriginalPlatformId(platformId)) {
+            return;
+        }
+
+        // 탈퇴 이력 조회
+        Optional.ofNullable(withdrawalService.findByOriginalPlatformId(platformId))
+                .map(WithdrawnLog::getCreatedAt)
+                .map(dt -> dt.plusDays(30))
+                .filter(date -> LocalDateTime.now().isBefore(date))
+                // 재가입 가능일이 아직 지나지 않은 경우 예외 처리
+                .ifPresent(date -> {
+                    expiredCookies(response, memberId);
+                    memberService.deleteMember(memberId);
+                    throw new ServiceException(CANNOT_SIGNUP_WITH_THIS_ID);
+                });
+
+    }
+
+    private void expiredCookies(HttpServletResponse response, Long memberId) {
+        tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
+        tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, memberId);
     }
 }

@@ -7,6 +7,7 @@ import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberService {
@@ -33,6 +34,8 @@ public interface MemberService {
 
     Member findByPlatformId(String platformId);
 
+    String findIdForPlatformId(Long memberId);
+
     boolean existsByNickname(String nickname);
 
     Long signupByOauth(String platformId,
@@ -40,4 +43,6 @@ public interface MemberService {
                        String nickname,
                        String profileImage,
                        LoginPlatform loginPlatform);
+
+    void deleteMember(Long memberId);
 }
