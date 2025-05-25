@@ -115,6 +115,7 @@ public class OAuthLoginService {
      * @throws ServiceException 30일 이내 탈퇴 이력이 있을 경우 예외 발생
      */
     @Async("securityTaskExecutor")
+    @Transactional
     public void registerNewMember(LoginPlatform platform,
                                   Map<String, Object> userAttributes) {
 
@@ -146,7 +147,6 @@ public class OAuthLoginService {
         );
     }
 
-    @Transactional
     public Long signupByOauth(String platformId,
                               String email,
                               String nickname,

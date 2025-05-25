@@ -41,6 +41,11 @@ public class QuartzConfig {
     @Value("${quartz.cron.cache-scheduler}")
     private String cacheSchedulerCron;
 
+    private final DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
+
+    public QuartzConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
 
     @Bean
@@ -122,7 +127,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailEn())
             .withIdentity("cacheSchedulerTriggerEn", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
@@ -131,7 +136,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailJp())
             .withIdentity("cacheSchedulerTriggerJp", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
@@ -165,9 +170,6 @@ public class QuartzConfig {
             schedulerFactoryBean.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         };
     }
-
-    @Autowired
-    private DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
 
     @Bean
     public JobFactory autowiringSpringBeanJobFactory() {

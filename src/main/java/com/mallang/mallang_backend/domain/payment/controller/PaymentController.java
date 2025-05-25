@@ -9,8 +9,10 @@ import com.mallang.mallang_backend.domain.payment.dto.request.PaymentSimpleReque
 import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
 import com.mallang.mallang_backend.domain.payment.service.process.PaymentFacade;
 import com.mallang.mallang_backend.domain.payment.service.process.complete.CompletePayServiceImpl.MemberGrantedInfo;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
@@ -48,6 +50,7 @@ public class PaymentController {
     private final PaymentFacade paymentFacade;
     private final JwtService jwtService;
     private final TokenService tokenService;
+    private final SubscriptionService subscriptionService;
 
     @Operation(
             summary = "결제 요청 정보 생성",
@@ -60,6 +63,11 @@ public class PaymentController {
     public ResponseEntity<RsData<PaymentRequest>> createPaymentRequest(
             @Parameter(hidden = true) @Login CustomUserDetails userDetails,
             @Valid @RequestBody PaymentSimpleRequest simpleRequest) {
+
+        // 구독이 존재하는 경우 에러 발생
+        if (subscriptionService.hasActiveSubscription(userDetails.getMemberId())) {
+            throw new ServiceException(SUBSCRIPTION_ALREADY_EXISTS);
+        }
 
         RsData<PaymentRequest> response = new RsData<>(
                 "200",
