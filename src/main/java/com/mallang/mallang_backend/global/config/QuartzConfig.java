@@ -91,7 +91,7 @@ public class QuartzConfig {
             .withIdentity("cacheSchedulerJobJp", "VIDEO_CACHE")
             .usingJobData("q", "")
             .usingJobData("category", "")
-            .usingJobData("language", "jp")
+            .usingJobData("language", "ja")
             .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
             .storeDurably()
             .requestRecovery(true)
