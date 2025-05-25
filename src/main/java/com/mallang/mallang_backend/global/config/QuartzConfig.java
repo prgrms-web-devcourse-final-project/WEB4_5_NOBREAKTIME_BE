@@ -86,7 +86,7 @@ public class QuartzConfig {
             .withIdentity("cacheSchedulerJobJp", "VIDEO_CACHE")
             .usingJobData("q", "")
             .usingJobData("category", "")
-            .usingJobData("language", "jp")
+            .usingJobData("language", "ja")
             .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
             .storeDurably()
             .requestRecovery(true)
@@ -122,7 +122,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailEn())
             .withIdentity("cacheSchedulerTriggerEn", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
@@ -131,7 +131,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailJp())
             .withIdentity("cacheSchedulerTriggerJp", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
