@@ -6,7 +6,6 @@ import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.domain.member.service.profile.MemberProfileService;
 import com.mallang.mallang_backend.domain.member.service.valid.MemberValidationService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
@@ -26,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 import static com.mallang.mallang_backend.global.common.Language.NONE;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 /**
  * 쓰기 작업(등록, 수정, 삭제 등)은 별도로 @Transactional 붙여 주세요
@@ -41,7 +40,8 @@ public class MemberServiceImpl implements MemberService {
     private final MemberProfileService profileService;
     private final MemberWithdrawalService withdrawalService;
     private final MemberValidationService validationService;
-    private final SubscriptionService subscriptionService;
+    private final WordbookRepository wordbookRepository;
+    private final ExpressionBookRepository expressionBookRepository;
 
     // memberService -> 단순 조립 + 사용
     @Override
@@ -60,19 +60,9 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public String getRoleName(Long memberId) {
-        return subscriptionService.getRoleName(memberId);
-    }
-
-    @Override
     @Transactional
     public void withdrawMember(Long memberId) {
         withdrawalService.withdrawMember(memberId);
-    }
-
-    @Override
-    public void scheduleAccountDeletion() {
-        withdrawalService.scheduleAccountDeletion();
     }
 
     @Override
@@ -158,5 +148,50 @@ public class MemberServiceImpl implements MemberService {
 
     public Member getMemberById(Long memberId) {
         return findMemberOrThrow(memberId);
+    }
+
+    @Override
+    public Boolean existsByPlatformId(String platformId) {
+        return memberRepository.existsByPlatformId(platformId);
+    }
+
+    @Override
+    public Member findByPlatformId(String platformId) {
+        return memberRepository.findByPlatformId(platformId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
+
+    @Override
+    @Transactional
+    public Long signupByOauth(String platformId,
+                              String email,
+                              String nickname,
+                              String profileImage,
+                              LoginPlatform loginPlatform) {
+
+        Member member = Member.builder()
+                .platformId(platformId) // null 불가능
+                .email(email) // null 가능
+                .nickname(nickname)
+                .loginPlatform(loginPlatform)
+                .language(NONE)
+                .profileImageUrl(profileImage).build();
+
+        Member savedMember = memberRepository.save(member);
+
+        // 회원가입 시 언어별 기본 단어장 생성
+        List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
+        wordbookRepository.saveAll(defaultWordbooks);
+
+        // 회원가입 시 언어별 기본 표현함 생성
+        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
+        expressionBookRepository.saveAll(defaultBooks);
+
+        return savedMember.getId();
     }
 }

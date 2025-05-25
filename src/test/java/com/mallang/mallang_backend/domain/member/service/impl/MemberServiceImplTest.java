@@ -7,6 +7,7 @@ import com.mallang.mallang_backend.domain.member.oauth.service.OAuthLoginService
 import com.mallang.mallang_backend.domain.member.query.MemberQueryRepository;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
+import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ class MemberServiceImplTest {
     private MemberService memberService;
 
     @Autowired
-    OAuthLoginService oAuthLoginService;
+    SubscriptionService sub;
 
     // 공통 초기화 데이터
     private Member createMember1() {
@@ -72,7 +73,7 @@ class MemberServiceImplTest {
     @DisplayName("소셜 로그인 성공 케이스")
     void signupByOauth_Success() {
         // Given
-        Long memberId = oAuthLoginService.signupByOauth(
+        Long memberId = memberService.signupByOauth(
                 "23123412A",
                 "oauth@example.com",
                 "oauthUser",
@@ -118,7 +119,7 @@ class MemberServiceImplTest {
         savedMember.updateSubscription(SubscriptionType.PREMIUM);
 
         // When
-        String role = memberService.getRoleName(savedMember.getId());
+        String role = sub.getRoleName(savedMember.getId());
 
         // Then
         assertEquals("ROLE_PREMIUM", role);

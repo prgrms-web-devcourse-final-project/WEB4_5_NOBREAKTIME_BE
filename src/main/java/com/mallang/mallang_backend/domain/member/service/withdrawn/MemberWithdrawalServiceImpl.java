@@ -28,6 +28,7 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
 
     private final MemberRepository memberRepository;
@@ -42,6 +43,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
      *
      * @param memberId 대상 회원 ID
      */
+    @Transactional
     public void withdrawMember(Long memberId) {
         Member member = findMemberOrThrow(memberId);
         String uuid = UUID.randomUUID().toString();
@@ -53,7 +55,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
         log.debug("회원 탈퇴 로그 저장 완료: {}", member.getId());
 
         if (subscriptionService.hasActiveSubscription(memberId)) {
-            downgradeSubscriptionToBasic(memberId);
+            subscriptionService.downgradeSubscriptionToBasic(memberId);
         }
     }
 
@@ -69,16 +71,12 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
                 .build());
     }
 
-    private void downgradeSubscriptionToBasic(Long memberId) {
-    }
-
     /**
      * 6개월 이상 경과한 탈퇴 회원 일괄 삭제
      * - 매일 새벽 3시 실행
      * - 일시적 오류 발생(DB 연결, 네트워크 오류) 시 최대 3회 재시도 (5초 간격)
      * - 비즈니스 로직 오류 (외래키 제약 조건 등): 재시도 의미 없어 실행하지 않음
      */
-    @Override
     @Retryable(
             maxAttempts = 3,
             backoff = @Backoff(delay = 3000),
@@ -87,6 +85,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     )
     @Scheduled(cron = "0 0 3 * * ?")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Override
     public void scheduleAccountDeletion() {
         LocalDateTime deletionThreshold = LocalDateTime.now().minusMonths(6);
         long deletedCount = memberQueryRepository.bulkDeleteExpiredMembers(deletionThreshold);
@@ -103,5 +102,15 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     private Member findMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    }
+
+    @Override
+    public boolean existsByOriginalPlatformId(String platformId) {
+        return logRepository.existsByOriginalPlatformId(platformId);
+    }
+
+    @Override
+    public WithdrawnLog findByOriginalPlatformId(String platformId) {
+        return logRepository.findByOriginalPlatformId(platformId);
     }
 }

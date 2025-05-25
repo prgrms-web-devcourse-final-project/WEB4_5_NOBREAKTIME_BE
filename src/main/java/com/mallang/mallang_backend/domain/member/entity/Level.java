@@ -1,10 +1,9 @@
 package com.mallang.mallang_backend.domain.member.entity;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-
 import com.mallang.mallang_backend.global.exception.ServiceException;
-
 import lombok.Getter;
+
+import static com.mallang.mallang_backend.global.exception.ErrorCode.LEVEL_PARSE_FAILED;
 
 @Getter
 public enum Level {

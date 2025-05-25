@@ -1,10 +1,9 @@
 package com.mallang.mallang_backend.domain.member.repository;
 
-import java.util.Optional;
-
+import com.mallang.mallang_backend.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
+import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
