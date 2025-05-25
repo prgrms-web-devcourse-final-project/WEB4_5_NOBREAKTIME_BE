@@ -20,10 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @PersistJobDataAfterExecution // 영속성
 public class CacheSchedulerJob implements Job {
 
-	@Autowired
-	private CacheSchedulerService cacheSchedulerService;
+	private final CacheSchedulerService cacheSchedulerService;
 
-	@Override
+    public CacheSchedulerJob(CacheSchedulerService cacheSchedulerService) {
+        this.cacheSchedulerService = cacheSchedulerService;
+    }
+
+    @Override
 	@TimeTrace
 	@SlackNotification(title = "검색 캐싱", message = "현재 캐시 스케줄링이 실행 준비 중입니다.")
 	public void execute(JobExecutionContext context) throws JobExecutionException {

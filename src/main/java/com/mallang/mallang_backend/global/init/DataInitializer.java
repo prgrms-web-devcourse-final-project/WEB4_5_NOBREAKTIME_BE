@@ -9,10 +9,12 @@ import com.mallang.mallang_backend.domain.plan.repository.PlanRepository;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.entity.ExpressionBook;
 import com.mallang.mallang_backend.domain.sentence.expressionbook.repository.ExpressionBookRepository;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
+import com.mallang.mallang_backend.domain.subscription.entity.SubscriptionStatus;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.init.factory.EntityTestFactory;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -47,11 +49,19 @@ public class DataInitializer implements CommandLineRunner {
     private final ExpressionBookRepository expressionBookRepository;
     private final PlanRepository planRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final EntityTestFactory factory;
 
     @Override
     public void run(String... args) throws Exception {
 
         Member basicUser = createTestUser();
+
+        Plan stan = planRepository.findById(4L).get();
+        Plan pre = planRepository.findById(7L).get();
+
+        Subscription subscription = factory.saveSubscription(basicUser, pre, LocalDateTime.now().minusDays(40));
+        subscription.updateStatus(SubscriptionStatus.EXPIRED);
+        subscriptionRepository.save(subscription);
 
         String key = createToken();
         log.info(">>>>>>>>>>>>>>>> access token: {}", key);
@@ -67,9 +77,6 @@ public class DataInitializer implements CommandLineRunner {
 
         List<Member> members = List.of(member1, member2, member3, member4, member5, member6);
         memberRepository.saveAll(members);
-
-        Plan stan = planRepository.findById(4L).get();
-        Plan pre = planRepository.findById(7L).get();
 
         LocalDateTime now = LocalDateTime.now();
 

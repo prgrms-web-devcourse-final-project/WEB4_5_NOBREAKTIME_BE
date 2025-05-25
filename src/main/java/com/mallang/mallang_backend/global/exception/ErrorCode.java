@@ -18,6 +18,9 @@ public enum ErrorCode {
     CANNOT_SIGNUP_WITH_THIS_ID("409-2", "cannot.signup.with.this.id", HttpStatus.CONFLICT),
     NICKNAME_GENERATION_FAILED("500-1", "nickname.generation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    // subscription errors
+    SUBSCRIPTION_ALREADY_EXISTS("409-3", "subscription.already.exists", HttpStatus.CONFLICT),
+
     // Token Errors
     TOKEN_EXPIRED("401-1", "token.expired", HttpStatus.UNAUTHORIZED),
     TOKEN_NOT_FOUND("401-2", "token.not.found", HttpStatus.UNAUTHORIZED),
