@@ -174,7 +174,7 @@ public class DashboardServiceImpl implements DashboardService {
 				.sum();
 
 		long videoLearningSeconds = videoHistories.stream()
-				.filter(vh -> isInRange(vh.getLastViewedAt(), from, to))
+				.filter(vh -> isInRange(vh.getCreatedAt(), from, to))
 				.mapToLong(vh -> Duration.parse(vh.getDuration()).getSeconds())  // ISO-8601 Duration 파싱
 				.sum();
 
