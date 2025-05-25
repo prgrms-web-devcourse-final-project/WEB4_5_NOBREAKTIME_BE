@@ -11,13 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
 import com.mallang.mallang_backend.domain.keyword.repository.KeywordRepository;
-import com.mallang.mallang_backend.domain.sentence.expression.repository.ExpressionRepository;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningExpressionQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizItem;
 import com.mallang.mallang_backend.domain.video.learning.dto.VideoLearningWordQuizListResponse;
 import com.mallang.mallang_backend.domain.video.learning.service.VideoLearningQuizService;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 
@@ -28,28 +28,23 @@ import lombok.RequiredArgsConstructor;
 public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 
 	private final KeywordRepository keywordRepository;
-	private final ExpressionRepository expressionRepository;
 	private final Random random = new Random();
 
 	/**
-	 * 주어진 videoId에 해당하는 빈칸 퀴즈 목록을 생성해서 반환. 현재는 랜덤 추출이라 추후 수정 필요
-	 * @param videoId
-	 * @return VideoLearningQuizListResponse
+	 * 영상 단어 퀴즈 생성
 	 */
 	@Override
 	@Transactional(readOnly = true)
 	public VideoLearningWordQuizListResponse makeQuizList(String videoId) {
-		// 영상 id로 연관 키워드 조회
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
 		if (pool.isEmpty()) {
 			throw new ServiceException(ErrorCode.KEYWORD_NOT_FOUND);
 		}
 
-		// 자막 id로 그룹핑
+		// 자막 ID별로 그룹핑 후 각 그룹에서 랜덤 하나씩 뽑기
 		Map<Long, List<Keyword>> bySubtitle = pool.stream()
 			.collect(Collectors.groupingBy(k -> k.getSubtitles().getId()));
 
-		// 각 그룹에서 랜덤 추출 리스트 변환
 		List<Keyword> picked = bySubtitle.values().stream()
 			.map(list -> {
 				Collections.shuffle(list, random);
@@ -57,9 +52,9 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 			})
 			.collect(Collectors.toList());
 
-		// 뽑힌 항목 전체 셔플 후 최대 갯수만큼 제한
 		Collections.shuffle(picked, random);
 
+		// VideoLearningWordQuizItem 변환
 		List<VideoLearningWordQuizItem> items = picked.stream()
 			.map(VideoLearningWordQuizItem::from)
 			.collect(Collectors.toList());
@@ -70,26 +65,39 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	}
 
 	/**
-	 * 주어진 videoId에 해당하는 표현 퀴즈 목록을 생성해서 반환
-	 * @param videoId
-	 * @return VideoLearningExpressionQuizListResponse
+	 * 영상 표현 퀴즈 생성 (영어/일본어 분기)
 	 */
 	@Override
 	@Transactional(readOnly = true)
 	public VideoLearningExpressionQuizListResponse makeExpressionQuizList(String videoId) {
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
-		if (pool.isEmpty()) throw new ServiceException(ErrorCode.EXPRESSION_NOT_FOUND);
+		if (pool.isEmpty()) {
+			throw new ServiceException(ErrorCode.EXPRESSION_NOT_FOUND);
+		}
 
-		// Subtitle별 그룹
+		// 첫 키워드의 자막을 통해 영상 언어 판별
+		Subtitle firstSub = pool.get(0).getSubtitles();
+		Language lang = (firstSub.getVideos() != null)
+			? firstSub.getVideos().getLanguage()
+			: Language.ENGLISH;
+
+		// Subtitle별로 그룹핑
 		Map<Subtitle, List<Keyword>> bySubtitle = pool.stream()
 			.collect(Collectors.groupingBy(Keyword::getSubtitles));
 
-		// QuizItem 생성
-		List<VideoLearningExpressionQuizItem> items = bySubtitle.keySet().stream()
-			.map(subtitle ->
-				VideoLearningExpressionQuizItem.fromSubtitle(subtitle, random)
-			)
-			.collect(Collectors.toList());
+		// 언어별로 각 Subtitle → QuizItem 변환
+		List<VideoLearningExpressionQuizItem> items;
+		if (lang == Language.JAPANESE) {
+			// 일본어 분기
+			items = bySubtitle.keySet().stream()
+				.map(sub -> VideoLearningExpressionQuizItem.fromSubtitleJapanese(sub, random))
+				.collect(Collectors.toList());
+		} else {
+			// 영어 포함 그 외 언어 분기
+			items = bySubtitle.keySet().stream()
+				.map(sub -> VideoLearningExpressionQuizItem.fromSubtitleEnglish(sub, random))
+				.collect(Collectors.toList());
+		}
 
 		return VideoLearningExpressionQuizListResponse.builder()
 			.quiz(items)
