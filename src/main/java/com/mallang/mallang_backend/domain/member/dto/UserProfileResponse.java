@@ -62,7 +62,7 @@ public class UserProfileResponse {
                 .email(member.getEmail())
                 .profileImage(member.getProfileImageUrl())
                 .subscriptionType(member.getSubscriptionType())
-                .language(member.getLanguage().getDefault())
+                .language(member.getLanguage())
                 .availableLanguages(availableLanguages)
                 .subscriptions(subscriptions)
                 .build();

@@ -125,10 +125,10 @@ public class DataInitializer implements CommandLineRunner {
                 .email("google123@gmail.com")
                 .nickname("TestUser1")
                 .loginPlatform(LoginPlatform.GOOGLE)
-                .language(Language.ALL)
+                .language(Language.JAPANESE)
                 .profileImageUrl("https://team07-mallang-bucket.s3.ap-northeast-2.amazonaws.com/profile.jpg")
                 .build();
-        testUser.updateSubTypeAndLanguage(SubscriptionType.PREMIUM);
+        testUser.updateSubscription(SubscriptionType.PREMIUM);
         testUser = memberRepository.save(testUser);
 
         List<Wordbook> wordbooks = Wordbook.createDefault(testUser);

@@ -86,9 +86,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LocalDateTime startDate = LocalDateTime.now(clock);
 
         Member member = findMemberOrThrow(memberId);
-        SubscriptionType type = member.getSubscriptionType();
+        SubscriptionType oldType = member.getSubscriptionType();
 
-        member.updateSubTypeAndLanguage(plan.getType());
+        member.updateSubscription(plan.getType());
 
         Subscription newSubs = Subscription.builder()
                 .member(member)
@@ -99,7 +99,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscriptionRepository.save(newSubs);
 
         log.info("[결제변경이력] 사용자 ID:{}|구독등급:{}→{}|변경기간:{}~{}",
-                memberId, type, member.getSubscriptionType(),
+                memberId, oldType, member.getSubscriptionType(),
                 newSubs.getStartedAt(), newSubs.getExpiredAt());
     }
 
