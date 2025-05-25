@@ -194,4 +194,18 @@ public class MemberServiceImpl implements MemberService {
 
         return savedMember.getId();
     }
+
+    @Override
+    public String findIdForPlatformId(Long memberId) {
+        return memberRepository.findById(memberId)
+                .map(Member::getPlatformId)
+                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
+    }
+
+
+    @Transactional
+    @Override
+    public void deleteMember(Long memberId) {
+        memberRepository.delete(findMemberOrThrow(memberId));
+    }
 }

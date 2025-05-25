@@ -50,6 +50,13 @@ public class YoutubeService {
 		long desiredCount,
 		String videoDuration
 	) throws IOException {
+
+		if ("all".equalsIgnoreCase(relevanceLanguage)) {
+			throw new ServiceException(
+				ErrorCode.LANGUAGE_NOT_CONFIGURED
+			);
+		}
+
 		List<String> allVideoIds = new ArrayList<>();
 		String nextPageToken = null;
 

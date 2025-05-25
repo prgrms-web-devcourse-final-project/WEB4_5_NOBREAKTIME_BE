@@ -33,6 +33,8 @@ public interface MemberService {
 
     Member findByPlatformId(String platformId);
 
+    String findIdForPlatformId(Long memberId);
+
     boolean existsByNickname(String nickname);
 
     Long signupByOauth(String platformId,
@@ -40,4 +42,6 @@ public interface MemberService {
                        String nickname,
                        String profileImage,
                        LoginPlatform loginPlatform);
+
+    void deleteMember(Long memberId);
 }
