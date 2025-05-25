@@ -35,7 +35,7 @@ public interface MemberService {
 
     boolean existsByNickname(String nickname);
 
-    void signupByOauth(String platformId,
+    Long signupByOauth(String platformId,
                        String email,
                        String nickname,
                        String profileImage,

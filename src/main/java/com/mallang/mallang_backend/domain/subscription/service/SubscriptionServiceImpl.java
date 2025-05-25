@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
@@ -49,8 +50,29 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @return 활성 구독 상태면 true, 아니면 false
      */
     public boolean hasActiveSubscription(Long memberId) {
-        final Member member = findMemberOrThrow(memberId);
-        return member.getSubscriptionType() != SubscriptionType.BASIC;
+        Member member = findMemberOrThrow(memberId);
+
+        // BASIC 등급은 구독 없음
+        if (member.getSubscriptionType() == SubscriptionType.BASIC) {
+            log.info("[구독조회] 사용자 ID:{} | 구독 없음", memberId);
+            return false;
+        }
+
+        Optional<Subscription> lastSub = queryRepository.findLatestByMember(member);
+        log.info("[구독조회] 사용자 ID:{} | 등급:{}", memberId, member.getSubscriptionType());
+
+        boolean isActive = lastSub
+                .map(sub -> sub.getStatus() == SubscriptionStatus.ACTIVE)
+                .orElseGet(() -> {
+                    log.warn("[구독조회] 사용자 ID:{} | 구독 기록이 없습니다.", memberId);
+                    return false;
+                });
+
+        if (!isActive) {
+            log.warn("[구독조회] 사용자 ID:{} | 비활성 구독 상태", memberId);
+        }
+
+        return isActive;
     }
 
     // 구독 테이블 업데이트

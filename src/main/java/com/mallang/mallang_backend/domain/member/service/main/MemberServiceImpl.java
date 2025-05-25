@@ -168,7 +168,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public void signupByOauth(String platformId,
+    public Long signupByOauth(String platformId,
                               String email,
                               String nickname,
                               String profileImage,
@@ -191,5 +191,7 @@ public class MemberServiceImpl implements MemberService {
         // 회원가입 시 언어별 기본 표현함 생성
         List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
         expressionBookRepository.saveAll(defaultBooks);
+
+        return savedMember.getId();
     }
 }

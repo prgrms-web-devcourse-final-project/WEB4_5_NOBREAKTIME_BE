@@ -221,4 +221,8 @@ public class Member extends BaseTime {
         this.loginPlatform = LoginPlatform.NONE;
         this.subscriptionType = SubscriptionType.NONE;
     }
+
+    public void updateWithdrawalDate(LocalDateTime localDateTime) {
+        this.withdrawalDate = localDateTime;
+    }
 }
