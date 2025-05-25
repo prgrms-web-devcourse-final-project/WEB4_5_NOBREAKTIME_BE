@@ -5,6 +5,7 @@ import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.dto.SubscriptionResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.entity.SubscriptionType;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.subscription.entity.Subscription;
 import com.mallang.mallang_backend.domain.subscription.repository.SubscriptionRepository;
@@ -32,7 +33,6 @@ public class MemberProfileServiceImpl implements MemberProfileService {
     private final S3ImageUploader imageUploader;
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
-
     /**
      * 주어진 회원 ID로 사용자 프로필 정보를 조회합니다.
      *
@@ -47,10 +47,15 @@ public class MemberProfileServiceImpl implements MemberProfileService {
         List<Subscription> subscriptions = subscriptionRepository.findByMember(member)
                 .orElse(Collections.emptyList());
 
-        List<SubscriptionResponse> subscriptionResponses = toSubscriptionResponses(subscriptions);
+        List<SubscriptionResponse> subscriptionResponses =
+                toSubscriptionResponses(subscriptions);
 
-        Language language = member.getLanguage();
-        List<Language> availableLanguages = language.getAvailableLanguages();
+        List<Language> availableLanguages = null;
+        if (member.getSubscriptionType() == SubscriptionType.PREMIUM) {
+            availableLanguages = Language.ALL.getAvailableLanguages();
+        } else {
+            availableLanguages = List.of(member.getLanguage());
+        }
 
         return fromMember(member, availableLanguages, subscriptionResponses);
     }

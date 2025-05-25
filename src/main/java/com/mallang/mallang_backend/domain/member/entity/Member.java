@@ -151,29 +151,6 @@ public class Member extends BaseTime {
     }
 
     /**
-     * 구독 타입과 언어를 업데이트하는 메서드입니다.
-     * <p>
-     * 구독 타입이 변경될 때, PREMIUM 타입으로 변경 시 언어를 ALL로 설정합니다.
-     * 동일한 타입으로 변경 요청 시 아무 동작도 하지 않습니다.
-     *
-     * @param newType 변경할 구독 타입
-     */
-    public void updateSubTypeAndLanguage(SubscriptionType newType) {
-        // 변경 사항이 없으면 바로 반환
-        if (this.subscriptionType == newType) {
-            return;
-        }
-
-        // PREMIUM으로 변경 시 언어를 ALL로 설정
-        if (newType == SubscriptionType.PREMIUM) {
-            this.language = Language.ALL;
-        }
-
-        // 구독 타입 변경
-        this.subscriptionType = newType;
-    }
-
-    /**
      * 회원 탈퇴 처리 및 개인정보 마스킹을 수행합니다.
      * <p>
      * 최초 1회만 실행 가능하며, 탈퇴 시 다음 작업이 수행됩니다:
