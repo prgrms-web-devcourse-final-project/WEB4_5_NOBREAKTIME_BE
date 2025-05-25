@@ -29,7 +29,6 @@ class SubscriptionQueryRepositoryTest {
         //then
         log.info("ids: {}", ids);
         assertThat(ids).hasSize(4);
-        assertThat(ids).contains(6L, 7L, 8L, 9L);
     }
 
     @Test

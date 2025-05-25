@@ -41,6 +41,11 @@ public class QuartzConfig {
     @Value("${quartz.cron.cache-scheduler}")
     private String cacheSchedulerCron;
 
+    private final DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
+
+    public QuartzConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
 
     @Bean
@@ -165,9 +170,6 @@ public class QuartzConfig {
             schedulerFactoryBean.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         };
     }
-
-    @Autowired
-    private DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
 
     @Bean
     public JobFactory autowiringSpringBeanJobFactory() {
