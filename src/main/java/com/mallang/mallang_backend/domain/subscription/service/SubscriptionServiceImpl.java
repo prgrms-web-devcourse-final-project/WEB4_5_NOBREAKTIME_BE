@@ -53,17 +53,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return member.getSubscriptionType() != SubscriptionType.BASIC;
     }
 
-    /*public boolean hasActiveSubscription(Long memberId) {
-        Member member = findMemberOrThrow(memberId);
-        List<Subscription> subscriptions = subscriptionRepository.findByMember(member);
-        Subscription last = subscriptions.getLast();
-        if (last.getStatus() == SubscriptionStatus.ACTIVE) {
-            return true;
-        } else {
-            return false;
-        }
-    }*/
-
     // 구독 테이블 업데이트
     @Override
     public void updateSubscriptionInfo(Long memberId,
