@@ -11,7 +11,6 @@ import com.mallang.mallang_backend.global.slack.SlackNotifier;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.spi.JobFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +34,11 @@ public class QuartzConfig {
     @Value("${quartz.cron.cache-scheduler}")
     private String cacheSchedulerCron;
 
+    private final DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
+
+    public QuartzConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
 
     @Bean
@@ -80,7 +84,7 @@ public class QuartzConfig {
             .withIdentity("cacheSchedulerJobJp", "VIDEO_CACHE")
             .usingJobData("q", "")
             .usingJobData("category", "")
-            .usingJobData("language", "jp")
+            .usingJobData("language", "ja")
             .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
             .storeDurably()
             .requestRecovery(true)
@@ -116,7 +120,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailEn())
             .withIdentity("cacheSchedulerTriggerEn", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
@@ -125,7 +129,7 @@ public class QuartzConfig {
         return TriggerBuilder.newTrigger()
             .forJob(cacheSchedulerJobDetailJp())
             .withIdentity("cacheSchedulerTriggerJp", "VIDEO_CACHE")
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 3,4 * * ?")) // 매일 3시,4시
+            .withSchedule(CronScheduleBuilder.cronSchedule(cacheSchedulerCron)) // 매일 3시,4시
             .build();
     }
 
@@ -159,9 +163,6 @@ public class QuartzConfig {
             schedulerFactoryBean.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         };
     }
-
-    @Autowired
-    private DataSource dataSource;  // Spring Boot가 자동 구성한 DataSource
 
     @Bean
     public JobFactory autowiringSpringBeanJobFactory() {
