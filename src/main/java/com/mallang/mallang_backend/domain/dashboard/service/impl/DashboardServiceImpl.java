@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -172,6 +173,11 @@ public class DashboardServiceImpl implements DashboardService {
 				.mapToLong(ExpressionQuiz::getLearningTime)
 				.sum();
 
+		long videoLearningSeconds = videoHistories.stream()
+				.filter(vh -> isInRange(vh.getLastViewedAt(), from, to))
+				.mapToLong(vh -> Duration.parse(vh.getDuration()).getSeconds())  // ISO-8601 Duration 파싱
+				.sum();
+
 		int quizCount = (int) wordQuizResults.stream()
 			.filter(r -> isInRange(r.getCreatedAt(), from, to))
 			.count()
@@ -188,7 +194,7 @@ public class DashboardServiceImpl implements DashboardService {
 			.filter(w -> isInRange(w.getCreatedAt(), from, to))
 			.count();
 
-		return new LearningHistory(formatDuration(learningSeconds), quizCount, videoCount, addedWordCount);
+		return new LearningHistory(formatDuration(learningSeconds + videoLearningSeconds), quizCount, videoCount, addedWordCount);
 	}
 
 	private boolean isInRange(LocalDateTime dateTime, LocalDateTime from, LocalDateTime to) {

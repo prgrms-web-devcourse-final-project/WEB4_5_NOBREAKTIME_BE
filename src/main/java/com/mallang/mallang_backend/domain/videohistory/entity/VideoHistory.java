@@ -48,4 +48,13 @@ public class VideoHistory extends BaseTime {
     public void updateTimestamp() {
         this.lastViewedAt = LocalDateTime.now();
     }
+
+
+    /**
+     * 시청한 영상의 길이를 반환합니다.
+     * @return 시청한 영상의 길이
+     */
+    public String getDuration() {
+        return videos.getDuration();
+    }
 }
