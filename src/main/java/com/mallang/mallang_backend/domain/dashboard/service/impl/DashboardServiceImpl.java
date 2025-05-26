@@ -141,17 +141,7 @@ public class DashboardServiceImpl implements DashboardService {
 			wordQuizList, expressionQuizList, wordQuizResults, expressionQuizResults,
 			videoHistories, wordbookItems);
 
-		// 어제
-		LearningHistory yesterday = createLearningHistory(yesterdayStart, todayStart,
-			wordQuizList, expressionQuizList, wordQuizResults, expressionQuizResults,
-			videoHistories, wordbookItems);
-
-		// 주간
-		LearningHistory week = createLearningHistory(weekStart, todayStart.plusDays(1),
-			wordQuizList, expressionQuizList, wordQuizResults, expressionQuizResults,
-			videoHistories, wordbookItems);
-
-		return new LearningHistoryResponse(today, yesterday, week);
+		return new LearningHistoryResponse(today);
 	}
 
 	private LearningHistory createLearningHistory(
