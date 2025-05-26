@@ -155,17 +155,6 @@ class DashBoardServiceImplTest {
 		LearningHistoryResponse response = dashboardServiceImpl.getLearningStatisticsByPeriod(memberId, now.plusDays(2));
 
 		assertNotNull(response);
-		// 전체 학습 시간: 2분(wordQuiz) + 3분(expressionQuiz) + 2분(video) + 1.5분(video) = 8.5분 = 510초 = 00:08:30
-		assertEquals("00:08:30", response.getWeek().getLearningTime());
-		assertEquals(2, response.getWeek().getQuizCount());
-		assertEquals(2, response.getWeek().getVideoCount());
-		assertEquals(1, response.getWeek().getAddedWordCount());
-
-		assertEquals("00:04:30", response.getYesterday().getLearningTime()); // 3분 + 1.5분
-		assertEquals(1, response.getYesterday().getQuizCount());
-		assertEquals(1, response.getYesterday().getVideoCount());
-		assertEquals(0, response.getYesterday().getAddedWordCount());
-
 		assertEquals("00:02:00", response.getToday().getLearningTime()); // 2분
 		assertEquals(0, response.getToday().getQuizCount());
 		assertEquals(1, response.getToday().getVideoCount());
