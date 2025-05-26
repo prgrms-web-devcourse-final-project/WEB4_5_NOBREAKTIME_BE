@@ -48,6 +48,7 @@ public enum ErrorCode {
     GPT_RESPONSE_PARSE_FAIL("500-1", "gpt.response.parse.fail", HttpStatus.INTERNAL_SERVER_ERROR),
     GPT_API_CALL_FAILED("500-4", "gpt.api.call.failed", HttpStatus.INTERNAL_SERVER_ERROR),
     GPT_RESPONSE_EMPTY("500-5", "gpt.response.empty", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_GPT_RESPONSE("500-6", "invalid.gpt.response", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Word Errors
     WORD_SAVE_FAILED("500-2", "word.save.failed", HttpStatus.INTERNAL_SERVER_ERROR),

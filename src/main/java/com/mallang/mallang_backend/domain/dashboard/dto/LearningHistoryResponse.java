@@ -11,6 +11,4 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LearningHistoryResponse {
 	LearningHistory today;
-	LearningHistory yesterday;
-	LearningHistory week;
 }
