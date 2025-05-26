@@ -172,10 +172,11 @@ public class MemberController {
             @Parameter(hidden = true)
             @Login CustomUserDetails userDetails
     ) {
+        Long memberId = userDetails.getMemberId();
         expiredCookies(response, userDetails.getMemberId());
 
         Sentry.configureScope(scope -> scope.setUser(null));
-        redisTemplate.opsForSet().remove("online-users", userDetails.getMemberId());
+        redisTemplate.opsForSet().remove("online-users", String.valueOf(memberId));
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
