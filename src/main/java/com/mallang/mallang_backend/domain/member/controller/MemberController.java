@@ -49,7 +49,7 @@ public class MemberController {
     private final MemberService memberService;
     private final TokenService tokenService;
     private final MemberWithdrawalService withdrawalService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * @param userDetails 로그인 사용자 정보
@@ -88,7 +88,7 @@ public class MemberController {
 
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
 
-        redisTemplate.opsForSet().add("online-users", memberId);
+        redisTemplate.opsForSet().add("online-users", String.valueOf(memberId));
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
