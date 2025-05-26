@@ -6,6 +6,7 @@ import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.exception.custom.RetryableException;
 import com.mallang.mallang_backend.global.gpt.dto.*;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
@@ -17,6 +18,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -26,7 +28,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.mallang.mallang_backend.global.common.Language.*;
+import static com.mallang.mallang_backend.global.common.Language.ENGLISH;
+import static com.mallang.mallang_backend.global.common.Language.JAPANESE;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
@@ -285,6 +288,7 @@ public class GptServiceImpl implements GptService {
 	 * GPT API 호출
 	 */
 	@MonitorExternalApi(name = "openai")
+	@Retry(name = "gptRetry", fallbackMethod = "gptFallback")
 	public OpenAiResponse callGptApi(String prompt) {
 		try {
 			log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
@@ -298,6 +302,9 @@ public class GptServiceImpl implements GptService {
 					clientResponse -> clientResponse.bodyToMono(String.class)
 						.map(body -> {
 							log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
+							if (clientResponse.statusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+								return new RetryableException("OpenAI 분당 토큰이 3만 토큰을 초과했습니다.");
+							}
 							return new ServiceException(GPT_API_CALL_FAILED);
 						})
 				)
@@ -306,8 +313,20 @@ public class GptServiceImpl implements GptService {
 
 			return response;
 		} catch (Exception e) {
+			if (e instanceof RetryableException) {
+				throw e; // 그대로 던지면 Retry가 작동함
+			}
 			throw new ServiceException(GPT_API_CALL_FAILED, e);
 		}
+	}
+
+	/**
+	 * OpenAI 분당 토큰 초과 실패로 인한 재시도 실패 후 처리
+	 */
+	public OpenAiResponse gptFallback(Exception ex) {
+		// 재시도 실패 후 처리
+		log.error("GPT 재시도 실패: {}", ex.getMessage());
+		throw new ServiceException(GPT_API_CALL_FAILED);
 	}
 
 	/**
