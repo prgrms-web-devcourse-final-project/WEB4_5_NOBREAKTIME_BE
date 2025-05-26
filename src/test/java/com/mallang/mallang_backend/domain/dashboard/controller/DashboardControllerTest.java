@@ -60,7 +60,7 @@ class DashboardControllerTest {
     @Test
     @DisplayName("대시보드 통계를 조회할 수 있다")
     void statistics_success() throws Exception {
-        StatisticResponse mockResponse = new StatisticResponse("nickname", 10, new DailyGoal(3, 5, 60.0, new AchievementDetail(2, 3)), new LevelStatus("A", "B", LocalDate.now().atStartOfDay(), false));
+        StatisticResponse mockResponse = new StatisticResponse("nickname", 10, new DailyGoal(3, 5, 60.0, new AchievementDetail(2, 3)), new LevelStatus("A", "B", LocalDate.now().atStartOfDay(), false), false);
         when(dashboardService.getStatistics(1L)).thenReturn(mockResponse);
 
         mockMvc.perform(get("/api/v1/dashboard/statistics"))
@@ -86,15 +86,13 @@ class DashboardControllerTest {
     @DisplayName("기간별 학습 통계를 조회할 수 있다")
     void getCalendarData_success() throws Exception {
         LearningHistoryResponse response = new LearningHistoryResponse(
-                new LearningHistory("00:10:00", 3, 1, 1),
-                new LearningHistory("00:05:00", 2, 0, 0),
-                new LearningHistory("00:15:00", 5, 1, 1)
+                new LearningHistory("00:10:00", 3, 1, 1)
         );
         when(dashboardService.getLearningStatisticsByPeriod(eq(1L), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/dashboard/calendar"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.week.quizCount").value(5));
+                .andExpect(jsonPath("$.data.today.quizCount").value(3));
     }
 
     @Test

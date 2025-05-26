@@ -34,7 +34,10 @@ class CacheSchedulerJobTest {
 
 	@BeforeEach
 	void setUp() {
+		// 기본 JobDataMap 반환
 		given(context.getMergedJobDataMap()).willReturn(dataMap);
+		// 스케줄러 실행 시 필요한 region 값 모킹
+		given(dataMap.getString("region")).willReturn("US");
 	}
 
 	@Test
@@ -45,13 +48,13 @@ class CacheSchedulerJobTest {
 		given(dataMap.getString("category")).willReturn("cat");
 		given(dataMap.getString("language")).willReturn("en");
 		given(dataMap.getLong("fetchSize")).willReturn(100L);
-		given(cacheSchedulerService.refreshCache("searchTerm", "cat", "en", 100L)).willReturn(5);
+		given(cacheSchedulerService.refreshCache("searchTerm", "cat", "en", "US", 100L)).willReturn(5);
 
 		// when
 		job.execute(context);
 
 		// then
-		then(cacheSchedulerService).should().refreshCache("searchTerm", "cat", "en", 100L);
+		then(cacheSchedulerService).should().refreshCache("searchTerm", "cat", "en", "US", 100L);
 	}
 
 	@Test
@@ -62,13 +65,12 @@ class CacheSchedulerJobTest {
 		given(dataMap.getString("category")).willReturn("c");
 		given(dataMap.getString("language")).willReturn("en");
 		given(dataMap.getLong("fetchSize")).willReturn(50L);
+		// 예외 던지도록 설정
 		willThrow(new RuntimeException("fail")).given(cacheSchedulerService)
-			.refreshCache(anyString(), anyString(), anyString(), anyLong());
+			.refreshCache(anyString(), anyString(), anyString(), anyString(), anyLong());
 
 		// when & then
-		// Should not throw
 		assertDoesNotThrow(() -> job.execute(context));
-		// And service was called
-		then(cacheSchedulerService).should().refreshCache("q", "c", "en", 50L);
+		then(cacheSchedulerService).should().refreshCache("q", "c", "en", "US", 50L);
 	}
 }

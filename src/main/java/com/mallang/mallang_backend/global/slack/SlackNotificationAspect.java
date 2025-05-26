@@ -1,10 +1,12 @@
 package com.mallang.mallang_backend.global.slack;
 
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @Aspect
 @Component
@@ -24,12 +26,25 @@ public class SlackNotificationAspect {
      */
     @Before("@annotation(slackNotification)")
     public void before(JoinPoint joinPoint, SlackNotification slackNotification) throws Throwable {
-        String title = slackNotification.title();
-        String message = slackNotification.message();
-        String methodName = joinPoint.getSignature().getName();
+        String baseTitle   = slackNotification.title();
+        String baseMessage = slackNotification.message();
+        String methodName  = joinPoint.getSignature().getName();
 
-        String fullMessage = String.format("%s\n> 메서드: `%s()`", message, methodName);
+        // 기본 타이틀 적용
+        String title = baseTitle;
+        // 언어별 접두사 추가
+        Object[] args = joinPoint.getArgs();
+        if (args.length > 0 && args[0] instanceof JobExecutionContext) {
+            JobExecutionContext context = (JobExecutionContext) args[0];
+            String language = context.getMergedJobDataMap().getString("language");
+            if ("ja".equalsIgnoreCase(language)) {
+                title = "[JP] " + baseTitle;
+            } else if ("en".equalsIgnoreCase(language)) {
+                title = "[EN] " + baseTitle;
+            }
+        }
 
+        String fullMessage = String.format("%s\n> 메서드: `%s()`", baseMessage, methodName);
         slackNotifier.sendSlackNotification(title, fullMessage);
     }
 }

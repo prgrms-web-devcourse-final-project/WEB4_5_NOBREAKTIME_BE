@@ -10,7 +10,6 @@ import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.spi.JobFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.quartz.SchedulerFactoryBeanCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -79,6 +78,7 @@ public class QuartzConfig {
             .usingJobData("q", "")
             .usingJobData("category", "")
             .usingJobData("language", "en")
+            .usingJobData("region", "US")
             .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
             .storeDurably()
             .requestRecovery(true)
@@ -92,6 +92,7 @@ public class QuartzConfig {
             .usingJobData("q", "")
             .usingJobData("category", "")
             .usingJobData("language", "ja")
+            .usingJobData("region", "JP")
             .usingJobData("fetchSize", CACHE_SCHEDULER_FETCH_SIZE)
             .storeDurably()
             .requestRecovery(true)

@@ -12,11 +12,13 @@ import com.mallang.mallang_backend.domain.quiz.wordquiz.repository.WordQuizRepos
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.entity.WordQuizResult;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
 import com.mallang.mallang_backend.domain.sentence.expression.entity.Expression;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
 import com.mallang.mallang_backend.domain.videohistory.entity.VideoHistory;
 import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRepository;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
@@ -33,6 +35,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,6 +74,9 @@ class DashBoardServiceImplTest {
 	@Mock
 	private GptService gptService;
 
+	@Mock
+	private WordbookRepository wordbookRepository;
+
 	@InjectMocks
 	private DashboardServiceImpl dashboardServiceImpl;
 
@@ -96,6 +102,8 @@ class DashBoardServiceImplTest {
 			.thenReturn(2);
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
 			.thenReturn(4);
+		when(wordbookRepository.findAllByMemberAndLanguage(member, Language.ENGLISH)).thenReturn(Collections.emptyList());
+		when(wordbookItemRepository.findReviewTargetWords(eq(member), any())).thenReturn(Collections.emptyList());
 
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
 
@@ -126,42 +134,52 @@ class DashBoardServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("오늘, 어제, 일주일에 대한 학습 통계를 조회할 수 있다")
-	void getLearningStatisticsByPeriod() {
+	@DisplayName("오늘, 어제, 일주일에 대한 학습 통계를 조회할 수 있다 (영상 시청 시간 포함)")
+	void getLearningStatisticsByPeriod_withVideoDuration() {
 		Long memberId = 1L;
 		LocalDate now = LocalDate.of(2025, 4, 30);
 
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 		when(wordQuizRepository.findByMemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createWordQuiz(now, 120)));
+				.thenReturn(List.of(createWordQuiz(now, 120))); // 2분
 		when(expressionQuizRepository.findByMemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createExpressionQuiz(now.plusDays(1), 180)));
+				.thenReturn(List.of(createExpressionQuiz(now.plusDays(1), 180))); // 3분
+
 		when(wordQuizResultRepository.findByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createWordQuizResult(now)));
+				.thenReturn(List.of(createWordQuizResult(now)));
 		when(expressionQuizResultRepository.findByExpressionQuiz_MemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createExpressionQuizResult(now.plusDays(1))));
+				.thenReturn(List.of(createExpressionQuizResult(now.plusDays(1))));
+
 		when(videoHistoryRepository.findByMemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createVideoHistory(now.plusDays(2))));
+				.thenReturn(List.of(
+						createVideoHistory(now.plusDays(2).atStartOfDay(), "PT2M"),  // 오늘 (2분)
+						createVideoHistory(now.plusDays(1).atStartOfDay(), "PT1M30S") // 어제 (1.5분)
+				));
+
 		when(wordbookItemRepository.findByWordbook_MemberAndCreatedAtAfter(eq(member), any()))
-			.thenReturn(List.of(createWordbookItem(now)));
+				.thenReturn(List.of(createWordbookItem(now)));
 
 		LearningHistoryResponse response = dashboardServiceImpl.getLearningStatisticsByPeriod(memberId, now.plusDays(2));
 
 		assertNotNull(response);
-		assertEquals("00:05:00", response.getWeek().getLearningTime());
-		assertEquals(2, response.getWeek().getQuizCount());
-		assertEquals(1, response.getWeek().getVideoCount());
-		assertEquals(1, response.getWeek().getAddedWordCount());
-
-		assertEquals("00:03:00", response.getYesterday().getLearningTime());
-		assertEquals(1, response.getYesterday().getQuizCount());
-		assertEquals(0, response.getYesterday().getVideoCount());
-		assertEquals(0, response.getYesterday().getAddedWordCount());
-
-		assertEquals("00:00:00", response.getToday().getLearningTime());
+		assertEquals("00:02:00", response.getToday().getLearningTime()); // 2분
 		assertEquals(0, response.getToday().getQuizCount());
 		assertEquals(1, response.getToday().getVideoCount());
 		assertEquals(0, response.getToday().getAddedWordCount());
+	}
+
+	private VideoHistory createVideoHistory(LocalDateTime date, String duration) {
+		Videos videos = Videos.builder()
+				.duration(duration)
+				.build();
+
+		VideoHistory videoHistory = VideoHistory.builder()
+				.member(member)
+				.videos(videos)
+				.build();
+		ReflectionTestUtils.setField(videoHistory, "createdAt", date);
+
+		return videoHistory;
 	}
 
 	@Test
