@@ -28,16 +28,20 @@ public class WordQuizResult extends BaseTime {
     private WordbookItem wordbookItem;
 
     @Column(nullable = false)
-    private Boolean isCorrect = false;
+    private boolean isCorrect = false;
 
     @Builder
     public WordQuizResult(
         WordQuiz wordQuiz,
         WordbookItem wordbookItem,
-        Boolean isCorrect
+        boolean isCorrect
     ) {
         this.wordQuiz = wordQuiz;
         this.wordbookItem = wordbookItem;
+        this.isCorrect = isCorrect;
+    }
+
+    public void updateIsCorrect(boolean isCorrect) {
         this.isCorrect = isCorrect;
     }
 }
