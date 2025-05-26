@@ -50,8 +50,7 @@ import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.VIDEO_ANALYSIS_FAILED;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -231,6 +230,9 @@ public class VideoServiceImpl implements VideoService {
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
+			if (isInvalidGptResult(gptResult)) {
+				throw new ServiceException(INVALID_GPT_RESPONSE);
+			}
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
@@ -254,6 +256,11 @@ public class VideoServiceImpl implements VideoService {
 			}
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
+	}
+
+	private boolean isInvalidGptResult(List<GptSubtitleResponse> gptResult) {
+		return gptResult.stream()
+				.anyMatch(r -> r.getKeywords().isEmpty());
 	}
 
 	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult, Language language) {
