@@ -18,6 +18,7 @@ import com.mallang.mallang_backend.domain.videohistory.repository.VideoHistoryRe
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
 import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
 import com.mallang.mallang_backend.global.common.Language;
@@ -34,6 +35,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,6 +74,9 @@ class DashBoardServiceImplTest {
 	@Mock
 	private GptService gptService;
 
+	@Mock
+	private WordbookRepository wordbookRepository;
+
 	@InjectMocks
 	private DashboardServiceImpl dashboardServiceImpl;
 
@@ -97,6 +102,8 @@ class DashBoardServiceImplTest {
 			.thenReturn(2);
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any()))
 			.thenReturn(4);
+		when(wordbookRepository.findAllByMemberAndLanguage(member, Language.ENGLISH)).thenReturn(Collections.emptyList());
+		when(wordbookItemRepository.findReviewTargetWords(eq(member), any())).thenReturn(Collections.emptyList());
 
 		StatisticResponse response = dashboardServiceImpl.getStatistics(1L);
 
