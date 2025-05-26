@@ -8,5 +8,5 @@ import lombok.Setter;
 public class WordQuizResultSaveRequest {
 	private Long quizId;
 	private Long wordbookItemId;
-	private Boolean isCorrect;
+	private boolean correct;
 }

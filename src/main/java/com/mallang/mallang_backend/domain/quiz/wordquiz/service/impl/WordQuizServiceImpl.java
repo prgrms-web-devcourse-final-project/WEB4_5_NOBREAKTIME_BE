@@ -136,16 +136,25 @@ public class WordQuizServiceImpl implements WordQuizService {
 		WordQuiz wordQuiz = wordQuizRepository.findById(request.getQuizId())
 			.orElseThrow(() -> new ServiceException(WORDQUIZ_NOT_FOUND));
 
-		WordQuizResult result = WordQuizResult.builder()
-			.wordQuiz(wordQuiz)
-			.wordbookItem(wordbookItem)
-			.isCorrect(request.getIsCorrect())
-			.build();
-
 		// 학습 표시
 		wordbookItem.updateLearned(true);
 
-		wordQuizResultRepository.save(result);
+		// 기존 결과가 있으면 업데이트, 없으면 새로 저장
+		Optional<WordQuizResult> opResult = wordQuizResultRepository.findByWordQuizAndWordbookItem(wordQuiz, wordbookItem);
+
+		if (opResult.isPresent()) {
+			WordQuizResult existingResult = opResult.get();
+			existingResult.updateIsCorrect(request.isCorrect());
+			return;
+		}
+
+		WordQuizResult newResult = WordQuizResult.builder()
+			.wordQuiz(wordQuiz)
+			.wordbookItem(wordbookItem)
+			.isCorrect(request.isCorrect())
+			.build();
+
+		wordQuizResultRepository.save(newResult);
 	}
 
 	// 통합 퀴즈
@@ -238,15 +247,24 @@ public class WordQuizServiceImpl implements WordQuizService {
 			.orElseThrow(() -> new ServiceException(WORDBOOK_ITEM_NOT_FOUND));
 
 		// 단어의 현재 상태에 따라 변경
-		wordbookItem.applyLearningResult(request.getIsCorrect());
+		wordbookItem.applyLearningResult(request.isCorrect());
 
 		WordQuiz wordQuiz = wordQuizRepository.findById(request.getQuizId())
 			.orElseThrow(() -> new ServiceException(WORDQUIZ_NOT_FOUND));
 
+		// 기존 결과가 있으면 업데이트, 없으면 새로 저장
+		Optional<WordQuizResult> opResult = wordQuizResultRepository.findByWordQuizAndWordbookItem(wordQuiz, wordbookItem);
+
+		if (opResult.isPresent()) {
+			WordQuizResult existingResult = opResult.get();
+			existingResult.updateIsCorrect(request.isCorrect());
+			return;
+		}
+
 		WordQuizResult result = WordQuizResult.builder()
 			.wordQuiz(wordQuiz)
 			.wordbookItem(wordbookItem)
-			.isCorrect(request.getIsCorrect())
+			.isCorrect(request.isCorrect())
 			.build();
 
 		wordQuizResultRepository.save(result);
