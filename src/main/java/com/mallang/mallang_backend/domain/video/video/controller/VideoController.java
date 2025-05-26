@@ -56,7 +56,7 @@ public class VideoController {
 		value = "/{youtubeVideoId}/analysis",
 		produces = MediaType.TEXT_EVENT_STREAM_VALUE
 	)
-	public SseEmitter videoAnalysis(
+	public ResponseEntity<SseEmitter> videoAnalysis(
 		@PathVariable String youtubeVideoId,
 		@Parameter(hidden = true) @Login CustomUserDetails userDetail
 	) {
@@ -70,11 +70,18 @@ public class VideoController {
 			emitter.send(SseEmitter.event().name("INIT").data("스트림 연결 성공"));
 		} catch (IOException e) {
 			emitter.completeWithError(e);
-			return emitter;
+			return ResponseEntity
+				.ok()
+				.header("X-Accel-Buffering", "no")
+				.body(emitter);
 		}
 
 		videoService.analyzeWithSseAsync(memberId, youtubeVideoId, emitterId);
-		return emitter;
+
+		return ResponseEntity
+			.ok()
+			.header("X-Accel-Buffering", "no")
+			.body(emitter);
 	}
 
 	/**
