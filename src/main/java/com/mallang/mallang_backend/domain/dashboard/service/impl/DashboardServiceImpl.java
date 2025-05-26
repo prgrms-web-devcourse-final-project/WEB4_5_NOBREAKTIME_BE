@@ -245,7 +245,7 @@ public class DashboardServiceImpl implements DashboardService {
 		return wordQuizResults.stream()
 			.map(result -> {
 				String wordText = result.getWordbookItem().getWord();
-				boolean correct = result.getIsCorrect();
+				boolean correct = result.isCorrect();
 
 				// 퀴즈 결과에 해당하는 단어가 WordRepository에서 찾을 수 없는 경우 스킵
 				Optional<Word> opWord = wordRepository.findFirstByWordOrderByIdAsc(wordText);
@@ -269,7 +269,7 @@ public class DashboardServiceImpl implements DashboardService {
 					return null;
 				}
 				String expressionText = expression.getSentence();
-				boolean correct = result.getIsCorrect();
+				boolean correct = result.isCorrect();
 
 				return expressionText + " | " + (correct ? "CORRECT" : "WRONG");
 			})

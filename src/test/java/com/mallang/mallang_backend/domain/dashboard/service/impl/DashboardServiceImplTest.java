@@ -205,12 +205,12 @@ class DashBoardServiceImplTest {
 		WordQuizResult wordResult = mock(WordQuizResult.class);
 		when(wordResult.getWordbookItem()).thenReturn(mock(WordbookItem.class));
 		when(wordResult.getWordbookItem().getWord()).thenReturn("apple");
-		when(wordResult.getIsCorrect()).thenReturn(true);
+		when(wordResult.isCorrect()).thenReturn(true);
 
 		ExpressionQuizResult expressionResult = mock(ExpressionQuizResult.class);
 		when(expressionResult.getExpression()).thenReturn(mock(Expression.class));
 		when(expressionResult.getExpression().getSentence()).thenReturn("How are you?");
-		when(expressionResult.getIsCorrect()).thenReturn(false);
+		when(expressionResult.isCorrect()).thenReturn(false);
 
 		when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
 		when(wordQuizResultRepository.countByWordQuiz_MemberAndCreatedAtAfter(eq(member), any())).thenReturn(60);

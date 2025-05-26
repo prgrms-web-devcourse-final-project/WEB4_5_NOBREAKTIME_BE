@@ -195,7 +195,7 @@ public class WordQuizServiceImplTest {
         WordQuizResultSaveRequest request = new WordQuizResultSaveRequest();
         request.setQuizId(quizId);
         request.setWordbookItemId(wordbookItemId);
-        request.setIsCorrect(true);
+        request.setCorrect(true);
 
         given(wordbookItemRepository.findById(wordbookItemId)).willReturn(Optional.of(wordbookItem));
         given(wordQuizRepository.findById(quizId)).willReturn(Optional.of(wordQuiz));
