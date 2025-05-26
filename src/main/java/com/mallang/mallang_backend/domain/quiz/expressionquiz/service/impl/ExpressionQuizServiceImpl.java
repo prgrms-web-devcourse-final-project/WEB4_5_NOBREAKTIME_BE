@@ -148,7 +148,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 	@Transactional
 	public void saveExpressionQuizResult(ExpressionQuizResultSaveRequest request, Member member) {
 		// 표현함의 표현
-		ExpressionBookItemId expressionBookItemId = new ExpressionBookItemId(request.getExpressionBookId(), request.getExpressionId());
+		ExpressionBookItemId expressionBookItemId = new ExpressionBookItemId(request.getExpressionId(), request.getExpressionBookId());
 		ExpressionBookItem expressionBookItem = expressionBookItemRepository.findById(expressionBookItemId)
 			.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_ITEM_NOT_FOUND));
 
