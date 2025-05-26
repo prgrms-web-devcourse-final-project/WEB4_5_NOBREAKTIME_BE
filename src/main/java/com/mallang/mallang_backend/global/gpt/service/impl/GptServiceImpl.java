@@ -313,6 +313,9 @@ public class GptServiceImpl implements GptService {
 
 			return response;
 		} catch (Exception e) {
+			if (e instanceof RetryableException) {
+				throw e; // 그대로 던지면 Retry가 작동함
+			}
 			throw new ServiceException(GPT_API_CALL_FAILED, e);
 		}
 	}
