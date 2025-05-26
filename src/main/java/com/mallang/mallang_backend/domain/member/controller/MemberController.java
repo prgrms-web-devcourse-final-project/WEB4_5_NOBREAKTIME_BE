@@ -28,6 +28,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -48,6 +49,7 @@ public class MemberController {
     private final MemberService memberService;
     private final TokenService tokenService;
     private final MemberWithdrawalService withdrawalService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * @param userDetails 로그인 사용자 정보
@@ -85,6 +87,8 @@ public class MemberController {
         validateWithdrawnLogNotRejoinable(platformId, response, memberId);
 
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
+
+        redisTemplate.opsForSet().add("online-users", memberId);
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
@@ -171,6 +175,7 @@ public class MemberController {
         expiredCookies(response, userDetails.getMemberId());
 
         Sentry.configureScope(scope -> scope.setUser(null));
+        redisTemplate.opsForSet().remove("online-users", userDetails.getMemberId());
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
