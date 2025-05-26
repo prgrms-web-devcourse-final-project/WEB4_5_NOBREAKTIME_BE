@@ -3,21 +3,29 @@ package com.mallang.mallang_backend.domain.member.oauth.service;
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.oauth.processor.OAuth2UserProcessor;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.exception.custom.OAuthLoginException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
@@ -107,6 +115,8 @@ public class OAuthLoginService {
         // 필수 속성 추출
         String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
 
+        validateWithdrawnLogNotRejoinable(platformId);
+
         String email = (String) userAttributes.get("email");
         String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
         String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
@@ -163,5 +173,48 @@ public class OAuthLoginService {
 
         log.error("닉네임 생성 실패: {}", originalNickname);
         throw new ServiceException(NICKNAME_GENERATION_FAILED);
+    }
+
+
+    /**
+     * 탈퇴 이력이 있는 회원의 재가입 가능 여부를 검증합니다.
+     * 재가입 가능일 이전일 시 회원 정보를 삭제하고 예외를 발생시킵니다.
+     *
+     * @param platformId 플랫폼 식별자
+     */
+    private void validateWithdrawnLogNotRejoinable(String platformId) {
+        // 탈퇴 이력이 없으면 바로 리턴
+        if (!withdrawalService.existsByOriginalPlatformId(platformId)) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now(); // 현재 시간 고정
+
+        // 탈퇴 이력 조회
+        Optional.ofNullable(withdrawalService.findByOriginalPlatformId(platformId))
+                .map(WithdrawnLog::getCreatedAt)
+                .map(dt -> dt.plusDays(30))
+                .filter(date -> LocalDateTime.now().isBefore(date))
+                // 재가입 가능일이 아직 지나지 않은 경우 예외 처리
+                .ifPresent(date -> {
+                    // 1. 날짜 포맷팅
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+                    String formattedDate = date.format(formatter);
+
+                    // 2. 남은 시간 계산
+                    Duration duration = Duration.between(now, date);
+                    long days = duration.toDays();
+
+                    // 3. 메시지 생성
+                    String message = String.format(
+                            "409 \n " +
+                                    "회원 탈퇴 이력이 30일 이내에 있어서 재가입이 불가능합니다. \n" +
+                                    "재가입 가능일: %s (%d일 남았어요!)",
+                            formattedDate, days
+                    );
+
+                    throw new OAuthLoginException(
+                            message);
+                });
     }
 }
