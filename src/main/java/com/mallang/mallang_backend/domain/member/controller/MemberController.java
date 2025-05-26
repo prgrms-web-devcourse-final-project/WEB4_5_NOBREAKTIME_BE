@@ -78,8 +78,7 @@ public class MemberController {
     @PossibleErrors(MEMBER_NOT_FOUND)
     @GetMapping("/me")
     public ResponseEntity<RsData<UserProfileResponse>> getMyProfile(
-            @Parameter(hidden = true) @Login CustomUserDetails userDetails,
-            HttpServletResponse response
+            @Parameter(hidden = true) @Login CustomUserDetails userDetails
     ) {
 
         Long memberId = userDetails.getMemberId();
