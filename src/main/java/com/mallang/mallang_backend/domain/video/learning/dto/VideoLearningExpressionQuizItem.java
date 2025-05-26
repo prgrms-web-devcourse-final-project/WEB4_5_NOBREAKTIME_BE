@@ -76,9 +76,14 @@ public class VideoLearningExpressionQuizItem {
 	 * 3) 빈 문자열 필터 → 셔플
 	 */
 	private static List<String> parseWord(String sentence, Random random) {
-		List<String> words = Arrays.stream(sentence.split("\\s+"))
-			.map(w -> w.replaceAll("[\\p{Punct}&&[^'’]]", ""))
-			.map(w -> w.replaceAll("[\\p{Punct}。、「」（）『』【】《》！？!?]+", ""))
+		// 문장 전체에서 '와 ’를 제외한 모든 구두점(영문·일문) 제거
+		String cleaned = sentence.replaceAll(
+			"[\\p{Punct}&&[^'’]]|[。、「」（）『』【】《》！？!?]+",
+			""
+		);
+
+		// 공백으로 나눠서, 빈 문자열 필터 → 셔플
+		List<String> words = Arrays.stream(cleaned.split("\\s+"))
 			.filter(w -> !w.isBlank())
 			.collect(Collectors.toList());
 
