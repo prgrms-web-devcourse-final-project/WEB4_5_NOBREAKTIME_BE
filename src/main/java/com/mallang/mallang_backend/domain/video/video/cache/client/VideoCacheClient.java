@@ -44,11 +44,11 @@ public class VideoCacheClient {
 		String q, String category, String language, long fetchSize
 	) {
 		log.info("[CACHE MISS] loadCached q={} category={} language={}", q, category, language);
-		return fetchAndCache(q, category, language, fetchSize);
+		return fetch(q, category, language, null, fetchSize, "[CACHE PUT]");
 	}
 
 	/**
-	 * YouTube API 호출 및 결과 필터링 후 캐시에 저장
+	 * YouTube API 호출 및 결과 필터링 후 캐시에 저장 (일반 검색)
 	 */
 	@CachePut(
 		cacheNames = "videoListCache",
@@ -62,17 +62,60 @@ public class VideoCacheClient {
 	public CachedVideos fetchAndCache(
 		String q, String category, String language, long fetchSize
 	) {
-		String safeQ       = (q == null)        ? "" : q;
-		String safeCategory= (category == null) ? "" : category;
+		return fetch(q, category, language, null, fetchSize, "[CACHE PUT]");
+	}
+
+	/**
+	 * 스케줄러 전용: overrideRegion으로 호출하면서도
+	 * 기존 캐시(key=q|category|language)를 갱신하도록 @CachePut 추가
+	 */
+	@CachePut(
+		cacheNames = "videoListCache",
+		key = "T(String).format(" +
+			"  '%s|%s|%s', " +
+			"  (#q        == null ? '' : #q), " +
+			"  (#category == null ? '' : #category), " +
+			"  #language" +
+			")"
+	)
+	public CachedVideos fetchAndCacheWithRegion(
+		String q,
+		String category,
+		String language,
+		String overrideRegion,
+		long fetchSize
+	) {
+		return fetch(q, category, language, overrideRegion, fetchSize, "[SCHEDULED CACHE PUT]");
+	}
+
+	/**
+	 * 공통 fetch 로직
+	 */
+	private CachedVideos fetch(
+		String q,
+		String category,
+		String language,
+		String overrideRegion,
+		long fetchSize,
+		String logPrefix
+	) {
+		String safeQ        = (q == null)        ? "" : q;
+		String safeCategory = (category == null) ? "" : category;
 
 		try {
-			log.info("[CACHE PUT] fetchAndCache q={} category={} language={} fetchSize={}",
-				safeQ, safeCategory, language, fetchSize);
+			log.info("{} q={} category={} language={} overrideRegion={} fetchSize={}",
+				logPrefix, safeQ, safeCategory, language, overrideRegion, fetchSize);
 
+			// build context
 			SearchContext ctx = buildSearchContext(q, category, language);
+			// overrideRegion이 있으면 사용, 없으면 기본
+			String regionToUse = (overrideRegion != null && !overrideRegion.isBlank())
+				? overrideRegion
+				: ctx.getRegion();
+
 			List<String> ids = youtubeService.searchVideoIds(
 				ctx.getQuery(),
-				ctx.getRegion(),
+				regionToUse,
 				ctx.getLangKey(),
 				ctx.getCategory(),
 				fetchSize,
@@ -90,8 +133,8 @@ public class VideoCacheClient {
 			return new CachedVideos(fetchSize, list);
 
 		} catch (IOException e) {
-			log.error("[ERROR] fetchAndCache failed q={} category={} language={} fetchSize={}",
-				safeQ, safeCategory, language, fetchSize, e);
+			log.error("{} failed q={} category={} language={} fetchSize={} overrideRegion={} ",
+				logPrefix, safeQ, safeCategory, language, fetchSize, overrideRegion, e);
 			throw new ServiceException(ErrorCode.VIDEO_ID_SEARCH_FAILED, e);
 		}
 	}
@@ -110,8 +153,11 @@ public class VideoCacheClient {
 		var defaults    = defaultsMap.getOrDefault(langKey, defaultsMap.get("en"));
 
 		String region        = defaults.getRegion();
-		String query         = (q != null && !q.isBlank())      ? q             : defaults.getQuery();
-		boolean isDefault    = (q == null || q.isBlank()) && (category == null || category.isBlank());
+		String query         = (q != null && !q.isBlank())
+			? q
+			: defaults.getQuery();
+		boolean isDefault    = (q == null || q.isBlank())
+			&& (category == null || category.isBlank());
 		String videoDuration = defaults.getVideoDuration();
 
 		return new SearchContext(query, region, langKey, category, isDefault, videoDuration);
