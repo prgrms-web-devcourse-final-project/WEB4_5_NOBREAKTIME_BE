@@ -33,6 +33,7 @@ public class MemberProfileServiceImpl implements MemberProfileService {
     private final S3ImageUploader imageUploader;
     private final MemberRepository memberRepository;
     private final SubscriptionRepository subscriptionRepository;
+
     /**
      * 주어진 회원 ID로 사용자 프로필 정보를 조회합니다.
      *

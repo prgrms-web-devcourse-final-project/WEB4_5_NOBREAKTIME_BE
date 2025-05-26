@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ExpressionQuizResultSaveRequest {
-	Long quizId;
-	Long expressionBookId;
-	Long expressionId;
-	boolean correct;
+	private Long quizId;
+	private Long expressionBookId;
+	private Long expressionId;
+	private boolean correct;
 }

@@ -164,15 +164,23 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		ExpressionBook expressionBook = expressionBookRepository.findById(request.getExpressionBookId())
 			.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
 
+		// 학습 표시
+		expressionBookItem.updateLearned(true);
+
+		Optional<ExpressionQuizResult> opResult = expressionQuizResultRepository.findByExpressionAndExpressionBookAndExpressionQuiz(expression, expressionBook, expressionQuiz);
+
+		if (opResult.isPresent()) {
+			ExpressionQuizResult result = opResult.get();
+			result.updateIsCorrect(request.isCorrect());
+			return;
+		}
+
 		ExpressionQuizResult result = ExpressionQuizResult.builder()
 			.expression(expression)
 			.expressionBook(expressionBook)
 			.expressionQuiz(expressionQuiz)
 			.isCorrect(request.isCorrect())
 			.build();
-
-		// 학습 표시
-		expressionBookItem.updateLearned(true);
 
 		expressionQuizResultRepository.save(result);
 	}

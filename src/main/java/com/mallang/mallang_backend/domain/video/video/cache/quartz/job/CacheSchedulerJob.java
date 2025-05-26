@@ -27,10 +27,11 @@ public class CacheSchedulerJob implements Job {
 		String q         = dataMap.getString("q");
 		String category  = dataMap.getString("category");
 		String language  = dataMap.getString("language");
+		String region = dataMap.getString("region");
 		long fetchSize   = dataMap.getLong("fetchSize");
 
 		try {
-			int refreshed = cacheSchedulerService.refreshCache(q, category, language, fetchSize);
+			int refreshed = cacheSchedulerService.refreshCache(q, category, language, region, fetchSize);
 			log.info("CacheSchedulerJob 실행 시작 검색어 {}, 카테고리 {}, 언어 {}, 요청 갯수 {}, 가져온 갯수 {}",
 				q, category, language, fetchSize, refreshed);
 		} catch (Exception e) {

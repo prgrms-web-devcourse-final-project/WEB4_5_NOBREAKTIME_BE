@@ -76,7 +76,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     // 구독 테이블 업데이트
-    // 구독 테이블 업데이트
     @Override
     public void updateSubscriptionInfo(Long memberId,
                                        Plan plan,

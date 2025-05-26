@@ -231,6 +231,9 @@ public class VideoServiceImpl implements VideoService {
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
+			if (isInvalidGptResult(gptResult)) {
+				throw new ServiceException(INVALID_GPT_RESPONSE);
+			}
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
@@ -241,6 +244,7 @@ public class VideoServiceImpl implements VideoService {
 			return AnalyzeVideoResponse.from(gptResult);
 		} catch (IOException | InterruptedException e) {
 			sseEmitterManager.sendTo(emitterId, "videoAnalysisFailed", "영상 분석에 실패했습니다.");
+			sseEmitterManager.removeEmitter(emitterId);
 			log.warn("영상 분석 실패", e);
 			throw new ServiceException(VIDEO_ANALYSIS_FAILED);
 		} finally {
@@ -253,6 +257,11 @@ public class VideoServiceImpl implements VideoService {
 			}
 			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
+	}
+
+	private boolean isInvalidGptResult(List<GptSubtitleResponse> gptResult) {
+		return gptResult.stream()
+				.anyMatch(r -> r.getKeywords().isEmpty());
 	}
 
 	private void saveSubtitleAndKeyword(Videos video, List<GptSubtitleResponse> gptResult, Language language) {

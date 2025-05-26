@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -85,11 +86,13 @@ public class DashboardController {
 	@GetMapping("/calendar")
 	public ResponseEntity<RsData<LearningHistoryResponse>> getCalendarsData(
 		@Parameter(hidden = true)
-		@Login CustomUserDetails userDetail
+		@Login CustomUserDetails userDetail,
+		@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
 	) {
 		Long memberId = userDetail.getMemberId();
+		LocalDate targetDate = (date != null) ? date : LocalDate.now();
 
-		LearningHistoryResponse response = dashboardService.getLearningStatisticsByPeriod(memberId, LocalDate.now());
+		LearningHistoryResponse response = dashboardService.getLearningStatisticsByPeriod(memberId, targetDate);
 
 		return ResponseEntity.ok(new RsData<>(
 			"200",

@@ -18,7 +18,7 @@ public class OnlineUserCountLogger {
     // 1분마다 실행
     @Scheduled(cron = "0 * * * * *")
     public void logOnlineUserCount() {
-        Long onlineCount = redisTemplate.opsForSet().size("online-users");
-        log.info("ONLINE_USER_COUNT currentOnlineCount={}", onlineCount);
+        Long onlineUserCount = redisTemplate.opsForSet().size("online-users");
+        log.info("ONLINE_USER_COUNT 현재 로그인한 회원의 수={}", onlineUserCount);
     }
 }

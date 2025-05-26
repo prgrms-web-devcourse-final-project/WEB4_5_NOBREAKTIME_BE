@@ -36,7 +36,7 @@ public class ExpressionQuizResult extends BaseTime {
     private Expression expression;
 
     @Column(nullable = false)
-    private Boolean isCorrect;
+    private boolean isCorrect = false;
 
     // 생성 메서드
     @Builder
@@ -44,7 +44,7 @@ public class ExpressionQuizResult extends BaseTime {
         ExpressionBook expressionBook,
         Expression expression,
         ExpressionQuiz expressionQuiz,
-        Boolean isCorrect
+        boolean isCorrect
     ) {
         this.expressionBook = expressionBook;
         this.expression = expression;
@@ -58,5 +58,9 @@ public class ExpressionQuizResult extends BaseTime {
      */
     public void updateExpressionBook(ExpressionBook targetBook) {
         this.expressionBook = targetBook;
+    }
+
+    public void updateIsCorrect(boolean isCorrect) {
+        this.isCorrect = isCorrect;
     }
 }

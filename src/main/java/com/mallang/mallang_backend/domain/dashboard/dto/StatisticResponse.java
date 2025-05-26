@@ -14,4 +14,5 @@ public class StatisticResponse {
 	private int watchedVideoCount;
 	private DailyGoal dailyGoal;
 	private LevelStatus levelStatus;
+	private boolean totalQuizAvailable;
 }
