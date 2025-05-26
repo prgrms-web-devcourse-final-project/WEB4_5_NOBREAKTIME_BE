@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.http.HttpRequest;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.VideoListResponse;
@@ -13,7 +14,9 @@ import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.global.dto.TokenUsageType;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class YoutubeApiClient {
@@ -52,6 +55,10 @@ public class YoutubeApiClient {
 		if (pageToken != null) {
 			req.setPageToken(pageToken);
 		}
+
+		HttpRequest httpRequest = req.buildHttpRequest();
+		log.info("[YouTube API] GET {}", httpRequest.getUrl());
+
 		return req.execute();
 	}
 
