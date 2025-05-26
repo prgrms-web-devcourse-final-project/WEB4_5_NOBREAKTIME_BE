@@ -133,6 +133,9 @@ dependencies {
 
 	// slack 알림 연동
 	implementation 'com.slack.api:slack-api-client:1.45.3'
+
+	// LogStash
+	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 }
 
 tasks.named('test') {
