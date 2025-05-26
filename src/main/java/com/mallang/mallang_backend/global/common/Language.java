@@ -40,14 +40,6 @@ public enum Language {
     }
 
     /**
-     * ALL일 경우 ENGLISH, 그 외에는 자기 자신 반환
-     */
-    public Language getDefault() {
-        List<Language> available = getAvailableLanguages();
-        return available.isEmpty() ? NONE : available.get(0);
-    }
-
-    /**
      * API가 주는 code(ex: "en", "en-US", "ja")를
      * 이 enum에 매핑하여 반환, 없을 경우 NONE 리턴
      */
