@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
@@ -41,6 +42,7 @@ public class GptServiceImpl implements GptService {
 	private final WebClient openAiWebClient;
 	private final GptPromptBuilder gptPromptBuilder;
 	private final MeterRegistry meterRegistry;
+	private final ObjectMapper objectMapper;
 
 	private Counter gptCallCounter;
 
