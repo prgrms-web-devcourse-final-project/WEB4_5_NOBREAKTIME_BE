@@ -4,6 +4,7 @@ import com.mallang.mallang_backend.domain.video.video.dto.VideoListRequest;
 import com.mallang.mallang_backend.domain.video.video.dto.VideoResponse;
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.dto.YoutubeCategoryId;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
@@ -54,6 +55,7 @@ public class VideoController {
 		value = "/{youtubeVideoId}/analysis",
 		produces = MediaType.TEXT_EVENT_STREAM_VALUE
 	)
+	@TimeTrace
 	public ResponseEntity<SseEmitter> videoAnalysis(
 		@PathVariable String youtubeVideoId,
 		@Parameter(hidden = true) @Login CustomUserDetails userDetail

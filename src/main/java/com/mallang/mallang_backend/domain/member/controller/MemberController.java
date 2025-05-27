@@ -48,7 +48,6 @@ public class MemberController {
 
     private final MemberService memberService;
     private final TokenService tokenService;
-    private final MemberWithdrawalService withdrawalService;
     private final RedisTemplate<String, String> redisTemplate;
 
     /**

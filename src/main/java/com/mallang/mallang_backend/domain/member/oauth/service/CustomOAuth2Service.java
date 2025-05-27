@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -21,6 +22,7 @@ public class CustomOAuth2Service extends DefaultOAuth2UserService {
     private final OAuthLoginService loginService;
 
     @Override
+    @TimeTrace
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
         String provider = request.getClientRegistration().getRegistrationId();
         OAuth2User oAuth2User = externalService.loadUser(request); // 외부 API 호출 발생 지점 -> 격리
