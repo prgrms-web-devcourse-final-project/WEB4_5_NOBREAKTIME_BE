@@ -21,7 +21,6 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
-import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -51,7 +50,8 @@ import java.util.stream.Collectors;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
 import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.ANALYZE_VIDEO_CONCURRENCY_TIME_OUT;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.VIDEO_ANALYSIS_FAILED;
 
 @Slf4j
 @Service
@@ -147,7 +147,6 @@ public class VideoServiceImpl implements VideoService {
 	@Async("analysisExecutor")
 	@Transactional
 	@Override
-	@TimeTrace
 	public void analyzeWithSseAsync(Long memberId, String videoId, String emitterId) {
 		AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitterId);
 		sseEmitterManager.sendTo(emitterId, "analysisComplete", result);
@@ -232,9 +231,9 @@ public class VideoServiceImpl implements VideoService {
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
-			if (isInvalidGptResult(gptResult)) {
-				throw new ServiceException(INVALID_GPT_RESPONSE);
-			}
+			// if (isInvalidGptResult(gptResult)) {
+			// 	throw new ServiceException(INVALID_GPT_RESPONSE);
+			// }
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
@@ -255,7 +254,7 @@ public class VideoServiceImpl implements VideoService {
 				publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 				log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생");
 			}
-			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
 	}
 

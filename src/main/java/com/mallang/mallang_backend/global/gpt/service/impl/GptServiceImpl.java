@@ -122,8 +122,8 @@ public class GptServiceImpl implements GptService {
 	 * 재시도 소진 후 단어 검색 fallback 처리
 	 */
 	private List<Word> fallbackSearchWord(String word, Language language, Throwable t) {
-		log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-		throw new ServiceException(API_ERROR);
+		log.warn("[GptService] searchWord fallback 처리, 예외 무시하고 빈 리스트 반환: {}", t.toString());
+		return List.of();
 	}
 
 	/**
