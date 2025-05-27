@@ -148,9 +148,16 @@ public class VideoServiceImpl implements VideoService {
 	@Transactional
 	@Override
 	public void analyzeWithSseAsync(Long memberId, String videoId, String emitterId) {
-		AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitterId);
-		sseEmitterManager.sendTo(emitterId, "analysisComplete", result);
-		sseEmitterManager.removeEmitter(emitterId);
+		try {
+			AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitterId);
+			sseEmitterManager.sendTo(emitterId, "analysisComplete", result);
+		} catch (Exception e) {
+			// 분석 실패 이벤트 전송
+			sseEmitterManager.sendTo(emitterId, "videoAnalysisFailed", "영상 분석에 실패했습니다.");
+			log.warn("영상 분석 중 에러", e);
+		} finally {
+			sseEmitterManager.removeEmitter(emitterId);
+		}
 	}
 
 	private AnalyzeVideoResponse analyzeVideo(Long memberId, String videoId, String emitterId) {
@@ -169,7 +176,7 @@ public class VideoServiceImpl implements VideoService {
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
 			log.debug("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
 
@@ -254,7 +261,7 @@ public class VideoServiceImpl implements VideoService {
 				publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 				log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생");
 			}
-			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
 	}
 

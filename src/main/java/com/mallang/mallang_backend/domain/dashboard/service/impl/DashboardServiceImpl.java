@@ -73,7 +73,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .collect(Collectors.toList());
         List<WordbookItem> reviewWords = wordbookItemRepository.findReviewTargetWords(member, LocalDateTime.now());
 
-        boolean totalQuizAvailable = newWords.size() + reviewWords.size() < goal;
+        boolean totalQuizAvailable = newWords.size() + reviewWords.size() >= goal;
 
         return new StatisticResponse(
 			member.getNickname(),

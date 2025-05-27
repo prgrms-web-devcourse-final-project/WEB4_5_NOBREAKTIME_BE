@@ -30,10 +30,6 @@ public class AppConstants {
      */
     public static final String YOUTUBE_VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
 	/**
-	 * Youtube 라이센스 타입
-	 */
-	public static final String CC_LICENSE = "creativeCommon";
-	/**
 	 * 기본 단어장 이름
 	 */
 	public static final String DEFAULT_WORDBOOK_NAME = "기본";
@@ -68,11 +64,6 @@ public class AppConstants {
     public static final String NICKNAME_KEY = "nickname";
     public static final String PROFILE_IMAGE_KEY = "profile_image";
 
-	/**
-	 * 비디오 히스토리 최대 갯수
-	 */
-	public static final int MAX_HISTORY_PER_MEMBER = 50;
-
     /**
      * s3 에 업로드 할 프로필 사진의 prefix
      */
@@ -90,7 +81,6 @@ public class AppConstants {
     public static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
     public static final String ORDER_ID_PREFIX = "order:";
     public static final String IDEM_KEY_PREFIX = "idempotencyKey:";
-    public static final String BILLING_KEY_PREFIX = "billing:";
 
     /**
      * 주문 ID 생성 용도
@@ -112,4 +102,5 @@ public class AppConstants {
      * SSE Heartbeat Interval (초 단위)
      */
     public static final long HEARTBEAT_INTERVAL_SEC = 15;
+    public static final long AUTO_COMPLETE_DELAY_MS = 720;
 }
