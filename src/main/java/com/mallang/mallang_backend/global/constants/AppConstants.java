@@ -97,14 +97,19 @@ public class AppConstants {
      */
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
-	/**
-	 * Redis Lock TTL (Time To Live)
-	 */
-	public static final long LOCK_TTL_MS      = 30_000L;   // 30초
-	public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
+    /**
+     * Redis Lock TTL (Time To Live)
+     */
+    public static final long LOCK_TTL_MS      = 30_000L;   // 30초
+    public static final long WAIT_INTERVAL_MS = 500L;      // 500ms
 
-	/**
-	 * 동영상 가져올 갯수
-	 */
-	public static final long CACHE_SCHEDULER_FETCH_SIZE = 300L;
+    /**
+     * 동영상 가져올 갯수
+     */
+    public static final long CACHE_SCHEDULER_FETCH_SIZE = 300L;
+
+    /**
+     * SSE Heartbeat Interval (초 단위)
+     */
+    public static final long HEARTBEAT_INTERVAL_SEC = 15;
 }

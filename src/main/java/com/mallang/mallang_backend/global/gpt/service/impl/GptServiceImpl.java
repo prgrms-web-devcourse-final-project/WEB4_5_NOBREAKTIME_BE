@@ -159,7 +159,7 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeScript 호출
 	 */
-	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeScript")
+	@Retry(name = "gptRetry", fallbackMethod = "fallbackAnalyzeScript")
 	@Override
 	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments, Language language) {
 		// prompt 생성
@@ -211,36 +211,36 @@ public class GptServiceImpl implements GptService {
 	 */
 	private List<GptSubtitleResponse> removeInvalidKeyword(List<GptSubtitleResponse> responses) {
 		return responses.stream()
-			.peek(response -> {
-				// original 문장을 띄어쓰기로 나누어 Set에 담음
-				Set<String> originalWords = Arrays.stream(response.getOriginal().split("\\s+"))
-					.map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase()) // 문장부호 제거, 소문자화
-					.collect(Collectors.toSet());
+				.peek(response -> {
+					// original 문장을 띄어쓰기로 나누어 Set에 담음
+					Set<String> originalWords = Arrays.stream(response.getOriginal().split("\\s+"))
+							.map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase()) // 문장부호 제거, 소문자화
+							.collect(Collectors.toSet());
 
-				List<KeywordInfo> validKeywords = response.getKeywords().stream()
-					.filter(keyword -> {
-						String word = keyword.getWord().replaceAll("[^a-zA-Z]", "").toLowerCase();
-						return originalWords.contains(word);
-					})
-					.toList();
+					List<KeywordInfo> validKeywords = response.getKeywords().stream()
+							.filter(keyword -> {
+								String word = keyword.getWord().replaceAll("[^a-zA-Z]", "").toLowerCase();
+								return originalWords.contains(word);
+							})
+							.toList();
 
-				response.setKeywords(validKeywords);
-			})
-			.toList();
+					response.setKeywords(validKeywords);
+				})
+				.toList();
 	}
 
 	private List<GptSubtitleResponse> removeInvalidKeywordJapanese(List<GptSubtitleResponse> responses) {
 		return responses.stream()
-			.filter(r -> {
-					for (KeywordInfo word : r.getKeywords()) {
-						if (!r.getOriginal().contains(word.getWord())) {
-							return false;
+				.filter(r -> {
+							for (KeywordInfo word : r.getKeywords()) {
+								if (!r.getOriginal().contains(word.getWord())) {
+									return false;
+								}
+							}
+							return true;
 						}
-					}
-					return true;
-				}
-			)
-			.toList();
+				)
+				.toList();
 	}
 
 	@Override
@@ -294,22 +294,22 @@ public class GptServiceImpl implements GptService {
 			log.debug("[GptService] 요청할 프롬프트:\n{}", prompt);
 
 			OpenAiResponse response = openAiWebClient.post()
-				.header("Authorization", "Bearer " + openAiApiKey)
-				.bodyValue(buildRequestBody(prompt))
-				.retrieve()
-				.onStatus(
-					status -> status.is4xxClientError() || status.is5xxServerError(),
-					clientResponse -> clientResponse.bodyToMono(String.class)
-						.map(body -> {
-							log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
-							if (clientResponse.statusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-								return new RetryableException("OpenAI 분당 토큰이 3만 토큰을 초과했습니다.");
-							}
-							return new ServiceException(GPT_API_CALL_FAILED);
-						})
-				)
-				.bodyToMono(OpenAiResponse.class)
-				.block();
+					.header("Authorization", "Bearer " + openAiApiKey)
+					.bodyValue(buildRequestBody(prompt))
+					.retrieve()
+					.onStatus(
+							status -> status.is4xxClientError() || status.is5xxServerError(),
+							clientResponse -> clientResponse.bodyToMono(String.class)
+									.map(body -> {
+										log.error("[GptService] GPT API 호출 실패. 상태: {}, 응답: {}", clientResponse.statusCode(), body);
+										if (clientResponse.statusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+											return new RetryableException("OpenAI 분당 토큰이 3만 토큰을 초과했습니다.");
+										}
+										return new ServiceException(GPT_API_CALL_FAILED);
+									})
+					)
+					.bodyToMono(OpenAiResponse.class)
+					.block();
 
 			return response;
 		} catch (Exception e) {
@@ -344,8 +344,8 @@ public class GptServiceImpl implements GptService {
 	 */
 	private OpenAiRequest buildRequestBody(String prompt) {
 		return new OpenAiRequest(
-			"gpt-4o",
-			new Message[]{new Message("user", prompt)}
+				"gpt-4o",
+				new Message[]{new Message("user", prompt)}
 		);
 	}
 }

@@ -241,9 +241,8 @@ public class VideoServiceImpl implements VideoService {
 			log.debug("[AnalyzeVideo] 결과 저장 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			return AnalyzeVideoResponse.from(gptResult);
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException | ServiceException e) {
 			sseEmitterManager.sendTo(emitterId, "videoAnalysisFailed", "영상 분석에 실패했습니다.");
-			sseEmitterManager.removeEmitter(emitterId);
 			log.warn("영상 분석 실패", e);
 			throw new ServiceException(VIDEO_ANALYSIS_FAILED);
 		} finally {
