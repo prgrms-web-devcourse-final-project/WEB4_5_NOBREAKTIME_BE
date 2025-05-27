@@ -37,7 +37,6 @@ class GptPromptBuilderImplTest {
         String script = "This is a test script.";
         String result = builder.buildPromptForAnalyzeScript(script);
         assertThat(result).contains("입력:", script);
-        assertThat(result).contains("원문 | 번역");
     }
 
     @Test

@@ -46,7 +46,21 @@ public class GptServiceImplTest {
 
 		OpenAiResponse mockResponse = new OpenAiResponse();
 		mockResponse.setChoices(List.of(
-			new OpenAiResponse.Choice(new Message("user", "It ceases to exist without me | 나 없이는 존재하지 않아 | cease | 멈추다 | 2 | exist | 존재하다 | 2"))
+			new OpenAiResponse.Choice(new Message("user", """
+			[
+				{
+					"original": "Who is it you think you see? Do you know how much I make a year?",
+					"translate": "네가 보고 있다고 생각하는 사람이 누구지? 내가 1년에 얼마나 버는지 알아?",
+					"keyword": [
+						{
+							"word": "made",
+							"meaning": "벌었다",
+							"difficulty": 1
+						}
+					]
+				}
+			]
+		"""))
 		));
 
 		doReturn(mockResponse).when(gptServiceImpl).callGptApi(prompt);
@@ -55,7 +69,7 @@ public class GptServiceImplTest {
 		List<GptSubtitleResponse> result = gptServiceImpl.analyzeScript(segments, ENGLISH);
 
 		assertThat(result).isNotEmpty();
-		assertThat(result.get(0).getKeywords()).extracting("word").doesNotContain("cease");
+		assertThat(result.get(0).getKeywords()).extracting("word").doesNotContain("made");
 	}
 
 	@Test

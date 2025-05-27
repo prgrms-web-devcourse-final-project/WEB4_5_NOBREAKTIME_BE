@@ -1,14 +1,12 @@
 package com.mallang.mallang_backend.global.gpt.util;
 
-import static org.assertj.core.api.Assertions.*;
-
-import java.util.List;
-
+import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
-import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GptScriptProcessorTest {
 
@@ -41,51 +39,5 @@ public class GptScriptProcessorTest {
         String result = GptScriptProcessor.prepareScriptInputText(emptySegments);
 
         assertThat(result).isEqualTo("");
-    }
-
-    @Test
-    @DisplayName("GPT 응답 문자열을 파싱하여 GptSubtitleResult 리스트로 변환")
-    void parseAnalysisResultTest() {
-        String gptResponse = """
-                Who is it you think you see? | 네가 보고 있다고 생각하는 사람이 누구지? | see | 보다 | 1 | believe | 믿다 | 2 | make a year | 1년에 얼마를 벌다 | 3
-                ---
-                I am the one who knocks. | 문을 두드리는 사람은 나야 | knock | 두드리다 | 1
-                ---
-                """;
-
-        List<TranscriptSegment> segments = List.of(
-                new TranscriptSegment(1L, "00:00:01.000", "00:00:05.000", "A", "Who is it you think you see?"),
-                new TranscriptSegment(5L, "00:00:06.000", "00:00:08.000", "A", "I am the one who knocks.")
-        );
-
-        List<GptSubtitleResponse> result = GptScriptProcessor.parseAnalysisResult(gptResponse, segments);
-
-        assertThat(result).hasSize(2);
-
-        GptSubtitleResponse first = result.get(0);
-        assertThat(first.getOriginal()).isEqualTo("Who is it you think you see?");
-        assertThat(first.getTranscript()).isEqualTo("네가 보고 있다고 생각하는 사람이 누구지?");
-        assertThat(first.getKeywords()).hasSize(3);
-
-        assertThat(first.getKeywords().get(0).getWord()).isEqualTo("see");
-        assertThat(first.getKeywords().get(0).getMeaning()).isEqualTo("보다");
-        assertThat(first.getKeywords().get(0).getDifficulty()).isEqualTo(1);
-
-        assertThat(first.getKeywords().get(1).getWord()).isEqualTo("believe");
-        assertThat(first.getKeywords().get(1).getMeaning()).isEqualTo("믿다");
-        assertThat(first.getKeywords().get(1).getDifficulty()).isEqualTo(2);
-
-        assertThat(first.getKeywords().get(2).getWord()).isEqualTo("make a year");
-        assertThat(first.getKeywords().get(2).getMeaning()).isEqualTo("1년에 얼마를 벌다");
-        assertThat(first.getKeywords().get(2).getDifficulty()).isEqualTo(3);
-
-
-        GptSubtitleResponse second = result.get(1);
-        assertThat(second.getOriginal()).isEqualTo("I am the one who knocks.");
-        assertThat(second.getTranscript()).isEqualTo("문을 두드리는 사람은 나야");
-        assertThat(second.getKeywords()).hasSize(1);
-        assertThat(second.getKeywords().get(0).getWord()).isEqualTo("knock");
-        assertThat(second.getKeywords().get(0).getMeaning()).isEqualTo("두드리다");
-        assertThat(second.getKeywords().get(0).getDifficulty()).isEqualTo(1);
     }
 }
