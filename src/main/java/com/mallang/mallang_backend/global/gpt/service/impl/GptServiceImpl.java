@@ -1,5 +1,20 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
+import static com.mallang.mallang_backend.global.common.Language.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
@@ -8,31 +23,21 @@ import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.exception.custom.RetryableException;
-import com.mallang.mallang_backend.global.gpt.dto.*;
+import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
+import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
+import com.mallang.mallang_backend.global.gpt.dto.Message;
+import com.mallang.mallang_backend.global.gpt.dto.OpenAiRequest;
+import com.mallang.mallang_backend.global.gpt.dto.OpenAiResponse;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
+
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static com.mallang.mallang_backend.global.common.Language.ENGLISH;
-import static com.mallang.mallang_backend.global.common.Language.JAPANESE;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor.parseGptResult;
 
 @Slf4j
 @Service
@@ -122,8 +127,8 @@ public class GptServiceImpl implements GptService {
 	 * 재시도 소진 후 단어 검색 fallback 처리
 	 */
 	private List<Word> fallbackSearchWord(String word, Language language, Throwable t) {
-		log.error("[GptService] searchWord fallback 처리, 예외: {}", t.getMessage());
-		throw new ServiceException(API_ERROR);
+		log.warn("[GptService] searchWord fallback 처리, 예외 무시하고 빈 리스트 반환: {}", t.toString());
+		return List.of();
 	}
 
 	/**

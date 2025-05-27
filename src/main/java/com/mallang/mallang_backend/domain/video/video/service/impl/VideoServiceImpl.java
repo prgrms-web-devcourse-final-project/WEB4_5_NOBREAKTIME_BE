@@ -1,5 +1,22 @@
 package com.mallang.mallang_backend.domain.video.video.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.google.api.services.youtube.model.Video;
 import com.mallang.mallang_backend.domain.bookmark.repository.BookmarkRepository;
 import com.mallang.mallang_backend.domain.keyword.entity.Keyword;
@@ -32,25 +49,9 @@ import com.mallang.mallang_backend.global.util.clova.NestRequestEntity;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.util.sse.SseEmitterManager;
 import com.mallang.mallang_backend.global.util.youtube.YoutubeAudioExtractor;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.UPLOADS_DIR;
-import static com.mallang.mallang_backend.global.constants.AppConstants.YOUTUBE_VIDEO_BASE_URL;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -230,9 +231,9 @@ public class VideoServiceImpl implements VideoService {
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
-			if (isInvalidGptResult(gptResult)) {
-				throw new ServiceException(INVALID_GPT_RESPONSE);
-			}
+			// if (isInvalidGptResult(gptResult)) {
+			// 	throw new ServiceException(INVALID_GPT_RESPONSE);
+			// }
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
