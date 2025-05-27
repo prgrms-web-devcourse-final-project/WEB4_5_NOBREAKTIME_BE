@@ -1,12 +1,14 @@
 package com.mallang.mallang_backend.global.gpt.util;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.gpt.dto.GptParsedBlock;
 import com.mallang.mallang_backend.global.gpt.dto.GptSubtitleResponse;
-import com.mallang.mallang_backend.global.gpt.dto.KeywordInfo;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -46,51 +48,43 @@ public class GptScriptProcessor {
      * @return 파싱된 GptSubtitleResult 리스트
      */
     public static List<GptSubtitleResponse> parseAnalysisResult(String gptResponse, List<TranscriptSegment> segments) {
-        String[] blocks = gptResponse.strip().split("---");
+        ObjectMapper objectMapper = new ObjectMapper();
         List<GptSubtitleResponse> results = new ArrayList<>();
 
-        for(int i = 0; i < blocks.length ; i++){
-            String block = blocks[i].strip();
-            if(block.isBlank() || block.strip().startsWith("```")) continue;
+        try {
+            // GPT 응답 전처리: ```json 또는 ``` 제거
+            String cleaned = gptResponse
+                .replaceAll("(?si)```json", "") // 줄바꿈 포함 전체 블록 제거
+                .replaceAll("(?s)```", "")    // 혹시라도 다른 ``` 블록이 있으면 제거
+                .trim();
 
-            String[] parts = block.split("\\|");
-            if (parts.length < 2) {
-                log.warn("잘못된 블록 형식 (최소 원문/번역 없음): {}", block);
-                continue;
-            }
+            // JSON 파싱
+            List<GptParsedBlock> parsedBlocks = objectMapper.readValue(
+                cleaned,
+                new TypeReference<List<GptParsedBlock>>() {}
+            );
 
-            String  original = parts[0].strip();
-            String translated = parts[1].strip();
-            List<KeywordInfo> keywordInfos = new ArrayList<>();
 
-            // 키워드가 있을 때만 처리
-            if(parts.length > 2){
-                for (int j = 2; j + 2 < parts.length; j += 3){
-                    try {
-                        String word = parts[j].strip();
-                        String meaning = parts[j + 1].strip();
-                        int difficulty = Integer.parseInt(parts[j + 2].strip());
-                        keywordInfos.add(new KeywordInfo(word, meaning, difficulty));
-                    } catch (Exception e) {
-                        log.warn("키워드 파싱 실패 (index: {}): {}", j, e.getMessage());
-                    }
-                }
-            }
+            for (int i = 0; i < parsedBlocks.size(); i++) {
+                if (i >= segments.size()) break;
 
-            if(i >= segments.size()) break;
-            TranscriptSegment seg = segments.get(i);
+                GptParsedBlock block = parsedBlocks.get(i);
+                TranscriptSegment seg = segments.get(i);
 
-            GptSubtitleResponse dto = new GptSubtitleResponse(
+                GptSubtitleResponse dto = new GptSubtitleResponse(
                     seg.getId(),
                     seg.getStartTime(),
                     seg.getEndTime(),
                     seg.getSpeaker(),
-                    original,
-                    translated,
-                    keywordInfos
-            );
+                    block.getOriginal(),
+                    block.getTranslate(),
+                    block.getKeyword()
+                );
 
-            results.add(dto);
+                results.add(dto);
+            }
+        } catch (Exception e) {
+            log.error("GPT 분석 결과 파싱 실패: {}", e.getMessage(), e);
         }
         return results;
     }

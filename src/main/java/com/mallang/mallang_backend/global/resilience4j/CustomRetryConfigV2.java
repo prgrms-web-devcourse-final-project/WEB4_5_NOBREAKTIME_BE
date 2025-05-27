@@ -11,10 +11,13 @@ import io.github.resilience4j.retry.event.RetryOnIgnoredErrorEvent;
 import io.github.resilience4j.retry.event.RetryOnRetryEvent;
 import io.github.resilience4j.retry.event.RetryOnSuccessEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -145,13 +148,33 @@ public class CustomRetryConfigV2 {
                 event.getNumberOfRetryAttempts(),
                 errorDetails);
 
-        // Slack 알림 전송 (키바나 링크 변경 필요)
-        String kibanaBaseUrl = "https://kibana.example.com/app/discover#/?_a=(query:(language:lucene,query:'transactionId:%s'))";
+        String slackMessage = getSlackMessage(name, event, txId, errorDetails);
+
+        slackNotifier.sendSlackNotification(
+                "[Fallback] 재시도 중 최종 실패 발생",
+                slackMessage
+        );
+
+        // 스레드 로컬 데이터 정리
+        retryExceptions.remove();
+    }
+
+    private String getSlackMessage(String name, RetryOnErrorEvent event, String txId, List<String> errorDetails) {
+        // Slack 알림 전송
+        String query = String.format("transactionId : \"%s\" ", txId); // 띄어쓰기 포함
+        String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8); // URL 인코딩
+        String kibanaBaseUrl = "https://api.mallang.site:5601/app/discover#/"
+                + "?_g=(filters:!(),query:(language:kuery,query:''),"
+                + "refreshInterval:(pause:!t,value:60000),time:(from:now-30m,to:now))"
+                + "&_a=(columns:!(),dataSource:(dataViewId:'17441b64-b5d7-45f4-aa21-8c31c4cc754b',type:dataView),"
+                + "filters:!(),interval:auto,query:(language:kuery,query:'%s'),"
+                + "sort:!(!(timestamp,desc)))";
+
         String kibanaLink = txId != null
-                ? String.format(kibanaBaseUrl, txId)
+                ? String.format(kibanaBaseUrl, encodedQuery)
                 : "트랜잭션 ID 없음";
 
-        String slackMessage = String.format(
+        return String.format(
                      "\n -  *서비스 이름*: `%s`\n" +
                         "-  *트랜잭션 ID*: `%s`\n" +
                         "-  *키바나에서 바로 보기*: <%s|로그 검색하기>\n" +
@@ -167,14 +190,6 @@ public class CustomRetryConfigV2 {
                 event.getLastThrowable().getMessage(),
                 String.join("\n", errorDetails)
         );
-
-        slackNotifier.sendSlackNotification(
-                "[Fallback] 재시도 중 최종 실패 발생",
-                slackMessage
-        );
-
-        // 스레드 로컬 데이터 정리
-        retryExceptions.remove();
     }
 
     /**
