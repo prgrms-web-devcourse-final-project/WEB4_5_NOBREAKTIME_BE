@@ -100,7 +100,7 @@ public class JwtService {
         }
 
         Arrays.stream(cookies)
-                .forEach(cookie -> log.info("Cookie Name: {}, Value: {}", cookie.getName(), cookie.getValue()));
+                .forEach(cookie -> log.debug("Cookie Name: {}, Value: {}", cookie.getName(), cookie.getValue()));
 
         return Arrays.stream(cookies)
                 .filter(cookie -> cookieName.equals(cookie.getName()))

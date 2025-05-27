@@ -1,10 +1,10 @@
 package com.mallang.mallang_backend.global.gpt.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.dashboard.dto.LevelCheckResponse;
 import com.mallang.mallang_backend.domain.stt.converter.TranscriptSegment;
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.exception.custom.RetryableException;
@@ -42,7 +42,6 @@ public class GptServiceImpl implements GptService {
 	private final WebClient openAiWebClient;
 	private final GptPromptBuilder gptPromptBuilder;
 	private final MeterRegistry meterRegistry;
-	private final ObjectMapper objectMapper;
 
 	private Counter gptCallCounter;
 
@@ -131,6 +130,7 @@ public class GptServiceImpl implements GptService {
 	 */
 	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
+	@TimeTrace
 	public String analyzeSentence(String sentence, String translatedSentence, Language language) {
 		if (language == ENGLISH) {
 			String prompt = gptPromptBuilder.buildPromptForAnalyzeSentence(sentence, translatedSentence);

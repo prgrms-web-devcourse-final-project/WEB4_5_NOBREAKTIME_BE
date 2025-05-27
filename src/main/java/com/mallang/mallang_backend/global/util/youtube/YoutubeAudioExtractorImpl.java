@@ -120,7 +120,7 @@ public class YoutubeAudioExtractorImpl implements YoutubeAudioExtractor {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				log.info("[yt-dlp] {}", line);
+				log.debug("[yt-dlp] {}", line);
 			}
 		}
 	}
