@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.aop.log;
 
+import com.mallang.mallang_backend.global.exception.ServiceException;
+import com.mallang.mallang_backend.global.exception.message.MessageService;
 import io.sentry.Sentry;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -8,17 +10,25 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.MDC;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Slf4j
 @Aspect
 @Component
 public class LoggingAspect {
+
+    private final MessageService messageService;
+
+    public LoggingAspect(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @Pointcut("@within(org.springframework.web.bind.annotation.RestController)")
     public void allControllers() {}
@@ -84,7 +94,12 @@ public class LoggingAspect {
             log.info("[{}#{}] executionTime: {}ms", className, methodName, end - start);
             return result;
         } catch (Exception e) {
-            log.error("[{}#{}] 예외 발생: {}", className, methodName, e.getMessage(), e);
+            if (e instanceof ServiceException) {
+                String messageCode = ((ServiceException) e).getMessageCode();
+                String message = messageService.getMessage(messageCode);
+                log.error("[{}#{}] 예외 발생: {}", className, methodName, message);
+            }
+            log.error("[{}#{}] 예외 발생: {}", className, methodName, e.getMessage());
             Sentry.captureException(e);
             throw e;
         } finally {
