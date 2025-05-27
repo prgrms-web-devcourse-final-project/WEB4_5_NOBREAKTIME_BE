@@ -95,10 +95,6 @@ public class DataInitializer implements CommandLineRunner {
         log.info("저장된 구독 목록 ID: {}, {}", subscription1.getId(), subscription2.getId());
         log.info("저장 완료");
 
-        if (memberRepository.findById(1L).isPresent()) {
-            log.info("데이터 초기화가 이미 진행되었습니다.");
-            return;
-        }
     }
 
     // JWT 생성

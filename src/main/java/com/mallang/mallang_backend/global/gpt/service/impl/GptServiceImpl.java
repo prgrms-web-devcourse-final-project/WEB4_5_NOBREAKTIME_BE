@@ -159,7 +159,7 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeScript 호출
 	 */
-	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeScript")
+	@Retry(name = "gptRetry", fallbackMethod = "fallbackAnalyzeScript")
 	@Override
 	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments, Language language) {
 		// prompt 생성
