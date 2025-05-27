@@ -112,4 +112,5 @@ public class AppConstants {
 	 * SSE Heartbeat Interval (초 단위)
 	 */
 	public static final long HEARTBEAT_INTERVAL_SEC = 15;
+	public static final long AUTO_COMPLETE_DELAY_MS = 720;
 }
