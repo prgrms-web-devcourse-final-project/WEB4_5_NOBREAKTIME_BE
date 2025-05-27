@@ -107,4 +107,9 @@ public class AppConstants {
 	 * 동영상 가져올 갯수
 	 */
 	public static final long CACHE_SCHEDULER_FETCH_SIZE = 300L;
+
+	/**
+	 * SSE Heartbeat Interval (초 단위)
+	 */
+	public static final long HEARTBEAT_INTERVAL_SEC = 15;
 }
