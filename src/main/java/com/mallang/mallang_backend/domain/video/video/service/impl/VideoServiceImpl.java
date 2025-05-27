@@ -21,6 +21,7 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.video.video.service.VideoService;
 import com.mallang.mallang_backend.domain.video.youtube.service.YoutubeService;
 import com.mallang.mallang_backend.domain.videohistory.event.VideoViewedEvent;
+import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -146,6 +147,7 @@ public class VideoServiceImpl implements VideoService {
 	@Async("analysisExecutor")
 	@Transactional
 	@Override
+	@TimeTrace
 	public void analyzeWithSseAsync(Long memberId, String videoId, String emitterId) {
 		AnalyzeVideoResponse result = analyzeVideo(memberId, videoId, emitterId);
 		sseEmitterManager.sendTo(emitterId, "analysisComplete", result);
@@ -253,7 +255,7 @@ public class VideoServiceImpl implements VideoService {
 				publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 				log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생");
 			}
-			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
 	}
 
