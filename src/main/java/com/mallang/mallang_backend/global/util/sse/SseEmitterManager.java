@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 public class SseEmitterManager {
 	private ConcurrentHashMap<String, SseEmitter> emitters = new ConcurrentHashMap<>();
@@ -31,11 +34,20 @@ public class SseEmitterManager {
 		futureHolder[0] = scheduler.scheduleAtFixedRate(() -> {
 			try {
 				emitter.send(SseEmitter.event().comment("ping"));
+				log.debug("[SSE] userId={}에게 ping 전송", userId);
 			} catch (IOException e) {
 				// 전송 실패 시 스케줄 취소
+				log.warn("[SSE] userId={}에 ping 전송 실패, heartbeat 중단", userId, e);
 				futureHolder[0].cancel(true);
 			}
 		}, HEARTBEAT_INTERVAL_SEC, HEARTBEAT_INTERVAL_SEC, TimeUnit.SECONDS);
+
+
+		// 자동 종료 스케줄
+		ScheduledFuture<?> autoCompleteFuture = scheduler.schedule(() -> {
+			log.info("[SSE] userId={} 자동 종료(시간 초과)", userId);
+			removeEmitter(userId);
+		}, AUTO_COMPLETE_DELAY_MS, TimeUnit.SECONDS);
 
 		// onCompletion/onTimeout/onError 에서도 동일하게 취소
 		emitter.onCompletion(() -> {
