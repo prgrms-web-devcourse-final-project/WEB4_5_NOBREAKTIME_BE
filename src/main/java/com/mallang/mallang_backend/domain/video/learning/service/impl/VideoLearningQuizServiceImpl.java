@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	 * 영상 단어 퀴즈 생성
 	 */
 	@Override
+	@Cacheable(value = "wordQuizCache", key = "#videoId", sync = true)
 	@Transactional(readOnly = true)
 	public VideoLearningWordQuizListResponse makeQuizList(String videoId) {
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
@@ -68,6 +70,7 @@ public class VideoLearningQuizServiceImpl implements VideoLearningQuizService {
 	 * 영상 표현 퀴즈 생성 (영어/일본어 분기)
 	 */
 	@Override
+	@Cacheable(value = "expressionQuizCache", key = "#videoId", sync = true)
 	@Transactional(readOnly = true)
 	public VideoLearningExpressionQuizListResponse makeExpressionQuizList(String videoId) {
 		List<Keyword> pool = keywordRepository.findAllByVideosId(videoId);
