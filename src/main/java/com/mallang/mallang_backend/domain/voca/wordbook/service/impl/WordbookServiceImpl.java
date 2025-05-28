@@ -69,15 +69,15 @@ public class WordbookServiceImpl implements WordbookService {
             throw new ServiceException(NO_PERMISSION);
         }
 
-        // 단어가 사용자의 설정 언어와 일치하는지 검사
-        boolean hasMismatch = request.getWords().stream()
-                .map(w -> w.getWord())
-                .anyMatch(word -> !WordValidator.isLanguageMatch(word, member.getLanguage()));
-        if (hasMismatch) {
-            throw new ServiceException(LANGUAGE_MISMATCH);
-        }
-
         for (AddWordToWordbookRequest dto : request.getWords()) {
+
+            String w = dto.getWord();
+            // 언어 불일치 시 스킵
+            if(!WordValidator.isLanguageMatch(w, member.getLanguage())) {
+                log.warn("단어 언어 불일치 : {}, 회원 언어 : {}", w, member.getLanguage());
+                continue;
+            }
+
             // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
             try {
                 saveWordIfNotExist(dto.getWord(), member.getLanguage());
