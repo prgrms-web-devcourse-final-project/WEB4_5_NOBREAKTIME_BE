@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoContentDetails;
 import com.mallang.mallang_backend.domain.video.util.VideoUtils;
 import com.mallang.mallang_backend.domain.video.video.cache.client.VideoCacheClient;
 import com.mallang.mallang_backend.domain.video.video.cache.dto.CachedVideos;
@@ -115,24 +116,32 @@ class VideoCacheClientTest {
 	@DisplayName("fetchAndCache: IDs 가 있으면 VideoUtils 필터 후 toVideoResponse 변환")
 	void fetchAndCache_withResults() throws IOException {
 		List<String> ids = List.of("i1", "i2");
-		// first call: searchVideoIds
+		// 1) searchVideoIds stub
 		when(youtubeService.searchVideoIds(
 			eq("bar"), eq("US"), eq("en"), eq("music"), eq(2L), eq("medium")
 		)).thenReturn(ids);
 
-		// fetchVideosByIdsAsync 호출 스텁
+		// 2) 원본 Video 객체 준비 (contentDetails 주입)
 		Video rawVideo = new Video();
-		CompletableFuture<List<Video>> rawFuture = CompletableFuture.completedFuture(List.of(rawVideo));
+		VideoContentDetails details = new VideoContentDetails();
+		details.setDuration("PT10M");           // 10분 길이
+		rawVideo.setContentDetails(details);
+
+		// 3) fetchVideosByIdsAsync stub
+		CompletableFuture<List<Video>> rawFuture =
+			CompletableFuture.completedFuture(List.of(rawVideo));
 		when(youtubeService.fetchVideosByIdsAsync(ids)).thenReturn(rawFuture);
 
-		// VideoUtils static 메서드 스텁
+		// 4) VideoUtils static 메서드 stub
 		VideoResponse mapped = Mockito.mock(VideoResponse.class);
 		try (MockedStatic<VideoUtils> vs = mockStatic(VideoUtils.class)) {
 			vs.when(() -> VideoUtils.matchesLanguage(rawVideo, "en")).thenReturn(true);
 			vs.when(() -> VideoUtils.toVideoResponse(rawVideo)).thenReturn(mapped);
 
+			// 실제 호출
 			CachedVideos result = client.fetchAndCache("bar", "music", "en", 2L);
 
+			// 검증
 			assertEquals(2L, result.getRawFetchSize());
 			assertEquals(1, result.getResponses().size());
 			assertSame(mapped, result.getResponses().get(0));
