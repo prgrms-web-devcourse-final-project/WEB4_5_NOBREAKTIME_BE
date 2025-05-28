@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.global.constants;
 
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+
 import java.time.format.DateTimeFormatter;
 
 public class AppConstants {
@@ -103,4 +105,13 @@ public class AppConstants {
      */
     public static final long HEARTBEAT_INTERVAL_SEC = 15;
     public static final long AUTO_COMPLETE_DELAY_MS = 720;
+
+    public static final DefaultRedisScript<Long> LOCK_RELEASE_SCRIPT = new DefaultRedisScript<>(
+            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+                    "    return redis.call('del', KEYS[1]) " +
+                    "else " +
+                    "    return 0 " +
+                    "end",
+            Long.class
+    );
 }

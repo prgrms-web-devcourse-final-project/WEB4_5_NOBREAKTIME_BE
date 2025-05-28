@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.TransientDataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +24,7 @@ import java.sql.SQLTransientConnectionException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static com.mallang.mallang_backend.domain.member.oauth.service.OAuthLoginService.JOIN_MEMBER_KEY;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Slf4j
@@ -35,6 +37,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     private final SubscriptionService subscriptionService;
     private final WithdrawnLogRepository logRepository;
     private final MemberQueryRepository memberQueryRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * 회원 탈퇴 처리
@@ -47,6 +50,7 @@ public class MemberWithdrawalServiceImpl implements MemberWithdrawalService {
     public void withdrawMember(Long memberId) {
         Member member = findMemberOrThrow(memberId);
         String uuid = UUID.randomUUID().toString();
+        redisTemplate.delete(JOIN_MEMBER_KEY + member.getPlatformId());
 
         saveWithdrawnMemberLog(memberId, member, uuid);
 

@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.exception;
 
+import com.mallang.mallang_backend.global.exception.custom.LockAcquisitionException;
 import com.mallang.mallang_backend.global.exception.message.MessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Builder;
@@ -23,18 +24,32 @@ public class ErrorResponse {
      * 메시지 프로퍼티 변환 -> ErrorResponse 의 팩토리 메서드
      */
     public static ErrorResponse of(
-            ServiceException e,
+            RuntimeException e,
             HttpServletRequest request,
             MessageService messageService
     ) {
-        String clientMessage = messageService.getMessage(e.getErrorCode().getMessageCode());
+        ErrorCode errorCode = resolveErrorCode(e);
+        String clientMessage = messageService.getMessage(errorCode.getMessageCode());
+
         return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(e.getErrorCode().getStatus().value()) // HttpStatus에서 int 값 추출
-                .code(e.getErrorCode().getCode())
+                .status(errorCode.getStatus().value())
+                .code(errorCode.getCode())
                 .message(clientMessage)
                 .path(request.getRequestURI())
                 .build();
+    }
+
+    /**
+     * 예외 타입에 따른 ErrorCode 추출
+     */
+    private static ErrorCode resolveErrorCode(RuntimeException ex) {
+        if (ex instanceof ServiceException) {
+            return ((ServiceException) ex).getErrorCode();
+        } else if (ex instanceof LockAcquisitionException) {
+            return ((LockAcquisitionException) ex).getErrorCode();
+        }
+        throw new IllegalArgumentException("지원하지 않은 예외 타입 " + ex.getClass().getName());
     }
 
     public static ErrorResponse of(

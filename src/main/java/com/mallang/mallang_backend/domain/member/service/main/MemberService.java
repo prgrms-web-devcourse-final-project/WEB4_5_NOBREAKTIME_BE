@@ -11,8 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberService {
 
-    Member getMemberByPlatformId (String platformId);
-
     Member getMemberById(Long memberId);
 
     void updateLearningLanguage(Long id, Language language);
@@ -29,11 +27,7 @@ public interface MemberService {
 
     UserProfileResponse getUserProfile(Long memberId);
 
-    Boolean existsByPlatformId(String platformId);
-
     Member findByPlatformId(String platformId);
-
-    String findIdForPlatformId(Long memberId);
 
     boolean existsByNickname(String nickname);
 
@@ -42,6 +36,4 @@ public interface MemberService {
                        String nickname,
                        String profileImage,
                        LoginPlatform loginPlatform);
-
-    void deleteMember(Long memberId);
 }

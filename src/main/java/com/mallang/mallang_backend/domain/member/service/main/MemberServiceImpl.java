@@ -72,19 +72,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     /**
-     * 플랫폼 ID로 회원 정보를 조회합니다.
-     *
-     * @param platformId 조회할 회원의 플랫폼 ID
-     * @return 플랫폼 ID에 해당하는 회원 객체
-     * @throws ServiceException 회원을 찾을 수 없을 경우 {@code MEMBER_NOT_FOUND} 예외 발생
-     */
-    @Override
-    public Member getMemberByPlatformId(String platformId) {
-        return memberRepository.findByPlatformId(platformId)
-                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-    /**
      * 회원의 학습 언어를 설정합니다.
      * 이미 언어가 설정된 경우 예외를 발생시킵니다.
      * - 최초 설정 시에만 설정이 가능하도록
@@ -151,11 +138,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Boolean existsByPlatformId(String platformId) {
-        return memberRepository.existsByPlatformId(platformId);
-    }
-
-    @Override
     public Member findByPlatformId(String platformId) {
         return memberRepository.findByPlatformId(platformId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
@@ -193,19 +175,5 @@ public class MemberServiceImpl implements MemberService {
         expressionBookRepository.saveAll(defaultBooks);
 
         return savedMember.getId();
-    }
-
-    @Override
-    public String findIdForPlatformId(Long memberId) {
-        return memberRepository.findById(memberId)
-                .map(Member::getPlatformId)
-                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-
-    @Transactional
-    @Override
-    public void deleteMember(Long memberId) {
-        memberRepository.delete(findMemberOrThrow(memberId));
     }
 }

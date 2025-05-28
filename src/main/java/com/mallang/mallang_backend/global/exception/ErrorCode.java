@@ -119,6 +119,7 @@ public enum ErrorCode {
     // 로그인 에러
     UNSUPPORTED_OAUTH_PROVIDER("404-35", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
     OAUTH_RATE_LIMIT("500-35", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
+    LOCK_ACQUIRED_FAILED("423-35", "lock.acquired.failed", HttpStatus.LOCKED),
 
     // 파일 업로드 에러
     FILE_UPLOAD_FAILED("500-36", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -178,6 +179,7 @@ public enum ErrorCode {
     CACHE_LOCK_TIMEOUT("500-54", "cache.lock.timeout", HttpStatus.INTERNAL_SERVER_ERROR),
 
     INVALID_LANGUAGE("400-55", "invalid.language", HttpStatus.BAD_REQUEST);
+
 
     private final String code;
     private final String messageCode; // 메시지 프로퍼티

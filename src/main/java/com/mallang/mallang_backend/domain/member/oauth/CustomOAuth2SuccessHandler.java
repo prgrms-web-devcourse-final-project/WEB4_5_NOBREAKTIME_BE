@@ -1,7 +1,7 @@
 package com.mallang.mallang_backend.domain.member.oauth;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.service.main.MemberService;
+import com.mallang.mallang_backend.domain.member.dto.MemberSimpleInfo;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 
 /**
  * 로그인 / 회원가입 후
@@ -42,7 +41,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     @Value("${custom.site.frontUrl}")
     private String frontUrl;
 
-    private final MemberService memberService;
+    private final MemberRepository memberRepository;
     private final TokenService tokenService;
     private final JwtService jwtService;
 
@@ -58,14 +57,17 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     public void onAuthenticationSuccess(
             HttpServletRequest request,
             HttpServletResponse response,
-            Authentication authentication) throws IOException {
-
+            Authentication authentication
+    ) {
         String platformId = authentication.getName();
-        Member member = memberService.getMemberByPlatformId(platformId);
+        MemberSimpleInfo info = memberRepository.findMemberGrantedInfo(platformId);
 
-        setJwtToken(response, member.getId(), member.getSubscriptionType().getRoleName());
+        setJwtToken(response,
+                info.getId(),
+                info.getType().getRoleName()
+        );
 
-        if (member.getLanguage() == Language.NONE) {
+        if (info.getLanguage() == Language.NONE) {
             redirectInfoPage(response);
         } else {
             redirectDashboardPage(response);
@@ -116,7 +118,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         // 2. 액세스 토큰 쿠키에 설정
         jwtService.setJwtSessionCookie(tokenPair.getAccessToken(), response);
-        log.info("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
+        log.debug("소셜 로그인 사용자 액세스 토큰: {}", tokenPair.getAccessToken());
 
         // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);

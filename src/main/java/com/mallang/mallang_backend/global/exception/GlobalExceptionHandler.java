@@ -1,5 +1,6 @@
 package com.mallang.mallang_backend.global.exception;
 
+import com.mallang.mallang_backend.global.exception.custom.LockAcquisitionException;
 import com.mallang.mallang_backend.global.exception.message.MessageService;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataAccessException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleDataAccessException(DataAccessException e,
-                                                                     HttpServletRequest request) {
+                                                   HttpServletRequest request) {
 
         // 1. 에러 로그 기록 (상세 정보 포함)
         log.error("[DB SERVER ERROR] - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
@@ -152,12 +153,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
-
         String errorId = UUID.randomUUID().toString();
 
-        log.error("""
-        [UNHANDLED SERVER ERROR] {} {} | ErrorID: {} | Exception: {} | Message: {}
-        """,
+        log.error("[UNHANDLED SERVER ERROR] {} {} | ErrorID: {} | Exception: {} | Message: {}",
                 request.getMethod(),
                 request.getRequestURI(),
                 errorId,
@@ -196,5 +194,18 @@ public class GlobalExceptionHandler {
                 .errors(List.of(e.getClass().getSimpleName() + ": " + e.getMessage()))
                 .path(request.getRequestURI())
                 .build();
+    }
+
+    @ExceptionHandler(LockAcquisitionException.class)
+    @ResponseStatus(HttpStatus.LOCKED)// 423 error - Locked
+    public ErrorResponse handleLockAcquisitionException(LockAcquisitionException e,
+                                                        HttpServletRequest request) {
+        String message = messageService.getMessage(e.getErrorCode().getMessageCode());
+        String uri = request.getRequestURI();
+        String code = e.getErrorCode().getCode();
+
+        log.warn("[CLIENT ERROR] LOCK 획득 실패 - URI: {} | code: {} | message: {}", uri, code, message);
+
+        return ErrorResponse.of(e, request, messageService);
     }
 }
