@@ -53,19 +53,19 @@ public class CustomRetryConfigV2 {
         public void onEntryAddedEvent(EntryAddedEvent<Retry> event) {
             Retry retry = event.getAddedEntry();
             registerEventListeners(retry);
-            log.info("재시도 인스턴스 등록됨: {}", retry.getName());
+            log.debug("재시도 인스턴스 등록됨: {}", retry.getName());
         }
 
         @Override
         public void onEntryRemovedEvent(EntryRemovedEvent<Retry> event) {
-            log.info("재시도 인스턴스 제거됨: {}", event.getRemovedEntry().getName());
+            log.debug("재시도 인스턴스 제거됨: {}", event.getRemovedEntry().getName());
         }
 
         @Override
         public void onEntryReplacedEvent(EntryReplacedEvent<Retry> event) {
             Retry retry = event.getNewEntry();
             registerEventListeners(retry);
-            log.info("재시도 인스턴스 갱신됨: {}", retry.getName());
+            log.debug("재시도 인스턴스 갱신됨: {}", retry.getName());
         }
     }
 

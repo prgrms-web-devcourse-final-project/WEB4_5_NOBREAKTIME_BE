@@ -36,12 +36,12 @@ public class CustomCircuitBreakerConfig {
         public void onEntryAddedEvent(EntryAddedEvent<CircuitBreaker> event) {
             CircuitBreaker circuitBreaker = event.getAddedEntry();
             registerEventListeners(circuitBreaker);
-            log.info("서킷 브레이커 등록됨: {}", circuitBreaker.getName());
+            log.debug("서킷 브레이커 등록됨: {}", circuitBreaker.getName());
         }
 
         @Override
         public void onEntryRemovedEvent(EntryRemovedEvent<CircuitBreaker> event) {
-            log.info("서킷 브레이커 제거됨: {}", event.getRemovedEntry().getName());
+            log.debug("서킷 브레이커 제거됨: {}", event.getRemovedEntry().getName());
         }
 
         @Override

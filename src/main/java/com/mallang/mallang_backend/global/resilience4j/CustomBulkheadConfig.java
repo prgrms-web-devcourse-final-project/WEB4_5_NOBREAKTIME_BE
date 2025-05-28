@@ -41,7 +41,7 @@ public class CustomBulkheadConfig {
 			.onCallRejected(this::onRejected)     // 호출 거부
 			.onCallFinished(this::onFinished);    // 호출 완료
 
-		log.info("벌크헤드 이벤트 리스너 등록: {}", name);
+		log.debug("벌크헤드 이벤트 리스너 등록: {}", name);
 	}
 
 	/**

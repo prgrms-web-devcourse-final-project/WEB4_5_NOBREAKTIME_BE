@@ -44,7 +44,7 @@ public class CustomTimeLimiterConfig {
 			.onSuccess(this::handleSuccess)   // 정상 완료 이벤트
 			.onError(this::handleError);      // 기타 오류 이벤트
 
-		log.info("타임리미터 이벤트 리스너 등록: {}", name);
+		log.debug("타임리미터 이벤트 리스너 등록: {}", name);
 	}
 
 	/**

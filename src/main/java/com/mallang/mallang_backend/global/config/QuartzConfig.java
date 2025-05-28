@@ -137,19 +137,18 @@ public class QuartzConfig {
 
     @Bean
     public LoggingJobListener loggingJobListener() {
-        log.info(">>>> loggingJobListener 생성됨 <<<<");
         return new LoggingJobListener();
     }
 
     @Bean
     public RetryJobListener retryJobListener() {
-        log.info(">>>> retryJobListener 생성됨 <<<<");
+        log.debug(">>>> retryJobListener 생성됨 <<<<");
         return new RetryJobListener(new SlackNotifier());
     }
 
     @Bean
     public RetryTriggerListener retryTriggerListener() {
-        log.info(">>>> retryTriggerListener 생성됨 <<<<");
+        log.debug(">>>> retryTriggerListener 생성됨 <<<<");
         return new RetryTriggerListener();
     }
 
@@ -160,7 +159,7 @@ public class QuartzConfig {
     @Bean
     public SchedulerFactoryBeanCustomizer schedulerCustomizer() {
         return schedulerFactoryBean -> {
-            log.info(">>>> 스케줄러 커스터마이저 적용됨 <<<<");
+            log.debug(">>>> 스케줄러 커스터마이저 적용됨 <<<<");
             schedulerFactoryBean.setGlobalTriggerListeners(retryTriggerListener());
             schedulerFactoryBean.setGlobalJobListeners(loggingJobListener(), retryJobListener());
         };
