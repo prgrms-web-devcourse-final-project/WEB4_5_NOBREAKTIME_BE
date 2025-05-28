@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,8 +62,10 @@ public class GlobalExceptionHandler {
             // 서버 오류 발생 시 메트릭 카운트 증가
             meterRegistry.counter(
                     "server_error_count",
-                    "code", e.getErrorCode().name(),
-                    "method", request.getMethod()
+                    "type", "server",
+                    "exception", "ServiceException",
+                    "method", request.getMethod(),
+                    "uri", request.getRequestURI()
             ).increment();
         } else {
             log.warn("[CLIENT ERROR] - URI: {} | code: {} | message: {}", uri, code, message);
@@ -80,20 +83,30 @@ public class GlobalExceptionHandler {
      * @return DBErrorResponse 를 포함한 ResponseEntity
      */
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException e,
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleDataAccessException(DataAccessException e,
                                                                      HttpServletRequest request) {
 
-        log.error("DB 접근 오류 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
+        // 1. 에러 로그 기록 (상세 정보 포함)
+        log.error("[DB SERVER ERROR] - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        // 2. 메트릭 수집 (DB 관련 서버 에러 카운트)
+        meterRegistry.counter(
+                "server_error_count",              // 메트릭 이름
+                "type", "db",                      // 에러 타입 구분 태그
+                "exception", "DataAccessException", // 예외 타입 태그
+                "method", request.getMethod(),     // HTTP 메서드 태그
+                "uri", request.getRequestURI()     // 요청 URI 태그
+        ).increment();
+
+        // 3. 사용자에게 반환할 에러 응답 생성
+        return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .code("500-1")
+                .code("500-0")
                 .message("DB 접근 중 오류가 발생했습니다.")
                 .path(request.getRequestURI())
                 .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     /**
@@ -117,12 +130,11 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
 
-        log.warn("유효성 검사 실패 - URI: {} | 에러 메시지 개수: {} | 메시지 목록: {}",
+        log.warn("[CLIENT ERROR] 유효성 검사 실패 - URI: {} | 에러 메시지 개수: {} | 메시지 목록: {}",
                 request.getRequestURI(),
                 errorMessages.size(),
                 errorMessages);
 
-        // ErrorResponse에 여러 메시지가 담길 수 있도록 생성자/팩토리 메서드 수정 필요
         return ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 errorMessages,
@@ -140,12 +152,32 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ErrorResponse handleUnexpectedException(Exception e, HttpServletRequest request) {
-        log.error(" 예외 발생 - URI: {} | message: {}", request.getRequestURI(), e.getMessage(), e);
+
+        String errorId = UUID.randomUUID().toString();
+
+        log.error("""
+        [UNHANDLED SERVER ERROR] {} {} | ErrorID: {} | Exception: {} | Message: {}
+        """,
+                request.getMethod(),
+                request.getRequestURI(),
+                errorId,
+                e.getClass().getSimpleName(),
+                e.getMessage(),
+                e
+        );
+
+        // 메트릭 수집
+        meterRegistry.counter("unhandled_server_errors",
+                "type", "server",
+                "exception", e.getClass().getSimpleName(), // 예외 타입 태그
+                "method", request.getMethod(),
+                "uri", request.getRequestURI()
+        ).increment();
 
         return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .code("500-0")
+                .code("500")
                 .message("알 수 없는 서버 오류가 발생했습니다.")
                 .errors(List.of(e.getClass().getSimpleName() + ": " + e.getMessage()))
                 .path(request.getRequestURI())
@@ -155,7 +187,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthorizationDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleAuthorizationDenied(AuthorizationDeniedException e, HttpServletRequest request) {
-        log.warn("접근 거부 - URI: {} | message: {}", request.getRequestURI(), e.getMessage());
+        log.warn("[CLIENT ERROR] 접근 거부 - URI: {} | message: {}", request.getRequestURI(), e.getMessage());
         return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
