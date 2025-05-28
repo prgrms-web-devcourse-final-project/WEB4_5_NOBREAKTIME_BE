@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.global.exception;
 
 import com.mallang.mallang_backend.global.exception.message.MessageService;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private final MessageService messageService;
+    private final MeterRegistry meterRegistry;
 
     /**
      * 예시 응답
@@ -36,17 +38,38 @@ public class GlobalExceptionHandler {
      * }
      */
 
+    /**
+     * ServiceException 발생 시 호출되는 예외 처리 메서드입니다.
+     * 서버 오류는 error 레벨로, 클라이언트 오류는 warn 레벨로 로깅하며,
+     * 서버 오류 발생 시 메트릭을 수집합니다.
+     *
+     * @param e       ServiceException 예외 객체
+     * @param request HttpServletRequest 객체
+     * @return ErrorResponse를 포함한 ResponseEntity
+     */
     @ExceptionHandler(ServiceException.class)
     public ResponseEntity<ErrorResponse> handleServiceException(ServiceException e,
                                                                 HttpServletRequest request) {
         String message = messageService.getMessage(e.getErrorCode().getMessageCode());
-        log.error("ServiceException 발생 - URI: {} | code: {} | message: {}",
-                request.getRequestURI(),
-                e.getErrorCode().getCode(),
-                message);
+        HttpStatus status = e.getErrorCode().getStatus();
+        String uri = request.getRequestURI();
+        String code = e.getErrorCode().getCode();
+
+        if (status.is5xxServerError()) {
+            log.error("[SERVER ERROR] - URI: {} | code: {} | message: {}", uri, code, message);
+
+            // 서버 오류 발생 시 메트릭 카운트 증가
+            meterRegistry.counter(
+                    "server_error_count",
+                    "code", e.getErrorCode().name(),
+                    "method", request.getMethod()
+            ).increment();
+        } else {
+            log.warn("[CLIENT ERROR] - URI: {} | code: {} | message: {}", uri, code, message);
+        }
 
         ErrorResponse errorResponse = ErrorResponse.of(e, request, messageService);
-        return ResponseEntity.status(e.getErrorCode().getStatus()).body(errorResponse);
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     /**
