@@ -1,12 +1,14 @@
 package com.mallang.mallang_backend.domain.video.learning.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class VideoLearningExpressionQuizListResponse {
-	private final List<VideoLearningExpressionQuizItem> quiz;
+	private List<VideoLearningExpressionQuizItem> quiz;
 }

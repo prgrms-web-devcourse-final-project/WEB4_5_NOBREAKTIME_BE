@@ -46,15 +46,6 @@ public class OAuthLoginService {
     private final RedisTemplate<String, String> redisTemplate;
     public static final String JOIN_MEMBER_KEY = "join_member";
 
-    @PostConstruct
-    public void init() {
-        redisTemplate.execute((RedisCallback<Void>) connection -> {
-            connection.flushDb();
-            return null;
-        });
-        log.debug("redis 초기화 완료");
-    }
-
     /**
      * OAuth2 로그인 프로세스를 처리하는 메서드
      *

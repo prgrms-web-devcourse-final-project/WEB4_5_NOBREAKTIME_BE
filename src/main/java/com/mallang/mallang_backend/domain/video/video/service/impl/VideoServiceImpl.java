@@ -176,7 +176,7 @@ public class VideoServiceImpl implements VideoService {
 		if (!existing.isEmpty()) {
 			List<GptSubtitleResponse> subtitleResponses = GptSubtitleResponse.from(existing);
 			log.debug("[AnalyzeVideo] 기존 분석 결과 반환 ({} ms)", (System.nanoTime() - start) / 1_000_000);
-			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
+			log.debug("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 			return AnalyzeVideoResponse.from(subtitleResponses);
 		}
 
