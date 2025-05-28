@@ -1,5 +1,24 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
@@ -10,7 +29,16 @@ import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository
 import com.mallang.mallang_backend.domain.voca.word.entity.Word;
 import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
 import com.mallang.mallang_backend.domain.voca.word.service.impl.SavedWordResultFetcher;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
 import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
 import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
 import com.mallang.mallang_backend.domain.voca.wordbook.service.WordbookService;
@@ -22,19 +50,9 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.util.redis.RedisDistributedLock;
 import com.mallang.mallang_backend.global.validation.WordValidator;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 @Slf4j
 @Service
@@ -69,15 +87,15 @@ public class WordbookServiceImpl implements WordbookService {
             throw new ServiceException(NO_PERMISSION);
         }
 
-        // 단어가 사용자의 설정 언어와 일치하는지 검사
-        boolean hasMismatch = request.getWords().stream()
-                .map(w -> w.getWord())
-                .anyMatch(word -> !WordValidator.isLanguageMatch(word, member.getLanguage()));
-        if (hasMismatch) {
-            throw new ServiceException(LANGUAGE_MISMATCH);
-        }
-
         for (AddWordToWordbookRequest dto : request.getWords()) {
+
+            String w = dto.getWord();
+            // 언어 불일치 시 스킵
+            if(!WordValidator.isLanguageMatch(w, member.getLanguage())) {
+                log.warn("단어 언어 불일치 : {}, 회원 언어 : {}", w, member.getLanguage());
+                continue;
+            }
+
             // 저장된 단어가 없는 경우, 사전 API 또는 GPT 처리해서 word 추가 (일반적인 경우엔 단어가 이미 존재함)
             try {
                 saveWordIfNotExist(dto.getWord(), member.getLanguage());
