@@ -1,6 +1,7 @@
 package com.mallang.mallang_backend.domain.video.video.cache.client;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -127,6 +128,11 @@ public class VideoCacheClient {
 				: youtubeService.fetchVideosByIdsAsync(ids)
 				.join().stream()
 				.filter(v -> VideoUtils.matchesLanguage(v, ctx.getLangKey()))
+				.filter(v -> {
+					long mins = Duration.parse(v.getContentDetails().getDuration())
+						.toMinutes();
+					return mins < 20;
+				})
 				.map(VideoUtils::toVideoResponse)
 				.collect(Collectors.toList());
 

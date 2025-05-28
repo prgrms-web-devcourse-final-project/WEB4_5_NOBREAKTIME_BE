@@ -9,16 +9,20 @@ import java.util.stream.Collectors;
 import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
 import com.mallang.mallang_backend.global.util.japanese.JapaneseSplitter;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class VideoLearningExpressionQuizItem {
-	private final String question;  // 빈칸 퀴즈용 문장 (단어 자리마다 {})
-	private final String original;  // 원문 문장
-	private final List<String> choices; // 선택지 단어 목록
-	private final String meaning;   // 문장 해석
+	private String question;  // 빈칸 퀴즈용 문장 (단어 자리마다 {})
+	private String original;  // 원문 문장
+	private List<String> choices; // 선택지 단어 목록
+	private String meaning;   // 문장 해석
 
 	/** 영어 퀴즈용 변환 메서드 */
 	public static VideoLearningExpressionQuizItem fromSubtitleEnglish(
