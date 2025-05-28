@@ -44,11 +44,11 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 	public ExpressionQuizResponse generateExpressionBookQuiz(Long expressionBookId, Member member) {
 		// 받은 아이디로 문제 만들거 가져오기
 		ExpressionBook expressionBook = expressionBookRepository.findByIdAndMember(expressionBookId, member)
-				.orElseThrow(() -> new ServiceException(NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN));
+				.orElseThrow(() -> new ServiceException(NO_EXPRESSION_BOOK_EXIST_OR_FORBIDDEN));
 
 		List<ExpressionBookItem> items = expressionBookItemRepository.findAllById_ExpressionBookId(expressionBookId);
 		if (items.isEmpty()) {
-			throw new ServiceException(EXPRESSIONBOOK_IS_EMPTY);
+			throw new ServiceException(EXPRESSION_BOOK_IS_EMPTY);
 		}
 
 		List<ExpressionQuizItem> quizzes = new ArrayList<>();
@@ -94,7 +94,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 	 */
 	private ExpressionQuizItem convertToQuizDtoJapanese(ExpressionBookItem item) {
 		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
-				.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
+				.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_IS_EMPTY));
 
 		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
 				.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
@@ -112,7 +112,7 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 
 	private ExpressionQuizItem convertToQuizDto(ExpressionBookItem item) {
 		Expression expression = expressionRepository.findById(item.getId().getExpressionId())
-				.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_IS_EMPTY));
+				.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_IS_EMPTY));
 
 		ExpressionBook expressionBook = expressionBookRepository.findById(item.getId().getExpressionBookId())
 				.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_NOT_FOUND));
@@ -150,11 +150,11 @@ public class ExpressionQuizServiceImpl implements ExpressionQuizService {
 		// 표현함의 표현
 		ExpressionBookItemId expressionBookItemId = new ExpressionBookItemId(request.getExpressionId(), request.getExpressionBookId());
 		ExpressionBookItem expressionBookItem = expressionBookItemRepository.findById(expressionBookItemId)
-				.orElseThrow(() -> new ServiceException(EXPRESSIONBOOK_ITEM_NOT_FOUND));
+				.orElseThrow(() -> new ServiceException(EXPRESSION_BOOK_ITEM_NOT_FOUND));
 
 		// 표현함 퀴즈
 		ExpressionQuiz expressionQuiz = expressionQuizRepository.findById(request.getQuizId())
-				.orElseThrow(() -> new ServiceException(EXPRESSIONQUIZ_NOT_FOUND));
+				.orElseThrow(() -> new ServiceException(EXPRESSION_QUIZ_NOT_FOUND));
 
 		// 표현
 		Expression expression = expressionRepository.findById(request.getExpressionId())

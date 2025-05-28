@@ -3,6 +3,8 @@ package com.mallang.mallang_backend.domain.member.oauth;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ErrorCode;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;
 import com.mallang.mallang_backend.global.token.TokenService;
@@ -64,9 +66,37 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         setJwtToken(response, member.getId(), member.getSubscriptionType().getRoleName());
 
         if (member.getLanguage() == Language.NONE) {
-            response.sendRedirect(frontUrl + "/additional_info");
+            redirectInfoPage(response);
         } else {
+            redirectDashboardPage(response);
+        }
+    }
+
+    /**
+     * 인증 성공 후 대시보드 페이지로 리다이렉트 (기존 회원)
+     *
+     * @param response 응답 객체
+     * @throws ServiceException 응답에 실패한 경우 발생
+     */
+    private void redirectDashboardPage(HttpServletResponse response) {
+        try {
             response.sendRedirect(frontUrl + "/dashboard");
+        } catch (Exception e) {
+            throw new ServiceException(ErrorCode.REDIRECTION_FAILED, e);
+        }
+    }
+
+    /**
+     * 인증 성공 후 언어 선택 페이지로 리다이렉트 (최초 가입 회원)
+     *
+     * @param response 응답 객체
+     * @throws ServiceException 응답에 실패한 경우 발생
+     */
+    private void redirectInfoPage(HttpServletResponse response) {
+        try {
+            response.sendRedirect(frontUrl + "/additional_info");
+        } catch (Exception e) {
+            throw new ServiceException(ErrorCode.REDIRECTION_FAILED, e);
         }
     }
 

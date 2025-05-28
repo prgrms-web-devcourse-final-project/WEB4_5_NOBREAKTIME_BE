@@ -1,5 +1,7 @@
 package com.mallang.mallang_backend.domain.member.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
@@ -34,6 +36,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.ACCESS_TOKEN;
@@ -48,7 +52,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final TokenService tokenService;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * @param userDetails 로그인 사용자 정보
@@ -84,7 +88,7 @@ public class MemberController {
 
         UserProfileResponse userProfile = memberService.getUserProfile(memberId);
 
-        redisTemplate.opsForSet().add("online-users", String.valueOf(memberId));
+        logLoginEvent(memberId);
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
@@ -168,11 +172,9 @@ public class MemberController {
             @Parameter(hidden = true)
             @Login CustomUserDetails userDetails
     ) {
-        Long memberId = userDetails.getMemberId();
         expiredCookies(response, userDetails.getMemberId());
 
         Sentry.configureScope(scope -> scope.setUser(null));
-        redisTemplate.opsForSet().remove("online-users", String.valueOf(memberId));
 
         return ResponseEntity.ok(new RsData<>(
                 "200",
@@ -208,5 +210,19 @@ public class MemberController {
     private void expiredCookies(HttpServletResponse response, Long memberId) {
         tokenService.deleteTokenInCookie(response, ACCESS_TOKEN);
         tokenService.invalidateTokenAndDeleteRedisRefreshToken(response, memberId);
+    }
+
+    public void logLoginEvent(Long memberId) {
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("user_id", memberId);
+        logMap.put("event_type", "LOGIN");
+        logMap.put("@timestamp", System.currentTimeMillis());
+        String json = null;
+        try {
+            json = objectMapper.writeValueAsString(logMap);
+        } catch (JsonProcessingException e) {
+            throw new ServiceException(JSON_PARSE_ERROR);
+        }
+        log.info(json);
     }
 }

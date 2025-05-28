@@ -98,8 +98,9 @@ public class LoggingAspect {
                 String messageCode = ((ServiceException) e).getMessageCode();
                 String message = messageService.getMessage(messageCode);
                 log.error("[{}#{}] 예외 발생: {}", className, methodName, message);
+            } else {
+                log.error("[{}#{}] 예외 발생: {}", className, methodName, e.getMessage());
             }
-            log.error("[{}#{}] 예외 발생: {}", className, methodName, e.getMessage());
             Sentry.captureException(e);
             throw e;
         } finally {

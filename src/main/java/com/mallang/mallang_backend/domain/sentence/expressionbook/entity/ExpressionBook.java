@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_EXPRESSION_BOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.EXPRESSION_BOOK_RENAME_DEFAULT_FORBIDDEN;
 
 @Getter
 @Entity
@@ -80,7 +80,7 @@ public class ExpressionBook extends BaseTime {
      */
     public void updateName(String newName) {
         if (DEFAULT_EXPRESSION_BOOK_NAME.equals(this.name) || DEFAULT_EXPRESSION_BOOK_NAME.equals(newName)) {
-            throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
+            throw new ServiceException(EXPRESSION_BOOK_RENAME_DEFAULT_FORBIDDEN);
         }
         this.name = newName;
     }

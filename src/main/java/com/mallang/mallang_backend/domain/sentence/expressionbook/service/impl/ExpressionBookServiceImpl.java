@@ -59,7 +59,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
 
         if (member.getSubscriptionType() == BASIC) {
-            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+            throw new ServiceException(NO_EXPRESSION_BOOK_CREATE_PERMISSION);
         }
 
         if (member.getLanguage() == Language.NONE) {
@@ -67,11 +67,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         }
 
         if (request.getName().equals(DEFAULT_EXPRESSION_BOOK_NAME)) {
-            throw new ServiceException(EXPRESSIONBOOK_CREATE_DEFAULT_FORBIDDEN);
+            throw new ServiceException(EXPRESSION_BOOK_CREATE_DEFAULT_FORBIDDEN);
         }
 
         if (expressionBookRepository.existsByMemberAndName(member, request.getName())) {
-            throw new ServiceException(DUPLICATE_EXPRESSIONBOOK_NAME);
+            throw new ServiceException(DUPLICATE_EXPRESSION_BOOK_NAME);
         }
 
         ExpressionBook expressionBook = ExpressionBook.builder()
@@ -116,11 +116,11 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         }
 
         if (!expressionBook.getMember().canUseAdditaional()) {
-            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+            throw new ServiceException(NO_EXPRESSION_BOOK_CREATE_PERMISSION);
         }
 
         if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
-            throw new ServiceException(EXPRESSIONBOOK_RENAME_DEFAULT_FORBIDDEN);
+            throw new ServiceException(EXPRESSION_BOOK_RENAME_DEFAULT_FORBIDDEN);
         }
 
         expressionBook.updateName(newName);
@@ -137,12 +137,12 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
         }
 
         if (!expressionBook.getMember().canUseAdditaional()) {
-            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+            throw new ServiceException(NO_EXPRESSION_BOOK_CREATE_PERMISSION);
         }
 
         // 기본 표현함을 삭제 시도하면 실패
         if (DEFAULT_EXPRESSION_BOOK_NAME.equals(expressionBook.getName())) {
-            throw new ServiceException(EXPRESSIONBOOK_DELETE_DEFAULT_FORBIDDEN);
+            throw new ServiceException(EXPRESSION_BOOK_DELETE_DEFAULT_FORBIDDEN);
         }
 
         // 삭제하려는 표현함의 표현에 대한 퀴즈 결과를 모두 삭제
@@ -352,7 +352,7 @@ public class ExpressionBookServiceImpl implements ExpressionBookService {
 
         if (sourceBook.getMember().getSubscriptionType() == BASIC ||
                 targetBook.getMember().getSubscriptionType() == BASIC) {
-            throw new ServiceException(NO_EXPRESSIONBOOK_CREATE_PERMISSION);
+            throw new ServiceException(NO_EXPRESSION_BOOK_CREATE_PERMISSION);
         }
 
         if (!sourceBook.getMember().getId().equals(memberId) ||

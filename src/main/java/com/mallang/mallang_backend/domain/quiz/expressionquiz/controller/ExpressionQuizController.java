@@ -36,7 +36,7 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 조회", description = "표현함에 대한 퀴즈를 요청합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 문제를 조회했습니다.")
-	@PossibleErrors({NO_EXPRESSIONBOOK_EXIST_OR_FORBIDDEN, EXPRESSIONBOOK_IS_EMPTY})
+	@PossibleErrors({NO_EXPRESSION_BOOK_EXIST_OR_FORBIDDEN, EXPRESSION_BOOK_IS_EMPTY})
 	@GetMapping("/{expressionBookId}/quiz")
 	public ResponseEntity<RsData<ExpressionQuizResponse>> getExpressionBookQuiz(
 		@PathVariable Long expressionBookId,
@@ -63,7 +63,7 @@ public class ExpressionQuizController {
 	 */
 	@Operation(summary = "표현함 퀴즈 결과 저장", description = "표현함 아이템에 대한 퀴즈 결과를 저장합니다.")
 	@ApiResponse(responseCode = "200", description = "표현함 퀴즈 결과 저장 완료")
-	@PossibleErrors({EXPRESSIONBOOK_ITEM_NOT_FOUND, EXPRESSIONQUIZ_NOT_FOUND, EXPRESSION_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND})
+	@PossibleErrors({EXPRESSION_BOOK_ITEM_NOT_FOUND, EXPRESSION_QUIZ_NOT_FOUND, EXPRESSION_NOT_FOUND, EXPRESSION_BOOK_NOT_FOUND})
 	@PostMapping("/quiz/result")
 	public ResponseEntity<RsData<Void>> saveExpressionQuizResult(
 		@RequestBody ExpressionQuizResultSaveRequest request,

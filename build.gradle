@@ -136,6 +136,9 @@ dependencies {
 
 	// LogStash
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+	// micrometer (메트릭 수집)
+	implementation 'io.micrometer:micrometer-registry-cloudwatch2'
 }
 
 tasks.named('test') {
