@@ -1,22 +1,18 @@
 package com.mallang.mallang_backend.domain.voca.wordbook.service.impl;
 
-import com.mallang.mallang_backend.domain.member.entity.Member;
-import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
-import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
-import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
-import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
-import com.mallang.mallang_backend.domain.video.video.entity.Videos;
-import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
-import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
-import com.mallang.mallang_backend.domain.voca.word.entity.Word;
-import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
-import com.mallang.mallang_backend.domain.voca.wordbook.dto.*;
-import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
-import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
-import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
-import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
-import com.mallang.mallang_backend.global.common.Language;
-import com.mallang.mallang_backend.global.exception.ServiceException;
+import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.*;
+import static com.mallang.mallang_backend.global.constants.AppConstants.*;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
+import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,19 +23,32 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.BASIC;
-import static com.mallang.mallang_backend.domain.member.entity.SubscriptionType.STANDARD;
-import static com.mallang.mallang_backend.global.constants.AppConstants.DEFAULT_WORDBOOK_NAME;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
-import static com.mallang.mallang_backend.global.util.ReflectionTestUtil.setId;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
+import com.mallang.mallang_backend.domain.member.entity.Member;
+import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.quiz.wordquizresult.repository.WordQuizResultRepository;
+import com.mallang.mallang_backend.domain.video.subtitle.entity.Subtitle;
+import com.mallang.mallang_backend.domain.video.subtitle.repository.SubtitleRepository;
+import com.mallang.mallang_backend.domain.video.video.entity.Videos;
+import com.mallang.mallang_backend.domain.video.video.repository.VideoRepository;
+import com.mallang.mallang_backend.domain.voca.word.entity.Difficulty;
+import com.mallang.mallang_backend.domain.voca.word.entity.Word;
+import com.mallang.mallang_backend.domain.voca.word.repository.WordRepository;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookListRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.AddWordToWordbookRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordDeleteRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveItem;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordMoveRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookCreateRequest;
+import com.mallang.mallang_backend.domain.voca.wordbook.dto.WordbookResponse;
+import com.mallang.mallang_backend.domain.voca.wordbook.entity.Wordbook;
+import com.mallang.mallang_backend.domain.voca.wordbook.repository.WordbookRepository;
+import com.mallang.mallang_backend.domain.voca.wordbookitem.entity.WordbookItem;
+import com.mallang.mallang_backend.domain.voca.wordbookitem.repository.WordbookItemRepository;
+import com.mallang.mallang_backend.global.common.Language;
+import com.mallang.mallang_backend.global.exception.ServiceException;
 
 @ExtendWith(MockitoExtension.class)
 class WordbookServiceImplTest {
@@ -171,27 +180,37 @@ class WordbookServiceImplTest {
     }
 
     @Test
-    @DisplayName("추가 단어장에 단어 추가 실패 - 언어 불일치")
-    void addWords_languageMismatch() {
-        Member member = Member.builder().language(Language.ENGLISH).build();
-        member.updateSubscription(STANDARD);
-        setId(member, 1L);
+    @DisplayName("언어 불일치 단어는 스킵하고, 나머지 단어만 추가된다")
+    void addWords_languageMismatchSkipped() {
+        // 준비: 한글 단어(스킵), 영어 단어(추가)
+        AddWordToWordbookRequest dtoKorean = new AddWordToWordbookRequest();
+        dtoKorean.setWord("한글단어");
 
-        Wordbook wordbook = Wordbook.builder().name("추가 단어장").member(member).build();
-        setId(wordbook, 2L);
+        AddWordToWordbookRequest dtoEnglish = new AddWordToWordbookRequest();
+        dtoEnglish.setWord("apple");
+        dtoEnglish.setVideoId("VID123");
+        dtoEnglish.setSubtitleId(10L);
 
-        AddWordToWordbookRequest dto = new AddWordToWordbookRequest();
-        dto.setWord("한글단어"); // 영어 설정인데 한글 단어 추가
         AddWordToWordbookListRequest request = new AddWordToWordbookListRequest();
-        request.setWords(List.of(dto));
+        request.setWords(List.of(dtoKorean, dtoEnglish));
 
-        given(wordbookRepository.findByIdAndMemberId(2L, 1L)).willReturn(Optional.of(wordbook));
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+        // mocks
+        given(wordbookRepository.findByIdAndMemberId(savedWordbook.getId(), savedMember.getId()))
+            .willReturn(Optional.of(savedWordbook));
+        given(memberRepository.findById(savedMember.getId()))
+            .willReturn(Optional.of(savedMember));
+        // 영어 단어만 DB 조회
+        given(wordRepository.findByWord("apple"))
+            .willReturn(List.of(savedWord));
+        given(wordbookItemRepository.findByWordbookIdAndWord(savedWordbook.getId(), "apple"))
+            .willReturn(Optional.empty());
 
-        ServiceException ex = assertThrows(ServiceException.class, () ->
-                wordbookService.addWords(2L, request, 1L));
+        // 실행
+        wordbookService.addWords(savedWordbook.getId(), request, savedMember.getId());
 
-        assertThat(ex.getMessageCode()).isEqualTo(LANGUAGE_MISMATCH.getMessageCode());
+        // 검증: 영어 단어는 save 호출, 한글 단어는 절대 save 호출되지 않아야 함
+        then(wordbookItemRepository).should().save(argThat(item -> item.getWord().equals("apple")));
+        then(wordbookItemRepository).should(never()).save(argThat(item -> item.getWord().equals("한글단어")));
     }
 
     @Test
