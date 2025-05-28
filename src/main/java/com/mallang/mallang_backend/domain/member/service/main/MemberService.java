@@ -3,10 +3,12 @@ package com.mallang.mallang_backend.domain.member.service.main;
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
+import com.mallang.mallang_backend.domain.member.dto.SignupRequest;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.global.common.Language;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberService {
@@ -27,13 +29,7 @@ public interface MemberService {
 
     UserProfileResponse getUserProfile(Long memberId);
 
-    Member findByPlatformId(String platformId);
-
     boolean existsByNickname(String nickname);
 
-    Long signupByOauth(String platformId,
-                       String email,
-                       String nickname,
-                       String profileImage,
-                       LoginPlatform loginPlatform);
+    void signupByOauth(SignupRequest request);
 }

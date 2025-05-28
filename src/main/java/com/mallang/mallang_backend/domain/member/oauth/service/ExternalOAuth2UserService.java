@@ -2,7 +2,6 @@ package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.exception.custom.RetryableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +22,7 @@ import javax.net.ssl.SSLHandshakeException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 
-import static com.mallang.mallang_backend.global.exception.ErrorCode.INVALID_TOKEN;
-import static com.mallang.mallang_backend.global.exception.ErrorCode.UNSUPPORTED_OAUTH_PROVIDER;
+import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 
 /**
  * 외부 API 호출 전용 서비스(트랜잭션 미적용)
@@ -46,7 +44,7 @@ public class ExternalOAuth2UserService {
                                                    Throwable t
     ) {
         handleErrorLogs(t);
-        throw new RetryableException(t.getMessage(), t);
+        throw new ServiceException(API_BLOCK);
     }
 
     private void handleErrorLogs(Throwable throwable

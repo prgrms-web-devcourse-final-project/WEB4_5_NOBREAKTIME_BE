@@ -114,4 +114,5 @@ public class AppConstants {
                     "end",
             Long.class
     );
+    public static final String JOIN_MEMBER_KEY = "join_member";
 }

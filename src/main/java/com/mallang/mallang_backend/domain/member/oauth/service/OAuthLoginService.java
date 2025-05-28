@@ -1,8 +1,8 @@
 package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
+import com.mallang.mallang_backend.domain.member.dto.SignupRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
 import com.mallang.mallang_backend.domain.member.oauth.processor.OAuth2UserProcessor;
 import com.mallang.mallang_backend.domain.member.service.main.MemberService;
@@ -11,10 +11,8 @@ import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.exception.custom.LockAcquisitionException;
 import com.mallang.mallang_backend.global.exception.custom.OAuthLoginException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -44,7 +42,6 @@ public class OAuthLoginService {
     private final MemberWithdrawalService withdrawalService;
     private final S3ImageUploader imageUploader;
     private final RedisTemplate<String, String> redisTemplate;
-    public static final String JOIN_MEMBER_KEY = "join_member";
 
     /**
      * OAuth2 로그인 프로세스를 처리하는 메서드
@@ -125,7 +122,8 @@ public class OAuthLoginService {
             log.warn("락 해제 실패: {}", e.getMessage(), e);
         }
     }
-    // ======================회원 정보 추출=======================
+
+    // === 회원 정보 추출 === //
 
     /**
      * 플랫폼별 사용자 속성 파싱 메서드
@@ -149,25 +147,7 @@ public class OAuthLoginService {
                 .orElseThrow(() -> new ServiceException(UNSUPPORTED_OAUTH_PROVIDER));
     }
 
-    // ======================회원 로그인 & 가입 처리=======================
-
-    /**
-     * 플랫폼 ID로 기존 회원의 존재 여부를 비동기적으로 확인합니다.
-     * 추후 필요에 따라 후속 작업(예: 로그, 알림 등)을 수행할 수 있습니다.
-     *
-     * @param platformId 확인할 회원의 플랫폼 ID
-     */
-    // @Async("securityTaskExecutor")
-    public void handleExistingMember(String platformId) {
-        log.debug("이미 존재하는 회원: {}", platformId);
-
-        Member member = memberService.findByPlatformId(platformId);
-
-        if (member.getPlatformId() == null) {
-            throw new ServiceException(MEMBER_ALREADY_WITHDRAWN);
-        }
-    }
-
+    // === 회원 가입 처리 === //
     /**
      * 신규 회원을 등록합니다.
      *
@@ -178,35 +158,47 @@ public class OAuthLoginService {
     public void registerNewMember(LoginPlatform platform,
                                   Map<String, Object> userAttributes) {
 
-        log.debug("[Signup] 회원 가입 로직 진행 시작");
-        // 필수 속성 추출
-        String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
+        log.debug("[OAuth 회원가입 시작] 플랫폼: {}", platform);
 
+        String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
         validateWithdrawnLogNotRejoinable(platformId);
 
-        String email = (String) userAttributes.get("email");
-        String originalNickname = (String) userAttributes.get(NICKNAME_KEY);
-        String profileImage = (String) userAttributes.get(PROFILE_IMAGE_KEY);
+        String nickname = generateUniqueNickname((String) userAttributes.get(NICKNAME_KEY)); // 닉네임 중복 방지 로직 적용
+        String s3ProfileImageUrl = uploadProfileImage((String) userAttributes.get(PROFILE_IMAGE_KEY)); // 프로필 이미지 S3 업로드
 
-        // 닉네임 중복 방지 로직 적용
-        String nickname = generateUniqueNickname(originalNickname);
-
-        log.debug("사용자 platformId: {}, email: {}, nickname: {}, profileImage: {}",
-                platformId, email, nickname, profileImage);
-
-        // 프로필 이미지 S3 업로드
-        String s3ProfileImageUrl = uploadProfileImage(profileImage);
-
-        memberService.signupByOauth(
-                platformId,
-                email,
-                originalNickname,
-                s3ProfileImageUrl,
-                platform
+        executeSignupProcess(
+                platform,
+                userAttributes,
+                platformId, nickname,
+                s3ProfileImageUrl
         );
 
-        // 회원 가입 성공 시 회원 키 저장 (이후 로그인 시 키로 정보 조회)
-        redisTemplate.opsForValue().setIfAbsent(JOIN_MEMBER_KEY + platformId, platformId);
+        storeMemberKeyInRedis(platformId); // 플랫폼 키 저장
+    }
+
+    // 회원 가입 진행 로직
+    private void executeSignupProcess(LoginPlatform platform,
+                                      Map<String, Object> userAttributes,
+                                      String platformId,
+                                      String nickname,
+                                      String s3ProfileImageUrl
+    ) {
+        memberService.signupByOauth(new SignupRequest(
+                platformId,
+                (String) userAttributes.get("email"),
+                nickname,
+                s3ProfileImageUrl,
+                platform)
+        );
+    }
+
+    // 회원 가입 성공 시 회원 키 저장 (이후 로그인 시 키로 정보 조회)
+    private void storeMemberKeyInRedis(String platformId) {
+        String redisKey = JOIN_MEMBER_KEY + platformId;
+        if (Boolean.FALSE.equals(redisTemplate.opsForValue().setIfAbsent(redisKey, platformId))) {
+            log.warn("[Redis 키 충돌] 이미 존재하는 회원 키: {}", redisKey);
+            throw new ServiceException(MEMBER_ALREADY_JOINED);
+        }
         log.debug("회원 키 저장 성공 키: {}, 값: {}", JOIN_MEMBER_KEY, platformId);
     }
 
@@ -268,6 +260,7 @@ public class OAuthLoginService {
                 .filter(date -> LocalDateTime.now().isBefore(date))
                 // 재가입 가능일이 아직 지나지 않은 경우 예외 처리
                 .ifPresent(date -> {
+                    log.warn("[재가입 차단] platformId: {}", platformId);
                     // 1. 날짜 포맷팅
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
                     String formattedDate = date.format(formatter);

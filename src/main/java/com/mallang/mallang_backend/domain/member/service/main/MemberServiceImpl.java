@@ -2,8 +2,8 @@ package com.mallang.mallang_backend.domain.member.service.main;
 
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoRequest;
 import com.mallang.mallang_backend.domain.member.dto.ChangeInfoResponse;
+import com.mallang.mallang_backend.domain.member.dto.SignupRequest;
 import com.mallang.mallang_backend.domain.member.dto.UserProfileResponse;
-import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.entity.Member;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
 import com.mallang.mallang_backend.domain.member.service.profile.MemberProfileService;
@@ -43,7 +43,6 @@ public class MemberServiceImpl implements MemberService {
     private final WordbookRepository wordbookRepository;
     private final ExpressionBookRepository expressionBookRepository;
 
-    // memberService -> 단순 조립 + 사용
     @Override
     public UserProfileResponse getUserProfile(Long memberId) {
         return profileService.getUserProfile(memberId);
@@ -122,6 +121,55 @@ public class MemberServiceImpl implements MemberService {
         );
     }
 
+    public Member getMemberById(Long memberId) {
+        return findMemberOrThrow(memberId);
+    }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
+
+    /**
+     * OAuth 제공자로부터 받은 정보를 기반으로 회원가입을 처리합니다.
+     * <p>
+     * 기본 언어별 단어장과 표현함을 자동 생성하며, 트랜잭션 범위 내에서 모든 작업을 수행합니다.
+     *
+     * @param request 사용자 가입 요청 DTO (platformId, email, nickname, profileImage, loginPlatform 포함)
+     */
+    @Transactional
+    @Override
+    public void signupByOauth(SignupRequest request) {
+
+        Member newMember = buildMemberFromRequest(request);
+        Member savedMember = memberRepository.save(newMember);
+
+        createDefaultWordbooks(savedMember);
+        createDefaultExpressionBooks(savedMember);
+    }
+
+    // == 내부 헬퍼 메서드 == //
+    private Member buildMemberFromRequest(SignupRequest request) {
+        return Member.builder()
+                .platformId(request.platformId())
+                .email(request.email())
+                .nickname(request.nickname())
+                .loginPlatform(request.loginPlatform())
+                .language(NONE)
+                .profileImageUrl(request.profileImage())
+                .build();
+    }
+
+    private void createDefaultWordbooks(Member member) {
+        List<Wordbook> defaultWordbooks = Wordbook.createDefault(member);
+        wordbookRepository.saveAll(defaultWordbooks);
+    }
+
+    private void createDefaultExpressionBooks(Member member) {
+        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
+        expressionBookRepository.saveAll(defaultBooks);
+    }
+
     /**
      * 회원을 조회하고, 없으면 예외를 발생
      *
@@ -131,49 +179,5 @@ public class MemberServiceImpl implements MemberService {
     private Member findMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-    public Member getMemberById(Long memberId) {
-        return findMemberOrThrow(memberId);
-    }
-
-    @Override
-    public Member findByPlatformId(String platformId) {
-        return memberRepository.findByPlatformId(platformId)
-                .orElseThrow(() -> new ServiceException(MEMBER_NOT_FOUND));
-    }
-
-    @Override
-    public boolean existsByNickname(String nickname) {
-        return memberRepository.existsByNickname(nickname);
-    }
-
-    @Override
-    @Transactional
-    public Long signupByOauth(String platformId,
-                              String email,
-                              String nickname,
-                              String profileImage,
-                              LoginPlatform loginPlatform) {
-
-        Member member = Member.builder()
-                .platformId(platformId) // null 불가능
-                .email(email) // null 가능
-                .nickname(nickname)
-                .loginPlatform(loginPlatform)
-                .language(NONE)
-                .profileImageUrl(profileImage).build();
-
-        Member savedMember = memberRepository.save(member);
-
-        // 회원가입 시 언어별 기본 단어장 생성
-        List<Wordbook> defaultWordbooks = Wordbook.createDefault(savedMember);
-        wordbookRepository.saveAll(defaultWordbooks);
-
-        // 회원가입 시 언어별 기본 표현함 생성
-        List<ExpressionBook> defaultBooks = ExpressionBook.createDefault(member);
-        expressionBookRepository.saveAll(defaultBooks);
-
-        return savedMember.getId();
     }
 }

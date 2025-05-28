@@ -24,7 +24,7 @@ import java.sql.SQLTransientConnectionException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static com.mallang.mallang_backend.domain.member.oauth.service.OAuthLoginService.JOIN_MEMBER_KEY;
+import static com.mallang.mallang_backend.global.constants.AppConstants.JOIN_MEMBER_KEY;
 import static com.mallang.mallang_backend.global.exception.ErrorCode.MEMBER_NOT_FOUND;
 
 @Slf4j

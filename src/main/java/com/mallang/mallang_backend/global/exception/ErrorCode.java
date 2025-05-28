@@ -15,9 +15,10 @@ public enum ErrorCode {
     DUPLICATE_FILED("409-1", "duplicate.filed", HttpStatus.CONFLICT),
     LANGUAGE_ALREADY_SET("409-1", "language.already.set", HttpStatus.CONFLICT),
     NICKNAME_GENERATION_FAILED("500-1", "nickname.generation.failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    MEMBER_ALREADY_JOINED("409-2", "member.already.joined", HttpStatus.CONFLICT),
 
     // 구독 에러
-    SUBSCRIPTION_ALREADY_EXISTS("409-2", "subscription.already.exists", HttpStatus.CONFLICT),
+    SUBSCRIPTION_ALREADY_EXISTS("409-3", "subscription.already.exists", HttpStatus.CONFLICT),
 
     // 토큰 에러
     TOKEN_EXPIRED("401-3", "token.expired", HttpStatus.UNAUTHORIZED),
