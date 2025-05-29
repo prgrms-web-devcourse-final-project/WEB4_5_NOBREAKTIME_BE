@@ -136,7 +136,6 @@ dependencies {
 
 	// Micrometer + CloudWatch
 	implementation 'io.micrometer:micrometer-registry-cloudwatch2'
-	implementation 'org.springframework.cloud:spring-cloud-starter-aws:3.1.0'
 	implementation "org.springframework.boot:spring-boot-starter-actuator"
 }
 
