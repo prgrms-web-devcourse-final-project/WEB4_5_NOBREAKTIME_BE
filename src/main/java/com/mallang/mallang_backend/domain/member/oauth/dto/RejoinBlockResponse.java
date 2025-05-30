@@ -9,5 +9,6 @@ import lombok.ToString;
 @AllArgsConstructor
 public class RejoinBlockResponse {
     private int status;
-    private String message;
+    private String availableDate;
+    private long daysLeft;
 }

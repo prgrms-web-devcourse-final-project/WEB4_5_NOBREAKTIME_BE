@@ -1,6 +1,9 @@
 package com.mallang.mallang_backend.domain.member.oauth.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mallang.mallang_backend.domain.member.dto.ImageUploadRequest;
+import com.mallang.mallang_backend.domain.member.oauth.dto.RejoinBlockResponse;
 import com.mallang.mallang_backend.domain.member.dto.SignupRequest;
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
 import com.mallang.mallang_backend.domain.member.log.withdrawn.WithdrawnLog;
@@ -15,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
@@ -159,7 +165,6 @@ public class OAuthLoginService {
         log.debug("[OAuth 회원가입 시작] 플랫폼: {}", platform);
 
         String platformId = (String) userAttributes.get(PLATFORM_ID_KEY);
-        validateWithdrawnLogNotRejoinable(platformId);
 
         String nickname = generateUniqueNickname((String) userAttributes.get(NICKNAME_KEY)); // 닉네임 중복 방지 로직 적용
         String s3ProfileImageUrl = uploadProfileImage((String) userAttributes.get(PROFILE_IMAGE_KEY)); // 프로필 이미지 S3 업로드
@@ -259,7 +264,26 @@ public class OAuthLoginService {
                 // 재가입 가능일이 아직 지나지 않은 경우 예외 처리
                 .ifPresent(date -> {
                     log.warn("[재가입 차단] platformId: {}", platformId);
+                    RejoinBlockResponse response = sendErrorMessage(date, now);
+
                     throw new ServiceException(REJOIN_BLOCKED);
                 });
+    }
+
+    private RejoinBlockResponse sendErrorMessage(LocalDateTime date, LocalDateTime now) {
+        // 1. 날짜 포맷팅
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+        String formattedDate = date.format(formatter);
+
+        // 2. 남은 시간 계산
+        Duration duration = Duration.between(now, date);
+        long days = duration.toDays();
+
+        // 3. 메시지 생성
+        return new RejoinBlockResponse(
+                409,
+                formattedDate,
+                days
+        );
     }
 }

@@ -2,6 +2,7 @@ package com.mallang.mallang_backend.domain.member.oauth;
 
 import com.mallang.mallang_backend.domain.member.dto.MemberSimpleInfo;
 import com.mallang.mallang_backend.domain.member.repository.MemberRepository;
+import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
 import com.mallang.mallang_backend.global.common.Language;
 import com.mallang.mallang_backend.global.exception.ErrorCode;
 import com.mallang.mallang_backend.global.exception.ServiceException;
@@ -44,6 +45,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private final MemberRepository memberRepository;
     private final TokenService tokenService;
     private final JwtService jwtService;
+    private final MemberWithdrawalService withdrawalService;
 
     /**
      * OAuth2 인증 성공시 호출되는 엔트리 포인트 메서드
@@ -60,6 +62,12 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             Authentication authentication
     ) {
         String platformId = authentication.getName();
+
+        // 재가입 가능 상태 판별 -> true: 가입 불가 상태
+        if (withdrawalService.handleRejoinScenario(response, platformId)) {
+            return;
+        }
+
         MemberSimpleInfo info = memberRepository.findMemberGrantedInfo(platformId);
 
         setJwtToken(response,
@@ -123,5 +131,4 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         // 3. 리프레시 토큰 쿠키에 설정
         jwtService.setJwtPersistentCookie(tokenPair.getRefreshToken(), response);
     }
-
 }
