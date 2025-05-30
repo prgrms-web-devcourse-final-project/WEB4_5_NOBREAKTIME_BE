@@ -137,6 +137,7 @@ dependencies {
 	// Micrometer + CloudWatch
 	implementation 'io.micrometer:micrometer-registry-cloudwatch2'
 	implementation "org.springframework.boot:spring-boot-starter-actuator"
+	implementation 'software.amazon.awssdk:cloudwatch'
 }
 
 tasks.named('test') {

@@ -9,7 +9,6 @@ public class CustomMetricService {
 
     private final Counter gptCallCounter;
     private final Counter loginCounter;
-    private final Counter eventCounter;
     private final Counter paymentCounter;
     private final Counter youtubeCallCounter;
 
@@ -22,8 +21,6 @@ public class CustomMetricService {
         this.paymentCounter = meterRegistry.counter("payment.call.count");
         // youtube 호출 카운터
         this.youtubeCallCounter = meterRegistry.counter("youtube.call.count");
-        // 기본 이벤트 카운터
-        this.eventCounter = meterRegistry.counter("custom.event.count");
     }
 
     // GPT 호출 시
@@ -44,10 +41,5 @@ public class CustomMetricService {
     // youtube 호출 시
     public void recordYoutubeCall() {
         youtubeCallCounter.increment();
-    }
-
-    // recordEvent()를 호출할 때마다 카운터가 1씩 증가
-    public void recordEvent() {
-        eventCounter.increment();
     }
 }
