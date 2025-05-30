@@ -52,7 +52,8 @@ public class AppConstants {
             "/test",
             "/actuator/**",
             "/api/auth/test",
-            "/api/v1/plans/**"
+            "/api/v1/plans/**",
+            "/rejoin-block"
     };
     /**
      * 정적 리소스 확장자 패턴

@@ -9,7 +9,6 @@ import com.mallang.mallang_backend.domain.member.service.main.MemberService;
 import com.mallang.mallang_backend.domain.member.service.withdrawn.MemberWithdrawalService;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.exception.custom.LockAcquisitionException;
-import com.mallang.mallang_backend.global.exception.custom.OAuthLoginException;
 import com.mallang.mallang_backend.global.util.s3.S3ImageUploader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.mallang.mallang_backend.global.constants.AppConstants.*;
@@ -261,24 +259,7 @@ public class OAuthLoginService {
                 // 재가입 가능일이 아직 지나지 않은 경우 예외 처리
                 .ifPresent(date -> {
                     log.warn("[재가입 차단] platformId: {}", platformId);
-                    // 1. 날짜 포맷팅
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
-                    String formattedDate = date.format(formatter);
-
-                    // 2. 남은 시간 계산
-                    Duration duration = Duration.between(now, date);
-                    long days = duration.toDays();
-
-                    // 3. 메시지 생성
-                    String message = String.format(
-                            "409 \n " +
-                                    "회원 탈퇴 이력이 30일 이내에 있어서 재가입이 불가능합니다. \n" +
-                                    "재가입 가능일: %s (%d일 남았어요!)",
-                            formattedDate, days
-                    );
-
-                    throw new OAuthLoginException(
-                            message);
+                    throw new ServiceException(REJOIN_BLOCKED);
                 });
     }
 }

@@ -121,6 +121,7 @@ public enum ErrorCode {
     UNSUPPORTED_OAUTH_PROVIDER("404-35", "unsupported.oauth.provider", HttpStatus.NOT_FOUND),
     OAUTH_RATE_LIMIT("500-35", "oauth.rate.limit", HttpStatus.INTERNAL_SERVER_ERROR),
     LOCK_ACQUIRED_FAILED("423-35", "lock.acquired.failed", HttpStatus.LOCKED),
+    REJOIN_BLOCKED("403-35", "rejoin.blocked", HttpStatus.FORBIDDEN),
 
     // 파일 업로드 에러
     FILE_UPLOAD_FAILED("500-36", "file.upload.failed", HttpStatus.INTERNAL_SERVER_ERROR),
