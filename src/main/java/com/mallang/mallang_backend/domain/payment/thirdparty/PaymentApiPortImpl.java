@@ -80,7 +80,6 @@ public class PaymentApiPortImpl implements PaymentApiPort {
     @Override
     @Retry(name = "paymentApi", fallbackMethod = "retryFallback")
     @CircuitBreaker(name = "paymentApi", fallbackMethod = "circuitBreakerFallback")
-    @Monitor(name = "payment")
     public PaymentResponse callTossPaymentAPI(PaymentApproveRequest approveRequest) {
         String idempotencyKey = approveRequest.getPaymentKey();
         PaymentApproveRequest request = buildPaymentRequest(
@@ -136,7 +135,6 @@ public class PaymentApiPortImpl implements PaymentApiPort {
     // ========== 빌링 키 발급 요청 ========== //
 
     @Override
-    @Monitor(name = "billingPayment", tags = {"type", "issue"})
     public String issueBillingKey(String customerKey, String authKey, String orderId) {
         log.debug("[빌링 키 발급 프로세스 시작] customerKey: {}", customerKey);
 

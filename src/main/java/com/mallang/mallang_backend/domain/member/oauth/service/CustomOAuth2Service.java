@@ -1,7 +1,6 @@
 package com.mallang.mallang_backend.domain.member.oauth.service;
 
 import com.mallang.mallang_backend.domain.member.entity.LoginPlatform;
-import com.mallang.mallang_backend.global.metrics.GptMetricService;
 import com.mallang.mallang_backend.global.metrics.Monitor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

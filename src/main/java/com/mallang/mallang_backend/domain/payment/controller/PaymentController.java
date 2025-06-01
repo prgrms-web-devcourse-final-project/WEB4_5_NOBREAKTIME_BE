@@ -10,11 +10,13 @@ import com.mallang.mallang_backend.domain.payment.service.common.PaymentService;
 import com.mallang.mallang_backend.domain.payment.service.process.PaymentFacade;
 import com.mallang.mallang_backend.domain.payment.service.process.complete.CompletePayServiceImpl.MemberGrantedInfo;
 import com.mallang.mallang_backend.domain.subscription.service.SubscriptionService;
+import com.mallang.mallang_backend.global.aop.monitor.MeasureExecutionTime;
 import com.mallang.mallang_backend.global.aop.time.TimeTrace;
 import com.mallang.mallang_backend.global.dto.RsData;
 import com.mallang.mallang_backend.global.exception.ServiceException;
 import com.mallang.mallang_backend.global.filter.login.CustomUserDetails;
 import com.mallang.mallang_backend.global.filter.login.Login;
+import com.mallang.mallang_backend.global.metrics.Monitor;
 import com.mallang.mallang_backend.global.swagger.PossibleErrors;
 import com.mallang.mallang_backend.global.token.JwtService;
 import com.mallang.mallang_backend.global.token.TokenPair;
@@ -83,9 +85,10 @@ public class PaymentController {
             summary = "결제 요청 성공 이후 결제 승인 로직",
             description = "결제 승인 요청을 전송하고, 결제 상태를 업데이트하며, 권한 정보 및 JWT 토큰을 갱신합니다."
     )
-    @TimeTrace
     @PossibleErrors({PAYMENT_NOT_FOUND, PAYMENT_CONFIRM_FAIL, PAYMENT_CONFLICT})
     @PostMapping("/confirm")
+    @Monitor(name = "payment")
+    @MeasureExecutionTime
     public ResponseEntity<RsData<String>> succeedPayment(
             @Valid @RequestBody PaymentApproveRequest request,
             HttpServletResponse response
@@ -126,7 +129,6 @@ public class PaymentController {
     }
 
     // ======== 자동 결제 ======== //
-
     /**
      * 빌링 키 발급 ( + 자동 결제 요청을 처리)
      *
@@ -150,6 +152,8 @@ public class PaymentController {
     )
     @PossibleErrors({PAYMENT_CONFIRM_FAIL, API_ERROR, PAYMENT_NOT_FOUND})
     @PostMapping("/issue-billing-key")
+    @Monitor(name = "billingPayment", tags = {"type", "issue"})
+    @MeasureExecutionTime
     public ResponseEntity<RsData<String>> succeedBillingPayment(
             @Valid @RequestBody BillingPaymentRequest request) {
 
