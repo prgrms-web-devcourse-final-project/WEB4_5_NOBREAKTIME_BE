@@ -11,6 +11,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -107,7 +108,8 @@ public class MetricsAspect {
         return Tags.of(
                 "status", "success",
                 "class", className,
-                "method", methodName
+                "method", methodName,
+                "txId", MDC.get("transactionId")
         );
     }
 
@@ -116,7 +118,8 @@ public class MetricsAspect {
                 "status", "fail",
                 "class", className,
                 "method", methodName,
-                "message", getErrorMessage(e)
+                "message", getErrorMessage(e),
+                "txId", MDC.get("transactionId")
         );
     }
 
