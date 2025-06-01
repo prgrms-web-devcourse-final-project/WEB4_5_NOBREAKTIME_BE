@@ -100,9 +100,6 @@ dependencies {
 	implementation "io.github.resilience4j:resilience4j-bulkhead"
 	implementation "io.github.resilience4j:resilience4j-timelimiter"
 
-	// 프로메테우스 연동 (메트릭 수집)
-	implementation "io.micrometer:micrometer-registry-prometheus"
-
 	// retry
 	implementation 'org.springframework.retry:spring-retry:1.3.3'
 	implementation 'org.springframework:spring-aspects'
@@ -134,10 +131,9 @@ dependencies {
 	// LogStash
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
-	// Micrometer + CloudWatch
-	implementation 'io.micrometer:micrometer-registry-cloudwatch2'
+	// prometheus (메트릭 지표 수집)
+	implementation "io.micrometer:micrometer-registry-prometheus"
 	implementation "org.springframework.boot:spring-boot-starter-actuator"
-	implementation 'software.amazon.awssdk:cloudwatch'
 }
 
 tasks.named('test') {

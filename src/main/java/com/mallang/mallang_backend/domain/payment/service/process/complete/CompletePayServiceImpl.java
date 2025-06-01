@@ -34,7 +34,7 @@ public class CompletePayServiceImpl implements CompletePayService {
      */
     @Transactional
     @Override
-    @Retry(name = "dataSaveInstance", fallbackMethod = "completePaymentFallback" )
+    @Retry(name = "dbSave", fallbackMethod = "completePaymentFallback")
     public MemberGrantedInfo completePayment(PaymentResponse response) {
         // 1. 결제 결과 처리 (트랜잭션 내)
         paymentConfirmService.processPaymentResult(response);

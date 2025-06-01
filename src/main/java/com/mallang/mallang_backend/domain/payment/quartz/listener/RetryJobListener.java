@@ -76,17 +76,12 @@ public class RetryJobListener implements JobListener {
             newJobDataMap.put("currentRetry", newRetryCount);  // 재시도 횟수 업데이트
 
             // 3. 새로운 트리거 생성 (기존 트리거 설정 유지)
-            Trigger newTrigger = TriggerBuilder.newTrigger()
-                    .withIdentity(createTriggerKey(context, newRetryCount).getName(), "DEFAULT")
-                    .forJob(context.getJobDetail().getKey())
-                    .startAt(nextFireTime())
-                    .usingJobData(newJobDataMap)  // 복사된 JobDataMap 설정
-                    .withSchedule(oldTrigger.getScheduleBuilder())  // 기존 스케줄 유지 (예: CronSchedule)
-                    .build();
+            Trigger newTrigger = createNewTrigger(context, newRetryCount, newJobDataMap, oldTrigger);
 
             // 4. 새로운 트리거 등록
             context.getScheduler().scheduleJob(newTrigger);
-            log.info("[재시도] Job: {} 재시도 트리거 생성: {}", context.getJobDetail().getKey(), newTrigger.getKey().getName());
+            log.info("[재시도] Job: {} 재시도 트리거 생성: {}",
+                    context.getJobDetail().getKey(), newTrigger.getKey().getName());
             log.info("[재시도] 새로운 JobDataMap: {}", newJobDataMap.getWrappedMap());
         } catch (SchedulerException e) {
             log.error("Job: {} 재시도 중 예외 발생: {}", context.getJobDetail().getKey(), e.getMessage(), e);
@@ -96,6 +91,17 @@ public class RetryJobListener implements JobListener {
             );
             throw new ServiceException(SUBSCRIPTION_STATUS_UPDATE_FAILED, e);
         }
+    }
+
+    private Trigger createNewTrigger(JobExecutionContext context, int newRetryCount, JobDataMap newJobDataMap, Trigger oldTrigger) {
+        Trigger newTrigger = TriggerBuilder.newTrigger()
+                .withIdentity(createTriggerKey(context, newRetryCount).getName(), "DEFAULT")
+                .forJob(context.getJobDetail().getKey())
+                .startAt(nextFireTime())
+                .usingJobData(newJobDataMap)  // 복사된 JobDataMap 설정
+                .withSchedule(oldTrigger.getScheduleBuilder())  // 기존 스케줄 유지 (예: CronSchedule)
+                .build();
+        return newTrigger;
     }
 
     private TriggerKey createTriggerKey(JobExecutionContext context, int newRetryCount) {

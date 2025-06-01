@@ -33,7 +33,7 @@ public class PaymentRedisService {
      * @param orderId 주문 ID
      * @param amount  결제 금액
      */
-    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
+    @Retry(name = "redisSave", fallbackMethod = "fallbackMethod")
     public void saveDataToRedis(String orderId,
                                 int amount
     ) {
@@ -57,7 +57,7 @@ public class PaymentRedisService {
      * 일반적으로 동시성 문제가 발생할 것이라고 보여지진 않음
      * 이 값을 기반으로 결제 정보를 update 해야 하는 것 -> 여기서 문제가 발생할 수도 있을 것 같다
      */
-    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
+    @Retry(name = "redisSave", fallbackMethod = "fallbackMethod")
     public void checkOrderIdAndAmount(String orderId,
                                       int amount
     ) {
@@ -86,7 +86,7 @@ public class PaymentRedisService {
      * setIfAbsent: 키가 없으면 저장, 이미 있으면 저장하지 않음 (원자적 실행)
      * → 여러 요청이 동시에 들어와도, 오직 하나의 요청만 true를 받고 나머지는 false를 받음
      */
-    @Retry(name = "redisConnectionRetry", fallbackMethod = "fallbackMethod")
+    @Retry(name = "redisSave", fallbackMethod = "fallbackMethod")
     public void checkAndSaveIdempotencyKey(String idempotencyKey
     ) {
         String redisIdemKey = IDEM_KEY_PREFIX + idempotencyKey;

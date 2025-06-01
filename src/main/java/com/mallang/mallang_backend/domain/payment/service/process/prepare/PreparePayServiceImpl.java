@@ -34,7 +34,7 @@ public class PreparePayServiceImpl implements PreparePayService {
      */
     @Override
     @Transactional
-    @Retry(name = "dataSaveInstance", fallbackMethod = "preparePaymentFallback")
+    @Retry(name = "dbSave", fallbackMethod = "preparePaymentFallback")
     public void preparePayment(PaymentApproveRequest request) {
         // 1. 멱등성 키 검증 및 저장 (트랜잭션 내)
         redisService.checkAndSaveIdempotencyKey(request.getIdempotencyKey());

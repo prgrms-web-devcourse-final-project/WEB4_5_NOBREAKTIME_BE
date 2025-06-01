@@ -238,9 +238,6 @@ public class VideoServiceImpl implements VideoService {
 			// 7. GPT 분석
 			start = System.nanoTime();
 			List<GptSubtitleResponse> gptResult = gptService.analyzeScript(segments, member.getLanguage());
-			// if (isInvalidGptResult(gptResult)) {
-			// 	throw new ServiceException(INVALID_GPT_RESPONSE);
-			// }
 			log.debug("[AnalyzeVideo] GPT 분석 완료 ({} ms)", (System.nanoTime() - start) / 1_000_000);
 
 			// 8. 저장
@@ -261,6 +258,7 @@ public class VideoServiceImpl implements VideoService {
 				publisher.publishEvent(new VideoAnalyzedEvent(fileName));
 				log.debug("[AnalyzeVideo] 오디오 삭제 이벤트 발생");
 			}
+
 			log.info("[AnalyzeVideo] 전체 완료 ({} ms)", (System.nanoTime() - startTotal) / 1_000_000);
 		}
 	}

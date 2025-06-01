@@ -154,7 +154,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     @Transactional
-    @Retry(name = "dataSaveInstance", fallbackMethod = "updateSubscriptionStatusFallback")
+    @Retry(name = "dbSave", fallbackMethod = "updateSubscriptionStatusFallback")
     public void updateSubscriptionStatus() {
         log.info("[구독만료조회] 구독만료 조회 시작 (ID 값만) | @Async: {} | @Scheduled: {}",
                 Thread.currentThread().getName(), LocalDateTime.now());

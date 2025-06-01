@@ -9,10 +9,8 @@ import com.mallang.mallang_backend.domain.payment.dto.request.IssueBillingKeyRes
 import com.mallang.mallang_backend.domain.payment.dto.request.PaymentRequest;
 import com.mallang.mallang_backend.domain.payment.service.process.error.HandleErrorService;
 import com.mallang.mallang_backend.domain.payment.service.request.PaymentRedisService;
-import com.mallang.mallang_backend.global.aop.monitor.MeasureExecutionTime;
-import com.mallang.mallang_backend.global.aop.monitor.MonitorExternalApi;
 import com.mallang.mallang_backend.global.exception.ServiceException;
-import com.mallang.mallang_backend.global.metrics.CustomMetricService;
+import com.mallang.mallang_backend.global.metrics.Monitor;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +38,6 @@ public class PaymentApiPortImpl implements PaymentApiPort {
     private final WebClient tossPaymentsBillingWebClient;
     private final HandleErrorService errorService;
     private final PaymentRedisService redisService;
-    private final CustomMetricService metricService;
-
 
     // ========== 공통 WebClient POST 요청 메서드 ==========
 
@@ -82,14 +78,10 @@ public class PaymentApiPortImpl implements PaymentApiPort {
      * @throws ServiceException API 호출 실패 시 발생
      */
     @Override
-    // Retry -> Circuit Breaker 순서로 적용
-    @Retry(name = "processPayment", fallbackMethod = "retryFallback")
-    @CircuitBreaker(name = "processPayment", fallbackMethod = "circuitBreakerFallback")
-    @MonitorExternalApi(name = "Payment")
-    @MeasureExecutionTime
+    @Retry(name = "paymentApi", fallbackMethod = "retryFallback")
+    @CircuitBreaker(name = "paymentApi", fallbackMethod = "circuitBreakerFallback")
+    @Monitor(name = "payment")
     public PaymentResponse callTossPaymentAPI(PaymentApproveRequest approveRequest) {
-        metricService.recordPaymentCall();
-
         String idempotencyKey = approveRequest.getPaymentKey();
         PaymentApproveRequest request = buildPaymentRequest(
                 approveRequest.getAmount(),
@@ -111,7 +103,7 @@ public class PaymentApiPortImpl implements PaymentApiPort {
     public PaymentResponse retryFallback(PaymentApproveRequest request,
                                          Throwable t) {
 
-        log.error("[모든 재시도 실패] orderId: {} | Error: {}",
+        log.error("[재시도 실패] orderId: {} | Error: {}",
                 request.getOrderId(), t.getMessage(), t);
         errorService.handleApiFallback(request.getOrderId()); // 보상 트랜잭션
         throw new ServiceException(API_ERROR, t);
@@ -144,9 +136,8 @@ public class PaymentApiPortImpl implements PaymentApiPort {
     // ========== 빌링 키 발급 요청 ========== //
 
     @Override
-    @MonitorExternalApi(name = "Billing")
+    @Monitor(name = "billingPayment", tags = {"type", "issue"})
     public String issueBillingKey(String customerKey, String authKey, String orderId) {
-        metricService.recordPaymentCall();
         log.debug("[빌링 키 발급 프로세스 시작] customerKey: {}", customerKey);
 
         IssueBillingKeyRequest billingRequest = new IssueBillingKeyRequest(
@@ -173,16 +164,14 @@ public class PaymentApiPortImpl implements PaymentApiPort {
             name = "autoPaymentService",
             fallbackMethod = "payWithBillingKeyFallback"
     )
-    @Retry(name = "processPayment", fallbackMethod = "payWithBillingKeyFallback")
-    @MonitorExternalApi(name = "Billing")
-    @MeasureExecutionTime
+    @Retry(name = "paymentApi", fallbackMethod = "payWithBillingKeyFallback")
+    @Monitor(name = "billingPayment", tags = {"type", "pay"})
     public BillingPaymentResponse payWithBillingKey(String billingKey,
                                                     String customerKey,
                                                     String orderId,
                                                     String orderName,
                                                     int amount) {
 
-        metricService.recordPaymentCall();
         log.debug("[빌링 결제 요청] billingKey: {}, customerKey: {}, orderId: {}, orderName: {}, amount: {}",
                 billingKey, customerKey, orderId, orderName, amount);
 

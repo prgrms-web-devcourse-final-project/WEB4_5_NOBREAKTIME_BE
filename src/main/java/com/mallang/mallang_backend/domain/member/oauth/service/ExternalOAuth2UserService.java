@@ -33,8 +33,8 @@ import static com.mallang.mallang_backend.global.exception.ErrorCode.*;
 public class ExternalOAuth2UserService {
     private final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
 
-    @Retry(name = "oauthUserLoginService")
-    @CircuitBreaker(name = "oauthUserLoginService", fallbackMethod = "circuitBreakerFallbackMethod")
+    @Retry(name = "oauthApi")
+    @CircuitBreaker(name = "oauthApi", fallbackMethod = "circuitBreakerFallbackMethod")
     public OAuth2User loadUser(OAuth2UserRequest request) {
         return delegate.loadUser(request);
     }

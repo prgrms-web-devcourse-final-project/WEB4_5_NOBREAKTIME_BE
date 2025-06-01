@@ -12,10 +12,8 @@ import com.mallang.mallang_backend.global.gpt.dto.*;
 import com.mallang.mallang_backend.global.gpt.service.GptPromptBuilder;
 import com.mallang.mallang_backend.global.gpt.service.GptService;
 import com.mallang.mallang_backend.global.gpt.util.GptScriptProcessor;
+import com.mallang.mallang_backend.global.metrics.GptMetricService;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,14 +39,7 @@ public class GptServiceImpl implements GptService {
 
 	private final WebClient openAiWebClient;
 	private final GptPromptBuilder gptPromptBuilder;
-	private final MeterRegistry meterRegistry;
-
-	private Counter gptCallCounter;
-
-	@PostConstruct
-	public void init() {
-		this.gptCallCounter = meterRegistry.counter("gpt_api_call_total");
-	}
+	private final GptMetricService metricService;
 
 	@Value("${spring.ai.openai.api-key}")
 	private String openAiApiKey;
@@ -56,7 +47,7 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 단어 검색: 5회 재시도, 1초 간격, 실패 시 fallbackSearchWord 호출
 	 */
-	@Retry(name = "apiRetry", fallbackMethod = "fallbackSearchWord")
+	@Retry(name = "gptApi", fallbackMethod = "fallbackSearchWord")
 	@Override
 	public List<Word> searchWord(String word, Language language) {
 		String prompt;
@@ -70,6 +61,7 @@ public class GptServiceImpl implements GptService {
 			return removeInvalidWordJapanese(getGptWordResult(prompt, word));
 		}
 
+		metricService.recordGptWordSuccess();
 		throw new ServiceException(LANGUAGE_NOT_CONFIGURED);
 	}
 
@@ -120,15 +112,19 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 단어 검색 fallback 처리
 	 */
-	private List<Word> fallbackSearchWord(String word, Language language, Throwable t) {
-		log.warn("[GptService] searchWord fallback 처리, 예외 무시하고 빈 리스트 반환: {}", t.toString());
+	private List<Word> fallbackSearchWord(String word,
+										  Language language,
+										  Throwable t
+	) {
+		log.error("[GptService] searchWord fallback 처리, 예외 무시하고 빈 리스트 반환: {}", t.toString());
+		metricService.recordGptWordFail();
 		return List.of();
 	}
 
 	/**
 	 * 문장 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeSentence 호출
 	 */
-	@Retry(name = "apiRetry", fallbackMethod = "fallbackAnalyzeSentence")
+	@Retry(name = "gptApi", fallbackMethod = "fallbackAnalyzeSentence")
 	@Override
 	@TimeTrace
 	public String analyzeSentence(String sentence, String translatedSentence, Language language) {
@@ -136,10 +132,13 @@ public class GptServiceImpl implements GptService {
 			String prompt = gptPromptBuilder.buildPromptForAnalyzeSentence(sentence, translatedSentence);
 			return getGptSentenceResult(prompt);
 		}
+
 		if (language == JAPANESE) {
 			String prompt = gptPromptBuilder.buildPromptForAnalyzeSentenceJapanese(sentence, translatedSentence);
 			return getGptSentenceResult(prompt);
 		}
+
+		metricService.recordGptSentenceSuccess();
 		throw new ServiceException(LANGUAGE_NOT_CONFIGURED);
 	}
 
@@ -153,15 +152,20 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 문장 분석 fallback 처리
 	 */
-	private String fallbackAnalyzeSentence(String sentence, String translatedSentence, Language language, Throwable t) {
+	private String fallbackAnalyzeSentence(String sentence,
+										   String translatedSentence,
+										   Language language,
+										   Throwable t
+	) {
 		log.error("[GptService] analyzeSentence fallback 처리, 예외: {}", t.getMessage());
+		metricService.recordGptSentenceFail();
 		throw new ServiceException(API_ERROR);
 	}
 
 	/**
 	 * 스크립트 분석: 5회 재시도, 1초 간격, 실패 시 fallbackAnalyzeScript 호출
 	 */
-	@Retry(name = "gptRetry", fallbackMethod = "fallbackAnalyzeScript")
+	@Retry(name = "gptApi", fallbackMethod = "fallbackAnalyzeScript")
 	@Override
 	public List<GptSubtitleResponse> analyzeScript(List<TranscriptSegment> segments, Language language) {
 		// prompt 생성
@@ -177,6 +181,7 @@ public class GptServiceImpl implements GptService {
 			return removeInvalidKeywordJapanese(getGptScriptResult(prompt, segments));
 		}
 
+		metricService.recordGptScriptSuccess();
 		// 회원의 언어가 영상 분석이 불가능한 경우
 		throw new ServiceException(LANGUAGE_NOT_CONFIGURED);
 	}
@@ -268,22 +273,13 @@ public class GptServiceImpl implements GptService {
 	/**
 	 * 재시도 소진 후 스크립트(대본) 분석 fallback 처리
 	 */
-	private List<GptSubtitleResponse> fallbackAnalyzeScript(List<TranscriptSegment> segments, Language language, Throwable t) {
+	private List<GptSubtitleResponse> fallbackAnalyzeScript(List<TranscriptSegment> segments,
+															Language language,
+															Throwable t
+	) {
 		log.error("[GptService] analyzeScript fallback 처리, 예외: {}", t.getMessage());
+		metricService.recordGptScriptFail();
 		throw new ServiceException(API_ERROR);
-	}
-
-	/**
-	 * OpenAI API 호출 및 응답 유효성 검증 후 응답 내용 반환
-	 *
-	 * @param prompt 생성된 프롬프트 문자열
-	 * @return GPT 응답의 content 필드 값
-	 */
-	private String callAndValidate(String prompt) {
-		OpenAiResponse response = callGptApi(prompt);
-		String content = response.getChoices().get(0).getMessage().getContent();
-		log.debug("[GptService] GPT 응답 결과:\n{}", content);
-		return content;
 	}
 
 	/**
@@ -313,6 +309,7 @@ public class GptServiceImpl implements GptService {
 				.bodyToMono(OpenAiResponse.class)
 				.block();
 
+			metricService.recordGptApiSuccess();
 			return response;
 		} catch (Exception e) {
 			if (e instanceof RetryableException) {
@@ -328,6 +325,7 @@ public class GptServiceImpl implements GptService {
 	public OpenAiResponse gptFallback(Exception ex) {
 		// 재시도 실패 후 처리
 		log.error("GPT 재시도 실패: {}", ex.getMessage());
+		metricService.recordGptApiFail();
 		throw new ServiceException(GPT_API_CALL_FAILED);
 	}
 
@@ -337,6 +335,7 @@ public class GptServiceImpl implements GptService {
 	public void validateResponse(OpenAiResponse response) {
 		if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
 			log.error("[GptService] GPT 응답이 비어있습니다.");
+			metricService.recordGptApiFail();
 			throw new ServiceException(GPT_RESPONSE_EMPTY);
 		}
 	}
