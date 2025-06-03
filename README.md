@@ -150,14 +150,14 @@
 ![image](https://github.com/user-attachments/assets/6cb60bd5-c59f-45b6-9f31-8db06a0f3575)
 
 ## ERD
-<-- 추가 예정 -->
+[[ERD](https://www.erdcloud.com/d/GrxcjAyDaPdA284sf)]
 
 ## System Architecture
-<-- 추가 예정 -->
+![image](https://github.com/user-attachments/assets/a0d8bb40-823d-4fa6-b2d8-3c0fdc72f5ca)
+
 
 ## Flow Chart
-<-- 추가 예정 -->
-[🗃️ Flow Chart]()
+[[🗃️ Flow Chart](https://www.figma.com/design/epEazN4EqXlQ5o51nwaBwx/4%EC%B0%A8-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8_7%ED%8C%80?node-id=99-6189&m=dev&t=B09GtbWWuUj6yDLq-1)]
 
 ## 🏷️  브랜치 전략
 
@@ -183,9 +183,9 @@
 
   
 ## API 명세서
-[📝 API 명세서]()
+[[📝 API 명세서](https://www.notion.so/API-1df3550b7b558090a35df36869970e74?source=copy_link)]
 <br/>
 <br/>
 
 ## 컨벤션
-[🎯 Commit Convention](https://github.com/prgrms-web-devcourse-final-project/WEB4_5_NOBREAKTIME_BE/wiki/Git-Flow-%EA%B8%B0%EB%B0%98-%EC%BB%A4%EB%B0%8B-%EC%BB%A8%EB%B2%A4%EC%85%98-&-%EB%B8%8C%EB%9E%9C%EC%B9%98-%EC%A0%84%EB%9E%B5)
+[[🎯 Commit Convention](https://github.com/prgrms-web-devcourse-final-project/WEB4_5_NOBREAKTIME_BE/wiki/Git-Flow-%EA%B8%B0%EB%B0%98-%EC%BB%A4%EB%B0%8B-%EC%BB%A8%EB%B2%A4%EC%85%98-&-%EB%B8%8C%EB%9E%9C%EC%B9%98-%EC%A0%84%EB%9E%B5)]
